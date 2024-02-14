@@ -133,12 +133,19 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
 	case engine_kind_t::EBPF:
-		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
-		// to be done once we drop the CLI option otherwise we would need to make the check twice,
-		// once here, and once when we merge the CLI options in the config file.
-		m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
-		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
-		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+		{
+			// default value for `m_probe_path` should be `$HOME/FALCO_PROBE_BPF_FILEPATH`
+			char full_path[PATH_MAX];
+			const char *home = std::getenv("HOME");
+			if(!home)
+			{
+				throw std::logic_error("Cannot get the env variable 'HOME'");
+			}
+			snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
+			m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", std::string(full_path));
+			m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+			m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+		}
 		break;
 	case engine_kind_t::MODERN_EBPF:
 		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern_ebpf.cpus_for_each_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);

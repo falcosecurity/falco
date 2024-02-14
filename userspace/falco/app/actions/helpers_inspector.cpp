@@ -106,21 +106,8 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		}
 		else if(s.is_ebpf()) /* BPF engine. */
 		{
-			const char *bpf_probe_path = s.config->m_ebpf.m_probe_path.c_str();
-			char full_path[PATH_MAX];
-			/* If the path is empty try to load the probe from the default path. */
-			if(strncmp(bpf_probe_path, "", 1) == 0)
-			{
-				const char *home = std::getenv("HOME");
-				if(!home)
-				{
-					return run_result::fatal("Cannot get the env variable 'HOME'");
-				}
-				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
-				bpf_probe_path = full_path;
-			}
-			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
-			inspector->open_bpf(bpf_probe_path, s.syscall_buffer_bytes_size, s.selected_sc_set);
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with BPF probe. BPF probe path: " + s.config->m_ebpf.m_probe_path);
+			inspector->open_bpf(s.config->m_ebpf.m_probe_path.c_str(), s.syscall_buffer_bytes_size, s.selected_sc_set);
 		}
 		else /* Kernel module (default). */
 		{
