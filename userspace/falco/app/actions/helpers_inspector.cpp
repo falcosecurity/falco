@@ -24,10 +24,6 @@ limitations under the License.
 
 #include "helpers.h"
 
-#ifdef _WIN32
-#define PATH_MAX 260
-#endif
-
 using namespace falco::app;
 using namespace falco::app::actions;
 
