@@ -22,6 +22,10 @@ option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engi
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 
+if(POLICY CMP0091)
+	cmake_policy(SET CMP0091 NEW)
+endif()
+
 if(WIN32)
 	set(CPACK_GENERATOR "NSIS") # this needs NSIS installed, and available
 elseif (APPLE)
