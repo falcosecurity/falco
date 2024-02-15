@@ -3,6 +3,9 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.2.1
+* fix(falco/README): typos, formatting and broken links
+
 ## v4.2.0
 
 * Bump falco to v0.37.1 and falcoctl to v0.7.2
