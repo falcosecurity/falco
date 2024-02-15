@@ -12,13 +12,37 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(CXXOPTS_SRC "${PROJECT_BINARY_DIR}/cxxopts-prefix/src/cxxopts/")
-set(CXXOPTS_INCLUDE_DIR "${CXXOPTS_SRC}/include")
+#
+# cxxopts (https://github.com/jarro2783/cxxopts)
+#
 
-ExternalProject_Add(
+option(USE_BUNDLED_CXXOPTS "Enable building of the bundled cxxopts" ON)
+
+if(CXXOPTS_INCLUDE_DIR)
+    # we already have cxxopts
+elseif(NOT USE_BUNDLED_CXXOPTS)
+    find_path(CXXOPTS_INCLUDE_DIR NAMES cxxopts.hpp)
+
+    if(CXXOPTS_INCLUDE_DIR)
+        message(STATUS "Found cxxopts: include: ${CXXOPTS_INCLUDE_DIR}")
+    else()
+        message(FATAL_ERROR "Couldn't find system cxxopts")
+    endif()
+else()
+    set(CXXOPTS_SRC "${PROJECT_BINARY_DIR}/cxxopts-prefix/src/cxxopts/")
+    set(CXXOPTS_INCLUDE_DIR "${CXXOPTS_SRC}/include")
+
+    message(STATUS "Using bundled cxxopts in ${CXXOPTS_SRC}")
+
+    ExternalProject_Add(
         cxxopts
         URL "https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.0.0.tar.gz"
         URL_HASH "SHA256=36f41fa2a46b3c1466613b63f3fa73dc24d912bc90d667147f1e43215a8c6d00"
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND ""
-	INSTALL_COMMAND "")
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND "")
+endif()
+
+if(NOT TARGET cxxopts)
+	add_custom_target(cxxopts)
+endif()

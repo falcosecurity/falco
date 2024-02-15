@@ -15,19 +15,32 @@
 #
 # cpp-httplib (https://github.com/yhirose/cpp-httplib)
 #
+
+option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ON)
+
 if(CPPHTTPLIB_INCLUDE)
-	# we already have cpp-httplib
+    # we already have cpp-httplib
+elseif(NOT USE_BUNDLED_CPPHTTPLIB)
+    find_path(CPPHTTPLIB_INCLUDE NAMES httplib.h)
+
+    if(CPPHTTPLIB_INCLUDE)
+        message(STATUS "Found cpp-httplib: include: ${CPPHTTPLIB_INCLUDE}")
+    else()
+        message(FATAL_ERROR "Couldn't find system cpp-httplib")
+    endif()
 else()
-	set(CPPHTTPLIB_SRC "${PROJECT_BINARY_DIR}/cpp-httplib-prefix/src/cpp-httplib")
-	set(CPPHTTPLIB_INCLUDE "${CPPHTTPLIB_SRC}")
+    set(CPPHTTPLIB_SRC "${PROJECT_BINARY_DIR}/cpp-httplib-prefix/src/cpp-httplib")
+    set(CPPHTTPLIB_INCLUDE "${CPPHTTPLIB_SRC}")
 
-	message(STATUS "Using bundled cpp-httplib in '${CPPHTTPLIB_SRC}'")
+    ExternalProject_Add(cpp-httplib
+        PREFIX "${PROJECT_BINARY_DIR}/cpp-httplib-prefix"
+        URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.13.1.tar.gz"
+        URL_HASH "SHA256=9b837d290b61e3f0c4239da0b23bbf14c382922e2bf2a9bac21c1e3feabe1ff9"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND "")	
+endif()
 
-	ExternalProject_Add(cpp-httplib
-		PREFIX "${PROJECT_BINARY_DIR}/cpp-httplib-prefix"
-		URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.13.1.tar.gz"
-		URL_HASH "SHA256=9b837d290b61e3f0c4239da0b23bbf14c382922e2bf2a9bac21c1e3feabe1ff9"
-		CONFIGURE_COMMAND ""
-		BUILD_COMMAND ""
-		INSTALL_COMMAND "")	
+if(NOT TARGET cpp-httplib)
+	add_custom_target(cpp-httplib)
 endif()
