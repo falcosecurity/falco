@@ -595,7 +595,7 @@ Remove whitespace around `falco.httpOutput.url` to fix the error `libcurl error:
 
 ### Minor Changes
 
-* Upgrade to Falco 0.26.2, `DRIVERS_REPO` now defaults to https://download.falco.org/driver (see the [Falco changelog](https://github.com/falcosecurity/falco/blob/0.26.2/CHANGELOG.md))
+* Upgrade to Falco 0.26.2, `DRIVERS_REPO` now defaults to https://download.falco.org/?prefix=driver/ (see the [Falco changelog](https://github.com/falcosecurity/falco/blob/0.26.2/CHANGELOG.md))
 
 ## v1.5.3
 

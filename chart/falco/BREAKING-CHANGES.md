@@ -59,7 +59,7 @@ This way you will upgrade Falco to `v0.34.0`.
 
 ### Falcoctl support
 
-[Falcoctl](https://https://github.com/falcosecurity/falcoctl) is a new tool born to automatize operations when deploying Falco.
+[Falcoctl](https://github.com/falcosecurity/falcoctl) is a new tool born to automatize operations when deploying Falco.
 
 Before the `v3.0.0` of the charts *rulesfiles* and *plugins* were shipped bundled in the Falco docker image. It precluded the possibility to update the *rulesfiles* and *plugins* until a new version of Falco was released. Operators had to manually update the *rulesfiles or add new *plugins* to Falco. The process was cumbersome and error-prone. Operators had to create their own Falco docker images with the new plugins baked into it or wait for a new Falco release.
 
@@ -212,11 +212,15 @@ Starting from `v0.3.0`, the chart drops the bundled **rulesfiles**. The previous
 
 The reason why we are dropping them is pretty simple, the files are already shipped within the Falco image and do not apport any benefit. On the other hand, we had to manually update those files for each Falco release.
 
-For users out there, do not worry, we have you covered. As said before the **rulesfiles** are already shipped inside the Falco image. Still, this solution has some drawbacks such as users having to wait for the next releases of Falco to get the latest version of those **rulesfiles**.  Or they could manually update them by using the [custom rules](https://https://github.com/falcosecurity/charts/tree/master/falco#loading-custom-rules).
+For users out there, do not worry, we have you covered. As said before the **rulesfiles** are already shipped inside 
+the Falco image. Still, this solution has some drawbacks such as users having to wait for the next releases of Falco 
+to get the latest version of those **rulesfiles**.  Or they could manually update them by using the [custom rules](.
+/README.md#loading-custom-rules).
 
 We came up with a better solution and that is **falcoctl**. Users can configure the **falcoctl** tool to fetch and install the latest **rulesfiles** as provided by the *falcosecurity* organization. For more info, please check the **falcoctl** section.
 
-**NOTE**: if any user (wrongly) used to customize those files before deploying Falco please switch to using the [custom rules](https://https://github.com/falcosecurity/charts/tree/master/falco#loading-custom-rules).
+**NOTE**: if any user (wrongly) used to customize those files before deploying Falco please switch to using the 
+[custom rules](./README.md#loading-custom-rules).
 
 ### Drop support for `falcosecurity/falco` image
 
