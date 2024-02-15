@@ -21,17 +21,6 @@ jobs:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-        with:
-          fetch-depth: 0
-          submodules: 'true'
-      
-      - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
-        with:
-          go-version: '>=1.17.0'
-
       - name: Download binary
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -43,54 +32,20 @@ jobs:
           tar -xvf $(ls falco-*.tar.gz)
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
-      
-      # Note: most probably the plugin related tests should be moved to the plugin repo sooner or later.
-      - name: Install needed artifacts using falcoctl
-        if: ${{ inputs.static == false }}
-        run: |
-          sudo mkdir -p /usr/share/falco/plugins
-          sudo falcoctl artifact install k8saudit-rules
-          sudo falcoctl artifact install cloudtrail-rules
      
       # We only run driver loader tests on x86_64
-      - name: Install dependencies for falco-driver-loader tests
+      - name: Install kernel headers for falco-driver-loader tests
         if: ${{ inputs.arch == 'x86_64' }}
         run: |
           sudo apt update -y
-          sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms linux-headers-$(uname -r)
-
-      - name: Install go-junit-report
-        run: |
-          pushd submodules/falcosecurity-testing
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          popd
-  
-      - name: Generate regression test files
-        run: |
-          pushd submodules/falcosecurity-testing
-          go generate ./...
-          popd
-
-      - name: Run regression tests
-        env:
-          # fixme(leogr): this is a workaround for https://github.com/falcosecurity/falco/issues/2784
-          HOST_ROOT: ""
-        run: |
-          pushd submodules/falcosecurity-testing
-          ./build/falco.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          if ${{ inputs.static && 'false' || 'true' }}; then
-            ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            if ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}; then
-                sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            fi    
-          fi
-          cat ./report.txt | go-junit-report -set-exit-code > report.xml
-          popd
-
-      - name: Test Summary
-        if: always() # run this even if previous step fails
-        uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f # v2.1
+          sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
+          
+      - name: Run tests
+        uses: falcosecurity/testing@main    
         with:
-          paths: "submodules/falcosecurity-testing/report.xml"
-          show: "fail"
+          test-falco: 'true'
+          test-falcoctl: 'true'
+          test-k8saudit: 'true'
+          static: ${{ inputs.static && 'true' || 'false' }}
+          test-drivers: ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}
+          show-all: 'true'
