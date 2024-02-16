@@ -1,6 +1,6 @@
 apiVersion: v2
 name: falco
-version: 4.2.1
+version: 4.2.2
 appVersion: "0.37.1"
 description: Falco
 keywords:
