@@ -41,10 +41,6 @@ Undocumented behaviors may be included in this definition if there's strong evid
 
 User-facing changes refer to any feature changes, behavior changes, modifications, or additions that are directly noticeable and interactable by the end users. These changes affect how Falco operates from the user's perspective (notably any change that can lead to user disruption). Unlike internal changes (i.e., code refactoring, CI, maintenance-related changes), which are under-the-hood improvements not directly visible to the user, user-facing changes are evident in the Falco and its core components interface and functionality.
 
-### Feature
-
-TODO: Add a definition of feature.
-
 ### CLI/Config Area
 
 Falco is comprised of the Falco binary and other programs and tools cooperating (notably [falcoctl](https://github.com/falcosecurity/falcoctl)). These programs are the primary user interface for Falco. Any feature or behavior changes to the following elements of these programs are assumed to be user-facing changes to the CLI/Config area:
@@ -59,9 +55,9 @@ Falco is comprised of the Falco binary and other programs and tools cooperating 
 - Program inputs, excluding elements explicitly governed by other areas (e.g., [Falco rules](#rules-area)).
 - Program outputs excluding elements explicitly governed by other areas (e.g., [Falco outputs/alerts](#outputs-alerts-area)).
 
-### Rules Area
+### Rules System Area
 
-Rules are the primary input for Falco. Any feature or behavior changes to the following aspects or elements are assumed to be user-facing changes to the rules area:
+Rules are the primary input for Falco. Any feature or behavior changes to the following aspects or elements are assumed to be user-facing changes to the rules system area:
 
 - Syntax.
 - File format.
@@ -70,6 +66,8 @@ Rules are the primary input for Falco. Any feature or behavior changes to the fo
 - Elements that affect the way rules are triggered.
 
 However, any change related to the rule's output when triggered (i.e., the alert) is out of scope for this area (see next section).
+
+Note that this area does not include changes related to the ruleset files. Ruleset distributions follow their own [Rules Maturity Framework](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework) policies. 
 
 ### Outputs/Alerts Area
 
@@ -123,55 +121,68 @@ The adoption policy applies to any backward compatible user-facing changes which
 
 **Adoption rules**:
 1. A feature can be introduced at only one of the following levels:
-   - Sandbox: The feature must be opt-in (e.g., using a feature flag), labeled as *Sandbox* and the user must be proactively informed by the experimental nature of the feature (i.e. emitting a notice when the feature is being enabled).
+   - Sandbox: The feature must be opt-in (e.g., not enabled by default), labeled as *Sandbox* and the user must be proactively informed by the experimental nature of the feature (i.e. emitting a notice when the feature is being enabled).
    - Incubating: The feature must be labeled as *Incubating*.
-2. A feature can be promoted *from Sandbox to Incubating* or *from Incubating to Stable* only after at least one release cycle has passed without user-facing changes to the feature.
-3. A feature cannot be demoted to a previous level.
+2. Any functionality additions to an existing feature are inherently introduced at the same level as the feature itself unless logically separable (for instance, a sub-feature that may be enabled separately).
+3. A feature can be promoted *from Sandbox to Incubating* or *from Incubating to Stable* only after at least one release cycle has passed without user-facing changes to the feature.
+4. A feature cannot be demoted to a previous level.
 
 
-_Note_: 
- - Behavior additions are assumed to be a consequence of a feature introduction, so this adoption policy does not directly apply to behaviors. However, behavior changes are still relevant in the context of deprecation.
+_Note about behaviors_:
+This policy indirectly applies to behaviors, too. Behavior changes are assumed to be a consequence of a feature change. The adoption level of a documented behavior is considered to be the same as the related feature. Furthermore, behavior changes are particularly relevant in the context of deprecation (see the next section).
 
 
 ### Deprecation Policy
 
 The deprecation policy applies to any non-backward compatible user-facing changes. Any other changes introduced in a backward-compatible manner does not fall under the scope of this deprecation policy.
 
-**Deprecation Rules**:
-1. Sandbox features can be removed at any time without notice. No deprecation period is required.
-2. Incubating or Stable features and documented behaviors must enter a deprecation period and function for no less than the indicated release cycles (see tables below) after their announced deprecation.
-3. Deprecated configurations or CLI elements must emit warnings when used and be signaled in the documentation for at least the entire deprecation period.
-4. Deprecated APIs should have a way to signal the deprecation status, which may vary depending on the specific subsystem.
-5. Deprecated behaviors must be reported in the documentation for at least the entire deprecation period.
-6. Any Pull Request introducing a deprecation notice must be labeled and include a note in the format `DEPRECATION NOTICE: ...`.
-7. Any Pull Request introducing a breaking change due to the end of the deprecation notice period must be labeled and include a note in the format `BREAKING CHANGE: ...`. 
+**Deprecation rules**:
+1. Sandbox features can be removed or changed at any time without notice. No deprecation period is required.
+2. Incubating or Stable features and documented behaviors must enter a deprecation period and function for no less than the indicated release cycles (see tables below) after their announced deprecation. 
+   - If the change affects the feature partially, the deprecation applies only to that feature part. 
+   - If the change removes the feature entirely, the deprecation applies to the entire feature.
+3. At least for the entire deprecation period, the feature must be labeled as *Deprecated* in all relevant documentation, and:
+   - for deprecated configurations or CLI elements, a warning must be emitted warnings when the feature is being enabled or used;
+   - for deprecated APIs, when technically feasible, the API should be signal the deprecation status (this may vary depending on the specific subsystem);
+   - for deprecated behaviors the documentation must highlight the _before_ and _after_ behavior, alongside with a prominent deprecation notice.
+4. Any Pull Request introducing a deprecation notice must be labeled and include a note in the format `DEPRECATION NOTICE: ...`.
+5. Any Pull Request introducing a breaking change due to the end of the deprecation notice period must be labeled and include a note in the format `BREAKING CHANGE: ...`. 
    - It is also recommended for code commits that introduce a breaking change to follow the related [conventional commit spec](https://www.conventionalcommits.org/en/v1.0.0/#specification).
 
-The minimum deprecation period length depends on the specific subsystem. If changes span multiple areas, the area with the most extended deprecation period is assumed.
+The minimum deprecation period length depends on the affected area. If a single change spans multiple areas, the area with the most extended deprecation period is assumed. Longer deprecation periods are allowed if the feature is deemed to be particularly critical or widely used.
 
-**Deprecation Periods (up to Falco 0.x)**
+#### Deprecation Period Lengths
+
+_The units represent the number of releases._
+
+##### Before Falco 1.0
 
 | Area           | Stable | Incubating |
 | -------------- | ------ | ---------- |
-| Behaviors      | 1      | 1          |
-| Output/Alerts  | 1      | 1          |
-| CLI/Config     | 1      | 0          |
-| Rules          | 1      | 0          |
-| Subsystem APIs | 0      | 0          |
+| *all areas*    | 1      | 0          |
 
-**Deprecation Periods (since Falco 1.0 onward)**
+##### Since Falco 1.0 onward
 
 | Area           | Stable | Incubating |
 | -------------- | ------ | ---------- |
 | Behaviors      | 2      | 1          |
+| Rules System   | 2      | 1          |
 | Output/Alerts  | 2      | 1          |
-| CLI/Config     | 2      | 1          |
-| Rules          | 2      | 1          |
-| Subsystem APIs | 1      | 1          |
+| Platform       | 2      | 1          |
+| CLI/Config     | 1      | 1          |
+| Subsystem APIs | 1      | 0          |
+
+### Examples
+
+**Example 1** Let's consider a feature _foo_ in the Output/Alerts Area introduced in Falco 1.0.0 and labeled as *Incubating*. The feature is promoted to *Stable* in Falco 1.1.0 (because the feature did not get any user-facing change).
+Subsequently, maintainers decide that backward-compatible changes must be introduced in _foo_ to improve its functionality. The part of the feature to be changed is labeled as *Deprecated* in Falco 1.2.0, and the deprecation period starts. The non-backward compatible change is then introduced in Falco 1.4.0.
+
+**Example 2** The `--bar` flag in the CLI/Config Area has been introduced since Falco 1.1.0 and is labeled as *Stable*. Before releasing Falco 1.5.0, maintainers realize `--bar` is redundant and should be removed. The flag is labeled as *Deprecated* in Falco 1.5.0, and the deprecation period starts. The flag is removed in Falco 1.6.0.
 
 ### Exceptions
 
-- Subsystems or subcomponents may have additional criteria and exceptions (for instance, [the rules maturity framework](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework)). Stated other criteria and exceptions must not directly affect the main Falco distribution (e.g., *falcoctl* can have a different release cycle and different policies; however, if Falco relies on a specific *falcoctl* feature, that *falcoctl* feature adoption and deprecation must be strictly compatible with the rules described in this proposal).
+- Ruleset in the official distributions follow the [Rules Maturity Framework](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework) policies.
+- Subsystems or subcomponents may have additional criteria and exceptions. Stated other criteria and exceptions must not directly affect the main Falco distribution (e.g., *falcoctl* can have a different release cycle and different policies; however, if Falco relies on a specific *falcoctl* feature, that *falcoctl* feature adoption and deprecation must be strictly compatible with the rules described in this proposal).
 - Internal APIs are out of scope for this policy. Their adoption models and deprecation policies might be regulated separately.
 - Different parties may provide plugins, and each plugin may have a different maturity level. Only those plugins officially maintained by The Falco Project and identified as "core" for Falco are in scope for this policy; all others are excluded.
 - Any other exceptions to the rules provided by this policy require a formal core maintainer majority vote.
@@ -201,8 +212,8 @@ Documentation must be tied to a specific release and reflect the adoption level 
 
 Since software components may need to adapt to implement the requirements this proposal mandates, we assume the following stages are required to transition from the current state to the desired state fully:
 
-- Within Falco 0.38, at least stable features must be identified, and the adoption policy and relevant documentation should be implemented in Falco. Exceptions may be made temporarily.
-- Within Falco 0.39, all both adoption and deprecation must be implemented (at least in Falco) part of the official documentation (i.e., published both on GitHub and [falco.org](https://falco.org)).
-- Within Falco 1.0.0 (still not scheduled to date), the policies must be strictly implemented in Falco and all [core projects](https://github.com/falcosecurity/evolution#core) with [stable](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable) status.
+- Within Falco 0.38, at least stable features must be identified, and the adoption policy and relevant documentation should be implemented in Falco. Exceptions may be made temporarily for the deprecation policy.
+- Within subsequent releases and no later than Falco 1.0.0 (still not scheduled to date), all the policies must be strictly implemented in Falco and documented in [falco.org](falco.org). The [Rules Maturity Framework](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#rules-maturity-framework) must be adapted to ensure it aligns with the spirit of this proposal. Exceptions may be made temporarily for other [core projects](https://github.com/falcosecurity/evolution#core) with [stable](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable) status, assuming exceptions don't severely affect the main Falco distribution.
+- Within Falco 1.1.0, all the policies must be strictly implemented in Falco and in all [core projects](https://github.com/falcosecurity/evolution#core) with [stable](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable) status.
 
 During the transition phases, maintainers can fine-tune these policies and add further exceptions, eventually. After this initial transition phases, the policy is assumed to be established. From then on, any policy modifications, updates, and exceptions must be subject to a core maintainer majority vote to ensure the policy remains relevant and practical.
