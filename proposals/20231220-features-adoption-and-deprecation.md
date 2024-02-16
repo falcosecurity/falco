@@ -115,7 +115,7 @@ The adoption policy applies to any backward compatible user-facing changes which
 
 **Adoption rules**:
 1. A feature can be introduced at only one of the following levels:
-   - Sandbox: The feature must be opt-in (e.g., a feature flag), labeled as *Sandbox* and the user must be proactively informed by the experimental nature of the feature (i.e. emitting a notice when the feature is being enabled).
+   - Sandbox: The feature must be opt-in (e.g., using a feature flag), labeled as *Sandbox* and the user must be proactively informed by the experimental nature of the feature (i.e. emitting a notice when the feature is being enabled).
    - Incubating: The feature must be labeled as *Incubating*.
 2. A feature can be promoted *from Sandbox to Incubating* or *from Incubating to Stable* only after at least one release cycle has passed without user-facing changes to the feature.
 3. A feature cannot be demoted to a previous level.
