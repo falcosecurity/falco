@@ -1,4 +1,4 @@
-# On Host Anomaly Detection Framework - New `libadetect` Plugin
+# On Host Anomaly Detection Framework - New `anomalydetection` Plugin
 
 ## Motivation
 
@@ -46,7 +46,7 @@ The initial scope is to implement the Count Min Sketch algorithm using n shared 
 
 Furthermore, The Falco Project will provide adopters with valuable initial use cases, recommended thresholds, and callouts for known issues. One important consideration is the identification of SRE anti-patterns. Another consideration is to provide *very clear* guidance to adopters for setting and configuring parameters, including recommended minimums. Additionally, guidance should be provided on indicators to look for in order to determine if adjustments need to be made and in which direction, particularly when defining application behavior profiles.
 
-## High-Level Technical Design of a New `libadetect` Plugin
+## High-Level Technical Design of a New `anomalydetection` Plugin
 
 This document provides a high-level proposal with limited technical details.
 
@@ -87,10 +87,10 @@ Furthermore, over the past several Falco releases, we have significantly improve
 
 *Falco Community Call - January 17, 2024*
 
-See dedicated [Anomaly Detector Library Plugin `libadetect` HackMD](https://hackmd.io/Ss0_1avySUuxArBQm-oaGQ?view):
+See dedicated [HackMD](https://hackmd.io/Ss0_1avySUuxArBQm-oaGQ?view):
 
 - While not blocking the start of the plugin or an alpha dev version, there's feedback from @jasondellaluce that plugins cannot access the existing `libsinsp` filtercheck. It would be advantageous to enable this access to avoid reimplementing them and the constant risk of falling out of sync with `libs`. @leogr mentioned that supporting this over time should be possible.
-- We have discussed the plugins config and are currently undecided on whether the definition of the behavior profile per sketch, meaning the fields that are string concatenated together and counted, should reside in the plugins config or in the rules files. The latter would potentially require a new rules component. Final decisions will be deferred to a later stage to ensure the config is intuitive, and we want to guarantee proper sketch definition when attempting to run Falco rules using the `libadetect` plugin.  
+- We have discussed the plugins config and are currently undecided on whether the definition of the behavior profile per sketch, meaning the fields that are string concatenated together and counted, should reside in the plugins config or in the rules files. The latter would potentially require a new rules component. Final decisions will be deferred to a later stage to ensure the config is intuitive, and we want to guarantee proper sketch definition when attempting to run Falco rules using the `anomalydetection` plugin.  
 - One use case, namely determining if a rule has previously occurred in a container, could be addressed by this framework as well. However, we are currently unsure how to expose the rule names, as `libsinsp` is not aware of them. This may be an optimization we can address later and does not block the development of an initial version.
 - Future use cases might involve counting distinct values, utilizing the hyper log log algorithm. However, there will be additional technical challenges to overcome.
 - Finally, just to reiterate some feedback from the KubeCon talk, there's a suggestion that, perhaps in the future, we could pass intelligence back and forth between the drivers and userspace. This idea has been discussed independently, especially in the context of kernel-side filtering. However, such capabilities would be a long-term consideration.
