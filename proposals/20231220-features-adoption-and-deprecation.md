@@ -90,6 +90,14 @@ In the context of this proposal, only changes to **public APIs** are assumed to 
 
 Public APIs are defined as those supporting Falco functioning and explicitly intended for user usage. Internal APIs consumed by Falco or other tools are out of scope for this area. For instance, the driver APIs or libs APIs are intended to be mainly consumed by Falco and not by users.
 
+### Platform Support Area
+
+Platform support for Falco encompasses the range of platforms, systems, and environments it is designed to operate in. Platform support may significantly vary by Falco's data sources and use cases. For example, its compatibility differs when utilized for Kubernetes audit events versus system call events. Additionally, platform support can be influenced by deployment methods (e.g., directly on a host versus within Kubernetes) or configurations (e.g., running in privileged versus least privileged mode).
+
+Given the diversity of potential platforms and setups, only those explicitly listed in Falco's documentation are considered officially supported. While Falco may function on other platforms, official support is guaranteed solely for documented ones.
+
+Therefore, changes in platform compatibility or behavior that are documented explicitly assumed to be user-facing changes to the Platform Support area.
+
 ### Release Cycle
 
 In the context of this proposal, a release cycle is the period between two consecutive major or minor releases of Falco. Hotfix/Patch releases must not be counted.
