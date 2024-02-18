@@ -195,8 +195,6 @@ TEST_F(test_falco_engine, rule_incorrect_override_type)
     priority: append
 )END";
 
-	std::string rule_name = "failing_rule";
-
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_TRUE(check_error_message("Key 'priority' cannot be appended to, use 'replace' instead"));
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["context"]["snippet"]).find("priority: append") != std::string::npos);
@@ -219,8 +217,6 @@ TEST_F(test_falco_engine, rule_incorrect_append_override)
     desc: replace
     condition: append
 )END";
-
-	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	
@@ -608,8 +604,6 @@ TEST_F(test_falco_engine, rule_override_without_field)
     condition: append
 )END";
 
-	std::string rule_name = "failing_rule";
-
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_TRUE(check_error_message("An append override for 'condition' was specified but 'condition' is not defined"));
 }
@@ -631,8 +625,6 @@ TEST_F(test_falco_engine, rule_override_extra_field)
     desc: replace
     condition: append
 )END";
-
-	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_TRUE(check_error_message("Unexpected key 'priority'"));
