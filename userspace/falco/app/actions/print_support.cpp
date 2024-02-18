@@ -98,7 +98,6 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s)
 	if(s.options.print_support)
 	{
 		nlohmann::json support;
-		std::string cmdline;
 
 		if(get_sysinfo(support) != 0)
 		{
