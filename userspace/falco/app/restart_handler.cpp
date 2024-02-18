@@ -158,7 +158,6 @@ void falco::app::restart_handler::watcher_loop() noexcept
             // at least we don't make users wait for the timeout.
             if (should_restart)
             {
-                should_restart = false;
                 // todo(jasondellaluce): make this a callback too maybe?
                 g_restart_signal.trigger();
                 return;
