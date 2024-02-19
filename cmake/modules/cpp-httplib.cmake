@@ -16,7 +16,7 @@
 # cpp-httplib (https://github.com/yhirose/cpp-httplib)
 #
 
-option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ON)
+option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ${USE_BUNDLED_DEPS})
 
 if(CPPHTTPLIB_INCLUDE)
     # we already have cpp-httplib
