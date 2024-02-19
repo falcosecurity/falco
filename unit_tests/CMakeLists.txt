@@ -19,67 +19,57 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.12.1
+  GIT_TAG        v1.14.0
 )
 
 FetchContent_MakeAvailable(googletest)
 
-file(GLOB_RECURSE ENGINE_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp)
-file(GLOB_RECURSE FALCO_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/falco/*.cpp)
-
 # Create a libscap_test_var.h file with some variables used by our tests
 # for example the kmod path or the bpf path.
 configure_file (
-    "${CMAKE_CURRENT_SOURCE_DIR}/falco_test_var.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/falco_test_var.h"
+    ${CMAKE_CURRENT_SOURCE_DIR}/falco_test_var.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/falco_test_var.h
 )
 
-set(FALCO_UNIT_TESTS_SOURCES
-  "${ENGINE_TESTS}"
-  falco/test_configuration.cpp
-  falco/app/actions/test_select_event_sources.cpp
-  falco/app/actions/test_load_config.cpp
+add_executable(falco_unit_tests
+    test_falco_engine.cpp
+    engine/test_add_source.cpp
+    engine/test_alt_rule_loader.cpp
+    engine/test_enable_rule.cpp
+    engine/test_falco_utils.cpp
+    engine/test_filter_details_resolver.cpp
+    engine/test_filter_macro_resolver.cpp
+    engine/test_filter_warning_resolver.cpp
+    engine/test_plugin_requirements.cpp
+    engine/test_rule_loader.cpp
+    engine/test_rulesets.cpp
+    falco/test_configuration.cpp
+    falco/app/actions/test_select_event_sources.cpp
+    falco/app/actions/test_load_config.cpp
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-  list(APPEND FALCO_UNIT_TESTS_SOURCES
-    falco/test_atomic_signal_handler.cpp
-    falco/app/actions/test_configure_interesting_sets.cpp
-    falco/app/actions/test_configure_syscall_buffer_num.cpp)
+    target_sources(falco_unit_tests
+    PRIVATE
+        falco/test_atomic_signal_handler.cpp
+        falco/app/actions/test_configure_interesting_sets.cpp
+        falco/app/actions/test_configure_syscall_buffer_num.cpp
+    )
 endif()
 
-set(FALCO_UNIT_TESTS_INCLUDES
-    PRIVATE
+target_include_directories(falco_unit_tests
+PRIVATE
     ${CMAKE_SOURCE_DIR}/userspace
     ${CMAKE_BINARY_DIR}/userspace/falco # we need it to include indirectly `config_falco.h` file
     ${CMAKE_SOURCE_DIR}/userspace/engine # we need it to include indirectly `falco_common.h` file
-	"${CMAKE_CURRENT_BINARY_DIR}" # we need it to include `falco_test_var.h`
+    ${CMAKE_CURRENT_BINARY_DIR} # we need it to include `falco_test_var.h`
 )
 
-set(FALCO_UNIT_TESTS_DEPENDENCIES
-  gtest
-  gtest_main
-  falco_application
+target_link_libraries(falco_unit_tests
+    falco_application
+    GTest::gtest
+    GTest::gtest_main
 )
-
-get_target_property(FALCO_APPLICATION_LIBRARIES falco_application LINK_LIBRARIES)
-
-set(FALCO_UNIT_TESTS_LIBRARIES
-  gtest
-  gtest_main
-  falco_application
-  ${FALCO_APPLICATION_LIBRARIES}
-)
-
-message(STATUS "FALCO_UNIT_TESTS_SOURCES: ${FALCO_UNIT_TESTS_SOURCES}")
-message(STATUS "FALCO_UNIT_TESTS_INCLUDES: ${FALCO_UNIT_TESTS_INCLUDES}")
-message(STATUS "FALCO_UNIT_TESTS_DEPENDENCIES: ${FALCO_UNIT_TESTS_DEPENDENCIES}")
-message(STATUS "FALCO_UNIT_TESTS_LIBRARIES: ${FALCO_UNIT_TESTS_LIBRARIES}")
-
-add_executable(falco_unit_tests ${FALCO_UNIT_TESTS_SOURCES})
-target_include_directories(falco_unit_tests ${FALCO_UNIT_TESTS_INCLUDES})
-target_link_libraries(falco_unit_tests ${FALCO_UNIT_TESTS_LIBRARIES})
-add_dependencies(falco_unit_tests ${FALCO_UNIT_TESTS_DEPENDENCIES})
 
 if (EMSCRIPTEN)
 	target_compile_options(falco_unit_tests PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
