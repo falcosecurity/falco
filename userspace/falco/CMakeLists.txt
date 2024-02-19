@@ -84,9 +84,7 @@ set(
   "${YAMLCPP_LIB}"
 )
 
-if(USE_BUNDLED_DEPS)
-  list(APPEND FALCO_DEPENDENCIES yamlcpp)
-endif()
+list(APPEND FALCO_DEPENDENCIES yamlcpp)
 
 if(NOT WIN32)
   list(
