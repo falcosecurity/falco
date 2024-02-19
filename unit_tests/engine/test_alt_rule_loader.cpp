@@ -163,8 +163,7 @@ public:
 
 	inline std::shared_ptr<filter_ruleset> new_ruleset() override
 	{
-		std::shared_ptr<filter_ruleset> ret(new test_ruleset(m_filter_factory));
-		return ret;
+		return std::make_shared<test_ruleset>(m_filter_factory);
 	}
 
 	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
@@ -235,12 +234,9 @@ static std::shared_ptr<rule_loader::configuration> create_configuration(sinsp& i
 									sinsp_filter_check_list& filterchecks,
 									indexed_vector<falco_source>& sources)
 {
-	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
-		new sinsp_filter_factory(&inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-		new sinsp_evt_formatter_factory(&inspector, filterchecks));
-	auto ruleset_factory = std::shared_ptr<filter_ruleset_factory>(
-		new evttype_index_ruleset_factory(filter_factory));
+	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
+	auto formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
+	auto ruleset_factory = std::make_shared<evttype_index_ruleset_factory>(filter_factory);
 
 	falco_source syscall_source;
 	syscall_source.name = syscall_source_name;
@@ -251,12 +247,9 @@ static std::shared_ptr<rule_loader::configuration> create_configuration(sinsp& i
 
 	sources.insert(syscall_source, syscall_source_name);
 
-	std::shared_ptr<rule_loader::configuration> configuration =
-		std::make_shared<rule_loader::configuration>(content,
-							     sources,
-							     "test configuration");
-
-	return configuration;
+	return std::make_shared<rule_loader::configuration>(content,
+	                                                    sources,
+	                                                    "test configuration");
 }
 
 static void load_rules(sinsp& inspector,
@@ -330,22 +323,15 @@ TEST(engine_loader_alt_loader, falco_engine_alternate_loader)
 	sinsp inspector;
 	sinsp_filter_check_list filterchecks;
 
-	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
-		new sinsp_filter_factory(&inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-		new sinsp_evt_formatter_factory(&inspector, filterchecks));
-	auto ruleset_factory = std::shared_ptr<filter_ruleset_factory>(
-		new test_ruleset_factory(filter_factory));
+	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
+	auto formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
+	auto ruleset_factory = std::make_shared<test_ruleset_factory>(filter_factory);
 
-	engine.add_source(syscall_source_name,
-			  filter_factory,
-			  formatter_factory,
-			  ruleset_factory);
+	engine.add_source(syscall_source_name, filter_factory, formatter_factory, ruleset_factory);
 
-	std::shared_ptr<rule_loader::reader> reader(new test_reader());
-	test_collector* test_col = new test_collector();
-	std::shared_ptr<rule_loader::collector> collector(test_col);
-	std::shared_ptr<rule_loader::compiler> compiler(new test_compiler());
+	auto reader = std::make_shared<test_reader>();
+	auto collector = std::make_shared<test_collector>();
+	auto compiler = std::make_shared<test_compiler>();
 
 	engine.set_rule_reader(reader);
 	engine.set_rule_collector(collector);
@@ -357,7 +343,7 @@ TEST(engine_loader_alt_loader, falco_engine_alternate_loader)
 
 	engine.load_rules(content, "test_rules.yaml");
 
-	EXPECT_EQ(test_col->test_object_infos.size(), 2);
+	EXPECT_EQ(collector->test_object_infos.size(), 2);
 
 	std::shared_ptr<filter_ruleset> ruleset = engine.ruleset_for_source(syscall_source_name);
 	std::set<std::string>& defined_properties = std::dynamic_pointer_cast<test_ruleset>(ruleset)->defined_properties;

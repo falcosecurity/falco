@@ -23,15 +23,15 @@ static bool check_requirements(std::string& err,
 			       const std::vector<falco_engine::plugin_version_requirement>& plugins,
 			       const std::string& ruleset_content)
 {
-	std::unique_ptr<falco_engine> e(new falco_engine());
+	falco_engine e;
 	falco::load_result::rules_contents_t c = {{"test", ruleset_content}};
 
-	auto res = e->load_rules(c.begin()->second, c.begin()->first);
+	auto res = e.load_rules(c.begin()->second, c.begin()->first);
 	if(!res->successful())
 	{
 		return false;
 	}
-	return e->check_plugin_requirements(plugins, err);
+	return e.check_plugin_requirements(plugins, err);
 }
 
 TEST(PluginRequirements, check_plugin_requirements_success)

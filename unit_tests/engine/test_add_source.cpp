@@ -54,12 +54,9 @@ TEST(AddSource, basic)
 	sinsp inspector;
 	sinsp_filter_check_list filterchecks;
 
-	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
-		new sinsp_filter_factory(&inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-		new sinsp_evt_formatter_factory(&inspector, filterchecks));
-	test_ruleset_factory *test_factory = new test_ruleset_factory(filter_factory);
-	auto ruleset_factory = std::shared_ptr<filter_ruleset_factory>(test_factory);
+	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
+	auto formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
+	auto ruleset_factory = std::make_shared<test_ruleset_factory>(filter_factory);
 
 	falco_source syscall_source;
 	syscall_source.name = syscall_source_name;
@@ -84,6 +81,6 @@ TEST(AddSource, basic)
 	ASSERT_EQ(engine.ruleset_factory_for_source(syscall_source_name), ruleset_factory);
 	ASSERT_EQ(engine.ruleset_factory_for_source(source_idx), ruleset_factory);
 
-	ASSERT_EQ(engine.ruleset_for_source(syscall_source_name), test_factory->ruleset);
-	ASSERT_EQ(engine.ruleset_for_source(source_idx), test_factory->ruleset);
+	ASSERT_EQ(engine.ruleset_for_source(syscall_source_name), ruleset_factory->ruleset);
+	ASSERT_EQ(engine.ruleset_for_source(source_idx), ruleset_factory->ruleset);
 }
