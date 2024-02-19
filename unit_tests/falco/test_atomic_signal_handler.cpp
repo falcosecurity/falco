@@ -15,15 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <gtest/gtest.h>
-#include <future>
-#include <thread>
-#include <vector>
-#include <memory>
-#include <chrono>
- 
 #include <falco/atomic_signal_handler.h>
 #include <falco/logger.h>
+
+#include <gtest/gtest.h>
+
+#include <chrono>
+#include <future>
+#include <memory>
+#include <vector>
 
 TEST(AtomicSignalHandler, lock_free_implementation)
 {
@@ -33,55 +33,50 @@ TEST(AtomicSignalHandler, lock_free_implementation)
 TEST(AtomicSignalHandler, handle_once_wait_consistency)
 {
 	constexpr const auto thread_num = 10;
-	constexpr const auto thread_wait_sec = 2;
-	constexpr const auto handler_wait_sec = 1;
+	constexpr const std::chrono::seconds thread_wait_sec{2};
+	constexpr const std::chrono::seconds handler_wait_sec{1};
 
 	// have a shared signal handler
 	falco::atomic_signal_handler handler;
 
 	// launch a bunch of threads all syncing on the same handler
-	typedef struct
+	struct task_result_t
 	{
 		bool handled;
-		uint64_t duration_secs;
-	} task_result_t;
+		std::chrono::seconds duration_secs;
+	};
+
 	std::vector<std::future<task_result_t>> futures;
-	std::vector<std::unique_ptr<std::thread>> threads;
 	for (int i = 0; i < thread_num; i++)
 	{
-		std::packaged_task<task_result_t()> task([&handler, &thread_wait_sec]{
-			auto start = std::chrono::high_resolution_clock::now();
-			task_result_t res;
-			res.handled = false;
-			while (!handler.handled())
-			{
-				if (handler.triggered())
+		futures.emplace_back(std::async(std::launch::async,
+			[&handler, thread_wait_sec]() {
+				auto start = std::chrono::high_resolution_clock::now();
+				task_result_t res;
+				res.handled = false;
+				while (!handler.handled())
 				{
-					res.handled = handler.handle([&thread_wait_sec]{
-						std::this_thread::sleep_for (std::chrono::seconds(thread_wait_sec));
-					});
+					if (handler.triggered())
+					{
+						res.handled = handler.handle([thread_wait_sec]() {
+							std::this_thread::sleep_for(thread_wait_sec);
+						});
+					}
 				}
-			}
-			auto diff = std::chrono::high_resolution_clock::now() - start;
-			res.duration_secs = std::chrono::duration_cast<std::chrono::seconds>(diff).count();
-			return res;
-		});
-		futures.push_back(task.get_future());
-		threads.emplace_back();
-		threads[i].reset(new std::thread(std::move(task)));
+				auto diff = std::chrono::high_resolution_clock::now() - start;
+				res.duration_secs = std::chrono::duration_cast<std::chrono::seconds>(diff);
+				return res;
+			}));
 	}
 
 	// wait a bit, then trigger the signal handler from the main thread
 	auto total_handled = 0;
 	auto start = std::chrono::high_resolution_clock::now();
-	std::this_thread::sleep_for (std::chrono::seconds(handler_wait_sec));
+	std::this_thread::sleep_for(handler_wait_sec);
 	handler.trigger();
 	for (int i = 0; i < thread_num; i++)
 	{
-		// we need to check that all threads didn't quit before
-		// the handle() function finished executing
-		futures[i].wait();
-		threads[i]->join();
+		// wait for all threads to finish and get the results from the futures
 		auto res = futures[i].get();
 		if (res.handled)
 		{
@@ -92,7 +87,7 @@ TEST(AtomicSignalHandler, handle_once_wait_consistency)
 
 	// check that the total time is consistent with the expectations
 	auto diff = std::chrono::high_resolution_clock::now() - start;
-	auto secs = std::chrono::duration_cast<std::chrono::seconds>(diff).count();
+	auto secs = std::chrono::duration_cast<std::chrono::seconds>(diff);
 	ASSERT_GE(secs, thread_wait_sec + handler_wait_sec);
 
 	// check that only one thread handled the signal

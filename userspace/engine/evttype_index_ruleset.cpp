@@ -199,7 +199,7 @@ void evttype_index_ruleset::add(
 {
 	try
 	{
-		std::shared_ptr<filter_wrapper> wrap(new filter_wrapper());
+		auto wrap = std::make_shared<filter_wrapper>();
 		wrap->rule = rule;
 		wrap->filter = filter;
 		if(rule.source == falco_common::syscall_source)
@@ -369,7 +369,7 @@ libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::enabled_sc_codes(uint1
 	}
 	return m_rulesets[ruleset]->sc_codes();
 }
-	
+
 libsinsp::events::set<ppm_event_code> evttype_index_ruleset::enabled_event_codes(uint16_t ruleset)
 {
 	if(m_rulesets.size() < (size_t)ruleset + 1)
