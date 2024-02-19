@@ -16,7 +16,7 @@
 # cxxopts (https://github.com/jarro2783/cxxopts)
 #
 
-option(USE_BUNDLED_CXXOPTS "Enable building of the bundled cxxopts" ON)
+option(USE_BUNDLED_CXXOPTS "Enable building of the bundled cxxopts" ${USE_BUNDLED_DEPS})
 
 if(CXXOPTS_INCLUDE_DIR)
     # we already have cxxopts
