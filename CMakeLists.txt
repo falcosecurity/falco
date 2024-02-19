@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 project(falco)
 
-option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
+option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" ON)
 option(USE_DYNAMIC_LIBELF "Dynamically link libelf" ON)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
