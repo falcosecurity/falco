@@ -58,10 +58,8 @@ struct falco_source
 
 	inline bool is_field_defined(const std::string& field) const
 	{
-		auto *chk = filter_factory->new_filtercheck(field.c_str());
-		if (chk)
+		if (filter_factory->new_filtercheck(field.c_str()) != nullptr)
 		{
-			delete(chk);
 			return true;
 		}
 		return false;

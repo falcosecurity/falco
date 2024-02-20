@@ -439,7 +439,7 @@ bool rule_loader::compiler::compile_condition(
 	sinsp_filter_compiler compiler(filter_factory, ast_out.get());
 	try
 	{
-		filter_out.reset(compiler.compile());
+		filter_out = std::move(compiler.compile());
 	}
 	catch(const sinsp_exception& e)
 	{
