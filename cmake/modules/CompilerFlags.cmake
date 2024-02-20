@@ -72,6 +72,9 @@ if(NOT MSVC)
 	set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
+	set(CMAKE_C_FLAGS_SANITIZERS "-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=undefined ${FALCO_EXTRA_DEBUG_FLAGS}")
+	set(CMAKE_CXX_FLAGS_SANITIZERS "-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=undefined ${FALCO_EXTRA_DEBUG_FLAGS}")
+
 else() # MSVC
 	set(MINIMAL_BUILD ON)
 

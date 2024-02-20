@@ -56,19 +56,27 @@ jobs:
 
   build-dev-minimal:
     uses: ./.github/workflows/reusable_build_dev.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Debug", "Sanitizers"]
     with:
       arch: x86_64
       git_ref: ${{ github.event.pull_request.head.sha }}
       minimal: true
-      build_type: Debug
+      build_type: ${{ matrix.build_type }}
 
   build-dev-minimal-arm64:
     uses: ./.github/workflows/reusable_build_dev.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Debug", "Sanitizers"]
     with:
       arch: aarch64
       git_ref: ${{ github.event.pull_request.head.sha }}
       minimal: true
-      build_type: Debug
+      build_type: ${{ matrix.build_type }}
 
   # builds using system deps, checking out the PR's code
   # note: this also runs a command that generates an output of form: "<engine_version> <some_hash>",
