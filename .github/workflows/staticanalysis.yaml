@@ -19,10 +19,11 @@ jobs:
 
       - name: Build and run cppcheck 🏎️
         run: |
-          mkdir build
-          cd build && cmake -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
-          make -j4 cppcheck
-          make -j4 cppcheck_htmlreport
+          cmake -B build -S . \
+                -DCMAKE_BUILD_TYPE="release" \
+                -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DBUILD_BPF=Off -DBUILD_DRIVER=Off
+          cmake --build build -j4 --target cppcheck
+          cmake --build build -j4 --target cppcheck_htmlreport
 
       - name: Upload reports ⬆️
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3

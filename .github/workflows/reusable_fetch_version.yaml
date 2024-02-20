@@ -5,34 +5,33 @@ on:
       version:
         description: "Falco version"
         value: ${{ jobs.fetch-version.outputs.version }}
-    
+
 jobs:
   # We need to use an ubuntu-latest to fetch Falco version because
   # Falco version is computed by some cmake scripts that do git sorceries
   # to get the current version.
-  # But centos7 jobs have a git version too old and actions/checkout does not 
+  # But centos7 jobs have a git version too old and actions/checkout does not
   # fully clone the repo, but uses http rest api instead.
   fetch-version:
     runs-on: ubuntu-latest
     # Map the job outputs to step outputs
     outputs:
-      version: ${{ steps.store_version.outputs.version }}  
+      version: ${{ steps.store_version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
-          
+
       - name: Install build dependencies
         run: |
-          sudo apt update 
+          sudo apt update
           sudo apt install -y cmake build-essential
-      
+
       - name: Configure project
         run: |
-          mkdir build && cd build
-          cmake -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off ..
-          
+          cmake -B build -S . -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off
+
       - name: Load and store Falco version output
         id: store_version
         run: |

@@ -60,16 +60,11 @@ jobs:
 
     - name: Prepare project
       run: |
-          mkdir build
-          pushd build
-          cmake -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=Off -DUSE_BUNDLED_NLOHMANN_JSON=On -DUSE_BUNDLED_CXXOPTS=On -DUSE_BUNDLED_CPPHTTPLIB=On ..
-          popd
+          cmake -B build -S . -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=Off -DUSE_BUNDLED_NLOHMANN_JSON=On -DUSE_BUNDLED_CXXOPTS=On -DUSE_BUNDLED_CPPHTTPLIB=On
 
     - name: Build
       run: |
-          pushd build
-          KERNELDIR=/lib/modules/$(uname -r)/build make -j4 all
-          popd
+          KERNELDIR=/lib/modules/$(uname -r)/build cmake --build build -j4
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@47b3d888fe66b639e431abf22ebca059152f1eea # v3.24.5
