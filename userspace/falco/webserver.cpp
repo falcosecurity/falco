@@ -43,13 +43,13 @@ void falco_webserver::start(
     // allocate and configure server
     if (ssl_enabled)
     {
-        m_server = new httplib::SSLServer(
+        m_server = std::make_unique<httplib::SSLServer>(
             ssl_certificate.c_str(),
             ssl_certificate.c_str());
     }
     else
     {
-        m_server = new httplib::Server();
+        m_server = std::make_unique<httplib::Server>();
     }
 
     // configure server
@@ -71,8 +71,7 @@ void falco_webserver::start(
     // run server in a separate thread
     if (!m_server->is_valid())
     {
-        delete m_server;
-        m_server = NULL;
+        m_server = nullptr;
         throw falco_exception("invalid webserver configuration");
     }
 
@@ -111,7 +110,7 @@ void falco_webserver::stop()
 {
     if (m_running)
     {
-        if (m_server != NULL)
+        if (m_server != nullptr)
         {
             m_server->stop();
         }
@@ -119,10 +118,9 @@ void falco_webserver::stop()
         {
             m_server_thread.join();
         }
-        if (m_server != NULL)
+        if (m_server != nullptr)
         {
-            delete m_server;
-            m_server = NULL;
+            m_server = nullptr;
         }
         m_running = false;
     }

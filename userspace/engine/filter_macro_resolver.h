@@ -40,11 +40,6 @@ class filter_macro_resolver
 			class and is deleted automatically.
 			\return true if at least one of the defined macros is resolved
 		*/
-		bool run(libsinsp::filter::ast::expr*& filter);
-
-		/*!
-			\brief Version of run() that works with shared pointers
-		*/
 		bool run(std::shared_ptr<libsinsp::filter::ast::expr>& filter);
 
 		/*!
