@@ -172,7 +172,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				if (is_input)
 				{
 					auto gen_check = src_info->inspector->new_generic_filtercheck();
-					src_info->filterchecks->add_filter_check(gen_check);
+					src_info->filterchecks->add_filter_check(std::move(gen_check));
 				}
 				used_plugins.insert(plugin->name());
 			}
