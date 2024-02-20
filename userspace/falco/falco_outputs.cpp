@@ -77,45 +77,41 @@ falco_outputs::~falco_outputs()
 #ifndef __EMSCRIPTEN__
 	this->stop_worker();
 #endif
-	for(auto o : m_outputs)
-	{
-		delete o;
-	}
 }
 
 // This function is called only at initialization-time by the constructor
 void falco_outputs::add_output(const falco::outputs::config &oc)
 {
-	falco::outputs::abstract_output *oo;
+	std::unique_ptr<falco::outputs::abstract_output> oo;
 
 	if(oc.name == "file")
 	{
-		oo = new falco::outputs::output_file();
+		oo = std::make_unique<falco::outputs::output_file>();
 	}
 #ifndef _WIN32
 	else if(oc.name == "program")
 	{
-		oo = new falco::outputs::output_program();
+		oo = std::make_unique<falco::outputs::output_program>();
 	}
 #endif
 	else if(oc.name == "stdout")
 	{
-		oo = new falco::outputs::output_stdout();
+		oo = std::make_unique<falco::outputs::output_stdout>();
 	}
 #ifndef _WIN32
 	else if(oc.name == "syslog")
 	{
-		oo = new falco::outputs::output_syslog();
+		oo = std::make_unique<falco::outputs::output_syslog>();
 	}
 #endif
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	else if(oc.name == "http")
 	{
-		oo = new falco::outputs::output_http();
+		oo = std::make_unique<falco::outputs::output_http>();
 	}
 	else if(oc.name == "grpc")
 	{
-		oo = new falco::outputs::output_grpc();
+		oo = std::make_unique<falco::outputs::output_grpc>();
 	}
 #endif
 	else
@@ -126,12 +122,11 @@ void falco_outputs::add_output(const falco::outputs::config &oc)
 	std::string init_err;
 	if (oo->init(oc, m_buffered, m_hostname, m_json_output, init_err))
 	{
-		m_outputs.push_back(oo);
+		m_outputs.push_back(std::move(oo));
 	}
 	else
 	{
 		falco_logger::log(falco_logger::level::ERR, "Failed to init output: " + init_err);
-		delete(oo);
 	}
 }
 
@@ -323,12 +318,12 @@ void falco_outputs::worker() noexcept
 		m_queue.pop(cmsg);
 #endif
 
-		for(auto o : m_outputs)
+		for(const auto& o : m_outputs)
 		{
 			wd.set_timeout(timeout, o->get_name());
 			try
 			{
-				process_msg(o, cmsg);
+				process_msg(o.get(), cmsg);
 			}
 			catch(const std::exception &e)
 			{

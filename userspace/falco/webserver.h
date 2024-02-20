@@ -45,6 +45,6 @@ public:
 
 private:
 	bool m_running = false;
-	httplib::Server* m_server = NULL;
+	std::unique_ptr<httplib::Server> m_server = nullptr;
 	std::thread m_server_thread;
 };

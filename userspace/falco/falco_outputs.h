@@ -93,7 +93,7 @@ public:
 private:
 	std::unique_ptr<falco_formats> m_formats;
 
-	std::vector<falco::outputs::abstract_output *> m_outputs;
+	std::vector<std::unique_ptr<falco::outputs::abstract_output>> m_outputs;
 
 	bool m_buffered;
 	bool m_json_output;

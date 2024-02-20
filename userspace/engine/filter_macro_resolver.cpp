@@ -20,23 +20,6 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
-bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
-{
-	m_unknown_macros.clear();
-	m_resolved_macros.clear();
-	m_errors.clear();
-
-	visitor v(m_errors, m_unknown_macros, m_resolved_macros, m_macros);
-	v.m_node_substitute = nullptr;
-	filter->accept(&v);
-	if (v.m_node_substitute)
-	{
-		delete filter;
-		filter = v.m_node_substitute.release();
-	}
-	return !m_resolved_macros.empty();
-}
-
 bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& filter)
 {
 	m_unknown_macros.clear();
