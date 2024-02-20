@@ -53,9 +53,7 @@ jobs:
 
       - name: Prepare project
         run: |
-          mkdir build
-          pushd build
-          cmake \
+          cmake -B build -S .\
             -DBUILD_FALCO_UNIT_TESTS=On \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
             -DBUILD_BPF=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
@@ -65,14 +63,10 @@ jobs:
             -DUSE_BUNDLED_NLOHMANN_JSON=On \
             -DUSE_BUNDLED_CXXOPTS=On \
             -DUSE_BUNDLED_CPPHTTPLIB=On \
-            ..
-          popd
 
       - name: Build
         run: |
-          pushd build
-          KERNELDIR=/lib/modules/$(uname -r)/build make -j4 all
-          popd
+          KERNELDIR=/lib/modules/$(uname -r)/build cmake --build build -j4
 
       - name: Run unit tests
         run: |

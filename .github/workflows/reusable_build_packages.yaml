@@ -21,23 +21,23 @@ jobs:
       - name: Install build dependencies
         run: |
           dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel elfutils-libelf-devel
-    
+
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Build modern BPF skeleton
         run: |
-          mkdir skeleton-build && cd skeleton-build
-          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ inputs.version }} ..
-          make ProbeSkeleton -j6
-          
+          cmake -B skeleton-build -S . \
+                -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ inputs.version }}
+          cmake --build skeleton-build --target ProbeSkeleton -j6
+
       - name: Upload skeleton
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: skeleton-build/skel_dir/bpf_probe.skel.h
           retention-days: 1
-          
+
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
@@ -51,30 +51,26 @@ jobs:
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
           yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd
-    
+
       - name: Checkout
         # It is not possible to upgrade the checkout action to versions >= v4.0.0 because of incompatibilities with centos 7's libc.
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
-    
+
       - name: Download skeleton
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
-          
+
       - name: Install updated cmake
         run: |
-          curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5-linux-$(uname -m).tar.gz
-          gzip -d /tmp/cmake.tar.gz
-          tar -xpf /tmp/cmake.tar --directory=/tmp
-          cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
-          rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)
-    
+          curl -L https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5-linux-$(uname -m).tar.gz \
+            | tar --directory=/usr --strip-components=1 -xzp
+
       - name: Prepare project
         run: |
-          mkdir build && cd build
           source /opt/rh/devtoolset-9/enable
-          cmake \
+          cmake -B build -S . \
               -DCMAKE_BUILD_TYPE=Release \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
@@ -82,20 +78,17 @@ jobs:
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
-              -DFALCO_VERSION=${{ inputs.version }} \
-              ..
-              
+              -DFALCO_VERSION=${{ inputs.version }}
+
       - name: Build project
         run: |
-          cd build
           source /opt/rh/devtoolset-9/enable
-          make falco -j6
-      
+          cmake --build build --target falco -j6
+
       - name: Build packages
         run: |
-          cd build
           source /opt/rh/devtoolset-9/enable
-          make package
+          cmake --build build --target package
 
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
@@ -103,27 +96,27 @@ jobs:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
-            
+
       - name: Upload Falco deb package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
-      
+
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.rpm
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
-            
+
   # The musl build job is currently disabled because we link libelf dynamically and it is
   # not possible to dynamically link with musl
   build-musl-package:
     # x86_64 only for now
     # if: ${{ inputs.arch == 'x86_64' }}
-    if: false 
+    if: false
     runs-on: ubuntu-latest
     container: alpine:3.17
     steps:
@@ -131,32 +124,33 @@ jobs:
       - name: Install build dependencies
         run: |
           apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang
-    
+
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
-          
+
       - name: Prepare project
         run: |
-          mkdir build && cd build
-          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../ -DFALCO_VERSION=${{ inputs.version }}
-          
+          cmake -B build -S . \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCPACK_GENERATOR=TGZ \
+                -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
+                -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
+
       - name: Build project
         run: |
-          cd build
-          make -j6 all
-      
+          cmake --build build -j6
+
       - name: Build packages
         run: |
-          cd build
-          make -j6 package
+          cmake --build build -j6 --target package
 
       - name: Rename static package
         run: |
           cd build
-          mv falco-${{ inputs.version }}-x86_64.tar.gz falco-${{ inputs.version }}-static-x86_64.tar.gz 
-          
+          mv falco-${{ inputs.version }}-x86_64.tar.gz falco-${{ inputs.version }}-static-x86_64.tar.gz
+
       - name: Upload Falco static package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
@@ -178,16 +172,15 @@ jobs:
         uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
         with:
           node-version: 14
-    
+
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
-          
+
       - name: Prepare project
         run: |
-          mkdir build && cd build
-          emcmake cmake \
+          emcmake cmake -B build -S . \
             -DBUILD_BPF=Off \
             -DBUILD_DRIVER=Off \
             -DBUILD_LIBSCAP_MODERN_BPF=OFF \
@@ -195,24 +188,23 @@ jobs:
             -DUSE_BUNDLED_DEPS=On \
             -DFALCO_ETC_DIR=/etc/falco \
             -DBUILD_FALCO_UNIT_TESTS=On \
-            -DFALCO_VERSION=${{ inputs.version }} \
-            ..
-          
+            -DFALCO_VERSION=${{ inputs.version }}
+
       - name: Build project
         run: |
           cd build
           emmake make -j6 all
-      
+
       - name: Run unit Tests
         run: |
           cd build
           node ./unit_tests/falco_unit_tests.js
-      
+
       - name: Build packages
         run: |
           cd build
           emmake make -j6 package
-          
+
       - name: Upload Falco WASM package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
@@ -229,11 +221,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      # NOTE: Backslash doesn't work as line continuation on Windows.
       - name: Prepare project
         run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }} ..
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
@@ -267,9 +258,8 @@ jobs:
 
       - name: Prepare project
         run: |
-          mkdir build
-          cd build
-          cmake -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }} ..
+          cmake -B build -S . \
+                -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
