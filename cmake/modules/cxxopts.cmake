@@ -44,5 +44,5 @@ else()
 endif()
 
 if(NOT TARGET cxxopts)
-	add_custom_target(cxxopts)
+    add_custom_target(cxxopts)
 endif()
