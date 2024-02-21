@@ -32,6 +32,8 @@ else()
     set(CPPHTTPLIB_SRC "${PROJECT_BINARY_DIR}/cpp-httplib-prefix/src/cpp-httplib")
     set(CPPHTTPLIB_INCLUDE "${CPPHTTPLIB_SRC}")
 
+    message(STATUS "Using bundled cpp-httplib in ${CPPHTTPLIB_SRC}")
+
     ExternalProject_Add(cpp-httplib
         PREFIX "${PROJECT_BINARY_DIR}/cpp-httplib-prefix"
         URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.13.1.tar.gz"
