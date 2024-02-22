@@ -21,13 +21,8 @@ option(USE_BUNDLED_CXXOPTS "Enable building of the bundled cxxopts" ${USE_BUNDLE
 if(CXXOPTS_INCLUDE_DIR)
     # we already have cxxopts
 elseif(NOT USE_BUNDLED_CXXOPTS)
-    find_path(CXXOPTS_INCLUDE_DIR NAMES cxxopts.hpp)
-
-    if(CXXOPTS_INCLUDE_DIR)
-        message(STATUS "Found cxxopts: include: ${CXXOPTS_INCLUDE_DIR}")
-    else()
-        message(FATAL_ERROR "Couldn't find system cxxopts")
-    endif()
+    find_package(cxxopts CONFIG REQUIRED)
+    get_target_property(CXXOPTS_INCLUDE_DIR cxxopts::cxxopts INTERFACE_INCLUDE_DIRECTORIES)
 else()
     set(CXXOPTS_SRC "${PROJECT_BINARY_DIR}/cxxopts-prefix/src/cxxopts/")
     set(CXXOPTS_INCLUDE_DIR "${CXXOPTS_SRC}/include")

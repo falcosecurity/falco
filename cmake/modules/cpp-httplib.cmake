@@ -21,13 +21,8 @@ option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ${USE
 if(CPPHTTPLIB_INCLUDE)
     # we already have cpp-httplib
 elseif(NOT USE_BUNDLED_CPPHTTPLIB)
-    find_path(CPPHTTPLIB_INCLUDE NAMES httplib.h)
-
-    if(CPPHTTPLIB_INCLUDE)
-        message(STATUS "Found cpp-httplib: include: ${CPPHTTPLIB_INCLUDE}")
-    else()
-        message(FATAL_ERROR "Couldn't find system cpp-httplib")
-    endif()
+    find_package(httplib CONFIG REQUIRED)
+    get_target_property(CPPHTTPLIB_INCLUDE httplib::httplib INTERFACE_INCLUDE_DIRECTORIES)
 else()
     set(CPPHTTPLIB_SRC "${PROJECT_BINARY_DIR}/cpp-httplib-prefix/src/cpp-httplib")
     set(CPPHTTPLIB_INCLUDE "${CPPHTTPLIB_SRC}")

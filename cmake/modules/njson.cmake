@@ -21,13 +21,8 @@ option(USE_BUNDLED_NLOHMANN_JSON "Enable building of the bundled nlohmann-json" 
 if(nlohmann_json_INCLUDE_DIRS)
     # we already have nlohmnann-json
 elseif(NOT USE_BUNDLED_NLOHMANN_JSON)
-    find_path(nlohmann_json_INCLUDE_DIRS NAMES nlohmann)
-
-    if(nlohmann_json_INCLUDE_DIRS)
-        message(STATUS "Found nlohmann-json: include: ${nlohmann_json_INCLUDE_DIRS}")
-    else()
-        message(FATAL_ERROR "Couldn't find system nlohmann-json")
-    endif()
+    find_package(nlohmann_json CONFIG REQUIRED)
+    get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
 else()
     set(nlohmann_json_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/njson-prefix/include")
 
