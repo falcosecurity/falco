@@ -74,6 +74,7 @@ if(NOT MSVC)
 
 else() # MSVC
 	set(MINIMAL_BUILD ON)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 	# The WIN32_LEAN_AND_MEAN define avoids possible macro pollution
 	# when a libsinsp consumer includes the windows.h header.
