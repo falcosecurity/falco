@@ -291,9 +291,9 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 		m_outputs_queue_num_drops++;
 	}
 #else
-	for (auto o : m_outputs)
+	for (const auto& o : m_outputs)
 	{
-		process_msg(o, cmsg);
+		process_msg(o.get(), cmsg);
 	}
 #endif
 }
