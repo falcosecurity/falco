@@ -63,13 +63,17 @@ spec:
         {{- include "falco.configSyscallSource" . | indent 8 }}
         {{- with .Values.collectors }}
         {{- if .enabled }}
+        {{- if .docker.enabled }}
+        - --cri
+        - /var/run/{{ base .docker.socket }}
+        {{- end }}
         {{- if .containerd.enabled }}
         - --cri
-        - /run/containerd/containerd.sock
+        - /run/containerd/{{ base .containerd.socket }}
         {{- end }}
         {{- if .crio.enabled }}
         - --cri
-        - /run/crio/crio.sock
+        - /run/crio/{{ base .crio.socket }}
         {{- end }}
         - -pk
         {{- end }}
@@ -161,15 +165,15 @@ spec:
         {{- with .Values.collectors }}
         {{- if .enabled }}
         {{- if .docker.enabled }}
-        - mountPath: /host/var/run/docker.sock
+        - mountPath: /host/var/run/
           name: docker-socket
         {{- end }}
         {{- if .containerd.enabled }}
-        - mountPath: /host/run/containerd/containerd.sock
+        - mountPath: /host/run/containerd/
           name: containerd-socket
         {{- end }}
         {{- if .crio.enabled }}
-        - mountPath: /host/run/crio/crio.sock
+        - mountPath: /host/run/crio/
           name: crio-socket
         {{- end }}
         {{- end }}
@@ -263,17 +267,17 @@ spec:
     {{- if .docker.enabled }}
     - name: docker-socket
       hostPath:
-        path: {{ .docker.socket }}
+        path: {{ dir .docker.socket }}
     {{- end }}
     {{- if .containerd.enabled }}
     - name: containerd-socket
       hostPath:
-        path: {{ .containerd.socket }}
+        path: {{ dir .containerd.socket }}
     {{- end }}
     {{- if .crio.enabled }}
     - name: crio-socket
       hostPath:
-        path: {{ .crio.socket }}
+        path: {{ dir .crio.socket }}
     {{- end }}
     {{- end }}
     {{- end }}
