@@ -45,7 +45,7 @@ jobs:
       version: ${{ needs.fetch-version.outputs.version }}
 
   test-dev-packages-arm64:
-    needs: [fetch-version, build-dev-packages]
+    needs: [fetch-version, build-dev-packages-arm64]
     uses: ./.github/workflows/reusable_test_packages.yaml
     strategy:
       fail-fast: false
