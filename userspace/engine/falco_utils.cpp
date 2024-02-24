@@ -17,13 +17,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-#include <cstring>
-#include <iomanip>
 
 #include "falco_utils.h"
 #include <libsinsp/utils.h>
 
 #include <re2/re2.h>
+
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <thread>
 
 #define RGX_PROMETHEUS_TIME_DURATION "^((?P<y>[0-9]+)y)?((?P<w>[0-9]+)w)?((?P<d>[0-9]+)d)?((?P<h>[0-9]+)h)?((?P<m>[0-9]+)m)?((?P<s>[0-9]+)s)?((?P<ms>[0-9]+)ms)?$"
 
@@ -145,7 +148,7 @@ uint32_t hardware_concurrency()
 
 void readfile(const std::string& filename, std::string& data)
 {
-	std::ifstream file(filename.c_str(), std::ios::in);
+	std::ifstream file(filename, std::ios::in);
 
 	if(file.is_open())
 	{

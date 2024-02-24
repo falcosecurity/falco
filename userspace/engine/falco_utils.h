@@ -20,30 +20,11 @@ limitations under the License.
 
 #pragma once
 
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <unordered_set>
-#include <set>
-#include <vector>
+#include <cstdint>
 #include <string>
 
-#ifdef __GNUC__
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
-
-namespace falco
+namespace falco::utils
 {
-
-namespace utils
-{
-
 uint64_t parse_prometheus_interval(std::string interval_str);
 
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t linelen);
@@ -57,5 +38,4 @@ namespace network
 static const std::string UNIX_SCHEME("unix://");
 bool is_unix_scheme(const std::string& url);
 } // namespace network
-} // namespace utils
-} // namespace falco
+} // namespace falco::utils
