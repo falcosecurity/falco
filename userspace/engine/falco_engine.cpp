@@ -450,9 +450,8 @@ std::size_t falco_engine::add_source(const std::string &source,
 				     std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory)
 {
 	// evttype_index_ruleset is the default ruleset implementation
-	std::shared_ptr<filter_ruleset_factory> ruleset_factory(
-		new evttype_index_ruleset_factory(filter_factory));
-	size_t idx = add_source(source, filter_factory, formatter_factory, ruleset_factory);
+	size_t idx = add_source(source, filter_factory, formatter_factory,
+	                        std::make_shared<evttype_index_ruleset_factory>(filter_factory));
 
 	if(source == falco_common::syscall_source)
 	{

@@ -66,13 +66,11 @@ void configure_output_format(falco::app::state& s)
 void add_source_to_engine(falco::app::state& s, const std::string& src)
 {
 	auto src_info = s.source_infos.at(src);
-	auto& filterchecks = *src_info->filterchecks.get();
+	auto& filterchecks = *src_info->filterchecks;
 	auto* inspector = src_info->inspector.get();
 
-	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
-		new sinsp_filter_factory(inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-		new sinsp_evt_formatter_factory(inspector, filterchecks));
+	auto filter_factory = std::make_shared<sinsp_filter_factory>(inspector, filterchecks);
+	auto formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(inspector, filterchecks);
 
 	if(s.config->m_json_output)
 	{
