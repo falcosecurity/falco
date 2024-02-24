@@ -488,8 +488,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		ctxs.reserve(s.enabled_sources.size());
 		for (const auto& source : s.enabled_sources)
 		{
-			ctxs.emplace_back();
-			auto& ctx = ctxs[ctxs.size() - 1];
+			auto& ctx = ctxs.emplace_back();
 			ctx.source = source;
 			ctx.sync.reset(new source_sync_context(termination_sem));
 			auto src_info = s.source_infos.at(source);
