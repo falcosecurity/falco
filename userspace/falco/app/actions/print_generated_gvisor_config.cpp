@@ -25,8 +25,8 @@ falco::app::run_result falco::app::actions::print_generated_gvisor_config(falco:
 {
 	if(!s.options.gvisor_generate_config_with_socket.empty())
 	{
-		std::unique_ptr<sinsp> i(new sinsp());
-		std::string gvisor_config = i->generate_gvisor_config(s.options.gvisor_generate_config_with_socket);
+		sinsp i;
+		std::string gvisor_config = i.generate_gvisor_config(s.options.gvisor_generate_config_with_socket);
 		printf("%s\n", gvisor_config.c_str());
 		return run_result::exit();
 	}

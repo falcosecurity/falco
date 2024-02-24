@@ -27,14 +27,14 @@ falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::
 {
 	if(!s.options.print_plugin_info.empty())
 	{
-		std::unique_ptr<sinsp> inspector(new sinsp());
+		sinsp inspector;
 		for(auto &pc : s.config->m_plugins)
 		{
 			if (pc.m_name == s.options.print_plugin_info
 				|| pc.m_library_path == s.options.print_plugin_info)
 			{
 				// load the plugin
-				auto p = inspector->register_plugin(pc.m_library_path);
+				auto p = inspector.register_plugin(pc.m_library_path);
 
 				// print plugin descriptive info
 				std::ostringstream os;
@@ -61,7 +61,7 @@ falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::
 				os << schema << std::endl;
 				os << std::endl;
 				printf("%s", os.str().c_str());
-				
+
 				// init the plugin
 				std::string err;
 				if (!p->init(pc.m_init_config, err))
