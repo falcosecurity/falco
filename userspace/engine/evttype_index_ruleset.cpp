@@ -230,8 +230,7 @@ void evttype_index_ruleset::clear()
 {
 	for (size_t i = 0; i < m_rulesets.size(); i++)
 	{
-		std::shared_ptr<ruleset_filters> r(new ruleset_filters());
-		m_rulesets[i] = r;
+		m_rulesets[i] = std::make_shared<ruleset_filters>();
 	}
 	m_filters.clear();
 }

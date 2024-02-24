@@ -122,8 +122,8 @@ private:
 		// that matched.
 		bool run(sinsp_evt *evt, falco_rule& match);
 
-		//  Evaluate an event against the ruleset and return all the 
-		//	matching rules. 
+		//  Evaluate an event against the ruleset and return all the
+		//	matching rules.
 		bool run(sinsp_evt *evt, std::vector<falco_rule>& matches);
 
 		libsinsp::events::set<ppm_sc_code> sc_codes();
@@ -164,9 +164,7 @@ public:
 
 	inline std::shared_ptr<filter_ruleset> new_ruleset() override
 	{
-		std::shared_ptr<filter_ruleset> ret(
-			new evttype_index_ruleset(m_filter_factory));
-		return ret;
+		return std::make_shared<evttype_index_ruleset>(m_filter_factory);
 	}
 
 private:
