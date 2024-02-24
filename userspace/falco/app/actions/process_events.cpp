@@ -199,7 +199,7 @@ static falco::app::run_result do_inspect(
 		}
 		else if(rc == SCAP_TIMEOUT)
 		{
-			if(unlikely(ev == nullptr))
+			if(ev == nullptr) [[unlikely]]
 			{
 				timeouts_since_last_success_or_msg++;
 				if(timeouts_since_last_success_or_msg > s.config->m_syscall_evt_timeout_max_consecutives
