@@ -33,12 +33,11 @@ if (EMSCRIPTEN)
 	target_compile_options(falco_engine PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 endif()
 
-add_dependencies(falco_engine yamlcpp njson)
+add_dependencies(falco_engine yamlcpp)
 
 target_include_directories(falco_engine
 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${nlohmann_json_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIR}
     ${YAMLCPP_INCLUDE_DIR}
 )
@@ -46,5 +45,5 @@ PUBLIC
 target_link_libraries(falco_engine
 PUBLIC
     sinsp
-    ${YAMLCPP_LIB}
+    nlohmann_json::nlohmann_json
 )
