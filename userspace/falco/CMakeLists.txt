@@ -14,8 +14,7 @@
 
 configure_file(config_falco.h.in config_falco.h)
 
-set(
-  FALCO_SOURCES
+add_library(falco_application STATIC
   app/app.cpp
   app/options.cpp
   app/restart_handler.cpp
@@ -62,15 +61,11 @@ set(
 set(
   FALCO_INCLUDE_DIRECTORIES
   "${PROJECT_SOURCE_DIR}/userspace/engine"
-  "${PROJECT_BINARY_DIR}/userspace/falco"
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_BINARY_DIR}"
   "${PROJECT_BINARY_DIR}/driver/src"
   "${CXXOPTS_INCLUDE_DIR}"
-  "${YAMLCPP_INCLUDE_DIR}"
-  "${CMAKE_CURRENT_BINARY_DIR}"
-  "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-
-list(APPEND FALCO_INCLUDE_DIRECTORIES "${FALCO_EXTRA_INCLUDE_DIRS}")
 
 set(
   FALCO_DEPENDENCIES
@@ -81,22 +76,20 @@ set(
   FALCO_LIBRARIES
   falco_engine
   sinsp
-  "${YAMLCPP_LIB}"
+  yaml-cpp
 )
-
-list(APPEND FALCO_DEPENDENCIES yamlcpp)
 
 if(NOT WIN32)
-  list(
-    APPEND FALCO_SOURCES
-	outputs_program.cpp
-	outputs_syslog.cpp
-)
+  target_sources(falco_application
+  PRIVATE
+    outputs_program.cpp
+    outputs_syslog.cpp
+  )
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
-  list(
-    APPEND FALCO_SOURCES
+  target_sources(falco_application
+  PRIVATE
     outputs_grpc.cpp
     outputs_http.cpp
     webserver.cpp
@@ -136,14 +129,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
     "${PROTOBUF_LIB}"
     "${CARES_LIB}"
     "${OPENSSL_LIBRARIES}"
-    "${YAMLCPP_LIB}"
   )
 endif()
-
-add_library(
-  falco_application STATIC
-  ${FALCO_SOURCES}
-)
 
 if (EMSCRIPTEN)
 	target_compile_options(falco_application PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
