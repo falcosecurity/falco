@@ -76,6 +76,7 @@ static void build_rule_exception_infos(
 	std::string& condition)
 {
 	std::string tmp;
+	condition = "(" + condition + ")";
 	for (const auto &ex : exceptions)
 	{
 		std::string icond;
