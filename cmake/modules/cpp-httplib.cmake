@@ -12,32 +12,15 @@
 # specific language governing permissions and limitations under the License.
 #
 
-#
-# cpp-httplib (https://github.com/yhirose/cpp-httplib)
-#
-
 option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ${USE_BUNDLED_DEPS})
 
-if(CPPHTTPLIB_INCLUDE)
-    # we already have cpp-httplib
-elseif(NOT USE_BUNDLED_CPPHTTPLIB)
-    find_package(httplib CONFIG REQUIRED)
-    get_target_property(CPPHTTPLIB_INCLUDE httplib::httplib INTERFACE_INCLUDE_DIRECTORIES)
+if(USE_BUNDLED_CPPHTTPLIB)
+    include(FetchContent)
+    FetchContent_Declare(cpp-httplib
+        URL https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.15.3.tar.gz
+        URL_HASH SHA256=2121bbf38871bb2aafb5f7f2b9b94705366170909f434428352187cb0216124e
+    )
+    FetchContent_MakeAvailable(cpp-httplib)
 else()
-    set(CPPHTTPLIB_SRC "${PROJECT_BINARY_DIR}/cpp-httplib-prefix/src/cpp-httplib")
-    set(CPPHTTPLIB_INCLUDE "${CPPHTTPLIB_SRC}")
-
-    message(STATUS "Using bundled cpp-httplib in ${CPPHTTPLIB_SRC}")
-
-    ExternalProject_Add(cpp-httplib
-        PREFIX "${PROJECT_BINARY_DIR}/cpp-httplib-prefix"
-        URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.13.1.tar.gz"
-        URL_HASH "SHA256=9b837d290b61e3f0c4239da0b23bbf14c382922e2bf2a9bac21c1e3feabe1ff9"
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND "")	
-endif()
-
-if(NOT TARGET cpp-httplib)
-	add_custom_target(cpp-httplib)
+    find_package(httplib CONFIG REQUIRED)
 endif()

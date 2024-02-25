@@ -115,7 +115,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
 
   list(
     APPEND FALCO_INCLUDE_DIRECTORIES
-    "${CPPHTTPLIB_INCLUDE}"
     "${OPENSSL_INCLUDE_DIR}"
     "${GRPC_INCLUDE}"
     "${GRPCPP_INCLUDE}"
@@ -128,10 +127,9 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
     list(APPEND FALCO_LIBRARIES "${GRPC_LIBRARIES}")
   endif()
 
-  list(APPEND FALCO_DEPENDENCIES cpp-httplib)
-
   list(
     APPEND FALCO_LIBRARIES
+    httplib::httplib
     "${GRPCPP_LIB}"
     "${GRPC_LIB}"
     "${GPR_LIB}"
@@ -150,6 +148,8 @@ add_library(
 if (EMSCRIPTEN)
 	target_compile_options(falco_application PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 endif()
+
+target_compile_definitions(falco_application PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 
 add_dependencies(falco_application ${FALCO_DEPENDENCIES})
 
