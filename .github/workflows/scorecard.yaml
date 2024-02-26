@@ -38,10 +38,26 @@ jobs:
       # actions: read
 
     steps:
+      - id: load-eco-ci
+        uses: green-coding-solutions/eco-ci-activity-checker@v1
+        with:
+          branch: 'main'
+
+      - name: Eco CI Energy Estimation - Initialize
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: start-measurement
+
       - name: "Checkout code"
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
         with:
           persist-credentials: false
+
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: get-measurement
+          label: Checkout code
 
       - name: "Run analysis"
         uses: ossf/scorecard-action@e38b1902ae4f44df626f11ba0734b14fb91f8f86 # v2.1.2
@@ -63,6 +79,13 @@ jobs:
           #     of the value entered here.
           publish_results: true
 
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: get-measurement
+          label: Run analysis
+
+
       # Upload the results as artifacts (optional). Commenting out will disable uploads of run results in SARIF
       # format to the repository Actions tab.
       - name: "Upload artifact"
@@ -72,9 +95,27 @@ jobs:
           path: results.sarif
           retention-days: 5
 
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: get-measurement
+          label: Upload artifact
+
+
       # Upload the results to GitHub's code scanning dashboard.
       - name: "Upload to code-scanning"
         uses: github/codeql-action/upload-sarif@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2.2.4
         with:
           sarif_file: results.sarif
 
+      - name: Eco CI Energy Estimation - Get Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: get-measurement
+          label: Upload to code-scanning
+
+
+      - name: Eco CI Energy Estimation - End Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        with:
+          task: display-results
