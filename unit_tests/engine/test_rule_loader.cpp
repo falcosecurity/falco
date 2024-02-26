@@ -866,3 +866,41 @@ TEST_F(test_falco_engine, exceptions_condition)
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   ASSERT_EQ(get_compiled_rule_condition("test_rule"),"((proc.cmdline contains curl or proc.cmdline contains wget) and not proc.cmdline contains \"curl 127.0.0.1\")");
 }
+
+TEST_F(test_falco_engine, macro_name_invalid)
+{
+    std::string rules_content = R"END(
+- macro: test-macro
+  condition: evt.type = close
+
+- rule: test_rule
+  desc: test rule description
+  condition: test-macro
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+)END";
+
+  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_error_message("Macro has an invalid name. Macro names must match a regular expression"));
+}
+
+TEST_F(test_falco_engine, list_name_invalid)
+{
+    std::string rules_content = R"END(
+- list: test list
+  items: [open, openat, openat2]
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type in (test list)
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+)END";
+
+  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_error_message("List has an invalid name. List names must match a regular expression"));
+}
