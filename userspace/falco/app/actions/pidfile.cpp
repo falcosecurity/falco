@@ -41,7 +41,7 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& s)
 
 		if (!pidfile.good())
 		{
-			falco_logger::log(falco_logger::level::ERR, "Could not write pid to pidfile " + s.options.pidfilename + ". Exiting.\n");
+			falco_logger::log(falco_logger::level::ERR, "Could not write pid to pidfile : " + s.options.pidfilename + ". Exiting.\n");
 			exit(-1);
 		}
 		pidfile << self_pid;
