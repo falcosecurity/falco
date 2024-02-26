@@ -29,6 +29,10 @@ limitations under the License.
 
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
+// Sinsp Filter grammar tokens taken from "libsinsp/filter/parser.h"
+// These regular expressions are used here to check for invalid macro/list names
+// todo(mrgian): to avoid code duplication we can move regex definitions in libsinsp/filter/parser.h
+// and include it here instead of redefining them.
 #define RGX_IDENTIFIER "([a-zA-Z]+[a-zA-Z0-9_]*)"
 #define RGX_BARESTR    "([^()\"'[:space:]=,]+)"
 
