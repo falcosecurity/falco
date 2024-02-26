@@ -38,10 +38,6 @@ jobs:
       # actions: read
 
     steps:
-      - id: load-eco-ci
-        uses: green-coding-solutions/eco-ci-activity-checker@v1
-        with:
-          branch: 'main'
 
       - name: Eco CI Energy Estimation - Initialize
         uses: green-coding-solutions/eco-ci-energy-estimation@v2
