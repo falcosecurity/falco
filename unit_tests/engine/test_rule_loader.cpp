@@ -846,3 +846,23 @@ TEST_F(test_falco_engine, list_value_with_escaping)
   ASSERT_EQ(rule_description["lists"][0]["details"]["items_compiled"][0].template get<std::string>(), "non_escaped_val");
   ASSERT_EQ(rule_description["lists"][0]["details"]["items_compiled"][1].template get<std::string>(), "escaped val");
 }
+
+TEST_F(test_falco_engine, exceptions_condition)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: proc.cmdline contains curl or proc.cmdline contains wget
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: test_exception
+      fields: [proc.cmdline]
+      comps: [contains]
+      values:
+        - [curl 127.0.0.1]
+)END";
+
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_EQ(get_compiled_rule_condition("test_rule"),"((proc.cmdline contains curl or proc.cmdline contains wget) and not proc.cmdline contains \"curl 127.0.0.1\")");
+}
