@@ -77,7 +77,7 @@ jobs:
           # For private repositories:
           #   - `publish_results` will always be set to `false`, regardless
           #     of the value entered here.
-          publish_results: true
+          publish_results: false
 
       - name: Eco CI Energy Estimation - Get Measurement
         uses: green-coding-solutions/eco-ci-energy-estimation@v2
