@@ -25,7 +25,15 @@ limitations under the License.
 #include "rule_loading_messages.h"
 #include <libsinsp/logger.h>
 
+#include <re2/re2.h>
+
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
+
+#define RGX_IDENTIFIER "([a-zA-Z]+[a-zA-Z0-9_]*)"
+#define RGX_BARESTR    "([^()\"'[:space:]=,]+)"
+
+static re2::RE2 s_rgx_identifier(RGX_IDENTIFIER, re2::RE2::POSIX);
+static re2::RE2 s_rgx_barestr(RGX_BARESTR, re2::RE2::POSIX);
 
 // Don't call this directly, call decode_val/decode_optional_val instead.
 template <typename T>
@@ -442,6 +450,10 @@ void rule_loader::reader::read_item(
 		decode_val(item, "list", name, tmp);
 
 		rule_loader::context ctx(item, rule_loader::context::LIST, name, parent);
+
+		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_barestr);
+		THROW(invalid_name, ERROR_INVALID_LIST_NAME RGX_BARESTR, ctx);
+
 		rule_loader::list_info v(ctx);
 
 		bool append = false;
@@ -482,6 +494,10 @@ void rule_loader::reader::read_item(
 		decode_val(item, "macro", name, tmp);
 
 		rule_loader::context ctx(item, rule_loader::context::MACRO, name, parent);
+
+		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_identifier);
+		THROW(invalid_name, ERROR_INVALID_MACRO_NAME RGX_IDENTIFIER, ctx);
+
 		rule_loader::macro_info v(ctx);
 		v.name = name;
 
