@@ -22,6 +22,6 @@
 
 #define ERROR_NO_PREVIOUS_RULE_REPLACE "An 'override.<key>: replace' to a rule was requested but no rule by that name already exists"
 
-#define ERROR_INVALID_MACRO_NAME "Macro has an invalid name. Macro names must match the Identifier regular expression: "
+#define ERROR_INVALID_MACRO_NAME "Macro has an invalid name. Macro names must match a regular expression: "
 
-#define ERROR_INVALID_LIST_NAME "List has an invalid name. List names must match the BareStr regular expression: "
+#define ERROR_INVALID_LIST_NAME "List has an invalid name. List names must match a regular expression: "
