@@ -61,6 +61,10 @@ jobs:
             -DBUILD_BPF=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
             -DBUILD_DRIVER=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
             -DMINIMAL_BUILD=${{ inputs.minimal == true && 'ON' || 'OFF' }} \
+            -DUSE_BUNDLED_DEPS=Off \
+            -DUSE_BUNDLED_NLOHMANN_JSON=On \
+            -DUSE_BUNDLED_CXXOPTS=On \
+            -DUSE_BUNDLED_CPPHTTPLIB=On \
             ..
           popd
 
