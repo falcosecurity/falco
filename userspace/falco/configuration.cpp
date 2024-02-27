@@ -37,8 +37,13 @@ limitations under the License.
 #include "logger.h"
 #include <iterator>
 #include <re2/re2.h>
+#include <iostream>
+#include <fstream>
 #include "valijson/adapters/yaml_cpp_adapters.hpp"
-#include "ValidationUtils.h"
+#include "valijson/schema_parser.hpp"
+#include "valijson/schema.hpp"
+#include <yaml-cpp/yaml.h>
+
 namespace fs = std::filesystem;
 
 // Reference: https://digitalfortress.tech/tips/top-15-commonly-used-regex/
@@ -179,46 +184,133 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 }
 
 
-std::vector<std::string> fixedSchemaKeysVec = {
-"rules_file", "engine", "engine.kind", "engine.kmod", "engine.kmod.buf_size_preset", "engine.kmod.drop_failed_exit", "engine.ebpf", "engine.ebpf.probe", "engine.ebpf.buf_size_preset", "engine.ebpf.drop_failed_exit", "engine.modern_ebpf", "engine.modern_ebpf.cpus_for_each_buffer", "engine.modern_ebpf.buf_size_preset", "engine.modern_ebpf.drop_failed_exit", "engine.replay", "engine.replay.capture_file", "engine.gvisor", "engine.gvisor.config", "engine.gvisor.root", "load_plugins", "plugins", "plugins.name", "plugins.library_path", "plugins.init_config", "plugins.init_config.maxEventSize", "plugins.init_config.webhookMaxBatchSize", "plugins.init_config.sslCertificate", "plugins.open_params", "plugins.library_path", "watch_config_files", "time_format_iso_8601", "priority", "json_output", "json_include_output_property", "json_include_tags_property", "buffered_outputs", "rule_matching", "outputs_queue", "outputs_queue.capacity", "stdout_output", "stdout_output.enabled", "syslog_output", "syslog_output.enabled", "file_output", "file_output.enabled", "file_output.keep_alive", "file_output.filename", "http_output", "http_output.enabled", "http_output.url", "http_output.user_agent", "http_output.insecure", "http_output.ca_cert", "http_output.ca_bundle", "http_output.ca_path", "http_output.mtls", "http_output.client_cert", "http_output.client_key", "http_output.echo", "http_output.compress_uploads", "http_output.keep_alive", "program_output", "program_output.enabled", "program_output.keep_alive", "program_output.program", "grpc_output", "grpc_output.enabled", "grpc", "grpc.enabled", "grpc.bind_address", "grpc.threadiness", "webserver", "webserver.enabled", "webserver.threadiness", "webserver.listen_port", "webserver.listen_address", "webserver.k8s_healthz_endpoint", "webserver.ssl_enabled", "webserver.ssl_certificate", "log_stderr", "log_syslog", "log_level", "libs_logger", "libs_logger.enabled", "libs_logger.severity", "output_timeout", "syscall_event_timeouts", "syscall_event_timeouts.max_consecutives", "syscall_event_drops", "syscall_event_drops.threshold", "syscall_event_drops.actions", "syscall_event_drops.rate", "syscall_event_drops.max_burst", "syscall_event_drops.simulate_drops", "metrics", "metrics.enabled", "metrics.interval", "metrics.output_rule", "metrics.output_file", "metrics.resource_utilization_enabled", "metrics.state_counters_enabled", "metrics.kernel_event_counters_enabled", "metrics.libbpf_stats_enabled", "metrics.convert_memory_to_mb", "metrics.include_empty_values", "syscall_buf_size_preset", "syscall_drop_failed_exit", "base_syscalls", "base_syscalls.custom_set", "base_syscalls.repair", "modern_bpf", "modern_bpf.cpus_for_each_syscall_buffer"
+// std::vector<std::string> fixedSchemaKeysVec = {
+// "rules_file", "engine", "engine.kind", "engine.kmod", "engine.kmod.buf_size_preset", "engine.kmod.drop_failed_exit", "engine.ebpf", "engine.ebpf.probe", "engine.ebpf.buf_size_preset", "engine.ebpf.drop_failed_exit", "engine.modern_ebpf", "engine.modern_ebpf.cpus_for_each_buffer", "engine.modern_ebpf.buf_size_preset", "engine.modern_ebpf.drop_failed_exit", "engine.replay", "engine.replay.capture_file", "engine.gvisor", "engine.gvisor.config", "engine.gvisor.root", "load_plugins", "plugins", "plugins.name", "plugins.library_path", "plugins.init_config", "plugins.init_config.maxEventSize", "plugins.init_config.webhookMaxBatchSize", "plugins.init_config.sslCertificate", "plugins.open_params", "plugins.library_path", "watch_config_files", "time_format_iso_8601", "priority", "json_output", "json_include_output_property", "json_include_tags_property", "buffered_outputs", "rule_matching", "outputs_queue", "outputs_queue.capacity", "stdout_output", "stdout_output.enabled", "syslog_output", "syslog_output.enabled", "file_output", "file_output.enabled", "file_output.keep_alive", "file_output.filename", "http_output", "http_output.enabled", "http_output.url", "http_output.user_agent", "http_output.insecure", "http_output.ca_cert", "http_output.ca_bundle", "http_output.ca_path", "http_output.mtls", "http_output.client_cert", "http_output.client_key", "http_output.echo", "http_output.compress_uploads", "http_output.keep_alive", "program_output", "program_output.enabled", "program_output.keep_alive", "program_output.program", "grpc_output", "grpc_output.enabled", "grpc", "grpc.enabled", "grpc.bind_address", "grpc.threadiness", "webserver", "webserver.enabled", "webserver.threadiness", "webserver.listen_port", "webserver.listen_address", "webserver.k8s_healthz_endpoint", "webserver.ssl_enabled", "webserver.ssl_certificate", "log_stderr", "log_syslog", "log_level", "libs_logger", "libs_logger.enabled", "libs_logger.severity", "output_timeout", "syscall_event_timeouts", "syscall_event_timeouts.max_consecutives", "syscall_event_drops", "syscall_event_drops.threshold", "syscall_event_drops.actions", "syscall_event_drops.rate", "syscall_event_drops.max_burst", "syscall_event_drops.simulate_drops", "metrics", "metrics.enabled", "metrics.interval", "metrics.output_rule", "metrics.output_file", "metrics.resource_utilization_enabled", "metrics.state_counters_enabled", "metrics.kernel_event_counters_enabled", "metrics.libbpf_stats_enabled", "metrics.convert_memory_to_mb", "metrics.include_empty_values", "syscall_buf_size_preset", "syscall_drop_failed_exit", "base_syscalls", "base_syscalls.custom_set", "base_syscalls.repair", "modern_bpf", "modern_bpf.cpus_for_each_syscall_buffer"
 
-};
-valijson::adapters::YamlCppArray fixedSchemaArray;
+// };
+// valijson::adapters::YamlCppArray fixedSchemaArray;
 
-for (const auto& key : fixedSchemaKeysVec) {
-    fixedSchemaArray.push_back(std::make_pair(key, YAML::Node()));
-} 
+// for (const auto& key : fixedSchemaKeysVec) {
+//     fixedSchemaArray.push_back(std::make_pair(key, YAML::Node()));
+// } 
 
-valijson::adapters::YamlCppAdapter fixedSchemaAdapter(fixedSchemaArray);
+// valijson::adapters::YamlCppAdapter fixedSchemaAdapter(fixedSchemaArray);
 
-void validateKeysRecursive(const YAML::Node& node, const std::string& prefix, const std::unordered_set<std::string>& fixedSchemaKeys)
-{
-    if (node.IsMap()) {
-        for (const auto& entry : node) {
-            std::string key = prefix + entry.first.as<std::string>();
+// void validateKeysRecursive(const YAML::Node& node, const std::string& prefix, const std::unordered_set<std::string>& fixedSchemaKeys)
+// {
+//     if (node.IsMap()) {
+//         for (const auto& entry : node) {
+//             std::string key = prefix + entry.first.as<std::string>();
 
-            if (fixedSchemaKeys.find(key) == fixedSchemaKeys.end()) {
-                throw std::logic_error("Error: Key '" + key + "' is not allowed in the loaded YAML");
-            } 
+//             if (fixedSchemaKeys.find(key) == fixedSchemaKeys.end()) {
+//                 throw std::logic_error("Error: Key '" + key + "' is not allowed in fixed.yaml");
+//             } 
 
-            validateKeysRecursive(entry.second, key + ".", fixedSchemaKeys);
-        }
-    }
+//             validateKeysRecursive(entry.second, key + ".", fixedSchemaKeys);
+//         }
+//     }
+// }
+
+// void validateLoadedYAML(const YAML::Node& loadedYaml, const valijson::adapters::YamlCppAdapter& fixedSchemaAdapter)
+// {
+//     std::unordered_set<std::string> fixedSchemaKeys;
+
+//     for (const auto& member : fixedSchemaAdapter.begin()) {
+//         fixedSchemaKeys.insert(member.first);
+//     }
+
+//     validateKeysRecursive(loadedYaml, "", fixedSchemaKeys);
+// }
+
+
+//    
+// 
+// 
+// 
+// 
+// 
+
+// void validateLoadedYAML(const YAML::Node& loadedYAML, const valijson::Schema& schema) {
+// 	std::unordered_set<std::string> loadedYamlKeys;
+// 	std::function<void(const YAML::Node&, const std::string&)> extractKeys = [&](const YAML::Node& node, const std::string& prefix) {
+//         if (node.IsMap()) {
+//             for (const auto& entry : node) {
+//                 std::string key = prefix + entry.first.as<std::string>();
+//                 loadedYamlKeys.insert(key);
+//                 extractKeys(entry.second, key + ".");
+//             }
+//         }
+//     };
+//     extractKeys(loadedYaml, "");
+
+//     // Get all keys defined in the JSON schema
+//     std::unordered_set<std::string> schemaKeys;
+//     schema.forEachProperty([&](const std::string& propertyName, const valijson::SchemaNode&) {
+//         schemaKeys.insert(propertyName);
+//     });
+
+//     // Check if all keys in the loaded YAML are present in the JSON schema
+//     for (const auto& key : loadedYamlKeys) {
+//         if (schemaKeys.find(key) == schemaKeys.end()) {
+//             throw std::logic_error("Error: Key '" + key + "' is not allowed in the JSON schema");
+//         }
+//     }
+// }
+
+// int main() {
+//     // Load the JSON schema from file
+//     std::ifstream schemaFile("falco_keys.json");
+//     if (!schemaFile.is_open()) {
+//         throw std::runtime_error("Failed to open schema file");
+//     }
+
+//     valijson::SchemaParser parser;
+//     valijson::Schema schema;
+//     try {
+//         parser.populateSchema(schemaFile, schema);
+//     } catch (const std::exception& e) {
+//         throw std::runtime_error("Failed to parse schema: " + std::string(e.what()));
+//     }
+
+//     // Load the YAML document to be validated
+//     YAML::Node loadedYaml = YAML::LoadFile("../../falco.yaml");
+
+//     // Validate the loaded YAML against the schema
+//     validateLoadedYAML(loadedYaml, schema);
+
+//     std::cout << "YAML validation successful!" << std::endl;
+
+//     return 0;
+// }
+void validateLoadedYAML(const YAML::Node& loadedYaml, const valijson::adapters::YamlCppAdapter& schemaAdapter) {
+	valijson::Validator validator;
+	validator.validate(schemaAdapter, loadedYaml);
+	if (!validator.isValid()) {
+		throw std::logic_error("ERROR: Loaded YAML does not conform to the schema");
+	}
 }
 
-void validateLoadedYAML(const YAML::Node& loadedYaml, const valijson::adapters::YamlCppAdapter& fixedSchemaAdapter)
-{
-    std::unordered_set<std::string> fixedSchemaKeys;
-
-    for (const auto& member : fixedSchemaAdapter.begin()) {
-        fixedSchemaKeys.insert(member.first);
-    }
-
-    validateKeysRecursive(loadedYaml, "", fixedSchemaKeys);
-}
-   
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
+	valijson::Schema schema;
+	valijson::SchemaParser parser;
+	std::ifstream schemaFile("falco_keys.json");
+	parser.populateSchema(schema, schemaFile);
+
+	//Convert schema to YamlCppAdapter
+	valijson::adapters::YamlCppAdapter schemaAdapter(schema);
+	
+	// Load the configuration from file
+	YAML::Node loadedYaml = YAML::LoadFile(config_name);
+	// Validate loaded YAML against schema
+	try {
+		validateLoadedYAML(loadedYaml, schemaAdapter);
+		std::cout << "Validation successful!" << std::endl;
+	} catch (const std::exception& e) {
+		std::cerr << "Validation failed: " << e.what() << std::endl;
+		return;
+	}
+
 	load_engine_config(config_name, config);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 

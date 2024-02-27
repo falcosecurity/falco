@@ -1,0 +1,215 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "object",
+    "properties": {
+      "engine": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "kmod": {
+            "type": "object",
+            "properties": {
+              "buf_size_preset": { "type": "integer" },
+              "drop_failed_exit": { "type": "boolean" }
+            }
+          },
+          "ebpf": {
+            "type": "object",
+            "properties": {
+              "probe": { "type": "string" },
+              "buf_size_preset": { "type": "integer" },
+              "drop_failed_exit": { "type": "boolean" }
+            }
+          },
+          "modern_ebpf": {
+            "type": "object",
+            "properties": {
+              "cpus_for_each_buffer": { "type": "integer" },
+              "buf_size_preset": { "type": "integer" },
+              "drop_failed_exit": { "type": "boolean" }
+            }
+          }
+        },
+        "required": ["kind", "kmod", "ebpf", "modern_ebpf"]
+      },
+      "replay": {
+        "type": "object",
+        "properties": {
+          "capture_file": { "type": "string" }
+        }
+      },
+      "gvisor": {
+        "type": "object",
+        "properties": {
+          "config": { "type": "string" },
+          "root": { "type": "string" }
+        }
+      },
+      "load_plugins": { "type": "array" },
+      "plugins": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "library_path": { "type": "string" },
+            "init_config": {
+              "type": "object",
+              "properties": {
+                "maxEventSize": { "type": "integer" },
+                "webhookMaxBatchSize": { "type": "integer" },
+                "sslCertificate": { "type": "string" }
+              }
+            },
+            "open_params": { "type": "string" }
+          },
+          "required": ["name", "library_path"]
+        }
+      },
+      "watch_config_files": { "type": "boolean" },
+      "time_format_iso_8601": { "type": "boolean" },
+      "priority": { "type": "string" },
+      "json_output": { "type": "boolean" },
+      "json_include_output_property": { "type": "boolean" },
+      "json_include_tags_property": { "type": "boolean" },
+      "buffered_outputs": { "type": "boolean" },
+      "rule_matching": { "type": "string" },
+      "outputs_queue": {
+        "type": "object",
+        "properties": {
+          "capacity": { "type": "integer" }
+        }
+      },
+      "stdout_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+      "syslog_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+      "file_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "keep_alive": { "type": "boolean" },
+          "filename": { "type": "string" }
+        }
+      },
+      "http_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "url": { "type": "string" },
+          "user_agent": { "type": "string" },
+          "insecure": { "type": "boolean" },
+          "ca_cert": { "type": "string" },
+          "ca_bundle": { "type": "string" },
+          "ca_path": { "type": "string" },
+          "mtls": { "type": "boolean" },
+          "client_cert": { "type": "string" },
+          "client_key": { "type": "string" },
+          "echo": { "type": "boolean" },
+          "compress_uploads": { "type": "boolean" },
+          "keep_alive": { "type": "boolean" }
+        }
+      },
+      "program_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "keep_alive": { "type": "boolean" },
+          "program": { "type": "string" }
+        }
+      },
+      "grpc_output": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+      "grpc": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "bind_address": { "type": "string" },
+          "threadiness": { "type": "integer" }
+        }
+      },
+      "webserver": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "threadiness": { "type": "integer" },
+          "listen_port": { "type": "integer" },
+          "listen_address": { "type": "string" },
+          "k8s_healthz_endpoint": { "type": "string" },
+          "ssl_enabled": { "type": "boolean" },
+          "ssl_certificate": { "type": "string" }
+        }
+      },
+      "log_stderr": { "type": "boolean" },
+      "log_syslog": { "type": "boolean" },
+      "log_level": { "type": "string" },
+      "libs_logger": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "severity": { "type": "string" }
+        }
+      },
+      "output_timeout": { "type": "integer" },
+      "syscall_event_timeouts": {
+        "type": "object",
+        "properties": {
+          "max_consecutives": { "type": "integer" }
+        }
+      },
+      "syscall_event_drops": {
+        "type": "object",
+        "properties": {
+          "threshold": { "type": "number" },
+          "actions": { "type": "array" },
+          "rate": { "type": "number" },
+          "max_burst": { "type": "integer" },
+          "simulate_drops": { "type": "boolean" }
+        }
+      },
+      "metrics": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "interval": { "type": "string" },
+          "output_rule": { "type": "boolean" },
+          "output_file": { "type": "string" },
+          "resource_utilization_enabled": { "type": "boolean" },
+          "state_counters_enabled": { "type": "boolean" },
+          "kernel_event_counters_enabled": { "type": "boolean" },
+          "libbpf_stats_enabled": { "type": "boolean" },
+          "convert_memory_to_mb": { "type": "boolean" },
+          "include_empty_values": { "type": "boolean" }
+        }
+      },
+      "syscall_buf_size_preset": { "type": "integer" },
+      "syscall_drop_failed_exit": { "type": "boolean" },
+      "base_syscalls": {
+        "type": "object",
+        "properties": {
+          "custom_set": { "type": "array" },
+          "repair": { "type": "boolean" }
+        }
+      },
+      "modern_bpf": {
+        "type": "object",
+        "properties": {
+          "cpus_for_each_syscall_buffer": { "type": "integer" }
+        }
+      }
+    },
+    "required": ["engine"]
+  }
+  
