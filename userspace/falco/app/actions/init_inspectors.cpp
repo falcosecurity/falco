@@ -65,29 +65,29 @@ static bool populate_filterchecks(
 		std::unordered_set<std::string>& used_plugins,
 		std::string& err)
 {
-	std::vector<const filter_check_info*> info;
-	for(const auto& p : inspector->get_plugin_manager()->plugins())
+	std::vector<const filter_check_info*> infos;
+	for(const auto& plugin : inspector->get_plugin_manager()->plugins())
 	{
-		if (!(p->caps() & CAP_EXTRACTION))
+		if (!(plugin->caps() & CAP_EXTRACTION))
 		{
 			continue;
 		}
 
 		// check if some fields are overlapping on this event sources
-		info.clear();
-		filterchecks.get_all_fields(info);
-		for (auto &info : info)
+		infos.clear();
+		filterchecks.get_all_fields(infos);
+		for (const auto &info : infos)
 		{
 			for (int32_t i = 0; i < info->m_nfields; i++)
 			{
 				// check if one of the fields extractable by the plugin
 				// is already provided by another filtercheck for this source
 				std::string fname = info->m_fields[i].m_name;
-				for (auto &f : p->fields())
+				for (const auto &field : plugin->fields())
 				{
-					if (std::string(f.m_name) == fname)
+					if (field.m_name == fname)
 					{
-						err = "Plugin '" + p->name()
+						err = "Plugin '" + plugin->name()
 							+ "' supports extraction of field '" + fname
 							+ "' that is overlapping for source '" + source + "'";
 						return false;
@@ -97,8 +97,8 @@ static bool populate_filterchecks(
 		}
 
 		// add plugin filterchecks to the event source
-		filterchecks.add_filter_check(sinsp_plugin::new_filtercheck(p));
-		used_plugins.insert(p->name());
+		filterchecks.add_filter_check(sinsp_plugin::new_filtercheck(plugin));
+		used_plugins.insert(plugin->name());
 	}
 	return true;
 }
@@ -197,10 +197,10 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			const auto& sources = src_info->inspector->event_sources();
 			if (sources.size() == 0 || sources.size() > 2 || sources[0] != falco_common::syscall_source)
 			{
-				std::string err;
-				for (const auto &s : sources)
+				err.clear();
+				for (const auto &source : sources)
 				{
-					err += (err.empty() ? "" : ", ") + s;
+					err += (err.empty() ? "" : ", ") + source;
 				}
 				return run_result::fatal("Illegal sources setup in live inspector for source '" + src + "': " + err);
 			}
