@@ -359,9 +359,11 @@ void rule_loader::reader::read_item(
 	const YAML::Node& item,
 	const rule_loader::context& parent)
 {
-	rule_loader::context tmp(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
-	THROW(!item.IsMap(), "Unexpected element type. "
-	      "Each element should be a yaml associative array.", tmp);
+	{
+		rule_loader::context tmp(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
+		THROW(!item.IsMap(), "Unexpected element type. "
+		      "Each element should be a yaml associative array.", tmp);
+	}
 
 	if (item["required_engine_version"].IsDefined())
 	{

@@ -141,7 +141,7 @@ public:
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
-	nlohmann::json describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+	nlohmann::json describe_rule(std::string *rule_name, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 
 	//
 	// Print statistics on how many events matched each rule.
