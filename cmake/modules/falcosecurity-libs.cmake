@@ -35,8 +35,8 @@ else()
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
   # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "b656814552774820f2234e8139b0d0c583116c3a")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=35d86e54fc727f1265226434dc996e33000a570f833537a25c8b702b0b824431")
+    set(FALCOSECURITY_LIBS_VERSION "d753477d22d857cfb866e780c69ba2c489180e6c")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=5d737a5104d8fcf23127051b07596638f9d1de5b0ae87c3075acd634be73c0df")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
