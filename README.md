@@ -10,7 +10,7 @@
 
 At its core, Falco is a kernel monitoring and detection agent that observes events, such as syscalls, based on custom rules. Falco can enhance these events by integrating metadata from the container runtime and Kubernetes. The collected events can be analyzed off-host in SIEM or data lake systems.
 
-Falco, originally created by [Sysdig](https://sysdig.com), is an incubating project under the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) used in production by various [organisations](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md).
+Falco, originally created by [Sysdig](https://sysdig.com), is a **graduated project** under the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) used in production by various [organisations](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md).
 
 For detailed technical information and insights into the cyber threats that Falco can detect, visit the official [Falco](https://falco.org/) website.
 
