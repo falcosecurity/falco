@@ -35,14 +35,13 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
-#include <iterator>
 #include <re2/re2.h>
-#include <iostream>
-#include <fstream>
-#include "valijson/adapters/yaml_cpp_adapter.hpp"
-#include "valijson/schema_parser.hpp"
-#include "valijson/schema.hpp"
-#include <yaml-cpp/yaml.h>
+#include <valijson/adapters/yaml_cpp_adapter.hpp>
+#include <valijson/adapters/nlohmann_json_adapter.hpp>
+#include <valijson/schema.hpp>
+#include <valijson/schema_parser.hpp>
+#include <valijson/validator.hpp>
+#include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 
@@ -183,9 +182,9 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 }
 
-const std::string schemaJson = R"(
+static const std::string schema_json_string = R"(
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
         "engine": {
@@ -401,41 +400,31 @@ const std::string schemaJson = R"(
 
 )";
 
-void validateLoadedYAML(const YAML::Node& loadedYaml, const std::string& schemaJson) {
-	valijson::Schema schema;
-	valijson::SchemaParser parser;
-	std::istringstream schemaStream(schemaJson);
-	parser.populateSchema(schema, schemaStream);
-
-	// convert schema to YamlCppAdapter
-	valijson::adapters::YamlCppAdapter schemaAdapter(schema);
-	// validate loaded YAML against schema
-	valijson::Validator validator;
-	validator.validate(schemaAdapter, loadedYaml);
-	if (!validator.isValid()) {
-		throw std::logic_error("ERROR: Loaded YAML does not conform to the schema");
-	}
-}
-
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
+	// Load the schema with a `NlohmannJsonAdapter`
 	valijson::Schema schema;
-	valijson::SchemaParser parser;
-	std::istringstream schemaStream(schemaJson);
-	parser.populateSchema(schema, schemaStream);
+	valijson::SchemaParser schema_parser;
+	auto json_schema = nlohmann::json::parse(schema_json_string);
+	auto schema_adapter = valijson::adapters::NlohmannJsonAdapter(json_schema);
+	schema_parser.populateSchema(schema_adapter, schema);
 
-	//Convert schema to YamlCppAdapter
-	valijson::adapters::YamlCppAdapter schemaAdapter(schema);
-	
-	// Load the configuration from file
+	// Load the yaml config into a `YamlCppAdapter`
 	YAML::Node loadedYaml = YAML::LoadFile(config_name);
-	// Validate loaded YAML against schema
-	try {
-		validateLoadedYAML(loadedYaml, schemaAdapter);
-		std::cout << "Validation successful!" << std::endl;
-	} catch (const std::exception& e) {
-		std::cerr << "Validation failed: " << e.what() << std::endl;
-		return;
+	auto yaml_adapter = valijson::adapters::YamlCppAdapter(loadedYaml);
+
+	// Validation
+	valijson::ValidationResults results;
+	valijson::Validator validator;
+
+	if (!validator.validate(schema, yaml_adapter, &results))
+	{
+		std::string validation_errors;
+		for(const auto &e : results){
+			validation_errors +=  e.description + "\n";
+		}
+
+		throw std::runtime_error("Validation failed with the following errors.\n" + validation_errors);
 	}
 
 	load_engine_config(config_name, config);
