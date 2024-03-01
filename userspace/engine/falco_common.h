@@ -28,6 +28,8 @@ limitations under the License.
 //
 #define DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE std::ptrdiff_t(~size_t(0) / 2)
 
+#define DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE 262144
+
 //
 // Most falco_* classes can throw exceptions. Unless directly related
 // to low-level failures like inability to open file, etc, they will

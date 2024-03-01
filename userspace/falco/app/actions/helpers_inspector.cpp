@@ -53,6 +53,12 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			inspector->set_sinsp_stats_v2_enabled();
 		}
 
+		if(s.config->m_falco_libs_thread_table_size > 0)
+		{
+			// Default value is set in libs as part of the sinsp_thread_manager setup
+			inspector->m_thread_manager->set_max_thread_table_size(s.config->m_falco_libs_thread_table_size);
+		}
+
 		if (source != falco_common::syscall_source) /* Plugin engine */
 		{
 			for (const auto& p: inspector->get_plugin_manager()->plugins())
