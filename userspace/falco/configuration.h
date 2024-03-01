@@ -136,6 +136,8 @@ public:
 
 	uint32_t m_syscall_evt_timeout_max_consecutives;
 
+	uint32_t m_falco_libs_thread_table_size;
+
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
 	std::unordered_set<std::string> m_base_syscalls_custom_set;
 	bool m_base_syscalls_repair;

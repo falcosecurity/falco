@@ -65,6 +65,8 @@
 #     metrics
 # Falco performance tuning (advanced)
 #     base_syscalls
+# Falco libs
+#     falco_libs
 
 ################################
 # Falco command-line arguments #
@@ -1099,6 +1101,29 @@ metrics:
 base_syscalls:
   custom_set: []
   repair: false
+
+##############
+# Falco libs #
+##############
+
+# [Experimental] `falco_libs` - Potentially subject to more frequent changes
+#
+# `thread_table_size`
+#
+# Set the maximum number of entries (the absolute maximum value can only be MAX UINT32) 
+# for Falco's internal threadtable (process cache). Please note that Falco operates at a 
+# granular level, focusing on individual threads. Falco rules reference the thread leader 
+# as the process. The size of the threadtable should typically be much higher than the 
+# number of currently alive processes. The default value should work well on modern 
+# infrastructures and be sufficient to absorb bursts.
+#
+# Reducing its size can help in better memory management, but as a consequence, your 
+# process tree may be more frequently disrupted due to missing threads. You can explore 
+# `metrics.state_counters_enabled` to measure how the internal state handling is performing, 
+# and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
+# if you should increase this value for optimal performance.
+falco_libs:
+  thread_table_size: 262144
 
 # [Stable] Guidance for Kubernetes container engine command-line args settings
 #

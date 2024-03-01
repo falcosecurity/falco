@@ -70,6 +70,7 @@ falco_configuration::falco_configuration():
 	m_syscall_evt_drop_max_burst(1),
 	m_syscall_evt_simulate_drops(false),
 	m_syscall_evt_timeout_max_consecutives(1000),
+	m_falco_libs_thread_table_size(DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE),
 	m_base_syscalls_repair(false),
 	m_metrics_enabled(false),
 	m_metrics_interval_str("5000"),
@@ -442,6 +443,8 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	{
 		throw std::logic_error("Error reading config file(" + config_name + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
+
+	m_falco_libs_thread_table_size = config.get_scalar<std::uint32_t>("falco_libs.thread_table_size", DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE);
 
 	m_base_syscalls_custom_set.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
