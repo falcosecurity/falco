@@ -545,7 +545,7 @@ void falco_configuration::read_rules_file_directory(const std::string &path, std
 		std::vector<std::string> dir_filenames;
 
 		const auto it_options = fs::directory_options::follow_directory_symlink
-											| fs::directory_options::follow_directory_symlink;
+											| fs::directory_options::skip_permission_denied;
 
 		for (auto const& dir_entry : fs::directory_iterator(rules_path, it_options))
 		{
