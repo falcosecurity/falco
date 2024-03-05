@@ -10,7 +10,7 @@ artifact:
     every: 6h0m0s
     falcoVersions: http://localhost:8765/versions
     refs:
-    - falco-rules:0
+    - falco-rules:3
 indexes:
 - name: falcosecurity
   url: https://falcosecurity.github.io/falcoctl/index.yaml
