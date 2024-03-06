@@ -282,6 +282,7 @@ static void decode_exception_values(
 }
 
 static void read_rule_exceptions(
+	rule_loader::configuration& cfg,
 	const YAML::Node& item,
 	std::vector<rule_loader::rule_exception_info>& exceptions,
 	const rule_loader::context& parent,
@@ -334,19 +335,24 @@ static void read_rule_exceptions(
 				decode_exception_values(val, v_ex_val, vctx);
 				v_ex.values.push_back(v_ex_val);
 			}
+		} 
+		else if (append)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_APPEND_NO_VALUES, "Overriding/appending exception with no values", ex_ctx);
 		}
 		exceptions.push_back(v_ex);
 	}
 }
 
 static void read_rule_exceptions(
+	rule_loader::configuration& cfg,
 	const YAML::Node& item,
 	std::optional<std::vector<rule_loader::rule_exception_info>>& exceptions,
 	const rule_loader::context& parent,
 	bool append)
 {
 	std::vector<rule_loader::rule_exception_info> decoded;
-	read_rule_exceptions(item, decoded, parent, append);
+	read_rule_exceptions(cfg, item, decoded, parent, append);
 	exceptions = decoded;
 }
 
@@ -597,7 +603,7 @@ void rule_loader::reader::read_item(
 
 				if (check_update_expected(expected_keys, override_append, "append", "exceptions", ctx))
 				{
-					read_rule_exceptions(item, v.exceptions, ctx, true);
+					read_rule_exceptions(cfg, item, v.exceptions, ctx, true);
 				}
 
 				if (check_update_expected(expected_keys, override_append, "append", "output", ctx))
@@ -629,7 +635,7 @@ void rule_loader::reader::read_item(
 
 				if (check_update_expected(expected_keys, override_replace, "replace", "exceptions", ctx))
 				{
-					read_rule_exceptions(item, v.exceptions, ctx, true);
+					read_rule_exceptions(cfg, item, v.exceptions, ctx, true);
 				}
 
 				if (check_update_expected(expected_keys, override_replace, "replace", "output", ctx))
@@ -694,7 +700,7 @@ void rule_loader::reader::read_item(
 
 			if(item["exceptions"].IsDefined())
 			{
-				read_rule_exceptions(item, v.exceptions, ctx, true);
+				read_rule_exceptions(cfg, item, v.exceptions, ctx, true);
 			}
 
 			// TODO restore this error and update testing
@@ -750,7 +756,7 @@ void rule_loader::reader::read_item(
 				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);
-				read_rule_exceptions(item, v.exceptions, ctx, has_append_flag);
+				read_rule_exceptions(cfg, item, v.exceptions, ctx, has_append_flag);
 				collector.define(cfg, v);
 			}
 		}
