@@ -48,7 +48,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 {
 	try
 	{
-		if((s.config->m_metrics_flags & PPM_SCAP_STATS_STATE_COUNTERS))
+		if((s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS))
 		{
 			inspector->set_sinsp_stats_v2_enabled();
 		}
