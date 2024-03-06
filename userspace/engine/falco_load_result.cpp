@@ -23,7 +23,8 @@ static const std::string error_codes[] = {
 	"LOAD_ERR_YAML_VALIDATE",
 	"LOAD_ERR_COMPILE_CONDITION",
 	"LOAD_ERR_COMPILE_OUTPUT",
-	"LOAD_ERR_VALIDATE"
+	"LOAD_ERR_VALIDATE",
+	"LOAD_ERR_EXTENSION"
 };
 
 const std::string& falco::load_result::error_code_str(error_code ec)
@@ -37,7 +38,8 @@ static const std::string error_strings[] = {
 	"Error validating internal structure of YAML file",
 	"Error compiling condition",
 	"Error compiling output",
-	"Error validating rule/macro/list/exception objects"
+	"Error validating rule/macro/list/exception objects",
+	"Error in extension item"
 };
 
 const std::string& falco::load_result::error_str(error_code ec)
@@ -51,7 +53,8 @@ static const std::string error_descs[] = {
 	"This occurs when the internal structure of the YAML file is incorrect. Examples include not consisting of a sequence of maps, a given rule/macro/list item not having required keys, values not having the right type (e.g. the items property of a list not being a sequence), etc.",
 	"This occurs when a condition string can not be compiled to a filter object.",
 	"This occurs when an output string can not be compiled to an output object.",
-	"This occurs when a rule/macro/list item is incorrect. Examples include a condition field referring to an undefined macro, falco engine/plugin version mismatches, items with append without any existing item, exception fields/comps having different lengths, etc."
+	"This occurs when a rule/macro/list item is incorrect. Examples include a condition field referring to an undefined macro, falco engine/plugin version mismatches, items with append without any existing item, exception fields/comps having different lengths, etc.",
+	"This occurs when there is an error in an extension item"
 };
 
 const std::string& falco::load_result::error_desc(error_code ec)
@@ -67,7 +70,9 @@ static const std::string warning_codes[] = {
 	"LOAD_UNUSED_MACRO",
 	"LOAD_UNUSED_LIST",
 	"LOAD_UNKNOWN_ITEM",
-	"LOAD_DEPRECATED_ITEM"
+	"LOAD_DEPRECATED_ITEM",
+	"LOAD_WARNING_EXTENSION",
+	"LOAD_APPEND_NO_VALUES"
 };
 
 const std::string& falco::load_result::warning_code_str(warning_code wc)
@@ -83,7 +88,9 @@ static const std::string warning_strings[] = {
 	"Unused macro",
 	"Unused list",
 	"Unknown rules file item",
-	"Used deprecated item"
+	"Used deprecated item",
+	"Warning in extension item",
+	"Overriding/appending with no values"
 };
 
 const std::string& falco::load_result::warning_str(warning_code wc)
@@ -99,7 +106,9 @@ static const std::string warning_descs[] = {
 	"A macro is defined in the rules content but is not used by any other macro or rule.",
 	"A list is defined in the rules content but is not used by any other list, macro, or rule.",
 	"An unknown top-level object is in the rules content. It will be ignored.",
-	"A deprecated item is employed by lists, macros, or rules."
+	"A deprecated item is employed by lists, macros, or rules.",
+	"An extension item has a warning",
+	"A rule exception is overriding/appending with no values"
 };
 
 const std::string& falco::load_result::warning_desc(warning_code wc)
