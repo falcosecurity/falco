@@ -101,8 +101,6 @@ void filter_macro_resolver::visitor::visit(ast::list_expr* e)
 
 void filter_macro_resolver::visitor::visit(ast::binary_check_expr* e)
 {
-	// avoid exploring checks, so that we can be sure that each
-	// value_expr* node visited is a macro identifier
 	m_node_substitute = nullptr;
 }
 
@@ -113,10 +111,22 @@ void filter_macro_resolver::visitor::visit(ast::unary_check_expr* e)
 
 void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 {
-	// we are supposed to get here only in case
-	// of identier-only children from either a 'not',
-	// an 'and' or an 'or'.
-	const auto& macro = m_macros.find(e->value);
+	m_node_substitute = nullptr;
+}
+
+void filter_macro_resolver::visitor::visit(ast::field_expr* e)
+{
+	m_node_substitute = nullptr;
+}
+
+void filter_macro_resolver::visitor::visit(ast::field_transformer_expr* e)
+{
+	m_node_substitute = nullptr;
+}
+
+void filter_macro_resolver::visitor::visit(ast::identifier_expr* e)
+{
+	const auto& macro = m_macros.find(e->identifier);
 	if (macro != m_macros.end() && macro->second) // skip null-ptr macros
 	{
 		// note: checks for loop detection
@@ -126,7 +136,7 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 			auto msg = "reference loop in macro '" + macro->first + "'";
 			m_errors.push_back({msg, e->get_pos()});
 			m_node_substitute = nullptr;
-			m_unknown_macros.push_back({e->value, e->get_pos()});
+			m_unknown_macros.push_back({e->identifier, e->get_pos()});
 			return;
 		}
 
@@ -140,12 +150,12 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 		{
 			m_node_substitute = std::move(new_node);
 		}
-		m_resolved_macros.push_back({e->value, e->get_pos()});
+		m_resolved_macros.push_back({e->identifier, e->get_pos()});
 		m_macros_path.pop_back();
 	}
 	else
 	{
 		m_node_substitute = nullptr;
-		m_unknown_macros.push_back({e->value, e->get_pos()});
+		m_unknown_macros.push_back({e->identifier, e->get_pos()});
 	}
 }

@@ -35,7 +35,7 @@ class filter_macro_resolver
 			according with all the definitions added through set_macro(),
 			by replacing the reference with a clone of the macro AST.
 			\param filter The filter AST to be processed. Note that the pointer
-			is passed by reference and be modified in order to apply
+			is passed by reference and be transformed in order to apply
 			the substutions. In that case, the old pointer is owned by this
 			class and is deleted automatically.
 			\return true if at least one of the defined macros is resolved
@@ -121,10 +121,13 @@ class filter_macro_resolver
 			void visit(libsinsp::filter::ast::and_expr* e) override;
 			void visit(libsinsp::filter::ast::or_expr* e) override;
 			void visit(libsinsp::filter::ast::not_expr* e) override;
+			void visit(libsinsp::filter::ast::identifier_expr* e) override;
 			void visit(libsinsp::filter::ast::value_expr* e) override;
 			void visit(libsinsp::filter::ast::list_expr* e) override;
 			void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 			void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+			void visit(libsinsp::filter::ast::field_expr* e) override;
+			void visit(libsinsp::filter::ast::field_transformer_expr* e) override;
 		};
 
 		std::vector<value_info> m_errors;

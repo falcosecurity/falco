@@ -60,22 +60,25 @@ private:
 		explicit visitor(filter_details& details) :
 			m_details(details),
 			m_expect_list(false),
-			m_expect_macro(false),
-			m_expect_evtname(false) {}
+			m_expect_evtname(false),
+			m_last_node_field_name() {}
 		visitor(visitor&&) = default;
 		visitor(const visitor&) = delete;
 
 		void visit(libsinsp::filter::ast::and_expr* e) override;
 		void visit(libsinsp::filter::ast::or_expr* e) override;
 		void visit(libsinsp::filter::ast::not_expr* e) override;
+		void visit(libsinsp::filter::ast::identifier_expr* e) override;
 		void visit(libsinsp::filter::ast::value_expr* e) override;
 		void visit(libsinsp::filter::ast::list_expr* e) override;
 		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+		void visit(libsinsp::filter::ast::field_expr* e) override;
+		void visit(libsinsp::filter::ast::field_transformer_expr* e) override;
 
 		filter_details& m_details;
 		bool m_expect_list;
-		bool m_expect_macro;
 		bool m_expect_evtname;
+		std::string m_last_node_field_name;
 	};
 };
