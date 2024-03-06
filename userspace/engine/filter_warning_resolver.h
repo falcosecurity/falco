@@ -49,17 +49,22 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::base_expr_visitor
 	{
-		visitor(): m_is_equality_check(false), m_warnings(nullptr) {}
+		visitor():
+			m_is_equality_check(false),
+			m_last_node_is_unsafe_field(false),
+			m_warnings(nullptr) {}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = delete;
 		visitor& operator = (const visitor&) = delete;
 
 		bool m_is_equality_check;
+		bool m_last_node_is_unsafe_field;
 		std::set<falco::load_result::warning_code>* m_warnings;
 
 		void visit(libsinsp::filter::ast::value_expr* e) override;
 		void visit(libsinsp::filter::ast::list_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+		void visit(libsinsp::filter::ast::field_expr* e) override;
 	};
 };

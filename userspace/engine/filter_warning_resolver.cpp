@@ -49,12 +49,20 @@ bool filter_warning_resolver::run(
 void filter_warning_resolver::visitor::visit(
 	libsinsp::filter::ast::binary_check_expr* e)
 {
-	if (is_unsafe_field(e->field) && is_equality_operator(e->op))
+	m_last_node_is_unsafe_field = false;
+	e->left->accept(this);
+	if (m_last_node_is_unsafe_field && is_equality_operator(e->op))
 	{
 		m_is_equality_check = true;
-		e->value->accept(this);
+		e->right->accept(this);
 		m_is_equality_check = false;
 	}
+}
+
+void filter_warning_resolver::visitor::visit(
+	libsinsp::filter::ast::field_expr* e)
+{
+	m_last_node_is_unsafe_field = is_unsafe_field(e->field);
 }
 
 void filter_warning_resolver::visitor::visit(
