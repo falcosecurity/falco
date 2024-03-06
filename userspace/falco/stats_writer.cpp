@@ -307,8 +307,9 @@ stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
 
 void stats_writer::collector::get_metrics_output_fields_wrapper(
 		nlohmann::json& output_fields,
-		const std::shared_ptr<sinsp>& inspector, uint64_t now,
-		const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec)
+		const std::shared_ptr<sinsp>& inspector,
+		const std::string& src, uint64_t num_evts,
+		uint64_t now, double stats_snapshot_time_delta_sec)
 {
 	static const char* all_driver_engines[] = {
 		BPF_ENGINE, KMOD_ENGINE, MODERN_BPF_ENGINE,
@@ -318,12 +319,12 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
+	output_fields["evt.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["falco.version"] = FALCO_VERSION;
 	output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
 	output_fields["falco.duration_sec"] = (uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
 	output_fields["falco.kernel_release"] = agent_info->uname_r;
 	output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
-	output_fields["falco.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
 
@@ -350,144 +351,57 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 void stats_writer::collector::get_metrics_output_fields_additional(
 		nlohmann::json& output_fields,
-		const std::shared_ptr<sinsp>& inspector,
-		double stats_snapshot_time_delta_sec, const std::string& src)
+		double stats_snapshot_time_delta_sec)
 {
-	const scap_agent_info* agent_info = inspector->get_agent_info();
-
 #if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-	uint32_t nstats = 0;
-	int32_t rc = 0;
-	uint32_t flags = m_writer->m_config->m_metrics_flags;
-
-	auto buffer = inspector->get_sinsp_stats_v2_buffer();
-	auto sinsp_stats_v2 = inspector->get_sinsp_stats_v2();
-	sinsp_thread_manager* thread_manager = inspector->m_thread_manager.get();
-	const scap_stats_v2* sinsp_stats_v2_snapshot = libsinsp::stats::get_sinsp_stats_v2(flags, agent_info, thread_manager, sinsp_stats_v2, buffer, &nstats, &rc);
-
-	uint32_t base_stat = 0;
-	// todo @incertum this needs to become better with the next proper stats refactor in libs 0.15.0
-	if ((flags & PPM_SCAP_STATS_STATE_COUNTERS) && !(flags & PPM_SCAP_STATS_RESOURCE_UTILIZATION))
+	if (m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter)
 	{
-		base_stat = SINSP_STATS_V2_N_THREADS;
-	}
-
-	if (sinsp_stats_v2_snapshot && rc == 0 && nstats > 0)
-	{
-		for(uint32_t stat = base_stat; stat < nstats; stat++)
-		{
-			if (sinsp_stats_v2_snapshot[stat].name[0] == '\0')
-			{
-				break;
-			}
-			char metric_name[STATS_NAME_MAX] = "falco.";
-			strlcat(metric_name, sinsp_stats_v2_snapshot[stat].name, sizeof(metric_name));
-			// todo @incertum temporary fix for n_fds and n_threads, type assignment was missed in libs, will be fixed in libs 0.15.0
-			if (strncmp(sinsp_stats_v2_snapshot[stat].name, "n_fds", 6) == 0 || strncmp(sinsp_stats_v2_snapshot[stat].name, "n_threads", 10) == 0)
-			{
-				output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u64;
-			}
-
-			switch(sinsp_stats_v2_snapshot[stat].type)
-			{
-			case STATS_VALUE_TYPE_U64:
-				if (sinsp_stats_v2_snapshot[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-				{
-					break;
-				}
-				if (m_writer->m_config->m_metrics_convert_memory_to_mb)
-				{
-					if (strncmp(sinsp_stats_v2_snapshot[stat].name, "container_memory_used", 22) == 0) // exact str match
-					{
-						output_fields[metric_name] = (uint64_t)(sinsp_stats_v2_snapshot[stat].value.u64 / (double)1024 / (double)1024);
-
-					} else if (strncmp(sinsp_stats_v2_snapshot[stat].name, "memory_", 7) == 0) // prefix match
-					{
-						output_fields[metric_name] = (uint64_t)(sinsp_stats_v2_snapshot[stat].value.u64 / (double)1024);
-					} else
-					{
-						output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u64;
-					}
-				}
-				else
-				{
-					output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u64;
-				}
-				break;
-			case STATS_VALUE_TYPE_U32:
-				if (sinsp_stats_v2_snapshot[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-				{
-					break;
-				}
-				if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(sinsp_stats_v2_snapshot[stat].name, "memory_", 7) == 0) // prefix match
-				{
-					output_fields[metric_name] = (uint32_t)(sinsp_stats_v2_snapshot[stat].value.u32 / (double)1024);
-				}
-				else
-				{
-					output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u32;
-				}
-				break;
-			case STATS_VALUE_TYPE_D:
-				if (sinsp_stats_v2_snapshot[stat].value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-				{
-					break;
-				}
-				output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.d;
-				break;
-			default:
-				break;
-			}
-		}
-	}
-
-	if (src != falco_common::syscall_source)
-	{
-		return;
-	}
-
-	/* Kernel side stats counters and libbpf stats if applicable. */
-	nstats = 0;
-	rc = 0;
-	if (!(inspector->check_current_engine(BPF_ENGINE) || inspector->check_current_engine(MODERN_BPF_ENGINE)))
-	{
-		flags &= ~PPM_SCAP_STATS_LIBBPF_STATS;
-	}
-
-	// Note: ENGINE_FLAG_BPF_STATS_ENABLED check has been moved to libs, that is, when libbpf stats is not enabled
-	// in the kernel settings we won't collect them even if the end user enabled the libbpf stats option
-
-	const scap_stats_v2* scap_stats_v2_snapshot = inspector->get_capture_stats_v2(flags, &nstats, &rc);
-	if (scap_stats_v2_snapshot && nstats > 0 && rc == 0)
-	{
-		/* Cache n_evts and n_drops to derive n_drops_perc. */
+		// Refresh / New snapshot
+		m_writer->m_libs_metrics_collector->snapshot();
+		auto metrics_snapshot = m_writer->m_libs_metrics_collector->get_metrics();
+		// Cache n_evts and n_drops to derive n_drops_perc.
 		uint64_t n_evts = 0;
 		uint64_t n_drops = 0;
 		uint64_t n_evts_delta = 0;
 		uint64_t n_drops_delta = 0;
-		for(uint32_t stat = 0; stat < nstats; stat++)
+
+		// Note: Because of possible metric unit conversions, get a non-const ref to the metric.
+		for (auto& metric: metrics_snapshot)
 		{
-			if (scap_stats_v2_snapshot[stat].name[0] == '\0')
+			if (metric.name[0] == '\0')
 			{
 				break;
 			}
-			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
-			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `falco.`
-			char metric_name[STATS_NAME_MAX] = "scap.";
-			strlcat(metric_name, scap_stats_v2_snapshot[stat].name, sizeof(metric_name));
-			switch(scap_stats_v2_snapshot[stat].type)
+			if (m_writer->m_config->m_metrics_convert_memory_to_mb)
 			{
-			case STATS_VALUE_TYPE_U64:
-				/* Always send high level n_evts related fields, even if zero. */
-				if (strncmp(scap_stats_v2_snapshot[stat].name, "n_evts", 7) == 0) // exact not prefix match here
+				m_writer->m_output_rule_metrics_converter->convert_metric_to_unit_convention(metric);
+			}
+			char metric_name[METRIC_NAME_MAX] = "falco.";
+			if((metric.flags & METRICS_V2_LIBBPF_STATS) || (metric.flags & METRICS_V2_KERNEL_COUNTERS) )
+			{
+				strlcpy(metric_name, "scap.", sizeof(metric_name));
+			}
+			strlcat(metric_name, metric.name, sizeof(metric_name));
+
+			switch (metric.type)
+			{
+			case METRIC_VALUE_TYPE_U32:
+				if (metric.value.u32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
-					n_evts = scap_stats_v2_snapshot[stat].value.u64;
+					break;
+				}
+				output_fields[metric_name] = metric.value.u32;
+				break;
+			case METRIC_VALUE_TYPE_U64:
+				if (strncmp(metric.name, "n_evts", 7) == 0)
+				{
+					n_evts = metric.value.u64;
+					// Always send high level n_evts related fields, even if zero and configs are set to exclude empty values.
 					output_fields[metric_name] = n_evts;
 					output_fields["scap.n_evts_prev"] = m_last_n_evts;
 					n_evts_delta = n_evts - m_last_n_evts;
 					if (n_evts_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
-						/* n_evts is total number of kernel side events. */
 						output_fields["scap.evts_rate_sec"] = std::round((double)(n_evts_delta / stats_snapshot_time_delta_sec) * 10.0) / 10.0; // round to 1 decimal
 					}
 					else
@@ -496,16 +410,15 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					m_last_n_evts = n_evts;
 				}
-				/* Always send high level n_drops related fields, even if zero. */
-				else if (strncmp(scap_stats_v2_snapshot[stat].name, "n_drops", 8) == 0) // exact not prefix match here
+				else if (strncmp(metric.name, "n_drops", 8) == 0)
 				{
-					n_drops = scap_stats_v2_snapshot[stat].value.u64;
+					n_drops = metric.value.u64;
+					// Always send high level n_drops related fields, even if zero and configs are set to exclude empty values.
 					output_fields[metric_name] = n_drops;
 					output_fields["scap.n_drops_prev"] = m_last_n_drops;
 					n_drops_delta = n_drops - m_last_n_drops;
 					if (n_drops_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
-						/* n_drops is total number of kernel side event drops. */
 						output_fields["scap.evts_drop_rate_sec"] = std::round((double)(n_drops_delta / stats_snapshot_time_delta_sec) * 10.0) / 10.0; // round to 1 decimal
 					}
 					else
@@ -514,18 +427,25 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					m_last_n_drops = n_drops;
 				}
-				if (scap_stats_v2_snapshot[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				if (metric.value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
 					break;
 				}
-				output_fields[metric_name] = scap_stats_v2_snapshot[stat].value.u64;
+				output_fields[metric_name] = metric.value.u64;
+				break;
+			case METRIC_VALUE_TYPE_D:
+				if (metric.value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = metric.value.d;
 				break;
 			default:
 				break;
 			}
 		}
 		/* n_drops_perc needs to be calculated outside the loop given no field ordering guarantees.
-		 * Always send n_drops_perc, even if zero. */
+		 * Always send n_drops_perc, even if zero and configs are set to exclude empty values. */
 		if(n_evts_delta > 0)
 		{
 			output_fields["scap.n_drops_perc"] = (double)((100.0 * n_drops_delta) / n_evts_delta);
@@ -542,6 +462,30 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 {
 	if (m_writer->has_output())
 	{
+
+		if(!m_writer->m_libs_metrics_collector)
+		{
+			uint32_t flags = m_writer->m_config->m_metrics_flags;
+			// Note: ENGINE_FLAG_BPF_STATS_ENABLED check has been moved to libs, that is, when libbpf stats is not enabled
+			// in the kernel settings we won't collect them even if the end user enabled the libbpf stats option
+			if (!(inspector->check_current_engine(BPF_ENGINE) || inspector->check_current_engine(MODERN_BPF_ENGINE)))
+			{
+				flags &= ~METRICS_V2_LIBBPF_STATS;
+			}
+			// Note: src is static for live captures
+			if (src != falco_common::syscall_source)
+			{
+				flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS);
+
+			}
+			m_writer->m_libs_metrics_collector = std::make_unique<libs::metrics::libs_metrics_collector>(inspector.get(), flags);
+		}
+
+		if(!m_writer->m_output_rule_metrics_converter)
+		{
+			m_writer->m_output_rule_metrics_converter = std::make_unique<libs::metrics::output_rule_metrics_converter>();
+		}
+
 		/* Collect stats / metrics once per ticker period. */
 		auto tick = stats_writer::get_ticker();
 		if (tick != m_last_tick)
@@ -559,8 +503,8 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 
 			/* Get respective metrics output_fields. */
 			nlohmann::json output_fields;
-			get_metrics_output_fields_wrapper(output_fields, inspector, now, src, num_evts, stats_snapshot_time_delta_sec);
-			get_metrics_output_fields_additional(output_fields, inspector, stats_snapshot_time_delta_sec, src);
+			get_metrics_output_fields_wrapper(output_fields, inspector, src, num_evts, now, stats_snapshot_time_delta_sec);
+			get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec);
 
 			/* Send message in the queue */
 			stats_writer::msg msg;

@@ -67,12 +67,12 @@ public:
 		/*!
 			\brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, const std::string& src, uint64_t num_evts, uint64_t now, double stats_snapshot_time_delta_sec);
 
 		/*!
-			\brief Collect snapshot metrics syscalls related metrics as internal rule formatted output fields.
+			\brief Collect the configurable snapshot metrics as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_additional(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
+		void get_metrics_output_fields_additional(nlohmann::json& output_fields, double stats_snapshot_time_delta_sec);
 
 		std::shared_ptr<stats_writer> m_writer;
 		stats_writer::ticker_t m_last_tick = 0;
@@ -148,6 +148,8 @@ private:
 #endif
 	std::shared_ptr<falco_outputs> m_outputs;
 	std::shared_ptr<const falco_configuration> m_config;
+	std::unique_ptr<libs::metrics::libs_metrics_collector> m_libs_metrics_collector;
+	std::unique_ptr<libs::metrics::output_rule_metrics_converter> m_output_rule_metrics_converter;
 
 	// note: in this way, only collectors can push into the queue
 	friend class stats_writer::collector;
