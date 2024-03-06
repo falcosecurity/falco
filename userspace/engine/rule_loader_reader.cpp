@@ -316,6 +316,13 @@ static void read_rule_exceptions(
 		rule_loader::rule_exception_info v_ex(ex_ctx);
 		v_ex.name = name;
 
+		// Check if an exception with the same name has already been defined
+		for (auto &exception : exceptions)
+		{
+			THROW((v_ex.name == exception.name),
+			       "Exceptions names in the same object must be unique", ex_ctx);
+		}
+
 		// note: the legacy lua loader used to throw a "xxx must strings" error
 
 		// fields are optional when append is true
