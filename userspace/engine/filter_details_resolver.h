@@ -34,6 +34,7 @@ struct filter_details
 	std::unordered_set<std::string> operators;
 	std::unordered_set<std::string> lists;
 	std::unordered_set<std::string> evtnames;
+	std::unordered_set<std::string> transformers;
 
 	void reset();
 };
