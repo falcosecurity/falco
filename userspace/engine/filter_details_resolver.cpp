@@ -38,6 +38,7 @@ void filter_details::reset()
 	operators.clear();
 	lists.clear();
 	evtnames.clear();
+	transformers.clear();
 }
 
 void filter_details_resolver::run(ast::expr* filter, filter_details& details)
@@ -94,13 +95,16 @@ void filter_details_resolver::visitor::visit(ast::list_expr* e)
 void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
 {
 	m_last_node_field_name.clear();
+	m_expect_evtname = false;
+	m_expect_list = false;
 	e->left->accept(this);
 	if (m_last_node_field_name.empty())
 	{
 		throw std::runtime_error("can't find field info in binary check expression");
 	}
-	m_details.fields.insert(m_last_node_field_name);
+	
 	m_details.operators.insert(e->op);
+
 	m_expect_list = true;
 	m_expect_evtname = m_last_node_field_name == "evt.type" || m_last_node_field_name == "evt.asynctype";
 	e->right->accept(this);
@@ -140,9 +144,11 @@ void filter_details_resolver::visitor::visit(ast::value_expr* e)
 void filter_details_resolver::visitor::visit(ast::field_expr* e)
 {
 	m_last_node_field_name = get_field_name(e->field, e->arg);
+	m_details.fields.insert(m_last_node_field_name);
 }
 
 void filter_details_resolver::visitor::visit(ast::field_transformer_expr* e)
 {
+	m_details.transformers.insert(e->transformer);
 	e->value->accept(this);
 }
