@@ -403,13 +403,7 @@ Based on the user input it populates the driver configuration in the falco confi
 It returns "true" if the driver loader has to be enabled, otherwise false.
 */}}
 {{- define "driverLoader.enabled" -}}
-{{- if or
-        (eq .Values.driver.kind "modern_ebpf")
-        (eq .Values.driver.kind "modern-bpf")
-        (eq .Values.driver.kind "gvisor")
-        (not .Values.driver.enabled)
-        (not .Values.driver.loader.enabled)
--}}
+{{- if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") (eq .Values.driver.kind "gvisor") (not .Values.driver.enabled) (not .Values.driver.loader.enabled) -}}
 false
 {{- else -}}
 true
