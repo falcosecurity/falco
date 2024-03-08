@@ -904,3 +904,58 @@ TEST_F(test_falco_engine, list_name_invalid)
   ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
   ASSERT_TRUE(check_error_message("List has an invalid name. List names must match a regular expression"));
 }
+
+// The appended exception has a purposely miswritten field (value),
+// simulating a typo or an incorrect usage.
+TEST_F(test_falco_engine, exceptions_append_no_values)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: proc.cmdline contains curl
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: test_exception
+      fields: [proc.cmdline]
+      comps: [contains]
+      values:
+        - [curl 127.0.0.1]
+
+- rule: test_rule
+  exceptions:
+    - name: test_exception
+      value: curl 1.1.1.1
+  append: true
+)END";
+
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_warning_message("Overriding/appending exception with no values"));
+}
+
+TEST_F(test_falco_engine, exceptions_override_no_values)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: proc.cmdline contains curl
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: test_exception
+      fields: [proc.cmdline]
+      comps: [contains]
+      values:
+        - [curl 127.0.0.1]
+
+- rule: test_rule
+  exceptions:
+    - name: test_exception
+      value: curl 1.1.1.1
+  override:
+    exceptions: append
+)END";
+
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_warning_message("Overriding/appending exception with no values"));
+}
