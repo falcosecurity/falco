@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+##v4.2.3
+
+* fix(falco/helpers): adjust formatting to be compatible with older helm versions
+
 ## v4.2.2
 
 * fix(falco/README): dead link
