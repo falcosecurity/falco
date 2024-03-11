@@ -35,8 +35,13 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
-
 #include <re2/re2.h>
+#include <valijson/adapters/yaml_cpp_adapter.hpp>
+#include <valijson/adapters/nlohmann_json_adapter.hpp>
+#include <valijson/schema.hpp>
+#include <valijson/schema_parser.hpp>
+#include <valijson/validator.hpp>
+#include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 
@@ -177,8 +182,251 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 }
 
+static const std::string schema_json_string = R"(
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "engine": {
+            "type": "object",
+            "properties": {
+                "kind": { "type": "string" },
+                "kmod": {
+                    "type": "object",
+                    "properties": {
+                        "buf_size_preset": {},
+                        "drop_failed_exit": {}
+                    }
+                },
+                "ebpf": {
+                    "type": "object",
+                    "properties": {
+                        "probe": {},
+                        "buf_size_preset": {},
+                        "drop_failed_exit": {}
+                    }
+                },
+                "modern_ebpf": {
+                    "type": "object",
+                    "properties": {
+                        "cpus_for_each_buffer": {},
+                        "buf_size_preset": {},
+                        "drop_failed_exit": {}
+                    }
+                }
+            },
+            "required": ["kind", "kmod", "ebpf", "modern_ebpf"]
+        },
+        "replay": {
+            "type": "object",
+            "properties": {
+                "capture_file": {}
+            }
+        },
+        "gvisor": {
+            "type": "object",
+            "properties": {
+                "config": {},
+                "root": {}
+            }
+        },
+        "load_plugins": {},
+        "plugins": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {},
+                    "library_path": {},
+                    "init_config": {
+                        "type": "object",
+                        "properties": {
+                            "maxEventSize": {},
+                            "webhookMaxBatchSize": {},
+                            "sslCertificate": {}
+                        }
+                    },
+                    "open_params": {}
+                },
+                "required": ["name", "library_path"]
+            }
+        },
+        "watch_config_files": {},
+        "time_format_iso_8601": {},
+        "priority": {},
+        "json_output": {},
+        "json_include_output_property": {},
+        "json_include_tags_property": {},
+        "buffered_outputs": {},
+        "rule_matching": {},
+        "outputs_queue": {
+            "type": "object",
+            "properties": {
+                "capacity": {}
+            }
+        },
+        "stdout_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {}
+            }
+        },
+        "syslog_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {}
+            }
+        },
+        "file_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "keep_alive": {},
+                "filename": {}
+            }
+        },
+        "http_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "url": {},
+                "user_agent": {},
+                "insecure": {},
+                "ca_cert": {},
+                "ca_bundle": {},
+                "ca_path": {},
+                "mtls": {},
+                "client_cert": {},
+                "client_key": {},
+                "echo": {},
+                "compress_uploads": {},
+                "keep_alive": {}
+            }
+        },
+        "program_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "keep_alive": {},
+                "program": {}
+            }
+        },
+        "grpc_output": {
+            "type": "object",
+            "properties": {
+                "enabled": {}
+            }
+        },
+        "grpc": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "bind_address": {},
+                "threadiness": {}
+            }
+        },
+        "webserver": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "threadiness": {},
+                "listen_port": {},
+                "listen_address": {},
+                "k8s_healthz_endpoint": {},
+                "ssl_enabled": {},
+                "ssl_certificate": {}
+            }
+        },
+        "log_stderr": {},
+        "log_syslog": {},
+        "log_level": {},
+        "libs_logger": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "severity": {}
+            }
+        },
+        "output_timeout": {},
+        "syscall_event_timeouts": {
+            "type": "object",
+            "properties": {
+                "max_consecutives": {}
+            }
+        },
+        "syscall_event_drops": {
+            "type": "object",
+            "properties": {
+                "threshold": {},
+                "actions": {},
+                "rate": {},
+                "max_burst": {},
+                "simulate_drops": {}
+            }
+        },
+        "metrics": {
+            "type": "object",
+            "properties": {
+                "enabled": {},
+                "interval": {},
+                "output_rule": {},
+                "output_file": {},
+                "resource_utilization_enabled": {},
+                "state_counters_enabled": {},
+                "kernel_event_counters_enabled": {},
+                "libbpf_stats_enabled": {},
+                "convert_memory_to_mb": {},
+                "include_empty_values": {}
+            }
+        },
+        "syscall_buf_size_preset": {},
+        "syscall_drop_failed_exit": {},
+        "base_syscalls": {
+            "type": "object",
+            "properties": {
+                "custom_set": {},
+                "repair": {}
+            }
+        },
+        "modern_bpf": {
+            "type": "object",
+            "properties": {
+                "cpus_for_each_syscall_buffer": {}
+            }
+        }
+    },
+    "required": ["engine"]
+}
+
+)";
+
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
+	// Load the schema with a `NlohmannJsonAdapter`
+	valijson::Schema schema;
+	valijson::SchemaParser schema_parser;
+	auto json_schema = nlohmann::json::parse(schema_json_string);
+	auto schema_adapter = valijson::adapters::NlohmannJsonAdapter(json_schema);
+	schema_parser.populateSchema(schema_adapter, schema);
+
+	// Load the yaml config into a `YamlCppAdapter`
+	YAML::Node loadedYaml = YAML::LoadFile(config_name);
+	auto yaml_adapter = valijson::adapters::YamlCppAdapter(loadedYaml);
+
+	// Validation
+	valijson::ValidationResults results;
+	valijson::Validator validator;
+
+	if (!validator.validate(schema, yaml_adapter, &results))
+	{
+		std::string validation_errors;
+		for(const auto &e : results){
+			validation_errors +=  e.description + "\n";
+		}
+
+		throw std::runtime_error("Validation failed with the following errors.\n" + validation_errors);
+	}
+
 	load_engine_config(config_name, config);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
