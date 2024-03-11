@@ -20,7 +20,7 @@ limitations under the License.
 
 // The version of this Falco engine
 #define FALCO_ENGINE_VERSION_MAJOR 0
-#define FALCO_ENGINE_VERSION_MINOR 36
+#define FALCO_ENGINE_VERSION_MINOR 37
 #define FALCO_ENGINE_VERSION_PATCH 0
 
 #define FALCO_ENGINE_VERSION \
