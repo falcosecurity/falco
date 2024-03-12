@@ -5,7 +5,7 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## v4.2.4
 
-* bump falcosidekick dependency version to install latest version through falco chart
+* bump falcosidekick dependency version to v0.7.15 install latest version through falco chart
 
 ## v4.2.3
 
