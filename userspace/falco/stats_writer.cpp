@@ -319,11 +319,11 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
-	output_fields["evt.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["falco.version"] = FALCO_VERSION;
 	output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
 	output_fields["falco.duration_sec"] = (uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
 	output_fields["falco.kernel_release"] = agent_info->uname_r;
+	output_fields["evt.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
 	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
@@ -353,7 +353,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		nlohmann::json& output_fields,
 		double stats_snapshot_time_delta_sec)
 {
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if (m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter)
 	{
 		// Refresh / New snapshot
@@ -462,7 +462,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 {
 	if (m_writer->has_output())
 	{
-
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 		if(!m_writer->m_libs_metrics_collector)
 		{
 			uint32_t flags = m_writer->m_config->m_metrics_flags;
@@ -485,7 +485,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 		{
 			m_writer->m_output_rule_metrics_converter = std::make_unique<libs::metrics::output_rule_metrics_converter>();
 		}
-
+#endif
 		/* Collect stats / metrics once per ticker period. */
 		auto tick = stats_writer::get_ticker();
 		if (tick != m_last_tick)

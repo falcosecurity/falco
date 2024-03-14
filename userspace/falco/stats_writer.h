@@ -146,11 +146,12 @@ private:
 #ifndef __EMSCRIPTEN__
 	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;
 #endif
-	std::shared_ptr<falco_outputs> m_outputs;
-	std::shared_ptr<const falco_configuration> m_config;
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	std::unique_ptr<libs::metrics::libs_metrics_collector> m_libs_metrics_collector;
 	std::unique_ptr<libs::metrics::output_rule_metrics_converter> m_output_rule_metrics_converter;
-
+#endif
+	std::shared_ptr<falco_outputs> m_outputs;
+	std::shared_ptr<const falco_configuration> m_config;
 	// note: in this way, only collectors can push into the queue
 	friend class stats_writer::collector;
 };
