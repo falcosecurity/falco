@@ -36,6 +36,7 @@ public:
 	falco_webserver& operator = (const falco_webserver&) = delete;
 	virtual void start(
 		const std::shared_ptr<sinsp>& inspector,
+		const std::vector<libs::metrics::libs_metrics_collector>& metrics_collectors,
 		uint32_t threadiness,
 		uint32_t listen_port,
 		std::string& list_address,

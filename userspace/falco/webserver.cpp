@@ -27,6 +27,7 @@ falco_webserver::~falco_webserver()
 
 void falco_webserver::start(
         const std::shared_ptr<sinsp>& inspector,
+        const std::vector<libs::metrics::libs_metrics_collector>& metrics_collectors,
         uint32_t threadiness,
         uint32_t listen_port,
         std::string& listen_address,
@@ -68,6 +69,28 @@ void falco_webserver::start(
             res.set_content(versions_json_str, "application/json");
         });
 
+    if (!metrics_collectors.empty())
+    {
+        libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
+
+        m_server->Get("/metrics",
+            [metrics_collectors, prometheus_metrics_converter](const httplib::Request &, httplib::Response &res) {
+                std::string prometheus_text;
+
+                for (auto metrics_collector: metrics_collectors) {
+                    metrics_collector.snapshot();
+                    auto metrics_snapshot = metrics_collector.get_metrics();
+
+                    for (auto& metric: metrics_snapshot)
+                    {
+                       prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+                       prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "namespace", "falco") + "\n";
+                    }
+                }
+
+                res.set_content(prometheus_text, "text/plain; version=0.0.4");
+            });
+    }
     // run server in a separate thread
     if (!m_server->is_valid())
     {
@@ -118,10 +141,7 @@ void falco_webserver::stop()
         {
             m_server_thread.join();
         }
-        if (m_server != nullptr)
-        {
-            m_server = nullptr;
-        }
+        m_server = nullptr;
         m_running = false;
     }
 }

@@ -151,6 +151,7 @@ public:
 	uint32_t m_metrics_flags;
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
+	bool m_metrics_prometheus_enabled;
 	std::vector<plugin_config> m_plugins;
 
 	// Falco engine

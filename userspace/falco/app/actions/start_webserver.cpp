@@ -44,8 +44,18 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			+ std::to_string(s.config->m_webserver_listen_port)
 			+ ssl_option + "\n");
 
+		std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
+		if (s.config->m_metrics_prometheus_enabled && s.config->m_metrics_prometheus_enabled)
+		{
+			for (const auto& source_info: s.source_infos)
+			{
+				metrics_collectors.push_back(libs::metrics::libs_metrics_collector(source_info.inspector.get(), s.config->m_metrics_flags));
+			}
+		}
+
 		s.webserver.start(
 			s.offline_inspector,
+			metrics_collectors,
 			s.config->m_webserver_threadiness,
 			s.config->m_webserver_listen_port, 
 			s.config->m_webserver_listen_address,
