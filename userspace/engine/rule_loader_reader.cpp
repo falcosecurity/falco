@@ -629,7 +629,7 @@ void rule_loader::reader::read_item(
 
 				if (check_update_expected(expected_keys, override_replace, "replace", "exceptions", ctx))
 				{
-					read_rule_exceptions(item, v.exceptions, ctx, true);
+					read_rule_exceptions(item, v.exceptions, ctx, false);
 				}
 
 				if (check_update_expected(expected_keys, override_replace, "replace", "output", ctx))
@@ -750,7 +750,7 @@ void rule_loader::reader::read_item(
 				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);
-				read_rule_exceptions(item, v.exceptions, ctx, has_append_flag);
+				read_rule_exceptions(item, v.exceptions, ctx, false);
 				collector.define(cfg, v);
 			}
 		}
