@@ -1003,6 +1003,7 @@ metrics:
   libbpf_stats_enabled: true
   convert_memory_to_mb: true
   include_empty_values: false
+  prometheus_enabled: false
 
 #######################################
 # Falco performance tuning (advanced) #

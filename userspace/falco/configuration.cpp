@@ -79,7 +79,8 @@ falco_configuration::falco_configuration():
 	m_metrics_output_file(""),
 	m_metrics_flags((METRICS_V2_KERNEL_COUNTERS | METRICS_V2_LIBBPF_STATS | METRICS_V2_RESOURCE_UTILIZATION | METRICS_V2_STATE_COUNTERS)),
 	m_metrics_convert_memory_to_mb(true),
-	m_metrics_include_empty_values(false)
+	m_metrics_include_empty_values(false),
+	m_metrics_prometheus_enabled(false)
 {
 }
 
@@ -553,6 +554,7 @@ void falco_configuration::load_yaml(const std::string& config_name)
 
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values = config.get_scalar<bool>("metrics.include_empty_values", false);
+	m_metrics_prometheus_enabled = config.get_scalar<bool>("metrics.prometheus_enabled", false);
 
 	std::vector<std::string> load_plugins;
 
