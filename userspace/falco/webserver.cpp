@@ -84,7 +84,7 @@ void falco_webserver::start(
                     for (auto& metric: metrics_snapshot)
                     {
                        prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-                       prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "namespace", "falco");
+                       prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco");
                     }
                 }
 
