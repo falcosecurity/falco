@@ -45,7 +45,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			+ ssl_option + "\n");
 
 		std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
-		if (s.config->m_metrics_prometheus_enabled && s.config->m_metrics_prometheus_enabled)
+		if (s.config->m_metrics_enabled && s.config->m_metrics_prometheus_enabled)
 		{
 			for (const auto& source_info: s.source_infos)
 			{
