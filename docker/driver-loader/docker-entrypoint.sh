@@ -28,12 +28,14 @@ print_usage() {
 	echo "  ebpf           eBPF probe"
 	echo ""
 	echo "Options:"
-	echo "  --help           show this help message"
-	echo "  --clean          try to remove an already present driver installation"
-	echo "  --compile        try to compile the driver locally (default true)"
-	echo "  --download       try to download a prebuilt driver (default true)"
- 	echo "  --http-insecure	 enable insecure downloads"
-	echo "  --print-env      skip execution and print env variables for other tools to consume"
+	echo "  --help                   show this help message"
+	echo "  --clean                  try to remove an already present driver installation"
+	echo "  --compile                try to compile the driver locally (default true)"
+	echo "  --download               try to download a prebuilt driver (default true)"
+	echo "  --kernel-release <value> set the kernel release"
+	echo "  --kernel-version <value> set the kernel version"
+ 	echo "  --http-insecure	         enable insecure downloads"
+	echo "  --print-env              skip execution and print env variables for other tools to consume"
 	echo ""
 	echo "Environment variables:"
 	echo "  FALCOCTL_DRIVER_REPOS         specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
@@ -55,6 +57,8 @@ ENABLE_DOWNLOAD="false"
 HTTP_INSECURE="false"
 has_driver=
 has_opts=
+extra_args=
+
 while test $# -gt 0; do
 	case "$1" in
 		kmod|ebpf)
@@ -85,11 +89,19 @@ while test $# -gt 0; do
 			;;
 		--http-insecure)
 			HTTP_INSECURE="true"
-			;;   
+			;;
 		--source-only)
-		    >&2 echo "Support dropped in Falco 0.37.0."
+			>&2 echo "Support dropped in Falco 0.37.0."
 			print_usage
 			exit 1
+			;;
+		--kernel-release)
+			extra_args+="--kernelrelease=$2 "
+			shift
+			;;
+		--kernel-version)
+			extra_args+="--kernelversion=$2 "
+			shift
 			;;
 		--print-env)
 			/usr/bin/falcoctl driver printenv
@@ -109,9 +121,6 @@ while test $# -gt 0; do
     shift
 done
 
-if [ -z "$has_opts" ]; then
-	ENABLE_COMPILE="true"
-	ENABLE_DOWNLOAD="true"
-fi
+echo "Extra args: $extra_args"
 
-/usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"
+/usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS" $extra_args
