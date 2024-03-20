@@ -121,6 +121,9 @@ while test $# -gt 0; do
     shift
 done
 
-echo "Extra args: $extra_args"
+if [ -z "$has_opts" ]; then
+	ENABLE_COMPILE="true"
+	ENABLE_DOWNLOAD="true"
+fi
 
 /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS" $extra_args
