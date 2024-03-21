@@ -90,11 +90,6 @@ while test $# -gt 0; do
 		--http-insecure)
 			HTTP_INSECURE="true"
 			;;
-		--source-only)
-			>&2 echo "Support dropped in Falco 0.37.0."
-			print_usage
-			exit 1
-			;;
 		--kernel-release)
 			extra_args+="--kernelrelease=$2 "
 			shift
