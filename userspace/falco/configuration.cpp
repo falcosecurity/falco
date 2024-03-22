@@ -65,6 +65,7 @@ falco_configuration::falco_configuration():
 	m_webserver_listen_address("0.0.0.0"),
 	m_webserver_k8s_healthz_endpoint("/healthz"),
 	m_webserver_ssl_enabled(false),
+	m_webserver_metrics_enabled(false),
 	m_syscall_evt_drop_threshold(.1),
 	m_syscall_evt_drop_rate(.03333),
 	m_syscall_evt_drop_max_burst(1),
@@ -79,8 +80,7 @@ falco_configuration::falco_configuration():
 	m_metrics_output_file(""),
 	m_metrics_flags((METRICS_V2_KERNEL_COUNTERS | METRICS_V2_LIBBPF_STATS | METRICS_V2_RESOURCE_UTILIZATION | METRICS_V2_STATE_COUNTERS)),
 	m_metrics_convert_memory_to_mb(true),
-	m_metrics_include_empty_values(false),
-	m_metrics_prometheus_enabled(false)
+	m_metrics_include_empty_values(false)
 {
 }
 
@@ -462,6 +462,7 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	{
 		m_webserver_threadiness = falco::utils::hardware_concurrency();
 	}
+	m_webserver_metrics_enabled = config.get_scalar<bool>("webserver.metrics_enabled", false);
 
 	std::list<std::string> syscall_event_drop_acts;
 	config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
@@ -554,7 +555,6 @@ void falco_configuration::load_yaml(const std::string& config_name)
 
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values = config.get_scalar<bool>("metrics.include_empty_values", false);
-	m_metrics_prometheus_enabled = config.get_scalar<bool>("metrics.prometheus_enabled", false);
 
 	std::vector<std::string> load_plugins;
 
