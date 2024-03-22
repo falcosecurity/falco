@@ -126,6 +126,7 @@ public:
 	std::string m_webserver_k8s_healthz_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;
+	bool m_webserver_metrics_enabled;
 
 	syscall_evt_drop_actions m_syscall_evt_drop_actions;
 	double m_syscall_evt_drop_threshold;
@@ -151,7 +152,6 @@ public:
 	uint32_t m_metrics_flags;
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
-	bool m_metrics_prometheus_enabled;
 	std::vector<plugin_config> m_plugins;
 
 	// Falco engine
