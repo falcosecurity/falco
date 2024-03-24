@@ -28,12 +28,7 @@ falco_webserver::~falco_webserver()
 void falco_webserver::start(
         const std::shared_ptr<sinsp>& inspector,
         const std::vector<libs::metrics::libs_metrics_collector>& metrics_collectors,
-        uint32_t threadiness,
-        uint32_t listen_port,
-        std::string& listen_address,
-        std::string& healthz_endpoint,
-        std::string &ssl_certificate,
-        bool ssl_enabled)
+        const falco_configuration::webserver_config& configuration)
 {
     if (m_running)
     {
@@ -42,11 +37,11 @@ void falco_webserver::start(
     }
 
     // allocate and configure server
-    if (ssl_enabled)
+    if (configuration.m_ssl_enabled)
     {
         m_server = std::make_unique<httplib::SSLServer>(
-            ssl_certificate.c_str(),
-            ssl_certificate.c_str());
+            configuration.m_ssl_certificate.c_str(),
+            configuration.m_ssl_certificate.c_str());
     }
     else
     {
@@ -54,10 +49,10 @@ void falco_webserver::start(
     }
 
     // configure server
-    m_server->new_task_queue = [&threadiness] { return new httplib::ThreadPool(threadiness); };
+    m_server->new_task_queue = [configuration] { return new httplib::ThreadPool(configuration.m_threadiness); };
 
     // setup healthz endpoint
-    m_server->Get(healthz_endpoint,
+    m_server->Get(configuration.m_k8s_healthz_endpoint,
         [](const httplib::Request &, httplib::Response &res) {
             res.set_content("{\"status\": \"ok\"}", "application/json");
         });
@@ -100,11 +95,11 @@ void falco_webserver::start(
 
     std::atomic<bool> failed;
     failed.store(false, std::memory_order_release);
-    m_server_thread = std::thread([this, listen_address, listen_port, &failed]
+    m_server_thread = std::thread([this, configuration, &failed]
     {
         try
         {
-            this->m_server->listen(listen_address, listen_port);
+            this->m_server->listen(configuration.m_listen_address, configuration.m_listen_port);
         }
         catch(std::exception &e)
         {

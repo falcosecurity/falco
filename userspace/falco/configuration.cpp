@@ -60,12 +60,6 @@ falco_configuration::falco_configuration():
 	m_grpc_enabled(false),
 	m_grpc_threadiness(0),
 	m_webserver_enabled(false),
-	m_webserver_threadiness(0),
-	m_webserver_listen_port(8765),
-	m_webserver_listen_address("0.0.0.0"),
-	m_webserver_k8s_healthz_endpoint("/healthz"),
-	m_webserver_ssl_enabled(false),
-	m_webserver_metrics_enabled(false),
 	m_syscall_evt_drop_threshold(.1),
 	m_syscall_evt_drop_rate(.03333),
 	m_syscall_evt_drop_max_burst(1),
@@ -373,22 +367,22 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_time_format_iso_8601 = config.get_scalar<bool>("time_format_iso_8601", false);
 
 	m_webserver_enabled = config.get_scalar<bool>("webserver.enabled", false);
-	m_webserver_threadiness = config.get_scalar<uint32_t>("webserver.threadiness", 0);
-	m_webserver_listen_port = config.get_scalar<uint32_t>("webserver.listen_port", 8765);
-	m_webserver_listen_address = config.get_scalar<std::string>("webserver.listen_address", "0.0.0.0");
-	if(!re2::RE2::FullMatch(m_webserver_listen_address, ip_address_re))
+	m_webserver_config.m_threadiness = config.get_scalar<uint32_t>("webserver.threadiness", 0);
+	m_webserver_config.m_listen_port = config.get_scalar<uint32_t>("webserver.listen_port", 8765);
+	m_webserver_config.m_listen_address = config.get_scalar<std::string>("webserver.listen_address", "0.0.0.0");
+	if(!re2::RE2::FullMatch(m_webserver_config.m_listen_address, ip_address_re))
 	{
-		throw std::logic_error("Error reading config file (" + config_name + "): webserver listen address \"" + m_webserver_listen_address + "\" is not a valid IP address");
+		throw std::logic_error("Error reading config file (" + config_name + "): webserver listen address \"" + m_webserver_config.m_listen_address + "\" is not a valid IP address");
 	}
 
-	m_webserver_k8s_healthz_endpoint = config.get_scalar<std::string>("webserver.k8s_healthz_endpoint", "/healthz");
-	m_webserver_ssl_enabled = config.get_scalar<bool>("webserver.ssl_enabled", false);
-	m_webserver_ssl_certificate = config.get_scalar<std::string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
-	if(m_webserver_threadiness == 0)
+	m_webserver_config.m_k8s_healthz_endpoint = config.get_scalar<std::string>("webserver.k8s_healthz_endpoint", "/healthz");
+	m_webserver_config.m_ssl_enabled = config.get_scalar<bool>("webserver.ssl_enabled", false);
+	m_webserver_config.m_ssl_certificate = config.get_scalar<std::string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
+	if(m_webserver_config.m_threadiness == 0)
 	{
-		m_webserver_threadiness = falco::utils::hardware_concurrency();
+		m_webserver_config.m_threadiness = falco::utils::hardware_concurrency();
 	}
-	m_webserver_metrics_enabled = config.get_scalar<bool>("webserver.metrics_enabled", false);
+	m_webserver_config.m_metrics_enabled = config.get_scalar<bool>("webserver.metrics_enabled", false);
 
 	std::list<std::string> syscall_event_drop_acts;
 	config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
