@@ -83,6 +83,16 @@ public:
 		std::string m_root;
 	};
 
+	struct webserver_config {
+		uint32_t m_threadiness = 0;
+		uint32_t m_listen_port = 8765;
+		std::string m_listen_address = "0.0.0.0";
+		std::string m_k8s_healthz_endpoint = "/healthz";
+		bool m_ssl_enabled = false;
+		std::string m_ssl_certificate;
+		bool m_metrics_enabled = false;
+	};
+
 	falco_configuration();
 	virtual ~falco_configuration() = default;
 
@@ -127,13 +137,7 @@ public:
 	std::string m_grpc_root_certs;
 
 	bool m_webserver_enabled;
-	uint32_t m_webserver_threadiness;
-	uint32_t m_webserver_listen_port;
-	std::string m_webserver_listen_address;
-	std::string m_webserver_k8s_healthz_endpoint;
-	bool m_webserver_ssl_enabled;
-	std::string m_webserver_ssl_certificate;
-	bool m_webserver_metrics_enabled;
+	webserver_config m_webserver_config;
 
 	syscall_evt_drop_actions m_syscall_evt_drop_actions;
 	double m_syscall_evt_drop_threshold;

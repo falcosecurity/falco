@@ -37,12 +37,7 @@ public:
 	virtual void start(
 		const std::shared_ptr<sinsp>& inspector,
 		const std::vector<libs::metrics::libs_metrics_collector>& metrics_collectors,
-		uint32_t threadiness,
-		uint32_t listen_port,
-		std::string& list_address,
-		std::string& healthz_endpoint,
-		std::string &ssl_certificate,
-		bool ssl_enabled);
+		const falco_configuration::webserver_config& configuration);
 	virtual void stop();
 
 private:
