@@ -108,6 +108,7 @@ TEST_F(test_falco_engine, preconditions_postconditions)
 
 	s1.engine = nullptr;
 	s1.config = std::make_shared<falco_configuration>();
+	s1.options.all_events = false;
 	auto result = falco::app::actions::configure_interesting_sets(s1);
 	ASSERT_FALSE(result.success);
 	ASSERT_NE(result.errstr, "");
