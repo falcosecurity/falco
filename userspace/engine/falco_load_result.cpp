@@ -75,7 +75,8 @@ static const std::string warning_codes[] = {
 	"LOAD_APPEND_NO_VALUES",
 	"LOAD_EXCEPTION_NAME_NOT_UNIQUE",
 	"LOAD_INVALID_MACRO_NAME",
-	"LOAD_INVALID_LIST_NAME"
+	"LOAD_INVALID_LIST_NAME",
+	"LOAD_COMPILE_CONDITION"
 };
 
 const std::string& falco::load_result::warning_code_str(warning_code wc)
@@ -96,7 +97,8 @@ static const std::string warning_strings[] = {
 	"Overriding/appending with no values",
 	"Multiple exceptions defined with the same name",
 	"Invalid macro name",
-	"Invalid list name"
+	"Invalid list name",
+	"Warning in rule condition"
 };
 
 const std::string& falco::load_result::warning_str(warning_code wc)
@@ -117,7 +119,8 @@ static const std::string warning_descs[] = {
 	"A rule exception is overriding/appending with no values",
 	"A rule is defining multiple exceptions with the same name",
 	"A macro is defined with an invalid name",
-	"A list is defined with an invalid name"
+	"A list is defined with an invalid name",
+	"A rule condition or output have been parsed with a warning"
 };
 
 const std::string& falco::load_result::warning_desc(warning_code wc)
