@@ -904,3 +904,28 @@ TEST_F(test_falco_engine, list_name_invalid)
   ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
   ASSERT_TRUE(check_error_message("List has an invalid name. List names must match a regular expression"));
 }
+
+TEST_F(test_falco_engine, exceptions_names_not_unique)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: proc.cmdline contains curl
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: test_exception
+      fields: [proc.cmdline]
+      comps: [contains]
+      values:
+        - [curl 127.0.0.1]
+    - name: test_exception
+      fields: [proc.cmdline]
+      comps: [endswith]
+      values:
+        - [curl 127.0.0.1]
+)END";
+
+  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_error_message("Exceptions names in the same object must be unique"));
+}
