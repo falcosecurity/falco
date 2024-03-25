@@ -39,6 +39,12 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
+
+      # Some builds use sanitizers, we always install support for them so they can run
+      - name: Install sanitizer support
+        run: |
+          sudo apt update -y
+          sudo apt install -y libasan5 libubsan1
           
       - name: Run tests
         uses: falcosecurity/testing@main    
