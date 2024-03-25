@@ -65,10 +65,13 @@ PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR} # we need it to include `falco_test_var.h`
 )
 
+get_target_property(FALCO_APPLICATION_LIBRARIES falco_application LINK_LIBRARIES)
+
 target_link_libraries(falco_unit_tests
     falco_application
     GTest::gtest
     GTest::gtest_main
+    ${FALCO_APPLICATION_LIBRARIES}
 )
 
 if (EMSCRIPTEN)
