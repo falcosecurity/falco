@@ -10,6 +10,16 @@ on:
         description: The Falco version to use when building packages
         required: true
         type: string
+      build_type:
+        description: The build type
+        required: false
+        type: string
+        default: 'Release'
+      sanitizers:
+        description: enable sanitizer support
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-modern-bpf-skeleton:
@@ -50,7 +60,7 @@ jobs:
           yum -y install centos-release-scl
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
-          yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd
+          yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd devtoolset-9-libasan-devel devtoolset-9-libubsan-devel
 
       - name: Checkout
         # It is not possible to upgrade the checkout action to versions >= v4.0.0 because of incompatibilities with centos 7's libc.
@@ -71,13 +81,14 @@ jobs:
         run: |
           source /opt/rh/devtoolset-9/enable
           cmake -B build -S . \
-              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
               -DBUILD_FALCO_MODERN_BPF=ON \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
+              -DUSE_ASAN=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'ON') || 'OFF' }} \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
@@ -133,7 +144,7 @@ jobs:
       - name: Prepare project
         run: |
           cmake -B build -S . \
-                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
                 -DCPACK_GENERATOR=TGZ \
                 -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
                 -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
@@ -184,7 +195,7 @@ jobs:
             -DBUILD_BPF=Off \
             -DBUILD_DRIVER=Off \
             -DBUILD_LIBSCAP_MODERN_BPF=OFF \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
             -DUSE_BUNDLED_DEPS=On \
             -DFALCO_ETC_DIR=/etc/falco \
             -DBUILD_FALCO_UNIT_TESTS=On \
@@ -224,15 +235,15 @@ jobs:
       # NOTE: Backslash doesn't work as line continuation on Windows.
       - name: Prepare project
         run: |
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
-          cmake --build build --target package --config Release
+          cmake --build build --target package --config ${{ inputs.build_type }}
 
       - name: Run unit Tests
         run: |
-          build/unit_tests/Release/falco_unit_tests.exe
+          build/unit_tests/${{ inputs.build_type }}/falco_unit_tests.exe
 
       - name: Upload Falco win32 installer
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
@@ -245,7 +256,7 @@ jobs:
         with:
           name: falco-${{ inputs.version }}-win32.exe
           path: |
-            ${{ github.workspace }}/build/userspace/falco/Release/falco.exe
+            ${{ github.workspace }}/build/userspace/falco/${{ inputs.build_type }}/falco.exe
 
   build-macos-package:
     if: ${{ inputs.arch == 'x86_64' }}
