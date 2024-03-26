@@ -19,6 +19,7 @@ limitations under the License.
 
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "webserver.h"
+#include "falco_metrics.h"
 #endif
 
 using namespace falco::app;
@@ -45,19 +46,12 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			+ std::to_string(webserver_config.m_listen_port)
 			+ ssl_option + "\n");
 
-		std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
-		if (state.config->m_metrics_enabled && webserver_config.m_metrics_enabled)
-		{
-			for (const auto& source_info: state.source_infos)
-			{
-				metrics_collectors.push_back(libs::metrics::libs_metrics_collector(source_info.inspector.get(), state.config->m_metrics_flags));
-			}
-		}
+		falco_metrics metrics(state);
 
 		state.webserver.start(
 			state.offline_inspector,
-			metrics_collectors,
-			webserver_config);
+			webserver_config,
+			metrics);
 	}
 #endif
 	return run_result::ok();
