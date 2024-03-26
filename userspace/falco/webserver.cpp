@@ -17,6 +17,7 @@ limitations under the License.
 
 #include "webserver.h"
 #include "falco_utils.h"
+#include "falco_metrics.h"
 #include "versions_info.h"
 #include <atomic>
 
@@ -27,8 +28,8 @@ falco_webserver::~falco_webserver()
 
 void falco_webserver::start(
         const std::shared_ptr<sinsp>& inspector,
-        const std::vector<libs::metrics::libs_metrics_collector>& metrics_collectors,
-        const falco_configuration::webserver_config& configuration)
+        const falco_configuration::webserver_config& webserver_config,
+        const falco_metrics& metrics)
 {
     if (m_running)
     {
@@ -37,11 +38,11 @@ void falco_webserver::start(
     }
 
     // allocate and configure server
-    if (configuration.m_ssl_enabled)
+    if (webserver_config.m_ssl_enabled)
     {
         m_server = std::make_unique<httplib::SSLServer>(
-            configuration.m_ssl_certificate.c_str(),
-            configuration.m_ssl_certificate.c_str());
+            webserver_config.m_ssl_certificate.c_str(),
+            webserver_config.m_ssl_certificate.c_str());
     }
     else
     {
@@ -49,10 +50,10 @@ void falco_webserver::start(
     }
 
     // configure server
-    m_server->new_task_queue = [configuration] { return new httplib::ThreadPool(configuration.m_threadiness); };
+    m_server->new_task_queue = [webserver_config] { return new httplib::ThreadPool(webserver_config.m_threadiness); };
 
     // setup healthz endpoint
-    m_server->Get(configuration.m_k8s_healthz_endpoint,
+    m_server->Get(webserver_config.m_k8s_healthz_endpoint,
         [](const httplib::Request &, httplib::Response &res) {
             res.set_content("{\"status\": \"ok\"}", "application/json");
         });
@@ -64,26 +65,11 @@ void falco_webserver::start(
             res.set_content(versions_json_str, "application/json");
         });
 
-    if (!metrics_collectors.empty())
+    if (metrics.is_enabled())
     {
-        libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
-
         m_server->Get("/metrics",
-            [metrics_collectors, prometheus_metrics_converter](const httplib::Request &, httplib::Response &res) {
-                std::string prometheus_text;
-
-                for (auto metrics_collector: metrics_collectors) {
-                    metrics_collector.snapshot();
-                    auto metrics_snapshot = metrics_collector.get_metrics();
-
-                    for (auto& metric: metrics_snapshot)
-                    {
-                       prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-                       prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco");
-                    }
-                }
-
-                res.set_content(prometheus_text, "text/plain; version=0.0.4");
+            [metrics](const httplib::Request &, httplib::Response &res) {
+                res.set_content(metrics.to_text(), "text/plain; version=0.0.4");
             });
     }
     // run server in a separate thread
@@ -95,11 +81,11 @@ void falco_webserver::start(
 
     std::atomic<bool> failed;
     failed.store(false, std::memory_order_release);
-    m_server_thread = std::thread([this, configuration, &failed]
+    m_server_thread = std::thread([this, webserver_config, &failed]
     {
         try
         {
-            this->m_server->listen(configuration.m_listen_address, configuration.m_listen_port);
+            this->m_server->listen(webserver_config.m_listen_address, webserver_config.m_listen_port);
         }
         catch(std::exception &e)
         {
