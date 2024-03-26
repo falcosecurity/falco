@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.3.0
+
+* `FALCO_HOSTNAME` and `HOST_ROOT` are now set by default in pods configuration.
+
 ## v4.2.6
 
 * bump falcosidekick dependency version to v0.7.17 install latest version through falco chart
