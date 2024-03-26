@@ -92,6 +92,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   PRIVATE
     outputs_grpc.cpp
     outputs_http.cpp
+    falco_metrics.cpp
     webserver.cpp
     grpc_context.cpp
     grpc_server_impl.cpp
