@@ -78,6 +78,10 @@ spec:
       {{- toYaml . | nindent 8 }}
     {{- end }}
       env:
+        - name: FALCO_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         - name: FALCO_K8S_NODE_NAME
           valueFrom:
             fieldRef:
