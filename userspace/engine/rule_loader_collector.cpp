@@ -88,7 +88,7 @@ static void validate_exception_info(
 		{
 			for (const auto &v : ex.fields.items)
 			{
-				THROW(!source->is_field_defined(v.item),
+				THROW(!source->is_valid_lhs_field(v.item),
 					std::string("'") + v.item + "' is not a supported filter field",
 					ex.ctx);
 			}
@@ -109,7 +109,7 @@ static void validate_exception_info(
 		      ex.ctx);
 		if (source)
 		{
-			THROW(!source->is_field_defined(ex.fields.item),
+			THROW(!source->is_valid_lhs_field(ex.fields.item),
 				std::string("'") + ex.fields.item + "' is not a supported filter field",
 				ex.ctx);
 		}
