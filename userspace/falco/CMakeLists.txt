@@ -94,11 +94,9 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
     outputs_http.cpp
     webserver.cpp
     grpc_context.cpp
-    grpc_server_impl.cpp
     grpc_request_context.cpp
     grpc_server.cpp
     grpc_context.cpp
-    grpc_server_impl.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
