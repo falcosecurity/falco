@@ -21,8 +21,12 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
+#include "config_falco.h"
+#include "falco_engine.h"
+#include "falco_engine_version.h"
 #include "logger.h"
 #include "grpc_server.h"
+#include "grpc_queue.h"
 #include "grpc_request_context.h"
 #include "falco_utils.h"
 
@@ -251,4 +255,77 @@ void falco::grpc::server::stop()
 	}
 
 	falco_logger::log(falco_logger::level::INFO, "Shutting down gRPC server complete\n");
+}
+
+bool falco::grpc::server::is_running()
+{
+	if(m_stop)
+	{
+		return false;
+	}
+	return true;
+}
+
+void falco::grpc::server::get(const stream_context& ctx, const outputs::request& req, outputs::response& res)
+{
+	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
+	{
+		// todo(leodido) > log "status=ctx->m_status, stream=ctx->m_stream"
+		ctx.m_stream = nullptr;
+		return;
+	}
+
+	ctx.m_is_running = is_running();
+
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
+
+	ctx.m_has_more = queue::get().try_pop(res);
+}
+
+void falco::grpc::server::sub(const bidi_context& ctx, const outputs::request& req, outputs::response& res)
+{
+	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
+	{
+		ctx.m_stream = nullptr;
+		return;
+	}
+
+	ctx.m_is_running = is_running();
+
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
+
+	ctx.m_has_more = queue::get().try_pop(res);
+}
+
+void falco::grpc::server::version(const context& ctx, const version::request&, version::response& res)
+{
+	auto& build = *res.mutable_build();
+	build = FALCO_VERSION_BUILD;
+
+	auto& prerelease = *res.mutable_prerelease();
+	prerelease = FALCO_VERSION_PRERELEASE;
+
+	auto& version = *res.mutable_version();
+	version = FALCO_VERSION;
+
+	res.set_engine_version(FALCO_ENGINE_VERSION);
+	res.set_engine_fields_checksum(FALCO_ENGINE_CHECKSUM); 
+	auto engine_version = falco_engine::engine_version();
+	res.set_engine_major(engine_version.major());
+	res.set_engine_minor(engine_version.minor());
+	res.set_engine_patch(engine_version.patch());
+
+	res.set_major(FALCO_VERSION_MAJOR);
+	res.set_minor(FALCO_VERSION_MINOR);
+	res.set_patch(FALCO_VERSION_PATCH);
+}
+
+void falco::grpc::server::shutdown()
+{
+	m_stop = true;
+	m_server->Shutdown();
 }
