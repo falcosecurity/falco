@@ -605,5 +605,12 @@ void falco_configuration::set_cmdline_option(yaml_helper& config, const std::str
 		throw std::logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	config.set_scalar(keyval.first, keyval.second);
+	if (keyval.first.rfind(yaml_helper::includes_key, 0) == 0)
+	{
+		falco_logger::log(falco_logger::level::WARNING, "Ignoring '-o " + yaml_helper::includes_key + "' directive: cannot be overridden by cmdline.\n");
+	}
+	else
+	{
+		config.set_scalar(keyval.first, keyval.second);
+	}
 }
