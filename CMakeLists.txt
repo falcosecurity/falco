@@ -21,6 +21,9 @@ option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
+option(USE_ASAN "Build with AddressSanitizer" OFF)
+option(USE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
+option(UBSAN_HALT_ON_ERROR "Halt on error when building with UBSan" ON)
 
 if(WIN32)
   if(POLICY CMP0091)

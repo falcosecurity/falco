@@ -39,7 +39,20 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
-          
+
+      # Some builds use sanitizers, we always install support for them so they can run
+      - name: Install sanitizer support
+        run: |
+          sudo apt update -y
+          sudo apt install -y libasan5 libubsan1
+      
+      - name: Check if falcoctl can install the eBPF probe
+        if: ${{ inputs.arch == 'x86_64' }}
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms
+          sudo falcoctl driver install --type ebpf --log-level debug --download=false
+          sudo find /root/.falco/ -iname "*.o" | sudo xargs rm
+      
       - name: Run tests
         uses: falcosecurity/testing@main    
         with:
