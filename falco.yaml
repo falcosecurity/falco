@@ -695,6 +695,7 @@ webserver:
   # Can be an IPV4 or IPV6 address, defaults to IPV4
   listen_address: 0.0.0.0
   k8s_healthz_endpoint: /healthz
+  metrics_enabled: false
   ssl_enabled: false
   ssl_certificate: /etc/falco/falco.pem
 

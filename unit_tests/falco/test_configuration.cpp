@@ -323,7 +323,7 @@ TEST(Configuration, configuration_webserver_ip)
 
         EXPECT_NO_THROW(falco_config.init(cmdline_config_options));
 
-        ASSERT_EQ(falco_config.m_webserver_listen_address, address);
+        ASSERT_EQ(falco_config.m_webserver_config.m_listen_address, address);
     }
 
     std::vector<std::string> invalid_addresses = {"327.0.0.1",

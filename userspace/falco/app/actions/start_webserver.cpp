@@ -19,56 +19,56 @@ limitations under the License.
 
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "webserver.h"
+#include "falco_metrics.h"
 #endif
 
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s)
+falco::app::run_result falco::app::actions::start_webserver(falco::app::state& state)
 {
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
+	if(!state.is_capture_mode() && state.config->m_webserver_enabled)
 	{
-		if (s.options.dry_run)
+		if (state.options.dry_run)
 		{
 			falco_logger::log(falco_logger::level::DEBUG, "Skipping starting webserver in dry-run\n");
 			return run_result::ok();
 		}
 	
-		std::string ssl_option = (s.config->m_webserver_ssl_enabled ? " (SSL)" : "");
+		falco_configuration::webserver_config webserver_config = state.config->m_webserver_config;
+		std::string ssl_option = (webserver_config.m_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(falco_logger::level::INFO, "Starting health webserver with threadiness "
-			+ std::to_string(s.config->m_webserver_threadiness)
+			+ std::to_string(webserver_config.m_threadiness)
 			+ ", listening on "
-			+ s.config->m_webserver_listen_address
+			+ webserver_config.m_listen_address
 			+ ":"
-			+ std::to_string(s.config->m_webserver_listen_port)
+			+ std::to_string(webserver_config.m_listen_port)
 			+ ssl_option + "\n");
 
-		s.webserver.start(
-			s.offline_inspector,
-			s.config->m_webserver_threadiness,
-			s.config->m_webserver_listen_port, 
-			s.config->m_webserver_listen_address,
-			s.config->m_webserver_k8s_healthz_endpoint,
-			s.config->m_webserver_ssl_certificate, 
-			s.config->m_webserver_ssl_enabled);
+		falco_metrics metrics(state);
+
+		state.webserver.start(
+			state.offline_inspector,
+			webserver_config,
+			metrics);
 	}
 #endif
 	return run_result::ok();
 }
 
-falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
+falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& state)
 {
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
+	if(!state.is_capture_mode() && state.config->m_webserver_enabled)
 	{
-		if (s.options.dry_run)
+		if (state.options.dry_run)
 		{
 			falco_logger::log(falco_logger::level::DEBUG, "Skipping stopping webserver in dry-run\n");
 			return run_result::ok();
 		}
 
-		s.webserver.stop();
+		state.webserver.stop();
 	}
 #endif
 	return run_result::ok();
