@@ -104,11 +104,17 @@ std::string falco_metrics::to_text() const
 		metrics_collector.snapshot();
 		auto metrics_snapshot = metrics_collector.get_metrics();
 
-		for (auto& metric: metrics_snapshot)
+		for (auto& metrics: metrics_snapshot)
 		{
-		   prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-		   prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "scap");
+			prometheus_metrics_converter.convert_metric_to_unit_convention(metrics);
+			std::string namespace_name = "scap";
+			if (metrics.flags & METRICS_V2_RESOURCE_UTILIZATION || metrics.flags & METRICS_V2_KERNEL_COUNTERS)
+			{
+				namespace_name = "falco";
+			}
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metrics, "falcosecurity", namespace_name);
 		}
+
 	}
 	return prometheus_text;
 }
