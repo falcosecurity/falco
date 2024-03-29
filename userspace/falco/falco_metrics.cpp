@@ -74,23 +74,23 @@ std::string falco_metrics::to_text() const
 
 		std::vector<metrics_v2> static_metrics;
 		static_metrics.push_back(libs_metrics_collector.new_metric("start_ts",
-											METRICS_V2_LIBBPF_STATS,
-											METRIC_VALUE_TYPE_U64,
-											METRIC_VALUE_UNIT_TIME_NS_COUNT,
-											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-											agent_info->start_ts_epoch));
-		static_metrics.push_back(libs_metrics_collector.new_metric("falco_host_boot_ts",
-											METRICS_V2_LIBBPF_STATS,
-											METRIC_VALUE_TYPE_U64,
-											METRIC_VALUE_UNIT_TIME_NS_COUNT,
-											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-											machine_info->boot_ts_epoch));
-		static_metrics.push_back(libs_metrics_collector.new_metric("falco_host_num_cpus",
-											METRICS_V2_LIBBPF_STATS,
-											METRIC_VALUE_TYPE_U64,
-											METRIC_VALUE_UNIT_TIME_NS_COUNT,
-											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-											machine_info->num_cpus));
+																	METRICS_V2_MISC,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
+																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	agent_info->start_ts_epoch));
+		static_metrics.push_back(libs_metrics_collector.new_metric("host_boot_ts",
+																	METRICS_V2_MISC,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
+																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	machine_info->boot_ts_epoch));
+		static_metrics.push_back(libs_metrics_collector.new_metric("host_num_cpus",
+																	METRICS_V2_MISC,
+																	METRIC_VALUE_TYPE_U32,
+																	METRIC_VALUE_UNIT_COUNT,
+																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	machine_info->num_cpus));
 
 		for (auto metrics: static_metrics)
 		{
