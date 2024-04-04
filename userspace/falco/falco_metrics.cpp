@@ -70,7 +70,7 @@ std::string falco_metrics::to_text() const
 
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_version", "falcosecurity", "falco", {{"falco_version", FALCO_VERSION}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
-		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("evt_hostname", "falcosecurity", "falco", {{"evt_hostname", machine_info->hostname}});
+		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
 
 		std::vector<metrics_v2> static_metrics;
 		static_metrics.push_back(libs_metrics_collector.new_metric("start_ts",
