@@ -1,5 +1,8 @@
 driver:
-    type: "kmod"
+    type:
+        - "modern_ebpf"
+        - "ebpf"
+        - "kmod"
     name: "@DRIVER_NAME@"
     repos:
         - "@DRIVERS_REPO@"
