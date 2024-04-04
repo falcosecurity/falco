@@ -16,14 +16,14 @@ include(ExternalProject)
 
 string(TOLOWER ${CMAKE_HOST_SYSTEM_NAME} FALCOCTL_SYSTEM_NAME)
 
-set(FALCOCTL_VERSION "0.7.2")
+set(FALCOCTL_VERSION "0.8.0-rc1")
 
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
     set(FALCOCTL_SYSTEM_PROC_GO "amd64")
-    set(FALCOCTL_HASH "abbbef2beefceb3d518a638fbad220ca6002840d33a20a7f1de9b358c4dbef45")
+    set(FALCOCTL_HASH "120a45be26be26ed9795926e3d382440ce010b8ec31fda8a0118ec3d42fc7bc7")
 else() # aarch64
     set(FALCOCTL_SYSTEM_PROC_GO "arm64")
-    set(FALCOCTL_HASH "8dafef99948355febfa311bb940f8c714af631a249f4ae05ffd7d4c5f181e2c4")
+    set(FALCOCTL_HASH "f2c15e7a4c210ee9e3a521f4b6f6ed3096db6bf52426d369a9fe2a1cd3a4a4c2")
 endif()
 
 ExternalProject_Add(
