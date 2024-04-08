@@ -91,29 +91,21 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 	load_yaml("default", config);
 }
 
-void falco_configuration::init(const std::string& conf_filename, const std::vector<std::string> &cmdline_options)
+void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
+			       std::vector<std::string>& loaded_conf_warnings, const std::vector<std::string> &cmdline_options)
 {
 	yaml_helper config;
-	std::vector<std::string> loaded_files;
 	try
 	{
-		config.load_from_file(conf_filename, loaded_files);
+		config.load_from_file(conf_filename, loaded_conf_files, loaded_conf_warnings);
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << "Cannot read config file (" + conf_filename + "): " + e.what() + "\n";
 		throw e;
 	}
-
 	init_cmdline_options(config, cmdline_options);
 	load_yaml(conf_filename, config);
-
-	// Here we have already set up correct logging level
-	falco_logger::log(falco_logger::level::DEBUG, "Loaded config filenames:\n");
-	for (const auto& path : loaded_files)
-	{
-		falco_logger::log(falco_logger::level::DEBUG, std::string("   ") + path + "\n");
-	}
 }
 
 void falco_configuration::load_engine_config(const std::string& config_name, const yaml_helper& config)

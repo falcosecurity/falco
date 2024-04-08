@@ -29,11 +29,15 @@ static falco::app::run_result apply_deprecated_options(const falco::app::state& 
 
 falco::app::run_result falco::app::actions::load_config(const falco::app::state& s)
 {
+	// List of loaded conf files, ie: s.options.conf_filename
+	// plus all the `configs_files` expanded list of configs.
+	std::vector<std::string> loaded_conf_files;
+	std::vector<std::string> loaded_conf_warnings;
 	try
 	{
 		if (!s.options.conf_filename.empty())
 		{
-			s.config->init(s.options.conf_filename, s.options.cmdline_config_options);
+			s.config->init(s.options.conf_filename, loaded_conf_files, loaded_conf_warnings, s.options.cmdline_config_options);
 		}
 		else
 		{
@@ -57,7 +61,16 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 	}
 	if (!s.options.conf_filename.empty())
 	{
-		falco_logger::log(falco_logger::level::INFO, "Falco initialized with configuration file: " + s.options.conf_filename + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Falco initialized with configuration files:\n");
+		for (const auto& path : loaded_conf_files)
+		{
+			falco_logger::log(falco_logger::level::INFO, std::string("   ") + path + "\n");
+		}
+
+		for (const auto &warn : loaded_conf_warnings)
+		{
+			falco_logger::log(falco_logger::level::WARNING, warn + "\n");
+		}
 	}
 
 	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;
