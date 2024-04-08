@@ -126,14 +126,6 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 					   "foo2: bar2\n"
 					   "base_value_2:\n"
 					   "    id: 2\n";
-	const std::string conf_yaml_3 =
-		"foo3: bar3\n"
-		"base_value_3:\n"
-		"    id: 3\n"
-		"    name: foo3\n";
-	const std::string conf_yaml_4 =
-		"base_value_4:\n"
-		"    id: 4\n";
 
 	std::ofstream outfile("main.yaml");
 	outfile << main_conf_yaml;
@@ -143,21 +135,11 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	outfile << conf_yaml_2;
 	outfile.close();
 
-	outfile.open("conf_3.yaml");
-	outfile << conf_yaml_3;
-	outfile.close();
-
-	outfile.open("conf_4.yaml");
-	outfile << conf_yaml_4;
-	outfile.close();
-
 	yaml_helper conf;
 	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
-	std::filesystem::remove("conf_3.yaml");
-	std::filesystem::remove("conf_4.yaml");
 }
 
 TEST(Configuration, configuration_config_files_ok)
@@ -219,6 +201,7 @@ TEST(Configuration, configuration_config_files_ok)
 	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
 	ASSERT_TRUE(conf.is_defined("base_value_3.name"));
 	ASSERT_EQ(conf.get_scalar<std::string>("base_value_3.name", ""), "foo3");
+	ASSERT_FALSE(conf.is_defined("base_value_4.id")); // conf_4 is not included
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -284,6 +267,7 @@ TEST(Configuration, configuration_config_files_relative_main)
 
 	std::filesystem::remove(temp_main.string());
 	std::filesystem::remove("conf_2.yaml");
+	std::filesystem::remove("conf_3.yaml");
 }
 
 TEST(Configuration, configuration_config_files_override)
@@ -446,6 +430,73 @@ TEST(Configuration, configuration_config_files_self)
 	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
 
 	std::filesystem::remove("main.yaml");
+}
+
+TEST(Configuration, configuration_config_files_directory)
+{
+	/*
+	 * Test that when main config file includes a config directory,
+	 * the config directory is parsed in lexicographic order,
+	 * and only regular files are parsed.
+	 */
+	// Main config includes whole temp directory
+	const std::string main_conf_yaml =
+		yaml_helper::configs_key + ": " + std::filesystem::temp_directory_path().string() + "/test\n"
+		   "foo: bar\n"
+		   "base_value:\n"
+		   "    id: 1\n"
+		   "    name: foo\n";
+	const std::string conf_yaml_2 =
+		"foo2: bar2\n"
+		"base_value_2:\n"
+		"    id: 2\n";
+	const std::string conf_yaml_3 =
+		"foo2: bar3\n"
+		"base_value_3:\n"
+		"    id: 3\n"
+		"    name: foo3\n";
+	const std::string conf_yaml_4 =
+		"foo4: bar4\n";
+
+	std::filesystem::create_directory(std::filesystem::temp_directory_path() / "test");
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open(std::filesystem::temp_directory_path()/"test/conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	outfile.open(std::filesystem::temp_directory_path()/"test/conf_3.yaml");
+	outfile << conf_yaml_3;
+	outfile.close();
+
+	// Create a directory and create a config inside it. We will later check that it was not parsed
+	std::filesystem::create_directory(std::filesystem::temp_directory_path() / "test" / "foo");
+	outfile.open(std::filesystem::temp_directory_path()/"test/foo/conf_4.yaml");
+	outfile << conf_yaml_4;
+	outfile.close();
+
+	yaml_helper conf;
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(conf.is_defined("base_value_2"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
+	ASSERT_TRUE(conf.is_defined("foo2"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar3");
+	ASSERT_FALSE(conf.is_defined("foo4"));
+
+	std::filesystem::remove("main");
+	std::filesystem::remove_all(std::filesystem::temp_directory_path()/"test");
 }
 
 TEST(Configuration, configuration_environment_variables)
