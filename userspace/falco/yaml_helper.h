@@ -92,9 +92,10 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path)
+	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files)
 	{
-		m_root = load_from_file_int(path);
+		loaded_config_files.clear();
+		m_root = load_from_file_int(path, loaded_config_files);
 
 		const auto ppath = std::filesystem::path(path);
 		const auto config_folder = ppath.parent_path();
@@ -120,7 +121,7 @@ public:
 			{
 				if (std::filesystem::is_regular_file(include_file_path))
 				{
-					include_config_file(include_file_path.string());
+					include_config_file(include_file_path.string(), loaded_config_files);
 				}
 				else if (std::filesystem::is_directory(include_file_path))
 				{
@@ -138,11 +139,11 @@ public:
 						{
 							falco_logger::log(falco_logger::level::WARNING, "Included config file has wrong type: " + dir_entry.path().string());
 						}
-						std::sort(v.begin(), v.end());
-						for (const auto &f : v)
-						{
-							include_config_file(f);
-						}
+					}
+					std::sort(v.begin(), v.end());
+					for (const auto &f : v)
+					{
+						include_config_file(f, loaded_config_files);
 					}
 				}
 				else
@@ -215,16 +216,17 @@ public:
 private:
 	YAML::Node m_root;
 
-	YAML::Node load_from_file_int(const std::string& path)
+	YAML::Node load_from_file_int(const std::string& path, std::vector<std::string>& loaded_config_files)
 	{
 		auto root = YAML::LoadFile(path);
 		pre_process_env_vars(root);
+		loaded_config_files.push_back(path);
 		return root;
 	}
 
-	void include_config_file(const std::string& include_file_path)
+	void include_config_file(const std::string& include_file_path, std::vector<std::string>& loaded_config_files)
 	{
-		auto loaded_nodes = load_from_file_int(include_file_path);
+		auto loaded_nodes = load_from_file_int(include_file_path, loaded_config_files);
 		for(auto n : loaded_nodes)
 		{
 			/*
