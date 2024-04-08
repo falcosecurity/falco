@@ -38,6 +38,7 @@ static std::string sample_yaml =
 	"    - elem3\n";
 
 static std::vector<std::string> loaded_conf_files;
+static std::vector<std::string> loaded_conf_warnings;
 
 TEST(Configuration, configuration_exceptions)
 {
@@ -138,7 +139,7 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -185,7 +186,7 @@ TEST(Configuration, configuration_config_files_ok)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
@@ -257,7 +258,7 @@ TEST(Configuration, configuration_config_files_relative_main)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files, loaded_conf_warnings));
 
 	// main + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 2);
@@ -310,7 +311,7 @@ TEST(Configuration, configuration_config_files_override)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
@@ -346,7 +347,7 @@ TEST(Configuration, configuration_config_files_unexistent)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
@@ -382,7 +383,7 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
@@ -417,7 +418,7 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
@@ -447,7 +448,7 @@ TEST(Configuration, configuration_config_files_self)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -499,7 +500,7 @@ TEST(Configuration, configuration_config_files_directory)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);

@@ -92,9 +92,11 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files)
+	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files, std::vector<std::string>& loaded_config_warnings)
 	{
 		loaded_config_files.clear();
+		loaded_config_warnings.clear();
+
 		m_root = load_from_file_int(path, loaded_config_files);
 
 		const auto ppath = std::filesystem::path(path);
@@ -137,7 +139,7 @@ public:
 						// We don't support nested directories
 						else
 						{
-							falco_logger::log(falco_logger::level::WARNING, "Included config file has wrong type: " + dir_entry.path().string());
+							loaded_config_warnings.push_back("Included config file has wrong type: " + dir_entry.path().string());
 						}
 					}
 					std::sort(v.begin(), v.end());
@@ -148,12 +150,12 @@ public:
 				}
 				else
 				{
-					falco_logger::log(falco_logger::level::WARNING, "Included config entry has wrong type: " + include_file_path.string());
+					loaded_config_warnings.push_back("Included config entry has wrong type: " + include_file_path.string());
 				}
 			}
 			else
 			{
-				falco_logger::log(falco_logger::level::WARNING, "Included config entry unexistent: " + include_file_path.string());
+				loaded_config_warnings.push_back("Included config entry unexistent: " + include_file_path.string());
 			}
 		}
 	}
