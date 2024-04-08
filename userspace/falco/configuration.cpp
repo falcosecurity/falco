@@ -94,9 +94,10 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 void falco_configuration::init(const std::string& conf_filename, const std::vector<std::string> &cmdline_options)
 {
 	yaml_helper config;
+	std::vector<std::string> loaded_files;
 	try
 	{
-		config.load_from_file(conf_filename);
+		config.load_from_file(conf_filename, loaded_files);
 	}
 	catch(const std::exception& e)
 	{
@@ -106,6 +107,13 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 
 	init_cmdline_options(config, cmdline_options);
 	load_yaml(conf_filename, config);
+
+	// Here we have already set up correct logging level
+	falco_logger::log(falco_logger::level::DEBUG, "Loaded config filenames:\n");
+	for (const auto& path : loaded_files)
+	{
+		falco_logger::log(falco_logger::level::DEBUG, std::string("   ") + path + "\n");
+	}
 }
 
 void falco_configuration::load_engine_config(const std::string& config_name, const yaml_helper& config)

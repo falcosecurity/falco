@@ -37,6 +37,8 @@ static std::string sample_yaml =
 	"    - elem2\n"
 	"    - elem3\n";
 
+static std::vector<std::string> loaded_conf_files;
+
 TEST(Configuration, configuration_exceptions)
 {
 	yaml_helper conf;
@@ -136,7 +138,7 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -183,7 +185,10 @@ TEST(Configuration, configuration_config_files_ok)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(loaded_conf_files.size(), 3);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -252,7 +257,10 @@ TEST(Configuration, configuration_config_files_relative_main)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file(temp_main.string()));
+	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files));
+
+	// main + conf_3
+	ASSERT_EQ(loaded_conf_files.size(), 2);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -302,7 +310,10 @@ TEST(Configuration, configuration_config_files_override)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(loaded_conf_files.size(), 3);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -335,7 +346,10 @@ TEST(Configuration, configuration_config_files_unexistent)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main
+	ASSERT_EQ(loaded_conf_files.size(), 1);
 
 	ASSERT_TRUE(conf.is_defined("base_value.id"));
 	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
@@ -368,7 +382,10 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main + conf_2
+	ASSERT_EQ(loaded_conf_files.size(), 2);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -400,7 +417,10 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main
+	ASSERT_EQ(loaded_conf_files.size(), 1);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -427,7 +447,7 @@ TEST(Configuration, configuration_config_files_self)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -479,7 +499,10 @@ TEST(Configuration, configuration_config_files_directory)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(loaded_conf_files.size(), 3);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
