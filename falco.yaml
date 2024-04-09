@@ -25,6 +25,8 @@
 #
 #     (Falco command-line arguments)
 #     (Falco environment variables)
+# Falco config files
+#     configs_files
 # Falco rules files
 #     rules_file
 # Falco engine
