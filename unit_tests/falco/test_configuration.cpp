@@ -38,7 +38,6 @@ static std::string sample_yaml =
 	"    - elem3\n";
 
 static std::vector<std::string> loaded_conf_files;
-static std::vector<std::string> loaded_conf_warnings;
 
 TEST(Configuration, configuration_exceptions)
 {
@@ -139,7 +138,7 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -186,11 +185,10 @@ TEST(Configuration, configuration_config_files_ok)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
-	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -220,9 +218,8 @@ TEST(Configuration, configuration_config_files_ok)
 TEST(Configuration, configuration_config_files_relative_main)
 {
 	/*
-	 * Test that when main config file is in a different folder,
-	 * other config files are searched relative to its folder,
-	 * when they are specified as relative paths
+	 * Test that relative path are treated as relative to cwd and not to main config folder,
+	 * and that absolute includes are ok too.
 	 */
 	const auto temp_main = std::filesystem::temp_directory_path() / "main.yaml";
 	// So, conf_2 will be looked up in the same folder as main config file,
@@ -259,13 +256,10 @@ TEST(Configuration, configuration_config_files_relative_main)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files));
 
-	// main + conf_3
-	ASSERT_EQ(loaded_conf_files.size(), 2);
-
-	// conf_2 gives warning
-	ASSERT_EQ(loaded_conf_warnings.size(), 1);
+	// main + conf_2 + conf_3
+	ASSERT_EQ(loaded_conf_files.size(), 3);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -273,9 +267,11 @@ TEST(Configuration, configuration_config_files_relative_main)
 	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
 	ASSERT_TRUE(conf.is_defined("base_value.name"));
 	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
-	ASSERT_FALSE(conf.is_defined("foo2"));		 // failed to include the config file since it is relative and is not under /tmp
-	ASSERT_FALSE(conf.is_defined("base_value_2"));	 // failed to include the config file since it is relative and is not under /tmp
-	ASSERT_TRUE(conf.is_defined("base_value_3.id")); // conf_3 was correctly included since it is absolute
+	ASSERT_TRUE(conf.is_defined("foo2"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(conf.is_defined("base_value_2"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
 	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
 
 	std::filesystem::remove(temp_main.string());
@@ -315,11 +311,10 @@ TEST(Configuration, configuration_config_files_override)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
-	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -339,7 +334,7 @@ TEST(Configuration, configuration_config_files_override)
 
 TEST(Configuration, configuration_config_files_unexistent)
 {
-	/* Test that including an unexistent file just skips it */
+	/* Test that including an unexistent file throws an exception */
 	const std::string main_conf_yaml =
 		yaml_helper::configs_key + ":\n"
 		"  - conf_5.yaml\n"
@@ -352,18 +347,7 @@ TEST(Configuration, configuration_config_files_unexistent)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
-
-	// main
-	ASSERT_EQ(loaded_conf_files.size(), 1);
-
-	// conf_5 unexistent
-	ASSERT_EQ(loaded_conf_warnings.size(), 1);
-
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -391,11 +375,10 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
-	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -427,11 +410,10 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
-	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -458,7 +440,7 @@ TEST(Configuration, configuration_config_files_self)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -510,13 +492,11 @@ TEST(Configuration, configuration_config_files_directory)
 	outfile.close();
 
 	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files, loaded_conf_warnings));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
 
-	// main + conf_2 + conf_3
+	// main + conf_2 + conf_3.
+	// test/foo is not parsed.
 	ASSERT_EQ(loaded_conf_files.size(), 3);
-
-	// Found a folder (test/foo) that will be skipped
-	ASSERT_EQ(loaded_conf_warnings.size(), 1);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");

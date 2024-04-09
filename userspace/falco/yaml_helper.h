@@ -92,70 +92,49 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files, std::vector<std::string>& loaded_config_warnings)
+	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files)
 	{
 		loaded_config_files.clear();
-		loaded_config_warnings.clear();
 
 		m_root = load_from_file_int(path, loaded_config_files);
 
 		const auto ppath = std::filesystem::path(path);
-		const auto config_folder = ppath.parent_path();
 		// Parse files to be included
 		std::vector<std::string> include_files;
 		get_sequence<std::vector<std::string>>(include_files, configs_key);
 		for(const std::string& include_file : include_files)
 		{
-			// If user specifies a relative include file,
-			// make it relative to main config file folder,
-			// instead of cwd.
 			auto include_file_path = std::filesystem::path(include_file);
-			if (!include_file_path.is_absolute())
-			{
-				include_file_path = config_folder / include_file;
-			}
 			if (include_file_path == ppath)
 			{
 				throw std::runtime_error(
 					"Config error: '" + configs_key + "' directive tried to recursively include main config file: " + path + ".");
 			}
-			if (std::filesystem::exists(include_file_path))
+			if (!std::filesystem::exists(include_file_path))
 			{
-				if (std::filesystem::is_regular_file(include_file_path))
-				{
-					include_config_file(include_file_path.string(), loaded_config_files);
-				}
-				else if (std::filesystem::is_directory(include_file_path))
-				{
-					std::vector<std::string> v;
-					const auto it_options = std::filesystem::directory_options::follow_directory_symlink
-								| std::filesystem::directory_options::skip_permission_denied;
-					for (auto const& dir_entry : std::filesystem::directory_iterator(include_file_path, it_options))
-					{
-						if (std::filesystem::is_regular_file(dir_entry.path()))
-						{
-							v.push_back(dir_entry.path().string());
-						}
-						// We don't support nested directories
-						else
-						{
-							loaded_config_warnings.push_back("Included config file has wrong type: " + dir_entry.path().string());
-						}
-					}
-					std::sort(v.begin(), v.end());
-					for (const auto &f : v)
-					{
-						include_config_file(f, loaded_config_files);
-					}
-				}
-				else
-				{
-					loaded_config_warnings.push_back("Included config entry has wrong type: " + include_file_path.string());
-				}
+				throw std::runtime_error("Included config entry not existent: " + include_file_path.string());
 			}
-			else
+			if (std::filesystem::is_regular_file(include_file_path))
 			{
-				loaded_config_warnings.push_back("Included config entry unexistent: " + include_file_path.string());
+				include_config_file(include_file_path.string(), loaded_config_files);
+			}
+			else if (std::filesystem::is_directory(include_file_path))
+			{
+				std::vector<std::string> v;
+				const auto it_options = std::filesystem::directory_options::follow_directory_symlink
+							| std::filesystem::directory_options::skip_permission_denied;
+				for (auto const& dir_entry : std::filesystem::directory_iterator(include_file_path, it_options))
+				{
+					if (std::filesystem::is_regular_file(dir_entry.path()))
+					{
+						v.push_back(dir_entry.path().string());
+					}
+				}
+				std::sort(v.begin(), v.end());
+				for (const auto &f : v)
+				{
+					include_config_file(f, loaded_config_files);
+				}
 			}
 		}
 	}

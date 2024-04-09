@@ -125,11 +125,8 @@
 # exactly in the order they are specified.
 # Therefore, loaded config files *can* override values from main config file.
 # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
-# When relative path is used, the config file is assumed to be in the same folder as the main config file.
-# Otherwise, absolute path must be used.
 #
-# Like for rules (below), specifying a folder will load all the configs files present in it
-# in a lexicographical order.
+# Like for 'rules_file', specifying a folder will load all the configs files present in it in a lexicographical order.
 configs_files:
   - /etc/falco/config.d
 

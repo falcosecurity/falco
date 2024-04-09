@@ -91,11 +91,11 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 }
 
 void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
-			       std::vector<std::string>& loaded_conf_warnings, const std::vector<std::string> &cmdline_options)
+			       const std::vector<std::string> &cmdline_options)
 {
 	try
 	{
-		config.load_from_file(conf_filename, loaded_conf_files, loaded_conf_warnings);
+		config.load_from_file(conf_filename, loaded_conf_files);
 	}
 	catch(const std::exception& e)
 	{
