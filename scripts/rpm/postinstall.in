@@ -16,7 +16,8 @@
 # limitations under the License.
 #
 
-chosen_driver=
+# By default, we use the automatic selection for drivers
+chosen_driver="auto"
 chosen_unit=
 CHOICE=
 
@@ -38,42 +39,53 @@ systemctl --system unmask falcoctl-artifact-follow.service || true
 
 if [ $1 -ge 1 ]; then
         case $FALCO_DRIVER_CHOICE in
-              kmod)
-                  CHOICE=2
+              none)
+                  CHOICE=1
                   ;;
-              ebpf)
+              kmod)
                   CHOICE=3
                   ;;
-              modern_ebpf)
+              ebpf)
                   CHOICE=4
+                  ;;
+              modern_ebpf)
+                  CHOICE=5
                   ;;
         esac     
         if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
                     1 "Manual configuration (no unit is started)" \
-                    2 "Kmod" \
-                    3 "eBPF" \
-                    4 "Modern eBPF" \
+                    2 "Automatic selection" \
+                    3 "Kmod" \
+                    4 "eBPF" \
+                    5 "Modern eBPF" \
                     2>&1 >/dev/tty)
-        fi         
+        fi
+        # No need to manage automatic case since it is already the default
         case $CHOICE in
-            2)
-                chosen_driver="kmod"
-                chosen_unit="kmod"
+            1)
+                chosen_driver=""
                 ;;
             3)
-                chosen_driver="ebpf"
-                chosen_unit="bpf"
+                chosen_driver="kmod"
                 ;;
             4)
+                chosen_driver="ebpf"
+                ;;
+            5)
                 chosen_driver="modern_ebpf"
-                chosen_unit="modern-bpf"
                 ;;
         esac
-        if [ -n "$CHOICE" ]; then
-            echo "[POST-INSTALL] Configure falcoctl driver type:"
-            falcoctl driver config --type $chosen_driver
+        if [ -n "$chosen_driver" ]; then
+            if [ "$chosen_driver" = "auto" ];  then
+                # Configure falcoctl to enable all drivers
+                falcoctl driver config --type "modern_ebpf" --type "ebpf" --type "kmod"
+                # Load the actually automatic chosen driver
+                chosen_driver=$(falcoctl driver printenv | grep DRIVER= | cut -d'"' -f2)
+            else
+                falcoctl driver config --type "$chosen_driver"
+            fi
             CHOICE=
             case $FALCOCTL_ENABLED in
                 no)
@@ -105,12 +117,17 @@ systemctl --system daemon-reload || true
 case "$chosen_driver" in
     "kmod")
       # Only compile for kmod, in this way we use dkms
-       echo "[POST-INSTALL] Call 'falcoctl driver install for kmod:"
-       falcoctl driver install --download=false
+      echo "[POST-INSTALL] Call 'falcoctl driver install for kmod:"
+      falcoctl driver install --download=false
+      chosen_unit="kmod"
       ;;
     "ebpf")
       echo "[POST-INSTALL] Call 'falcoctl driver install for ebpf':"
       falcoctl driver install
+      chosen_unit="bpf"
+      ;;
+    "modern_ebpf")
+      chosen_unit="modern-bpf"
       ;;
 esac
 
