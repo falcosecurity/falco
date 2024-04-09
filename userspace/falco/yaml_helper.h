@@ -215,6 +215,13 @@ public:
 		return node.IsDefined();
 	}
 
+	std::string dump() const
+	{
+		YAML::Emitter emitter;
+		emitter << YAML::DoubleQuoted << YAML::Flow << YAML::LowerNull << YAML::BeginSeq << m_root;
+		return emitter.c_str() + 1; // drop initial '[' char
+	}
+
 private:
 	YAML::Node m_root;
 

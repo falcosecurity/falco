@@ -89,6 +89,8 @@ public:
 	void init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files, std::vector<std::string>& loaded_conf_warnings, const std::vector<std::string>& cmdline_options);
 	void init(const std::vector<std::string>& cmdline_options);
 
+	std::string dump();
+
 	static void read_rules_file_directory(const std::string& path, std::list<std::string>& rules_filenames, std::list<std::string> &rules_folders);
 
 	// Rules list as passed by the user
@@ -162,11 +164,11 @@ public:
 	gvisor_config m_gvisor = {};
 
 private:
-	void load_yaml(const std::string& config_name, const yaml_helper& config);
+	void load_yaml(const std::string& config_name);
 
-	void load_engine_config(const std::string& config_name, const yaml_helper& config);
+	void load_engine_config(const std::string& config_name);
 
-	void init_cmdline_options(yaml_helper& config, const std::vector<std::string>& cmdline_options);
+	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
 
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
@@ -174,7 +176,9 @@ private:
 	 * characters for nesting. Currently only 1- or 2- level keys
 	 * are supported and only scalar values are supported.
 	 */
-	void set_cmdline_option(yaml_helper& config, const std::string& spec);
+	void set_cmdline_option(const std::string& spec);
+
+	yaml_helper config;
 };
 
 namespace YAML {
