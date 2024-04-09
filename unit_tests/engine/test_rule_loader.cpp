@@ -981,6 +981,6 @@ TEST_F(test_falco_engine, exceptions_names_not_unique)
         - [curl 127.0.0.1]
 )END";
 
-  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-  ASSERT_TRUE(check_error_message("Exceptions names in the same object must be unique"));
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_warning_message("Multiple definitions of exception"));
 }
