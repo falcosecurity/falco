@@ -32,12 +32,11 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 	// List of loaded conf files, ie: s.options.conf_filename
 	// plus all the `configs_files` expanded list of configs.
 	std::vector<std::string> loaded_conf_files;
-	std::vector<std::string> loaded_conf_warnings;
 	try
 	{
 		if (!s.options.conf_filename.empty())
 		{
-			s.config->init(s.options.conf_filename, loaded_conf_files, loaded_conf_warnings, s.options.cmdline_config_options);
+			s.config->init(s.options.conf_filename, loaded_conf_files, s.options.cmdline_config_options);
 		}
 		else
 		{
@@ -65,11 +64,6 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 		for (const auto& path : loaded_conf_files)
 		{
 			falco_logger::log(falco_logger::level::INFO, std::string("   ") + path + "\n");
-		}
-
-		for (const auto &warn : loaded_conf_warnings)
-		{
-			falco_logger::log(falco_logger::level::WARNING, warn + "\n");
 		}
 	}
 
