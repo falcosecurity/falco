@@ -190,6 +190,7 @@ TEST(Configuration, configuration_config_files_ok)
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
+	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -263,6 +264,9 @@ TEST(Configuration, configuration_config_files_relative_main)
 	// main + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 2);
 
+	// conf_2 gives warning
+	ASSERT_EQ(loaded_conf_warnings.size(), 1);
+
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
 	ASSERT_TRUE(conf.is_defined("base_value.id"));
@@ -315,6 +319,7 @@ TEST(Configuration, configuration_config_files_override)
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
+	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -352,6 +357,9 @@ TEST(Configuration, configuration_config_files_unexistent)
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
 
+	// conf_5 unexistent
+	ASSERT_EQ(loaded_conf_warnings.size(), 1);
+
 	ASSERT_TRUE(conf.is_defined("base_value.id"));
 	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
 	ASSERT_TRUE(conf.is_defined("base_value.name"));
@@ -387,6 +395,7 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
+	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -422,6 +431,7 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
+	ASSERT_EQ(loaded_conf_warnings.size(), 0);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
@@ -504,6 +514,9 @@ TEST(Configuration, configuration_config_files_directory)
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
+
+	// Found a folder (test/foo) that will be skipped
+	ASSERT_EQ(loaded_conf_warnings.size(), 1);
 
 	ASSERT_TRUE(conf.is_defined("foo"));
 	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
