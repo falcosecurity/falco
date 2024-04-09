@@ -72,7 +72,8 @@ static const std::string warning_codes[] = {
 	"LOAD_UNKNOWN_ITEM",
 	"LOAD_DEPRECATED_ITEM",
 	"LOAD_WARNING_EXTENSION",
-	"LOAD_APPEND_NO_VALUES"
+	"LOAD_APPEND_NO_VALUES",
+	"LOAD_EXCEPTION_NAME_NOT_UNIQUE"
 };
 
 const std::string& falco::load_result::warning_code_str(warning_code wc)
@@ -90,7 +91,8 @@ static const std::string warning_strings[] = {
 	"Unknown rules file item",
 	"Used deprecated item",
 	"Warning in extension item",
-	"Overriding/appending with no values"
+	"Overriding/appending with no values",
+	"Multiple exceptions defined with the same name"
 };
 
 const std::string& falco::load_result::warning_str(warning_code wc)
@@ -108,7 +110,8 @@ static const std::string warning_descs[] = {
 	"An unknown top-level object is in the rules content. It will be ignored.",
 	"A deprecated item is employed by lists, macros, or rules.",
 	"An extension item has a warning",
-	"A rule exception is overriding/appending with no values"
+	"A rule exception is overriding/appending with no values",
+	"A rule is defining multiple exceptions with the same name"
 };
 
 const std::string& falco::load_result::warning_desc(warning_code wc)
