@@ -85,16 +85,14 @@ falco_configuration::falco_configuration():
 
 void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 {
-	yaml_helper config;
 	config.load_from_string("");
-	init_cmdline_options(config, cmdline_options);
-	load_yaml("default", config);
+	init_cmdline_options(cmdline_options);
+	load_yaml("default");
 }
 
 void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
 			       std::vector<std::string>& loaded_conf_warnings, const std::vector<std::string> &cmdline_options)
 {
-	yaml_helper config;
 	try
 	{
 		config.load_from_file(conf_filename, loaded_conf_files, loaded_conf_warnings);
@@ -104,11 +102,16 @@ void falco_configuration::init(const std::string& conf_filename, std::vector<std
 		std::cerr << "Cannot read config file (" + conf_filename + "): " + e.what() + "\n";
 		throw e;
 	}
-	init_cmdline_options(config, cmdline_options);
-	load_yaml(conf_filename, config);
+	init_cmdline_options(cmdline_options);
+	load_yaml(conf_filename);
 }
 
-void falco_configuration::load_engine_config(const std::string& config_name, const yaml_helper& config)
+std::string falco_configuration::dump()
+{
+	return config.dump();
+}
+
+void falco_configuration::load_engine_config(const std::string& config_name)
 {
 	// Set driver mode if not already set.
 	const std::unordered_map<std::string, engine_kind_t> engine_mode_lut = {
@@ -177,9 +180,9 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 }
 
-void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
+void falco_configuration::load_yaml(const std::string& config_name)
 {
-	load_engine_config(config_name, config);
+	load_engine_config(config_name);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
 	std::list<std::string> rules_files;
@@ -588,15 +591,15 @@ static bool split(const std::string &str, char delim, std::pair<std::string, std
 	return true;
 }
 
-void falco_configuration::init_cmdline_options(yaml_helper& config, const std::vector<std::string> &cmdline_options)
+void falco_configuration::init_cmdline_options(const std::vector<std::string> &cmdline_options)
 {
 	for(const std::string &option : cmdline_options)
 	{
-		set_cmdline_option(config, option);
+		set_cmdline_option(option);
 	}
 }
 
-void falco_configuration::set_cmdline_option(yaml_helper& config, const std::string &opt)
+void falco_configuration::set_cmdline_option(const std::string &opt)
 {
 	std::pair<std::string, std::string> keyval;
 

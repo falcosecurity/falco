@@ -108,7 +108,7 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s)
 		support["version"] = infos.falco_version;
 		support["engine_info"] = infos.as_json();
 		support["cmdline"] = s.cmdline;
-		support["config"] = read_file(s.options.conf_filename);
+		support["config"] = s.config->dump();
 		support["rules_files"] = nlohmann::json::array();
 		for(const auto& filename : s.config->m_loaded_rules_filenames)
 		{
