@@ -1,8 +1,5 @@
 driver:
-    type:
-        - "modern_ebpf"
-        - "ebpf"
-        - "kmod"
+    type: [@FALCOCTL_DRIVER_TYPES@]
     name: "@DRIVER_NAME@"
     repos:
         - "@DRIVERS_REPO@"
