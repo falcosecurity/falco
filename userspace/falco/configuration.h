@@ -173,13 +173,10 @@ public:
 
 private:
 	void merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files);
-
 	void load_yaml(const std::string& config_name);
-
+	void init_logger();
 	void load_engine_config(const std::string& config_name);
-
 	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
-
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
 	 * in the underlying yaml config. <key> can contain '.'
