@@ -28,7 +28,7 @@
 # Falco config files
 #     configs_files
 # Falco rules files
-#     rules_file
+#     rules_files
 # Falco engine
 #     engine
 # Falco plugins
@@ -128,7 +128,7 @@
 # Therefore, loaded config files *can* override values from main config file.
 # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
 #
-# Like for 'rules_file', specifying a folder will load all the configs files present in it in a lexicographical order.
+# Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
 configs_files:
   - /etc/falco/config.d
 
@@ -136,11 +136,12 @@ configs_files:
 # Falco rules files #
 #####################
 
-# [Stable] `rules_file`
+# [Stable] `rules_files`
 #
 # Falco rules can be specified using files or directories, which are loaded at
-# startup. The name "rules_file" is maintained for backwards compatibility. If
-# the entry is a file, it will be read directly. If the entry is a directory,
+# startup. The old name "rules_file" is maintained for backwards compatibility.
+#
+# If the entry is a file, it will be read directly. If the entry is a directory,
 # all files within that directory will be read in alphabetical order.
 #
 # The falco_rules.yaml file ships with the Falco package and is overridden with
@@ -169,7 +170,7 @@ configs_files:
 # "first match wins" principle. However, enabling the `all` matching option may result
 # in a performance penalty. We recommend carefully testing this alternative setting  
 # before deploying it in production. Read more under the `rule_matching` configuration.
-rules_file:
+rules_files:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d

@@ -167,6 +167,18 @@ void falco_configuration::merge_configs_files(const std::string& config_name, st
 	}
 }
 
+void falco_configuration::init_logger()
+{
+	m_log_level = config.get_scalar<std::string>("log_level", "info");
+	falco_logger::set_level(m_log_level);
+	falco_logger::set_sinsp_logging(
+		config.get_scalar<bool>("libs_logger.enabled", false),
+		config.get_scalar<std::string>("libs_logger.severity", "debug"),
+		"[libs]: ");
+	falco_logger::log_stderr = config.get_scalar<bool>("log_stderr", false);
+	falco_logger::log_syslog = config.get_scalar<bool>("log_syslog", true);
+}
+
 void falco_configuration::load_engine_config(const std::string& config_name)
 {
 	// Set driver mode if not already set.
@@ -238,12 +250,28 @@ void falco_configuration::load_engine_config(const std::string& config_name)
 
 void falco_configuration::load_yaml(const std::string& config_name)
 {
+	init_logger();
 	load_engine_config(config_name);
-	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
 	std::list<std::string> rules_files;
 
-	config.get_sequence<std::list<std::string>>(rules_files, std::string("rules_file"));
+	// Small glue code to support old deprecated 'rules_file' config key.
+	int num_rules_files_opts = 0;
+	if (config.is_defined("rules_files"))
+	{
+		num_rules_files_opts++;
+		config.get_sequence<std::list<std::string>>(rules_files, std::string("rules_files"));
+	}
+	if (config.is_defined("rules_file"))
+	{
+		num_rules_files_opts++;
+		config.get_sequence<std::list<std::string>>(rules_files, std::string("rules_file"));
+		falco_logger::log(falco_logger::level::WARNING, "Using deprecated config key 'rules_file'. Please use new 'rules_files' config key.");
+	}
+	if (num_rules_files_opts == 2)
+	{
+		throw std::logic_error("Error reading config file (" + config_name + "): both 'rules_files' and 'rules_file' keys set");
+	}
 
 	m_rules_filenames.clear();
 	m_loaded_rules_filenames.clear();
@@ -392,19 +420,6 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	{
 		m_outputs.push_back(grpc_output);
 	}
-
-	m_log_level = config.get_scalar<std::string>("log_level", "info");
-
-	falco_logger::set_level(m_log_level);
-
-
-	falco_logger::set_sinsp_logging(
-		config.get_scalar<bool>("libs_logger.enabled", false),
-		config.get_scalar<std::string>("libs_logger.severity", "debug"),
-		"[libs]: ");
-
-	falco_logger::log_stderr = config.get_scalar<bool>("log_stderr", false);
-	falco_logger::log_syslog = config.get_scalar<bool>("log_syslog", true);
 
 	m_output_timeout = config.get_scalar<uint32_t>("output_timeout", 2000);
 
