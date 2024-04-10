@@ -21,6 +21,15 @@ limitations under the License.
 
 #include <libsinsp/sinsp.h>
 
+/*!
+	\class falco_metrics
+	\brief This class is used to convert the metrics provided by the application
+	and falco libs into a string to be return by the metrics endpoint.
+*/
+
+/*!
+	\brief Constructor that takes a \c state object to build its internal state
+*/
 falco_metrics::falco_metrics(falco::app::state& state)
 {
 	falco_configuration::webserver_config webserver_config = state.config->m_webserver_config;
@@ -37,6 +46,11 @@ falco_metrics::falco_metrics(falco::app::state& state)
 	}
 }
 
+/*!
+	\brief This method returns a textual representation of the metrics configured.
+
+	The current implementation returns a Prometheus exposition formatted string.
+*/
 std::string falco_metrics::to_text() const
 {
 	if (!m_metrics_enabled)
