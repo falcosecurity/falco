@@ -10,6 +10,8 @@ on:
     # Weekly on Mondays at 00:00.
     - cron: '0 0 * * 1'
   workflow_dispatch:
+  pull_request:
+
 
   # The OSSF recommendation encourages to enable branch protection rules trigger
   # to update the scorecard
