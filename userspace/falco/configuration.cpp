@@ -93,9 +93,10 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
 			       const std::vector<std::string> &cmdline_options)
 {
+	loaded_conf_files.clear();
 	try
 	{
-		config.load_from_file(conf_filename, loaded_conf_files);
+		config.load_from_file(conf_filename);
 	}
 	catch(const std::exception& e)
 	{
@@ -103,12 +104,61 @@ void falco_configuration::init(const std::string& conf_filename, std::vector<std
 		throw e;
 	}
 	init_cmdline_options(cmdline_options);
+	merge_configs_files(conf_filename, loaded_conf_files);
 	load_yaml(conf_filename);
 }
 
 std::string falco_configuration::dump()
 {
 	return config.dump();
+}
+
+void falco_configuration::merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files)
+{
+	// Load configs files to be included and merge them into current config
+	loaded_config_files.push_back(config_name);
+	const auto ppath = std::filesystem::path(config_name);
+	// Parse files to be included
+	std::vector<std::string> include_files;
+	config.get_sequence<std::vector<std::string>>(include_files, yaml_helper::configs_key);
+	for(const std::string& include_file : include_files)
+	{
+		auto include_file_path = std::filesystem::path(include_file);
+		if (include_file_path == ppath)
+		{
+			throw std::logic_error(
+				"Config error: '" + yaml_helper::configs_key + "' directive tried to recursively include main config file: " + config_name + ".");
+		}
+		if (!std::filesystem::exists(include_file_path))
+		{
+			// Same we do for rules_file: just skip the entry.
+			continue;
+		}
+		if (std::filesystem::is_regular_file(include_file_path))
+		{
+			config.include_config_file(include_file_path.string());
+			loaded_config_files.push_back(include_file);
+		}
+		else if (std::filesystem::is_directory(include_file_path))
+		{
+			std::vector<std::string> v;
+			const auto it_options = std::filesystem::directory_options::follow_directory_symlink
+						| std::filesystem::directory_options::skip_permission_denied;
+			for (auto const& dir_entry : std::filesystem::directory_iterator(include_file_path, it_options))
+			{
+				if (std::filesystem::is_regular_file(dir_entry.path()))
+				{
+					v.push_back(dir_entry.path().string());
+				}
+			}
+			std::sort(v.begin(), v.end());
+			for (const auto &f : v)
+			{
+				config.include_config_file(f);
+				loaded_config_files.push_back(f);
+			}
+		}
+	}
 }
 
 void falco_configuration::load_engine_config(const std::string& config_name)
@@ -608,12 +658,5 @@ void falco_configuration::set_cmdline_option(const std::string &opt)
 		throw std::logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	if (keyval.first.rfind(yaml_helper::configs_key, 0) == 0)
-	{
-		falco_logger::log(falco_logger::level::WARNING, "Ignoring '-o " + yaml_helper::configs_key + "' directive: cannot be overridden by cmdline.\n");
-	}
-	else
-	{
-		config.set_scalar(keyval.first, keyval.second);
-	}
+	config.set_scalar(keyval.first, keyval.second);
 }

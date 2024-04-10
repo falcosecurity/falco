@@ -37,8 +37,6 @@ static std::string sample_yaml =
 	"    - elem2\n"
 	"    - elem3\n";
 
-static std::vector<std::string> loaded_conf_files;
-
 TEST(Configuration, configuration_exceptions)
 {
 	yaml_helper conf;
@@ -137,8 +135,10 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	outfile << conf_yaml_2;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_ANY_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -184,29 +184,31 @@ TEST(Configuration, configuration_config_files_ok)
 	outfile << conf_yaml_4;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
-	ASSERT_TRUE(conf.is_defined("foo2"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
-	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
-	ASSERT_TRUE(conf.is_defined("foo3"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo3", ""), "bar3");
-	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
-	ASSERT_TRUE(conf.is_defined("base_value_3.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value_3.name", ""), "foo3");
-	ASSERT_FALSE(conf.is_defined("base_value_4.id")); // conf_4 is not included
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(falco_config.config.is_defined("foo3"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo3", ""), "bar3");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_3.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_3.id", 0), 3);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_3.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value_3.name", ""), "foo3");
+	ASSERT_FALSE(falco_config.config.is_defined("base_value_4.id")); // conf_4 is not included
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -255,24 +257,26 @@ TEST(Configuration, configuration_config_files_relative_main)
 	outfile << conf_yaml_3;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file(temp_main.string(), loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init(temp_main.string(), loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
-	ASSERT_TRUE(conf.is_defined("foo2"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
-	ASSERT_TRUE(conf.is_defined("base_value_2"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
-	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_3.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_3.id", 0), 3);
 
 	std::filesystem::remove(temp_main.string());
 	std::filesystem::remove("conf_2.yaml");
@@ -310,22 +314,24 @@ TEST(Configuration, configuration_config_files_override)
 	outfile << conf_yaml_3;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 3); // overridden!
-	ASSERT_FALSE(conf.is_defined("base_value.name"));	// no more present since entire `base_value` block was overridden
-	ASSERT_TRUE(conf.is_defined("foo2"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
-	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
-	ASSERT_FALSE(conf.is_defined("base_value_3.id")); // not defined
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 3); // overridden!
+	ASSERT_FALSE(falco_config.config.is_defined("base_value.name"));	// no more present since entire `base_value` block was overridden
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_FALSE(falco_config.config.is_defined("base_value_3.id")); // not defined
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -334,7 +340,7 @@ TEST(Configuration, configuration_config_files_override)
 
 TEST(Configuration, configuration_config_files_unexistent)
 {
-	/* Test that including an unexistent file throws an exception */
+	/* Test that including an unexistent file just skips it */
 	const std::string main_conf_yaml =
 		yaml_helper::configs_key + ":\n"
 		"  - conf_5.yaml\n"
@@ -346,8 +352,18 @@ TEST(Configuration, configuration_config_files_unexistent)
 	outfile << main_conf_yaml;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+
+	// main
+	ASSERT_EQ(loaded_conf_files.size(), 1);
+
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
 
 	std::filesystem::remove("main.yaml");
 }
@@ -374,22 +390,24 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	outfile << conf_yaml_2;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
-	ASSERT_TRUE(conf.is_defined("foo2"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
-	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -409,18 +427,20 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 	outfile << main_conf_yaml;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
 
 	std::filesystem::remove("main.yaml");
 }
@@ -439,8 +459,10 @@ TEST(Configuration, configuration_config_files_self)
 	outfile << main_conf_yaml;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_ANY_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -491,29 +513,78 @@ TEST(Configuration, configuration_config_files_directory)
 	outfile << conf_yaml_4;
 	outfile.close();
 
-	yaml_helper conf;
-	ASSERT_NO_THROW(conf.load_from_file("main.yaml", loaded_conf_files));
+	std::vector<std::string> cmdline_config_options;
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3.
 	// test/foo is not parsed.
 	ASSERT_EQ(loaded_conf_files.size(), 3);
 
-	ASSERT_TRUE(conf.is_defined("foo"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
-	ASSERT_TRUE(conf.is_defined("base_value.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
-	ASSERT_TRUE(conf.is_defined("base_value.name"));
-	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
-	ASSERT_TRUE(conf.is_defined("base_value_2"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
-	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
-	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
-	ASSERT_TRUE(conf.is_defined("foo2"));
-	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar3");
-	ASSERT_FALSE(conf.is_defined("foo4"));
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_3.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_3.id", 0), 3);
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar3");
+	ASSERT_FALSE(falco_config.config.is_defined("foo4"));
 
 	std::filesystem::remove("main");
 	std::filesystem::remove_all(std::filesystem::temp_directory_path()/"test");
+}
+
+TEST(Configuration, configuration_config_files_cmdline)
+{
+	/* Test that we support including configs files from cmdline option */
+	const std::string main_conf_yaml =
+					   "foo: bar\n"
+					   "base_value:\n"
+					   "    id: 1\n"
+					   "    name: foo\n";
+	const std::string conf_yaml_2 =
+		"foo2: bar2\n"
+		"base_value_2:\n"
+		"    id: 2\n";
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	// Pass "configs_files=..." cmdline option
+	std::vector<std::string> cmdline_config_options;
+	cmdline_config_options.push_back((yaml_helper::configs_key+"=conf_2.yaml"));
+
+	std::vector<std::string> loaded_conf_files;
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+
+	// main + conf_2
+	ASSERT_EQ(loaded_conf_files.size(), 2);
+
+	ASSERT_TRUE(falco_config.config.is_defined("foo"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(falco_config.config.is_defined("base_value.name"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(falco_config.config.is_defined("foo2"));
+	ASSERT_EQ(falco_config.config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(falco_config.config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.config.get_scalar<int>("base_value_2.id", 0), 2);
+
+	std::filesystem::remove("main.yaml");
+	std::filesystem::remove("conf_2.yaml");
 }
 
 TEST(Configuration, configuration_environment_variables)

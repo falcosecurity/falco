@@ -92,50 +92,31 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path, std::vector<std::string>& loaded_config_files)
+	void load_from_file(const std::string& path)
 	{
-		loaded_config_files.clear();
+		m_root = load_from_file_int(path);
+	}
 
-		m_root = load_from_file_int(path, loaded_config_files);
-
-		const auto ppath = std::filesystem::path(path);
-		// Parse files to be included
-		std::vector<std::string> include_files;
-		get_sequence<std::vector<std::string>>(include_files, configs_key);
-		for(const std::string& include_file : include_files)
+	void include_config_file(const std::string& include_file_path)
+	{
+		auto loaded_nodes = load_from_file_int(include_file_path);
+		for(auto n : loaded_nodes)
 		{
-			auto include_file_path = std::filesystem::path(include_file);
-			if (include_file_path == ppath)
+			/*
+			 * To avoid recursion hell,
+			 * we don't support `configs_files` directives from included config files
+			 * (that use load_from_file_int recursively).
+			 */
+			const auto &key = n.first.Scalar();
+			if (key == configs_key)
 			{
 				throw std::runtime_error(
-					"Config error: '" + configs_key + "' directive tried to recursively include main config file: " + path + ".");
+					"Config error: '" + configs_key + "' directive in included config file " + include_file_path + ".");
 			}
-			if (!std::filesystem::exists(include_file_path))
-			{
-				throw std::runtime_error("Included config entry not existent: " + include_file_path.string());
-			}
-			if (std::filesystem::is_regular_file(include_file_path))
-			{
-				include_config_file(include_file_path.string(), loaded_config_files);
-			}
-			else if (std::filesystem::is_directory(include_file_path))
-			{
-				std::vector<std::string> v;
-				const auto it_options = std::filesystem::directory_options::follow_directory_symlink
-							| std::filesystem::directory_options::skip_permission_denied;
-				for (auto const& dir_entry : std::filesystem::directory_iterator(include_file_path, it_options))
-				{
-					if (std::filesystem::is_regular_file(dir_entry.path()))
-					{
-						v.push_back(dir_entry.path().string());
-					}
-				}
-				std::sort(v.begin(), v.end());
-				for (const auto &f : v)
-				{
-					include_config_file(f, loaded_config_files);
-				}
-			}
+			// We allow to override keys.
+			// We don't need to use `get_node()` here,
+			// since key is a top-level one.
+			m_root[key] = n.second;
 		}
 	}
 
@@ -204,35 +185,11 @@ public:
 private:
 	YAML::Node m_root;
 
-	YAML::Node load_from_file_int(const std::string& path, std::vector<std::string>& loaded_config_files)
+	YAML::Node load_from_file_int(const std::string& path)
 	{
 		auto root = YAML::LoadFile(path);
 		pre_process_env_vars(root);
-		loaded_config_files.push_back(path);
 		return root;
-	}
-
-	void include_config_file(const std::string& include_file_path, std::vector<std::string>& loaded_config_files)
-	{
-		auto loaded_nodes = load_from_file_int(include_file_path, loaded_config_files);
-		for(auto n : loaded_nodes)
-		{
-			/*
-			 * To avoid recursion hell,
-			 * we don't support `configs_files` directives from included config files
-			 * (that use load_from_file_int recursively).
-			 */
-			const auto &key = n.first.Scalar();
-			if (key == configs_key)
-			{
-				throw std::runtime_error(
-					"Config error: '" + configs_key + "' directive in included config file " + include_file_path + ".");
-			}
-			// We allow to override keys.
-			// We don't need to use `get_node()` here,
-			// since key is a top-level one.
-			m_root[key] = n.second;
-		}
 	}
 
 	/*
