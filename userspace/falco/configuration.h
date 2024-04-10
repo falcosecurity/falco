@@ -163,7 +163,12 @@ public:
 	replay_config m_replay = {};
 	gvisor_config m_gvisor = {};
 
+	// Needed by tests
+	yaml_helper config;
+
 private:
+	void merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files);
+
 	void load_yaml(const std::string& config_name);
 
 	void load_engine_config(const std::string& config_name);
@@ -177,8 +182,6 @@ private:
 	 * are supported and only scalar values are supported.
 	 */
 	void set_cmdline_option(const std::string& spec);
-
-	yaml_helper config;
 };
 
 namespace YAML {
