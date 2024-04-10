@@ -103,7 +103,14 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 	falco::app::restart_handler::watch_list_t dirs_to_watch;
 	if (s.config->m_watch_config_files)
 	{
-		files_to_watch.push_back(s.options.conf_filename);
+		files_to_watch.insert(
+			files_to_watch.end(),
+			s.config->m_loaded_configs_filenames.begin(),
+			s.config->m_loaded_configs_filenames.end());
+		dirs_to_watch.insert(
+			dirs_to_watch.end(),
+			s.config->m_loaded_configs_folders.begin(),
+			s.config->m_loaded_configs_folders.end());
 		files_to_watch.insert(
 			files_to_watch.end(),
 			s.config->m_loaded_rules_filenames.begin(),

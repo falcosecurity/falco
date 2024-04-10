@@ -93,6 +93,11 @@ public:
 
 	static void read_rules_file_directory(const std::string& path, std::list<std::string>& rules_filenames, std::list<std::string> &rules_folders);
 
+	// Config list as passed by the user. Filenames.
+	std::list<std::string> m_loaded_configs_filenames;
+	// Config list as passed by the user. Folders.
+	std::list<std::string> m_loaded_configs_folders;
+
 	// Rules list as passed by the user
 	std::list<std::string> m_rules_filenames;
 	// Actually loaded rules, with folders inspected

@@ -116,7 +116,11 @@ std::string falco_configuration::dump()
 void falco_configuration::merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files)
 {
 	// Load configs files to be included and merge them into current config
+	// NOTE: loaded_config_files will resolve to the filepaths list of loaded config.
+	// m_loaded_configs_filenames and m_loaded_configs_folders instead will hold the list of
+	// filenames and folders specified in config (minus the skipped ones).
 	loaded_config_files.push_back(config_name);
+	m_loaded_configs_filenames.push_back(config_name);
 	const auto ppath = std::filesystem::path(config_name);
 	// Parse files to be included
 	std::vector<std::string> include_files;
@@ -138,9 +142,11 @@ void falco_configuration::merge_configs_files(const std::string& config_name, st
 		{
 			config.include_config_file(include_file_path.string());
 			loaded_config_files.push_back(include_file);
+			m_loaded_configs_filenames.push_back(include_file);
 		}
 		else if (std::filesystem::is_directory(include_file_path))
 		{
+			m_loaded_configs_folders.push_back(include_file);
 			std::vector<std::string> v;
 			const auto it_options = std::filesystem::directory_options::follow_directory_symlink
 						| std::filesystem::directory_options::skip_permission_denied;
