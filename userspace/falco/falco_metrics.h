@@ -27,6 +27,8 @@ namespace falco::app {
 class falco_metrics
 {
 public:
+	static const std::string content_type;
+
 	falco_metrics(falco::app::state& state);
 	bool is_enabled() const { return m_metrics_enabled; };
 	std::string to_text() const;
