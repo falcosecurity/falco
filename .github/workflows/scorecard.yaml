@@ -24,7 +24,20 @@ on:
     branches: [ "master" ]
 
 # Declare default permissions as read only.
-permissions: read-all
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  deployments: read
+  id-token: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: write
+  repository-projects: read
+  security-events: read
+  statuses: read
 
 jobs:
   analysis:
@@ -117,3 +130,5 @@ jobs:
         uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: display-results
+          pr-comment: true
+
