@@ -40,7 +40,7 @@ jobs:
     steps:
 
       - name: Eco CI Energy Estimation - Initialize
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: start-measurement
 
@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: get-measurement
           label: Checkout code
@@ -76,7 +76,7 @@ jobs:
           publish_results: false
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: get-measurement
           label: Run analysis
@@ -92,7 +92,7 @@ jobs:
           retention-days: 5
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: get-measurement
           label: Upload artifact
@@ -105,13 +105,13 @@ jobs:
           sarif_file: results.sarif
 
       - name: Eco CI Energy Estimation - Get Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: get-measurement
           label: Upload to code-scanning
 
 
       - name: Eco CI Energy Estimation - End Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@v2
+        uses: green-coding-solutions/eco-ci-energy-estimation@main
         with:
           task: display-results
