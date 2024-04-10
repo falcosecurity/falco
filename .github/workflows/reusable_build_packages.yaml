@@ -104,21 +104,21 @@ jobs:
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
 
       - name: Upload Falco deb package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}.deb
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
 
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}.rpm
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.rpm
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
 

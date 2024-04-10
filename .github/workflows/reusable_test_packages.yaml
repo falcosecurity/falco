@@ -15,6 +15,11 @@ on:
         description: The Falco version to use when testing packages
         required: true
         type: string
+      sanitizers:
+        description: Use sanitizer enabled build
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   test-packages:
@@ -24,7 +29,7 @@ jobs:
       - name: Download binary
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: falco-${{ inputs.version }}${{ inputs.static && '-static' || '' }}-${{ inputs.arch }}.tar.gz
+          name: falco-${{ inputs.version }}${{ inputs.static && '-static' || '' }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.tar.gz
       
       - name: Install Falco package
         run: |
