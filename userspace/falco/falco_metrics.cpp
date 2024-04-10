@@ -28,6 +28,15 @@ limitations under the License.
 */
 
 /*!
+	\brief content_type to be returned by the webserver's metrics endpoint.
+
+	Currently it is the default Prometheus exposition format
+
+	https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
+*/
+const std::string falco_metrics::content_type = "text/plain; version=0.0.4";
+
+/*!
 	\brief Constructor that takes a \c state object to build its internal state
 */
 falco_metrics::falco_metrics(falco::app::state& state)

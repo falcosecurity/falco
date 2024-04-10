@@ -69,7 +69,7 @@ void falco_webserver::start(
     {
         m_server->Get("/metrics",
             [metrics](const httplib::Request &, httplib::Response &res) {
-                res.set_content(metrics.to_text(), "text/plain; version=0.0.4");
+                res.set_content(metrics.to_text(), falco_metrics::content_type);
             });
     }
     // run server in a separate thread
