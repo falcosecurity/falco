@@ -24,8 +24,10 @@ print_usage() {
 	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader:latest [driver] [options]"
 	echo ""
 	echo "Available drivers:"
-	echo "  kmod           kernel module (default)"
+	echo "  auto	       leverage automatic driver selection logic (default)"
+	echo "	modern_ebpf    modern eBPF CORE probe"
 	echo "  ebpf           eBPF probe"
+	echo "  kmod           kernel module"
 	echo ""
 	echo "Options:"
 	echo "  --help                   show this help message"
@@ -61,13 +63,15 @@ extra_args=
 
 while test $# -gt 0; do
 	case "$1" in
-		kmod|ebpf)
+		auto|kmod|ebpf|modern_ebpf)
 			if [ -n "$has_driver" ]; then
 				>&2 echo "Only one driver per invocation"
 				print_usage
 				exit 1
 			else
-				/usr/bin/falcoctl driver config --type $1
+				if [ "$1" != "auto" ]; then
+					/usr/bin/falcoctl driver config --type $1
+				fi
 				has_driver="true"
 			fi
 			;;
