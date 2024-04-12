@@ -39,6 +39,7 @@ systemctl --system disable 'falcoctl-artifact-follow.service' || true
 systemctl --system unmask falcoctl-artifact-follow.service || true
 
 if [ "$1" = "configure" ]; then
+	# "auto" case is not managed here since it is already the default, so no CHOICE=2
         case $FALCO_DRIVER_CHOICE in
               none)
                   CHOICE=1
@@ -63,7 +64,7 @@ if [ "$1" = "configure" ]; then
                     5 "Modern eBPF" \
                     2>&1 >/dev/tty)
         fi
-        # No need to manage automatic case since it is already the default
+        # "auto" case is not managed here since it is already the default, so no CHOICE=2
         case $CHOICE in
             1)
                 chosen_driver=""
