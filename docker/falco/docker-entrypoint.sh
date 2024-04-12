@@ -23,9 +23,11 @@ print_usage() {
 	echo "Usage:"
 	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro -e 'FALCO_DRIVER_LOADER_OPTIONS=[driver] [options]' falcosecurity/falco:latest"
 	echo ""
-	echo "Available FALCO_DRIVER_LOADER_OPTIONS drivers:"
-	echo "  kmod           kernel module (default)"
+	echo "Available drivers:"
+	echo "  auto	       leverage automatic driver selection logic (default)"
+	echo "	modern_ebpf    modern eBPF CORE probe"
 	echo "  ebpf           eBPF probe"
+	echo "  kmod           kernel module"
 	echo ""
 	echo "FALCO_DRIVER_LOADER_OPTIONS options:"
 	echo "  --help           show this help message"
@@ -71,7 +73,9 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
                     print_usage
                     exit 1
                 else
-                    /usr/bin/falcoctl driver config --type $opt
+                    if [ "$opt" != "auto" ]; then
+			/usr/bin/falcoctl driver config --type $opt
+		    fi
                     has_driver="true"
                 fi
                 ;;
