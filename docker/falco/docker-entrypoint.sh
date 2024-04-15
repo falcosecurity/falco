@@ -23,9 +23,9 @@ print_usage() {
 	echo "Usage:"
 	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro -e 'FALCO_DRIVER_LOADER_OPTIONS=[driver] [options]' falcosecurity/falco:latest"
 	echo ""
-	echo "Available drivers:"
+	echo "Available FALCO_DRIVER_LOADER_OPTIONS drivers:"
 	echo "  auto	       leverage automatic driver selection logic (default)"
-	echo "	modern_ebpf    modern eBPF CORE probe"
+	echo "  modern_ebpf    modern eBPF CORE probe"
 	echo "  ebpf           eBPF probe"
 	echo "  kmod           kernel module"
 	echo ""
@@ -67,15 +67,18 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     for opt in "${falco_driver_loader_option_arr[@]}"
     do
         case "$opt" in
-            kmod|ebpf)
+            auto|kmod|ebpf|modern_ebpf)
                 if [ -n "$has_driver" ]; then
                     >&2 echo "Only one driver per invocation"
                     print_usage
                     exit 1
                 else
                     if [ "$opt" != "auto" ]; then
-			/usr/bin/falcoctl driver config --type $opt
-		    fi
+	                /usr/bin/falcoctl driver config --type $opt
+	            else
+	                # Needed because we need to configure Falco to start with correct driver
+	                /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
+                    fi
                     has_driver="true"
                 fi
                 ;;
