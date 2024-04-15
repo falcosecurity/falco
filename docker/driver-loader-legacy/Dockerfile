@@ -92,7 +92,7 @@ RUN rm -rf /usr/bin/clang \
 RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& echo "deb https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
 	&& apt-get update -y \
-	&& if [ "$FALCO_VERSION" = "latest" ]; then apt-get install -y --no-install-recommends falco; else apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
+	&& if [ "$FALCO_VERSION" = "latest" ]; then FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco; else FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 

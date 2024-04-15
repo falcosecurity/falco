@@ -79,6 +79,7 @@ if [ $1 -ge 1 ]; then
                 ;;
         esac
         if [ -n "$chosen_driver" ]; then
+            echo "[POST-INSTALL] Configure falcoctl '$chosen_driver' driver type:"
             if [ "$chosen_driver" = "auto" ];  then
                 # Configure falcoctl to enable all drivers
                 falcoctl driver config --type "modern_ebpf" --type "ebpf" --type "kmod"
