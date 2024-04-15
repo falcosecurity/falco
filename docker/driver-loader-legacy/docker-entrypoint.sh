@@ -25,7 +25,7 @@ print_usage() {
 	echo ""
 	echo "Available drivers:"
 	echo "  auto	       leverage automatic driver selection logic (default)"
-	echo "	modern_ebpf    modern eBPF CORE probe"
+	echo "  modern_ebpf    modern eBPF CORE probe"
 	echo "  ebpf           eBPF probe"
 	echo "  kmod           kernel module"
 	echo ""
@@ -59,14 +59,17 @@ has_driver=
 has_opts=
 while test $# -gt 0; do
 	case "$1" in
-		kmod|ebpf)
+		auto|kmod|ebpf|modern_ebpf)
 			if [ -n "$has_driver" ]; then
 				>&2 echo "Only one driver per invocation"
 				print_usage
 				exit 1
 			else
-				if [ "$1" != "auto" ]; then
-					/usr/bin/falcoctl driver config --type $1
+				if [ "$opt" != "auto" ]; then
+				  /usr/bin/falcoctl driver config --type $opt
+				else
+				  # Needed because we need to configure Falco to start with correct driver
+				  /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
 				fi
 				has_driver="true"
 			fi

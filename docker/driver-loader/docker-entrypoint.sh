@@ -69,8 +69,11 @@ while test $# -gt 0; do
 				print_usage
 				exit 1
 			else
-				if [ "$1" != "auto" ]; then
-					/usr/bin/falcoctl driver config --type $1
+				if [ "$opt" != "auto" ]; then
+				  /usr/bin/falcoctl driver config --type $opt
+				else
+				  # Needed because we need to configure Falco to start with correct driver
+				  /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
 				fi
 				has_driver="true"
 			fi
