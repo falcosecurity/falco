@@ -872,18 +872,10 @@ TEST_F(test_falco_engine, macro_name_invalid)
     std::string rules_content = R"END(
 - macro: test-macro
   condition: evt.type = close
-
-- rule: test_rule
-  desc: test rule description
-  condition: test-macro
-  output: user=%user.name command=%proc.cmdline file=%fd.name
-  priority: INFO
-  enabled: false
-
 )END";
 
-  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-  ASSERT_TRUE(check_error_message("Macro has an invalid name. Macro names must match a regular expression"));
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_warning_message("Macro has an invalid name. Macro names should match a regular expression"));
 }
 
 TEST_F(test_falco_engine, list_name_invalid)
@@ -901,8 +893,8 @@ TEST_F(test_falco_engine, list_name_invalid)
 
 )END";
 
-  ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-  ASSERT_TRUE(check_error_message("List has an invalid name. List names must match a regular expression"));
+  ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_TRUE(check_warning_message("List has an invalid name. List names should match a regular expression"));
 }
 
 // The appended exception has a purposely miswritten field (value),
