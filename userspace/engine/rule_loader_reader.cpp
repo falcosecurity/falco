@@ -471,7 +471,10 @@ void rule_loader::reader::read_item(
 		rule_loader::context ctx(item, rule_loader::context::LIST, name, parent);
 
 		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_barestr);
-		THROW(invalid_name, ERROR_INVALID_LIST_NAME RGX_BARESTR, ctx);
+		if(invalid_name)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_INVALID_LIST_NAME, "List has an invalid name. List names must match a regular expression: " RGX_BARESTR, ctx);
+		}
 
 		rule_loader::list_info v(ctx);
 
@@ -515,7 +518,10 @@ void rule_loader::reader::read_item(
 		rule_loader::context ctx(item, rule_loader::context::MACRO, name, parent);
 
 		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_identifier);
-		THROW(invalid_name, ERROR_INVALID_MACRO_NAME RGX_IDENTIFIER, ctx);
+		if(invalid_name)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_INVALID_MACRO_NAME, "Macro has an invalid name. Macro names must match a regular expression: " RGX_IDENTIFIER, ctx);
+		}
 
 		rule_loader::macro_info v(ctx);
 		v.name = name;
