@@ -137,9 +137,11 @@ configs_files:
 #####################
 
 # [Stable] `rules_files`
+
+NOTICE: Before Falco 0.38, this config key was `rules_file` (singular form), which is now deprecated in favor of `rules_files` (plural form).
 #
 # Falco rules can be specified using files or directories, which are loaded at
-# startup. The old name "rules_file" is maintained for backwards compatibility.
+# startup.
 #
 # If the entry is a file, it will be read directly. If the entry is a directory,
 # all files within that directory will be read in alphabetical order.
