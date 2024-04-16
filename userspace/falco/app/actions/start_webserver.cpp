@@ -19,7 +19,6 @@ limitations under the License.
 
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "webserver.h"
-#include "falco_metrics.h"
 #endif
 
 using namespace falco::app;
@@ -35,7 +34,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			falco_logger::log(falco_logger::level::DEBUG, "Skipping starting webserver in dry-run\n");
 			return run_result::ok();
 		}
-	
+
 		falco_configuration::webserver_config webserver_config = state.config->m_webserver_config;
 		std::string ssl_option = (webserver_config.m_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(falco_logger::level::INFO, "Starting health webserver with threadiness "
@@ -46,12 +45,9 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			+ std::to_string(webserver_config.m_listen_port)
 			+ ssl_option + "\n");
 
-		falco_metrics metrics(state);
-
 		state.webserver.start(
-			state.offline_inspector,
-			webserver_config,
-			metrics);
+			state,
+			webserver_config);
 	}
 #endif
 	return run_result::ok();
@@ -73,4 +69,3 @@ falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& st
 #endif
 	return run_result::ok();
 }
-
