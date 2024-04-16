@@ -90,7 +90,7 @@ public:
 		std::string m_k8s_healthz_endpoint = "/healthz";
 		bool m_ssl_enabled = false;
 		std::string m_ssl_certificate;
-		bool m_metrics_enabled = false;
+		bool m_prometheus_metrics_enabled = false;
 	};
 
 	falco_configuration();

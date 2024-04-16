@@ -456,7 +456,7 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	{
 		m_webserver_config.m_threadiness = falco::utils::hardware_concurrency();
 	}
-	m_webserver_config.m_metrics_enabled = config.get_scalar<bool>("webserver.metrics_enabled", false);
+	m_webserver_config.m_prometheus_metrics_enabled = config.get_scalar<bool>("webserver.prometheus_metrics_enabled", false);
 
 	std::list<std::string> syscall_event_drop_acts;
 	config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
