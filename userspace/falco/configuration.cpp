@@ -266,7 +266,7 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	{
 		num_rules_files_opts++;
 		config.get_sequence<std::list<std::string>>(rules_files, std::string("rules_file"));
-		falco_logger::log(falco_logger::level::WARNING, "Using deprecated config key 'rules_file'. Please use new 'rules_files' config key.");
+		falco_logger::log(falco_logger::level::WARNING, "Using deprecated config key 'rules_file' (singular form). Please use new 'rules_files' config key (plural form).");
 	}
 	if (num_rules_files_opts == 2)
 	{
