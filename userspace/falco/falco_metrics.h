@@ -28,13 +28,5 @@ class falco_metrics
 {
 public:
 	static const std::string content_type;
-
-	falco_metrics(falco::app::state& state);
-	bool is_enabled() const { return m_metrics_enabled; };
-	std::string to_text() const;
-
-private:
-	bool m_metrics_enabled = false;
-	std::vector<sinsp*> m_inspectors;
-	std::vector<libs::metrics::libs_metrics_collector> m_metrics_collectors;
+	static std::string to_text(const falco::app::state& state);
 };

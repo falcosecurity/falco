@@ -18,6 +18,7 @@ limitations under the License.
 #include "webserver.h"
 #include "falco_utils.h"
 #include "falco_metrics.h"
+#include "app/state.h"
 #include "versions_info.h"
 #include <atomic>
 
@@ -27,9 +28,8 @@ falco_webserver::~falco_webserver()
 }
 
 void falco_webserver::start(
-        const std::shared_ptr<sinsp>& inspector,
-        const falco_configuration::webserver_config& webserver_config,
-        const falco_metrics& metrics)
+        const falco::app::state& state,
+        const falco_configuration::webserver_config& webserver_config)
 {
     if (m_running)
     {
@@ -57,19 +57,19 @@ void falco_webserver::start(
         [](const httplib::Request &, httplib::Response &res) {
             res.set_content("{\"status\": \"ok\"}", "application/json");
         });
-    
+
     // setup versions endpoint
-    const auto versions_json_str = falco::versions_info(inspector).as_json().dump();
+    const auto versions_json_str = falco::versions_info(state.offline_inspector).as_json().dump();
     m_server->Get("/versions",
         [versions_json_str](const httplib::Request &, httplib::Response &res) {
             res.set_content(versions_json_str, "application/json");
         });
 
-    if (metrics.is_enabled())
+    if (state.config->m_metrics_enabled && webserver_config.m_metrics_enabled)
     {
         m_server->Get("/metrics",
-            [metrics](const httplib::Request &, httplib::Response &res) {
-                res.set_content(metrics.to_text(), falco_metrics::content_type);
+            [&state](const httplib::Request &, httplib::Response &res) {
+                res.set_content(falco_metrics::to_text(state), falco_metrics::content_type);
             });
     }
     // run server in a separate thread

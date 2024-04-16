@@ -25,7 +25,9 @@ limitations under the License.
 #include <memory>
 #include <thread>
 
-class falco_metrics;
+namespace falco::app {
+	struct state;
+}
 
 class falco_webserver
 {
@@ -37,9 +39,8 @@ public:
 	falco_webserver(const falco_webserver&) = delete;
 	falco_webserver& operator = (const falco_webserver&) = delete;
 	virtual void start(
-		const std::shared_ptr<sinsp>& inspector,
-		const falco_configuration::webserver_config& webserver_config,
-		const falco_metrics& metrics);
+		const falco::app::state& state,
+		const falco_configuration::webserver_config& webserver_config);
 	virtual void stop();
 
 private:

@@ -36,46 +36,33 @@ limitations under the License.
 */
 const std::string falco_metrics::content_type = "text/plain; version=0.0.4";
 
-/*!
-	\brief Constructor that takes a \c state object to build its internal state
-*/
-falco_metrics::falco_metrics(falco::app::state& state)
-{
-	falco_configuration::webserver_config webserver_config = state.config->m_webserver_config;
-	m_metrics_enabled = state.config->m_metrics_enabled && webserver_config.m_metrics_enabled;
-
-	if (m_metrics_enabled)
-	{
-		for (const auto& source_info: state.source_infos)
-		{
-			sinsp *source_inspector = source_info.inspector.get();
-			m_inspectors.push_back(source_inspector);
-			m_metrics_collectors.push_back(libs::metrics::libs_metrics_collector(source_inspector, state.config->m_metrics_flags));	
-		}
-	}
-}
 
 /*!
-	\brief This method returns a textual representation of the metrics configured.
+	\brief this method takes an application \c state and returns a textual representation of
+	its configured metrics.
 
 	The current implementation returns a Prometheus exposition formatted string.
 */
-std::string falco_metrics::to_text() const
+std::string falco_metrics::to_text(const falco::app::state& state)
 {
-	if (!m_metrics_enabled)
-	{
-		return "";
-	}
-
 	static const char* all_driver_engines[] = {
 		BPF_ENGINE, KMOD_ENGINE, MODERN_BPF_ENGINE,
 		SOURCE_PLUGIN_ENGINE, NODRIVER_ENGINE, GVISOR_ENGINE };
 
+	std::vector<sinsp*> inspectors;
+	std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
+
+	for (const auto& source_info: state.source_infos)
+	{
+		sinsp *source_inspector = source_info.inspector.get();
+		inspectors.push_back(source_inspector);
+		metrics_collectors.push_back(libs::metrics::libs_metrics_collector(source_inspector, state.config->m_metrics_flags));
+	}
 
 	libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
 	std::string prometheus_text;
 
-	for (auto* inspector: m_inspectors)
+	for (auto* inspector: inspectors)
 	{
 		for (size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++)
 		{
@@ -122,7 +109,7 @@ std::string falco_metrics::to_text() const
 		}
 	}
 
-	for (auto metrics_collector: m_metrics_collectors)
+	for (auto metrics_collector: metrics_collectors)
 	{
 		metrics_collector.snapshot();
 		auto metrics_snapshot = metrics_collector.get_metrics();
