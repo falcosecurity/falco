@@ -62,24 +62,18 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     ENABLE_COMPILE="false"
     ENABLE_DOWNLOAD="false"
     HTTP_INSECURE="false"
-    has_driver=
+    driver=
     has_opts=
     for opt in "${falco_driver_loader_option_arr[@]}"
     do
         case "$opt" in
             auto|kmod|ebpf|modern_ebpf)
-                if [ -n "$has_driver" ]; then
+                if [ -n "$driver" ]; then
                     >&2 echo "Only one driver per invocation"
                     print_usage
                     exit 1
                 else
-                    if [ "$opt" != "auto" ]; then
-	                /usr/bin/falcoctl driver config --type $opt
-	            else
-	                # Needed because we need to configure Falco to start with correct driver
-	                /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
-                    fi
-                    has_driver="true"
+                    driver=$opt
                 fi
                 ;;
             -h|--help)
@@ -98,33 +92,42 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
                 ENABLE_DOWNLOAD="true"
                 has_opts="true"
                 ;;
-	    --http-insecure)
-		HTTP_INSECURE="true"
-		;;
-            --source-only)
-                >&2 echo "Support dropped in Falco 0.37.0."
-                print_usage
-                exit 1
-                ;;    
+            --http-insecure)
+                HTTP_INSECURE="true"
+                ;;
             --print-env)
                 /usr/bin/falcoctl driver printenv
                 exit 0
                 ;;
             --*)
-                >&2 echo "Unknown option: $1"
+                >&2 echo "Unknown option: $opt"
                 print_usage
                 exit 1
                 ;;
             *)
-                >&2 echo "Unknown driver: $1"
+                >&2 echo "Unknown driver: $opt"
                 print_usage
                 exit 1
                 ;;
         esac
     done
+
+    # No opts passed, enable both compile and download
     if [ -z "$has_opts" ]; then
         ENABLE_COMPILE="true"
         ENABLE_DOWNLOAD="true"
+    fi
+
+    # Default value: auto
+    if [ -z "$driver" ]; then
+      driver="auto"
+    fi
+
+    if [ "$driver" != "auto" ]; then
+      /usr/bin/falcoctl driver config --type $driver
+    else
+      # Needed because we need to configure Falco to start with correct driver
+      /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
     fi
     /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"
 
