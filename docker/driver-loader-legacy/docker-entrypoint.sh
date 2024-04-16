@@ -55,23 +55,17 @@ done
 ENABLE_COMPILE="false"
 ENABLE_DOWNLOAD="false"
 HTTP_INSECURE="false"
-has_driver=
+driver=
 has_opts=
 while test $# -gt 0; do
 	case "$1" in
 		auto|kmod|ebpf|modern_ebpf)
-			if [ -n "$has_driver" ]; then
+			if [ -n "$driver" ]; then
 				>&2 echo "Only one driver per invocation"
 				print_usage
 				exit 1
 			else
-				if [ "$opt" != "auto" ]; then
-				  /usr/bin/falcoctl driver config --type $opt
-				else
-				  # Needed because we need to configure Falco to start with correct driver
-				  /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
-				fi
-				has_driver="true"
+			  driver=$1
 			fi
 			;;
 		-h|--help)
@@ -92,11 +86,6 @@ while test $# -gt 0; do
 			;;
 		--http-insecure)
 			HTTP_INSECURE="true"
-			;;   
-		--source-only)
-		    >&2 echo "Support dropped in Falco 0.37.0."
-			print_usage
-			exit 1
 			;;
 		--print-env)
 			/usr/bin/falcoctl driver printenv
@@ -116,9 +105,22 @@ while test $# -gt 0; do
     shift
 done
 
+# No opts passed, enable both compile and download
 if [ -z "$has_opts" ]; then
-	ENABLE_COMPILE="true"
-	ENABLE_DOWNLOAD="true"
+    ENABLE_COMPILE="true"
+    ENABLE_DOWNLOAD="true"
+fi
+
+# Default value: auto
+if [ -z "$driver" ]; then
+  driver="auto"
+fi
+
+if [ "$driver" != "auto" ]; then
+  /usr/bin/falcoctl driver config --type $driver
+else
+  # Needed because we need to configure Falco to start with correct driver
+  /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
 fi
 
 /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"
