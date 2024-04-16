@@ -65,7 +65,7 @@ void falco_webserver::start(
             res.set_content(versions_json_str, "application/json");
         });
 
-    if (state.config->m_metrics_enabled && webserver_config.m_metrics_enabled)
+    if (state.config->m_metrics_enabled && webserver_config.m_prometheus_metrics_enabled)
     {
         m_server->Get("/metrics",
             [&state](const httplib::Request &, httplib::Response &res) {
