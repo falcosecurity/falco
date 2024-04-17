@@ -535,9 +535,9 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		// wait for event processing to terminate for all sources
 		// if a thread terminates with an error, we trigger the app termination
 		// to force all other event streams to terminate too.
-		// We accomulate the errors in a single run_result.
-		size_t closed_count = 0;
-		while (closed_count < ctxs.size())
+		// We accumulate the errors in a single run_result.
+		size_t stopped_count = 0;
+		while (stopped_count < ctxs.size())
 		{
 			if (!res.success && !termination_forced)
 			{
@@ -572,12 +572,12 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 						ctx.thread->join();
 					}
 
-					falco_logger::log(falco_logger::level::DEBUG, "Closing event source '" + ctx.source + "'\n");
-					s.source_infos.at(ctx.source)->inspector->close();
+					falco_logger::log(falco_logger::level::DEBUG, "Stopping capture for event source '" + ctx.source + "'\n");
+					s.source_infos.at(ctx.source)->inspector->stop_capture();
 
 					res = run_result::merge(res, ctx.res);
 					ctx.sync->join();
-					closed_count++;
+					stopped_count++;
 				}
 			}
 		}

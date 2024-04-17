@@ -56,6 +56,7 @@ falco::app::run_result stop_grpc_server(falco::app::state& s);
 falco::app::run_result stop_webserver(falco::app::state& s);
 falco::app::run_result unregister_signal_handlers(falco::app::state& s);
 falco::app::run_result validate_rules_files(falco::app::state& s);
+falco::app::run_result close_inspectors(falco::app::state& s);
 
 }; // namespace actions
 }; // namespace app
