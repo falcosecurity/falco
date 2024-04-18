@@ -82,7 +82,7 @@ if [ $1 -ge 1 ]; then
             echo "[POST-INSTALL] Configure falcoctl '$chosen_driver' driver type:"
             if [ "$chosen_driver" = "auto" ];  then
                 # Configure falcoctl to enable all drivers
-                falcoctl driver config --type "modern_ebpf" --type "ebpf" --type "kmod"
+                falcoctl driver config --type "modern_ebpf" --type "kmod" --type "ebpf"
                 # Load the actually automatic chosen driver
                 chosen_driver=$(falcoctl driver printenv | grep DRIVER= | cut -d'"' -f2)
             else
