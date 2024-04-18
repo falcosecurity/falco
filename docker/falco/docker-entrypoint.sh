@@ -26,8 +26,8 @@ print_usage() {
 	echo "Available FALCO_DRIVER_LOADER_OPTIONS drivers:"
 	echo "  auto	       leverage automatic driver selection logic (default)"
 	echo "  modern_ebpf    modern eBPF CORE probe"
-	echo "  ebpf           eBPF probe"
 	echo "  kmod           kernel module"
+	echo "  ebpf           eBPF probe"
 	echo ""
 	echo "FALCO_DRIVER_LOADER_OPTIONS options:"
 	echo "  --help           show this help message"
@@ -127,7 +127,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
       /usr/bin/falcoctl driver config --type $driver
     else
       # Needed because we need to configure Falco to start with correct driver
-      /usr/bin/falcoctl driver config --type modern_ebpf --type ebpf --type kmod
+      /usr/bin/falcoctl driver config --type modern_ebpf --type kmod --type ebpf
     fi
     /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"
 
