@@ -310,9 +310,8 @@ TEST(engine_loader_alt_loader, pass_compile_output_to_ruleset)
 	// Enable all rules for a ruleset id. Because the compile
 	// output contained one rule with priority >= INFO, that rule
 	// should be enabled.
-	bool match_exact = true;
 	uint16_t ruleset_id = 0;
-	ruleset->enable("", match_exact, ruleset_id);
+	ruleset->enable("", filter_ruleset::match_type::substring, ruleset_id);
 
 	EXPECT_EQ(ruleset->enabled_count(ruleset_id), 1);
 }

@@ -53,13 +53,13 @@ public:
 	void on_loading_complete() override;
 
 	void enable(
-		const std::string &substring,
-		bool match_exact,
+		const std::string &pattern,
+		match_type match,
 		uint16_t rulset_id) override;
 
 	void disable(
-		const std::string &substring,
-		bool match_exact,
+		const std::string &pattern,
+		match_type match,
 		uint16_t rulset_id) override;
 
 	void enable_tags(
@@ -85,8 +85,8 @@ private:
 
 	// Helper used by enable()/disable()
 	void enable_disable(
-		const std::string &substring,
-		bool match_exact,
+		const std::string &pattern,
+		match_type match,
 		bool enabled,
 		uint16_t rulset_id);
 

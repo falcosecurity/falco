@@ -44,6 +44,7 @@ add_executable(falco_unit_tests
     engine/test_rule_loader.cpp
     engine/test_rulesets.cpp
     falco/test_configuration.cpp
+    falco/test_configuration_rule_selection.cpp
     falco/app/actions/test_select_event_sources.cpp
     falco/app/actions/test_load_config.cpp
 )

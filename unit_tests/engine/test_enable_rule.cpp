@@ -44,6 +44,36 @@ static std::string single_rule = R"END(
   tags: [exec process]
 )END";
 
+static std::string multi_rule = R"END(
+- rule: first actual rule
+  desc: A test rule
+  condition: evt.type=execve
+  output: A test rule matched (evt.type=%evt.type)
+  priority: INFO
+  source: syscall
+  tags: [process]
+
+- rule: second disabled rule
+  desc: A disabled rule
+  condition: evt.type=execve
+  output: A disabled 2 rule matched (evt.type=%evt.type)
+  priority: INFO
+  source: syscall
+  enabled: false
+  tags: [exec process]
+
+- rule: third disabled rule
+  desc: A disabled rule
+  condition: evt.type=execve
+  output: A disabled 3 rule matched (evt.type=%evt.type)
+  priority: INFO
+  source: syscall
+  enabled: false
+  tags: [exec]
+)END";
+
+
+
 // This must be kept in line with the (private) falco_engine::s_default_ruleset
 static const std::string default_ruleset = "falco-default-ruleset";
 
@@ -216,3 +246,41 @@ TEST_F(test_falco_engine, enable_rule_name_exact)
 	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_3));
 	EXPECT_EQ(2, m_engine->num_rules_for_ruleset(ruleset_4));
 }
+
+TEST_F(test_falco_engine, enable_rule_name_wildcard)
+{
+	load_rules(multi_rule, "multi_rule.yaml");
+
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(default_ruleset));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_1));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_2));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_3));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_4));
+
+	// As long as there are no *, exact matches work
+	m_engine->enable_rule_wildcard("first actual rule", true, ruleset_1);
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_1));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_2));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_3));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_4));
+
+	m_engine->enable_rule_wildcard("*rule", true, ruleset_2);
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_1));
+	EXPECT_EQ(3, m_engine->num_rules_for_ruleset(ruleset_2));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_3));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_4));
+
+	// This should enable the second rule
+	m_engine->enable_rule_wildcard("*second*r*", true, ruleset_3);
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_1));
+	EXPECT_EQ(3, m_engine->num_rules_for_ruleset(ruleset_2));
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_3));
+	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_4));
+
+	m_engine->enable_rule_wildcard("*", true, ruleset_4);
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_1));
+	EXPECT_EQ(3, m_engine->num_rules_for_ruleset(ruleset_2));
+	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_3));
+	EXPECT_EQ(3, m_engine->num_rules_for_ruleset(ruleset_4));
+}
+

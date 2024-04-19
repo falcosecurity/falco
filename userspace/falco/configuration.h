@@ -93,11 +93,23 @@ public:
 		bool m_prometheus_metrics_enabled = false;
 	};
 
+	enum class rule_selection_operation {
+		enable,
+		disable
+	};
+
+	struct rule_selection_config {
+		rule_selection_operation m_op;
+		std::string m_tag;
+		std::string m_rule;
+	};
+
 	falco_configuration();
 	virtual ~falco_configuration() = default;
 
 	void init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files, const std::vector<std::string>& cmdline_options);
 	void init(const std::vector<std::string>& cmdline_options);
+	void init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options);
 
 	std::string dump();
 
@@ -118,6 +130,9 @@ public:
 	std::unordered_map<std::string, std::string> m_loaded_rules_filenames_sha256sum;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
+	// Rule selection options passed by the user
+	std::vector<rule_selection_config> m_rules_selection;
+
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
@@ -196,6 +211,91 @@ private:
 };
 
 namespace YAML {
+	template<>
+	struct convert<falco_configuration::rule_selection_config> {
+		static Node encode(const falco_configuration::rule_selection_config & rhs) {
+			Node node;
+			Node subnode;
+			if(rhs.m_rule != "")
+			{
+				subnode["rule"] = rhs.m_rule;
+			}
+
+			if(rhs.m_tag != "")
+			{
+				subnode["tag"] = rhs.m_tag;
+			}
+			
+			if(rhs.m_op == falco_configuration::rule_selection_operation::enable)
+			{
+				node["enable"] = subnode;
+			}
+			else if(rhs.m_op == falco_configuration::rule_selection_operation::disable)
+			{
+				node["disable"] = subnode;
+			}
+
+			return node;
+		}
+
+		static bool decode(const Node& node, falco_configuration::rule_selection_config & rhs) {
+			if(!node.IsMap())
+			{
+				return false;
+			}
+
+			if(node["enable"])
+			{
+				rhs.m_op = falco_configuration::rule_selection_operation::enable;
+
+				const Node& enable = node["enable"];
+				if(!enable.IsMap())
+				{
+					return false;
+				}
+
+				if(enable["rule"])
+				{
+					rhs.m_rule = enable["rule"].as<std::string>();
+				}
+				if(enable["tag"])
+				{
+					rhs.m_tag = enable["tag"].as<std::string>();
+				}
+			}
+			else if(node["disable"])
+			{
+				rhs.m_op = falco_configuration::rule_selection_operation::disable;
+
+				const Node& disable = node["disable"];
+				if(!disable.IsMap())
+				{
+					return false;
+				}
+
+				if(disable["rule"])
+				{
+					rhs.m_rule = disable["rule"].as<std::string>();
+				}
+				if(disable["tag"])
+				{
+					rhs.m_tag = disable["tag"].as<std::string>();
+				}
+			}
+			else
+			{
+				return false;
+			}
+
+			if (rhs.m_rule == "" && rhs.m_tag == "")
+			{
+				return false;
+			}
+
+			return true;
+		}
+	};
+
 	template<>
 	struct convert<falco_configuration::plugin_config> {
 

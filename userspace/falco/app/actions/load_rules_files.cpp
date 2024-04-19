@@ -131,6 +131,12 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		return run_result::fatal(err);
 	}
 
+	if((!s.options.disabled_rule_substrings.empty() || !s.options.disabled_rule_tags.empty() || !s.options.enabled_rule_tags.empty()) &&
+		!s.config->m_rules_selection.empty())
+	{
+		return run_result::fatal("Specifying -D, -t, -T command line options together with \"rules:\" configuration or -o \"rules...\" is not supported.");
+	}
+
 	for (const auto& substring : s.options.disabled_rule_substrings)
 	{
 		falco_logger::log(falco_logger::level::INFO, "Disabling rules matching substring: " + substring + "\n");
@@ -156,6 +162,27 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 			falco_logger::log(falco_logger::level::INFO, "Enabling rules with tag: " + tag + "\n");
 		}
 		s.engine->enable_rule_by_tag(s.options.enabled_rule_tags, true);
+	}
+
+	for(const auto& sel : s.config->m_rules_selection)
+	{
+		bool enable = sel.m_op == falco_configuration::rule_selection_operation::enable;
+
+		if(sel.m_rule != "")
+		{
+			falco_logger::log(falco_logger::level::INFO,
+				(enable ? "Enabling" : "Disabling") + std::string(" rules with name: ") + sel.m_rule + "\n");
+
+			s.engine->enable_rule_wildcard(sel.m_rule, enable);
+		}
+
+		if(sel.m_tag != "")
+		{
+			falco_logger::log(falco_logger::level::INFO,
+				(enable ? "Enabling" : "Disabling") + std::string(" rules with tag: ") + sel.m_tag + "\n");
+
+			s.engine->enable_rule_by_tag(std::set<std::string>{sel.m_tag}, enable); // TODO wildcard support
+		}
 	}
 
 	// printout of `-L` option

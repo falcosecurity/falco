@@ -85,6 +85,13 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 	load_yaml("default");
 }
 
+void falco_configuration::init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options)
+{
+	config.load_from_string(config_content);
+	init_cmdline_options(cmdline_options);
+	load_yaml("default");
+}
+
 void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
 			       const std::vector<std::string> &cmdline_options)
 {
@@ -557,6 +564,8 @@ void falco_configuration::load_yaml(const std::string& config_name)
 
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values = config.get_scalar<bool>("metrics.include_empty_values", false);
+
+	config.get_sequence<std::vector<rule_selection_config>>(m_rules_selection, "rules");
 
 	std::vector<std::string> load_plugins;
 

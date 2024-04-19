@@ -102,6 +102,12 @@ public:
 	// Same as above but providing a ruleset id instead
 	void enable_rule_exact(const std::string &rule_name, bool enabled, const uint16_t ruleset_id);
 
+	// Like enable_rule, but wildcards are supported and substrings are not matched
+	void enable_rule_wildcard(const std::string &rule_name, bool enabled, const std::string &ruleset = s_default_ruleset);
+
+	// Same as above but providing a ruleset id instead
+	void enable_rule_wildcard(const std::string &rule_name, bool enabled, const uint16_t ruleset_id);
+
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//

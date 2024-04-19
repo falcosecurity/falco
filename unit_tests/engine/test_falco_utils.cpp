@@ -72,3 +72,24 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	 */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 0UL);
 }
+
+TEST(FalcoUtils, matches_wildcard)
+{
+	ASSERT_TRUE(falco::utils::matches_wildcard("*", "anything"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("**", "anything"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("*", ""));
+	ASSERT_TRUE(falco::utils::matches_wildcard("no star", "no star"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("", ""));
+	ASSERT_TRUE(falco::utils::matches_wildcard("hello*world", "hello new world"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("hello*world*", "hello new world yes"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("*hello*world", "come on hello this world"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("*hello*****world", "come on hello this world"));
+
+	ASSERT_FALSE(falco::utils::matches_wildcard("no star", ""));
+	ASSERT_FALSE(falco::utils::matches_wildcard("", "no star"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("star", "no star"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("hello*world", "hello new thing"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("hello*world", "hello new world yes"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("*hello*world", "come on hello this world yes"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("*hello*world*", "come on hello this yes"));
+}
