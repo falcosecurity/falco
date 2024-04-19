@@ -41,6 +41,10 @@ public:
 		ruleset_retriever_func_t get_ruleset;
 	};
 
+	enum class match_type {
+		exact, substring, wildcard
+	};
+
 	virtual ~filter_ruleset() = default;
 
 	void set_engine_state(const engine_state_funcs &engine_state);
@@ -167,31 +171,37 @@ public:
 	/*!
 		\brief Find those rules matching the provided substring and enable
 		them in the provided ruleset.
-		\param substring Substring used to match rule names.
-		If empty, all rules are matched.
-		\param match_exact If true, substring must be an exact match for a
-		given rule name. Otherwise, any rules having substring as a substring
-		in the rule name are enabled/disabled.
+		\param pattern Pattern used to match rule names.
+		\param match How to match the pattern against rules:
+			- exact: rules that has the same exact name as the pattern are matched
+			- substring: rules having the pattern as a substring in the rule are matched.
+						 An empty pattern matches all rules.
+			- wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
+						 A "*" pattern matches all rules.
+						 Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
 		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual void enable(
-		const std::string &substring,
-		bool match_exact,
+		const std::string &pattern,
+		match_type match,
 		uint16_t ruleset_id) = 0;
 
 	/*!
 		\brief Find those rules matching the provided substring and disable
 		them in the provided ruleset.
-		\param substring Substring used to match rule names.
-		If empty, all rules are matched.
-		\param match_exact If true, substring must be an exact match for a
-		given rule name. Otherwise, any rules having substring as a substring
-		in the rule name are enabled/disabled.
+		\param pattern Pattern used to match rule names.
+		\param match How to match the pattern against rules:
+			- exact: rules that has the same exact name as the pattern are matched
+			- substring: rules having the pattern as a substring in the rule are matched.
+						 An empty pattern matches all rules.
+			- wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
+						 A "*" pattern matches all rules.
+						 Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
 		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual void disable(
-		const std::string &substring,
-		bool match_exact,
+		const std::string &pattern,
+		match_type match,
 		uint16_t ruleset_id) = 0;
 
 	/*!

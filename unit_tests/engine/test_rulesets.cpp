@@ -74,46 +74,70 @@ TEST(Ruleset, enable_disable_rules_using_names)
 	r->add(rule_C, filter, ast);
 
 	/* Enable `rule_A` for RULESET_0 */
-	r->enable(rule_A.name, true, RULESET_0);
+	r->enable(rule_A.name, filter_ruleset::match_type::exact, RULESET_0);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 1);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Disable `rule_A` for RULESET_1, this should have no effect */
-	r->disable(rule_A.name, true, RULESET_1);
+	r->disable(rule_A.name, filter_ruleset::match_type::exact, RULESET_1);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 1);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Enable a not existing rule for RULESET_2, this should have no effect */
-	r->disable("<NA>", true, RULESET_2);
+	r->disable("<NA>", filter_ruleset::match_type::exact, RULESET_2);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 1);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Enable all rules for RULESET_0 */
-	r->enable("rule_", false, RULESET_0);
+	r->enable("rule_", filter_ruleset::match_type::substring, RULESET_0);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 3);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Try to disable all rules with exact match for RULESET_0, this should have no effect */
-	r->disable("rule_", true, RULESET_0);
+	r->disable("rule_", filter_ruleset::match_type::exact, RULESET_0);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 3);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Disable all rules for RULESET_0 */
-	r->disable("rule_", false, RULESET_0);
+	r->disable("rule_", filter_ruleset::match_type::substring, RULESET_0);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 
 	/* Enable rule_C for RULESET_2 without exact_match */
-	r->enable("_C", false, RULESET_2);
+	r->enable("_C", filter_ruleset::match_type::substring, RULESET_2);
 	ASSERT_EQ(r->enabled_count(RULESET_0), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
 	ASSERT_EQ(r->enabled_count(RULESET_2), 1);
+
+	/* Disable rule_C for RULESET_2 without exact_match */
+	r->disable("_C", filter_ruleset::match_type::substring, RULESET_2);
+	ASSERT_EQ(r->enabled_count(RULESET_0), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
+
+	/* Enable all rules for RULESET_0 with wildcard */
+	r->enable("*", filter_ruleset::match_type::wildcard, RULESET_0);
+	ASSERT_EQ(r->enabled_count(RULESET_0), 3);
+	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
+
+	/* Disable rule C for RULESET_0 with wildcard */
+	r->disable("*C*", filter_ruleset::match_type::wildcard, RULESET_0);
+	ASSERT_EQ(r->enabled_count(RULESET_0), 2);
+	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
+
+	/* Disable all rules for RULESET_0 with wildcard */
+	r->disable("*_*", filter_ruleset::match_type::wildcard, RULESET_0);
+	ASSERT_EQ(r->enabled_count(RULESET_0), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_1), 0);
+	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 }
 
 TEST(Ruleset, enable_disable_rules_using_tags)

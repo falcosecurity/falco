@@ -150,7 +150,7 @@ public:
 	void set_scalar(const std::string& key, const T& value)
 	{
 		YAML::Node node;
-		get_node(node, key);
+		get_node(node, key, true);
 		node = value;
 	}
 
@@ -264,15 +264,18 @@ private:
 	 * this regular language:
 	 *
 	 * Key 		:= NodeKey ('.' NodeKey)*
-	 * NodeKey	:= (any)+ ('[' (integer)+ ']')*
+	 * NodeKey	:= (any)+ ('[' (integer)+? ']')*
 	 *
+	 * If can_append is true, an empty NodeKey will append a new entry
+	 * to the sequence, it is rejected otherwise.
+	 * 
 	 * Some examples of accepted key strings:
 	 * - NodeName
 	 * - ListValue[3].subvalue
 	 * - MatrixValue[1][3]
 	 * - value1.subvalue2.subvalue3
 	 */
-	void get_node(YAML::Node &ret, const std::string &key) const
+	void get_node(YAML::Node &ret, const std::string &key, bool can_append=false) const
 	{
 		try
 		{
@@ -310,7 +313,27 @@ private:
 				if (c == '[')
 				{
 					auto close_param_idx = key.find(']', i);
-					int nodeIdx = std::stoi(key.substr(i + 1, close_param_idx - i - 1));
+					std::string idx_str = key.substr(i + 1, close_param_idx - i - 1);
+					int nodeIdx;
+
+					bool ret_appendable = !ret.IsDefined() || ret.IsSequence();
+					if (idx_str.empty() && ret_appendable && can_append)
+					{
+						YAML::Node newNode;
+						ret.push_back(newNode);
+						nodeIdx = ret.size() - 1;
+					}
+					else
+					{
+						try
+						{
+							nodeIdx = std::stoi(idx_str);
+						}
+						catch(const std::exception& e)
+						{
+							throw std::runtime_error("Parsing error: expected a numeric index, found '" + idx_str + "'");
+						}
+					}
 					ret.reset(ret[nodeIdx]);
 					i = close_param_idx;
 					if (i < key.size() - 1 && key[i + 1] == '.')

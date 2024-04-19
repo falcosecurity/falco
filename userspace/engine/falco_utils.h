@@ -33,6 +33,8 @@ void readfile(const std::string& filename, std::string& data);
 
 uint32_t hardware_concurrency();
 
+bool matches_wildcard(const std::string &pattern, const std::string &s);
+
 namespace network
 {
 static const std::string UNIX_SCHEME("unix://");

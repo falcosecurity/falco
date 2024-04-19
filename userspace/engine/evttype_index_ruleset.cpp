@@ -17,6 +17,8 @@ limitations under the License.
 
 #include "evttype_index_ruleset.h"
 
+#include "falco_utils.h"
+
 #include <algorithm>
 
 evttype_index_ruleset::evttype_index_ruleset(
@@ -235,17 +237,17 @@ void evttype_index_ruleset::clear()
 	m_filters.clear();
 }
 
-void evttype_index_ruleset::enable(const std::string &substring, bool match_exact, uint16_t ruleset_id)
+void evttype_index_ruleset::enable(const std::string &pattern, match_type match, uint16_t ruleset_id)
 {
-	enable_disable(substring, match_exact, true, ruleset_id);
+	enable_disable(pattern, match, true, ruleset_id);
 }
 
-void evttype_index_ruleset::disable(const std::string &substring, bool match_exact, uint16_t ruleset_id)
+void evttype_index_ruleset::disable(const std::string &pattern, match_type match, uint16_t ruleset_id)
 {
-	enable_disable(substring, match_exact, false, ruleset_id);
+	enable_disable(pattern, match, false, ruleset_id);
 }
 
-void evttype_index_ruleset::enable_disable(const std::string &substring, bool match_exact, bool enabled, uint16_t ruleset_id)
+void evttype_index_ruleset::enable_disable(const std::string &pattern, match_type match, bool enabled, uint16_t ruleset_id)
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
@@ -255,17 +257,25 @@ void evttype_index_ruleset::enable_disable(const std::string &substring, bool ma
 	for(const auto &wrap : m_filters)
 	{
 		bool matches;
+		std::string::size_type pos;
 
-		if(match_exact)
+		switch(match)
 		{
-			size_t pos = wrap->rule.name.find(substring);
+		case match_type::exact:
+			pos = wrap->rule.name.find(pattern);
 
-			matches = (substring == "" || (pos == 0 &&
-						       substring.size() == wrap->rule.name.size()));
-		}
-		else
-		{
-			matches = (substring == "" || (wrap->rule.name.find(substring) != std::string::npos));
+			matches = (pattern == "" || (pos == 0 &&
+						       pattern.size() == wrap->rule.name.size()));
+			break;
+		case match_type::substring:
+			matches = (pattern == "" || (wrap->rule.name.find(pattern) != std::string::npos));
+			break;
+		case match_type::wildcard:
+			matches = falco::utils::matches_wildcard(pattern, wrap->rule.name);
+			break;
+		default:
+			// should never happen
+			matches = false;
 		}
 
 		if(matches)

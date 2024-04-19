@@ -163,6 +163,48 @@ void readfile(const std::string& filename, std::string& data)
 	return;
 }
 
+bool matches_wildcard(const std::string &pattern, const std::string &s)
+{
+	std::string::size_type star_pos = pattern.find("*");
+	if(star_pos == std::string::npos)
+	{
+		// regular match (no wildcards)
+		return pattern == s;
+	}
+
+	if(star_pos == 0)
+	{
+		// wildcard at the beginning "*something*..."
+
+		std::string::size_type next_pattern_start = pattern.find_first_not_of("*");
+		if(next_pattern_start == std::string::npos)
+		{
+			// pattern was just a sequence of stars *, **, ***, ... . This always matches.
+			return true;
+		}
+
+		std::string next_pattern = pattern.substr(next_pattern_start);
+		std::string to_find = next_pattern.substr(0, next_pattern.find("*"));
+		std::string::size_type lit_pos = s.find(to_find);
+		if(lit_pos == std::string::npos)
+		{
+			return false;
+		}
+
+		return matches_wildcard(next_pattern.substr(to_find.size()), s.substr(lit_pos + to_find.size()));
+	} else
+	{
+		// wildcard at the end or in the middle "something*else*..."
+		
+		if(pattern.substr(0, star_pos) != s.substr(0, star_pos))
+		{
+			return false;
+		}
+
+		return matches_wildcard(pattern.substr(star_pos), s.substr(star_pos));
+	}
+}
+
 namespace network
 {
 bool is_unix_scheme(const std::string& url)
