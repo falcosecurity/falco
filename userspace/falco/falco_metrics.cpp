@@ -101,6 +101,12 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRIC_VALUE_UNIT_COUNT,
 																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 																	machine_info->num_cpus));
+		static_metrics.push_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
+																	METRICS_V2_MISC,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_COUNT,
+																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	state.outputs->get_outputs_queue_num_drops()));
 
 		for (auto metrics: static_metrics)
 		{
