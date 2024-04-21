@@ -108,6 +108,15 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 																	state.outputs->get_outputs_queue_num_drops()));
 
+		auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+		static_metrics.push_back(libs_metrics_collector.new_metric("duration_sec",
+																	METRICS_V2_MISC,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
+																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	(uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS)));
+
 		for (auto metrics: static_metrics)
 		{
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metrics);
