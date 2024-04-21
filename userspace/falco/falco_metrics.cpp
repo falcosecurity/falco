@@ -82,6 +82,10 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
 
+		for (const std::string& source: inspector->event_sources())
+		{
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("evt_source", "falcosecurity", "falco", {{"evt_source", source}});
+		}
 		std::vector<metrics_v2> static_metrics;
 		static_metrics.push_back(libs_metrics_collector.new_metric("start_ts",
 																	METRICS_V2_MISC,
