@@ -177,6 +177,39 @@ rules_files:
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
 
+# [Experimental] `rules`
+#
+# --- [Description]
+#
+# Falco rules can be enabled or disabled by name (with wildcards *) and/or by tag.
+#
+# This configuration is applied after all rules files have been loaded, including
+# their overrides, and will take precedence over the enabled/disabled configuration
+# specified or overridden in the rules files.
+#
+# The ordering matters and selections are evaluated in order. For instance, if you
+# need to only enable a rule you would first disable all of them and then only
+# enable what you need, regardless of the enabled status in the files.
+#
+# --- [Examples]
+#
+# Only enable two rules:
+#
+# rules:
+#   - disable:
+#       rule: "*"
+#   - enable:
+#       rule: Netcat Remote Code Execution in Container
+#   - enable:
+#       rule: Delete or rename shell history
+#
+# Disable all rules with a specific tag:
+#
+# rules:
+#   - disable:
+#       tag: network
+#
+
 ################
 # Falco engine #
 ################
