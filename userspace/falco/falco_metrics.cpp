@@ -109,7 +109,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 																	state.outputs->get_outputs_queue_num_drops()));
 
 		auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -118,7 +118,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_TIME_S_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 																	(uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS)));
 
 		for (auto metrics: static_metrics)
