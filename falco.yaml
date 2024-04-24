@@ -991,7 +991,9 @@ syscall_event_drops:
 # beneficial for exploring the data schema and ensuring that fields with empty
 # values are included in the output.
 #
-# todo: prometheus export option
+# If metrics are enabled, the web server can be configured to activate the
+# corresponding Prometheus endpoint using webserver.prometheus_metrics_enabled.
+#
 # todo: syscall_counters_enabled option
 metrics:
   enabled: false
