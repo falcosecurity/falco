@@ -78,7 +78,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 
 		libs::metrics::libs_metrics_collector libs_metrics_collector(inspector, 0);
 
-		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_version", "falcosecurity", "falco", {{"falco_version", FALCO_VERSION}});
+		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_version", "falcosecurity", "falco", {{"version", FALCO_VERSION}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
 
