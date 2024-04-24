@@ -38,7 +38,7 @@ jobs:
       - name: Build modern BPF skeleton
         run: |
           cmake -B skeleton-build -S . \
-                -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ inputs.version }}
+                -DUSE_BUNDLED_DEPS=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ inputs.version }}
           cmake --build skeleton-build --target ProbeSkeleton -j6
 
       - name: Upload skeleton
@@ -84,7 +84,6 @@ jobs:
               -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
-              -DBUILD_FALCO_MODERN_BPF=ON \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
@@ -194,7 +193,7 @@ jobs:
           emcmake cmake -B build -S . \
             -DBUILD_BPF=Off \
             -DBUILD_DRIVER=Off \
-            -DBUILD_LIBSCAP_MODERN_BPF=OFF \
+            -DBUILD_FALCO_MODERN_BPF=Off \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
             -DUSE_BUNDLED_DEPS=On \
             -DFALCO_ETC_DIR=/etc/falco \
