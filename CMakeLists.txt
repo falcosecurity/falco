@@ -52,7 +52,7 @@ endif()
 
 # Modern BPF is not supported on not Linux systems and in MINIMAL_BUILD
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
-  option(BUILD_FALCO_MODERN_BPF "Build modern BPF support for Falco" OFF)
+  option(BUILD_FALCO_MODERN_BPF "Build modern BPF support for Falco" ON)
   if(BUILD_FALCO_MODERN_BPF)
     add_definitions(-DHAS_MODERN_BPF)
   endif()
