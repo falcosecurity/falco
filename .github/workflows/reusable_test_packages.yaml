@@ -52,6 +52,8 @@ jobs:
           sudo apt install -y libasan5 libubsan1
           
       - name: Run tests
+        env:
+          LSAN_OPTIONS: "intercept_tls_get_addr=0"
         uses: falcosecurity/testing@main    
         with:
           test-falco: 'true'
