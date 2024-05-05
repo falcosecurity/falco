@@ -108,7 +108,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	std::string err;
 	std::unordered_set<std::string> used_plugins;
 	const auto& all_plugins = s.offline_inspector->get_plugin_manager()->plugins();
-	
+
 	for (const auto &src : s.loaded_sources)
 	{
 		auto src_info = s.source_infos.at(src);
@@ -182,7 +182,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		if (!populate_filterchecks(
 				src_info->inspector,
 				src,
-				*src_info->filterchecks.get(),
+				*src_info->filterchecks,
 				used_plugins,
 				err))
 		{

@@ -48,18 +48,11 @@ struct state
     // Holds the info mapped for each loaded event source
     struct source_info
     {
-        source_info():
-            engine_idx(-1),
-            filterchecks(new filter_check_list()),
-            inspector(nullptr) { }
-        source_info(source_info&&) = default;
-        source_info& operator = (source_info&&) = default;
-        source_info(const source_info&) = default;
-        source_info& operator = (const source_info&) = default;
+        source_info() : filterchecks(std::make_shared<filter_check_list>()) {}
 
         // The index of the given event source in the state's falco_engine,
         // as returned by falco_engine::add_source
-        std::size_t engine_idx;
+        std::size_t engine_idx = -1;
         // The filtercheck list containing all fields compatible
         // with the given event source
         std::shared_ptr<filter_check_list> filterchecks;
@@ -71,32 +64,21 @@ struct state
     };
 
     state():
-        restart(false),
         config(std::make_shared<falco_configuration>()),
-        outputs(nullptr),
         engine(std::make_shared<falco_engine>()),
-        loaded_sources(),
-        enabled_sources(),
-        offline_inspector(std::make_shared<sinsp>()),
-        source_infos(),
-        plugin_configs(),
-        selected_sc_set(),
-        syscall_buffer_bytes_size(DEFAULT_DRIVER_BUFFER_BYTES_DIM),
-        restarter(nullptr)
+        offline_inspector(std::make_shared<sinsp>())
     {
     }
 
-    state(const std::string& cmd, const falco::app::options& opts): state()
+    state(const std::string& cmd, const falco::app::options& opts):
+        cmdline(cmd),
+        options(opts)
     {
-        cmdline = cmd;
-        options = opts;
     }
-
-    ~state() = default;
 
     std::string cmdline;
     falco::app::options options;
-    std::atomic<bool> restart;
+    std::atomic<bool> restart = false;
 
 
     std::shared_ptr<falco_configuration> config;
@@ -129,7 +111,7 @@ struct state
     libsinsp::events::set<ppm_sc_code> selected_sc_set;
 
     // Dimension of the syscall buffer in bytes.
-    uint64_t syscall_buffer_bytes_size;
+    uint64_t syscall_buffer_bytes_size = DEFAULT_DRIVER_BUFFER_BYTES_DIM;
 
     // Helper responsible for watching of handling hot application restarts
     std::shared_ptr<restart_handler> restarter;

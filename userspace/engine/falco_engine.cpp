@@ -198,11 +198,11 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	cfg.replace_output_container_info = m_replace_container_info;
 
 	// read rules YAML file and collect its definitions
-	if(m_rule_reader->read(cfg, *(m_rule_collector.get())))
+	if(m_rule_reader->read(cfg, *m_rule_collector))
 	{
 		// compile the definitions (resolve macro/list refs, exceptions, ...)
 		m_last_compile_output = m_rule_compiler->new_compile_output();
-		m_rule_compiler->compile(cfg, *(m_rule_collector.get()), *m_last_compile_output.get());
+		m_rule_compiler->compile(cfg, *m_rule_collector, *m_last_compile_output);
 
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
@@ -210,7 +210,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		// add rules to each ruleset
 		{
 			src.ruleset = create_ruleset(src.ruleset_factory);
-			src.ruleset->add_compile_output(*(m_last_compile_output.get()),
+			src.ruleset->add_compile_output(*m_last_compile_output,
 							m_min_priority,
 							src.name);
 		}

@@ -310,7 +310,7 @@ static falco::app::run_result do_inspect(
 		auto res = s.engine->process_event(source_engine_idx, ev, s.config->m_rule_matching);
 		if(res != nullptr)
 		{
-			for(auto& rule_res : *res.get())
+			for(auto& rule_res : *res)
 			{
 				s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
 			}
@@ -490,7 +490,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		{
 			auto& ctx = ctxs.emplace_back();
 			ctx.source = source;
-			ctx.sync.reset(new source_sync_context(termination_sem));
+			ctx.sync = std::make_unique<source_sync_context>(termination_sem);
 			auto src_info = s.source_infos.at(source);
 
 			try
@@ -516,9 +516,9 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				{
 					auto res_ptr = &ctx.res;
 					auto sync_ptr = ctx.sync.get();
-					ctx.thread.reset(new std::thread([&s, src_info, &statsw, source, sync_ptr, res_ptr](){
+					ctx.thread = std::make_unique<std::thread>([&s, src_info, &statsw, source, sync_ptr, res_ptr]() {
 						process_inspector_events(s, src_info->inspector, statsw, source, sync_ptr, res_ptr);
-					}));
+					});
 				}
 			}
 			catch (std::exception &e)
