@@ -249,7 +249,7 @@ void evttype_index_ruleset::enable_disable(const std::string &substring, bool ma
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
-		m_rulesets.emplace_back(new ruleset_filters());
+		m_rulesets.emplace_back(std::make_shared<ruleset_filters>());
 	}
 
 	for(const auto &wrap : m_filters)
@@ -296,7 +296,7 @@ void evttype_index_ruleset::enable_disable_tags(const std::set<std::string> &tag
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
-		m_rulesets.emplace_back(new ruleset_filters());
+		m_rulesets.emplace_back(std::make_shared<ruleset_filters>());
 	}
 
 	for(const auto &wrap : m_filters)
@@ -325,7 +325,7 @@ uint64_t evttype_index_ruleset::enabled_count(uint16_t ruleset_id)
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
-		m_rulesets.emplace_back(new ruleset_filters());
+		m_rulesets.emplace_back(std::make_shared<ruleset_filters>());
 	}
 
 	return m_rulesets[ruleset_id]->num_filters();

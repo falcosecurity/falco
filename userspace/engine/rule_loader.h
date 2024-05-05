@@ -270,10 +270,8 @@ namespace rule_loader
 			const std::string& cont,
 			const indexed_vector<falco_source>& srcs,
 			const std::string& name)
-				: content(cont), sources(srcs), name(name),
-				  output_extra(), replace_output_container_info(false)
+				: content(cont), sources(srcs), name(name), res(std::make_unique<result>(name))
 			{
-				res.reset(new result(name));
 			}
 
 		// inputs
@@ -281,7 +279,7 @@ namespace rule_loader
 		const indexed_vector<falco_source>& sources;
 		std::string name;
 		std::string output_extra;
-		bool replace_output_container_info;
+		bool replace_output_container_info = false;
 
 		// outputs
 		std::unique_ptr<result> res;

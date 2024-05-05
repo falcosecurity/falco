@@ -44,7 +44,7 @@ void stats_manager::format(
 	out += "Rule counts by severity:\n";
 	for (size_t i = 0; i < m_by_priority.size(); i++)
 	{
-		auto val = m_by_priority[i].get()->load();
+		auto val = m_by_priority[i]->load();
 		if (val > 0)
 		{
 			falco_common::format_priority(
@@ -56,7 +56,7 @@ void stats_manager::format(
 	out += "Triggered rules by rule name:\n";
 	for (size_t i = 0; i < m_by_rule_id.size(); i++)
 	{
-		auto val = m_by_rule_id[i].get()->load();
+		auto val = m_by_rule_id[i]->load();
 		if (val > 0)
 		{
 			out += "   " + rules.at(i)->name + ": " + std::to_string(val) + "\n";
@@ -68,13 +68,11 @@ void stats_manager::on_rule_loaded(const falco_rule& rule)
 {
 	while (m_by_rule_id.size() <= rule.id)
 	{
-		m_by_rule_id.emplace_back();
-		m_by_rule_id[m_by_rule_id.size() - 1].reset(new std::atomic<uint64_t>(0));
+		m_by_rule_id.emplace_back(std::make_unique<std::atomic<uint64_t>>(0));
 	}
 	while (m_by_priority.size() <= (size_t) rule.priority)
 	{
-		m_by_priority.emplace_back();
-		m_by_priority[m_by_priority.size() - 1].reset(new std::atomic<uint64_t>(0));
+		m_by_priority.emplace_back(std::make_unique<std::atomic<uint64_t>>(0));
 	}
 }
 

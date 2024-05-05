@@ -50,22 +50,18 @@ falco_outputs::falco_outputs(
 	size_t outputs_queue_capacity,
 	bool time_format_iso_8601,
 	const std::string& hostname)
+	: m_formats(std::make_unique<falco_formats>(engine, json_include_output_property, json_include_tags_property)),
+	  m_buffered(buffered),
+	  m_json_output(json_output),
+	  m_time_format_iso_8601(time_format_iso_8601),
+	  m_timeout(std::chrono::milliseconds(timeout)),
+	  m_hostname(hostname)
 {
-	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
-
-	m_json_output = json_output;
-
-	m_timeout = std::chrono::milliseconds(timeout);
-
-	m_buffered = buffered;
-	m_time_format_iso_8601 = time_format_iso_8601;
-	m_hostname = hostname;
-
 	for(const auto& output : outputs)
 	{
 		add_output(output);
 	}
-	m_outputs_queue_num_drops = 0;
+
 #ifndef __EMSCRIPTEN__
 	m_queue.set_capacity(outputs_queue_capacity);
 	m_worker_thread = std::thread(&falco_outputs::worker, this);

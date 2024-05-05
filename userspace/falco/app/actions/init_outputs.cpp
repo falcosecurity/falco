@@ -60,7 +60,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 		return run_result::ok();
 	}
 
-	s.outputs.reset(new falco_outputs(
+	s.outputs = std::make_shared<falco_outputs>(
 		s.engine,
 		s.config->m_outputs,
 		s.config->m_json_output,
@@ -70,7 +70,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 		s.config->m_buffered_outputs,
 		s.config->m_outputs_queue_capacity,
 		s.config->m_time_format_iso_8601,
-		hostname));
+		hostname);
 
 	return run_result::ok();
 }

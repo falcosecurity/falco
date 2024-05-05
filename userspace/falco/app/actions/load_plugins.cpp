@@ -29,10 +29,10 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 		return run_result::fatal("Loading plugins dynamic libraries is not supported by this Falco build");
 	}
 #endif
-	// Initialize the set of loaded event sources. 
+	// Initialize the set of loaded event sources.
 	// By default, the set includes the 'syscall' event source
 	state::source_info syscall_src_info;
-	syscall_src_info.filterchecks.reset(new sinsp_filter_check_list());
+	syscall_src_info.filterchecks = std::make_shared<sinsp_filter_check_list>();
 	s.source_infos.clear();
 	s.source_infos.insert(syscall_src_info, falco_common::syscall_source);
 	s.loaded_sources = { falco_common::syscall_source };
@@ -44,7 +44,7 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 	// plugins in order to have them available every time we need to access
 	// their static info. If Falco is in capture mode, this inspector is also
 	// used to open and read the trace file
-	s.offline_inspector.reset(new sinsp());
+	s.offline_inspector = std::make_shared<sinsp>();
 
 	// Load all the configured plugins
 	for(auto &p : s.config->m_plugins)
@@ -55,7 +55,7 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0)
 		{
 			state::source_info src_info;
-			src_info.filterchecks.reset(new filter_check_list());
+			src_info.filterchecks = std::make_shared<filter_check_list>();
 			auto sname = plugin->event_source();
 			s.source_infos.insert(src_info, sname);
 			// note: this avoids duplicate values

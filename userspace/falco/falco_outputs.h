@@ -85,7 +85,7 @@ public:
 	void reopen_outputs();
 
 	/*!
-		\brief Return the number of events currently dropped due to failed push 
+		\brief Return the number of events currently dropped due to failed push
 		attempts into the outputs queue
 	*/
 	uint64_t get_outputs_queue_num_drops();
@@ -119,7 +119,7 @@ private:
 	falco_outputs_cbq m_queue;
 #endif
 
-	std::atomic<uint64_t> m_outputs_queue_num_drops;
+	std::atomic<uint64_t> m_outputs_queue_num_drops = 0;
 	std::thread m_worker_thread;
 	inline void push(const ctrl_msg& cmsg);
 	inline void push_ctrl(ctrl_msg_type cmt);
