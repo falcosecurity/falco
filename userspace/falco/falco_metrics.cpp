@@ -20,6 +20,7 @@ limitations under the License.
 #include "app/state.h"
 
 #include <libsinsp/sinsp.h>
+#include <re2/re2.h>
 
 /*!
 	\class falco_metrics
@@ -81,6 +82,30 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("version", "falcosecurity", "falco", {{"version", FALCO_VERSION}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
+
+		auto it_filename = state.config.get()->m_loaded_rules_filenames.begin();
+		auto it_sha256 = state.config.get()->m_loaded_rules_filenames_sha256sum.begin();
+		while (it_filename != state.config.get()->m_loaded_rules_filenames.end() && it_sha256 != state.config.get()->m_loaded_rules_filenames_sha256sum.end())
+		{
+			std::string metric_name_file_sha256 = *it_filename;
+			RE2::GlobalReplace(&metric_name_file_sha256, R"([.\\/]|yaml|yml)", "");
+			metric_name_file_sha256 = "sha256_rule_file_" + metric_name_file_sha256;
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, *it_sha256}});
+			++it_filename;
+			++it_sha256;
+		}
+
+		it_filename = state.config.get()->m_loaded_configs_filenames.begin();
+		it_sha256 = state.config.get()->m_loaded_configs_filenames_sha256sum.begin();
+		while (it_filename != state.config.get()->m_loaded_configs_filenames.end() && it_sha256 != state.config.get()->m_loaded_configs_filenames_sha256sum.end())
+		{
+			std::string metric_name_file_sha256 = *it_filename;
+			RE2::GlobalReplace(&metric_name_file_sha256, R"([.\\/]|yaml|yml)", "");
+			metric_name_file_sha256 = "sha256_config_file_" + metric_name_file_sha256;
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, *it_sha256}});
+			++it_filename;
+			++it_sha256;
+		}
 
 		for (const std::string& source: inspector->event_sources())
 		{

@@ -105,6 +105,8 @@ public:
 
 	// Config list as passed by the user. Filenames.
 	std::list<std::string> m_loaded_configs_filenames;
+	// sha256 of the loaded configs files
+	std::list<std::string> m_loaded_configs_filenames_sha256sum;
 	// Config list as passed by the user. Folders.
 	std::list<std::string> m_loaded_configs_folders;
 
@@ -112,6 +114,8 @@ public:
 	std::list<std::string> m_rules_filenames;
 	// Actually loaded rules, with folders inspected
 	std::list<std::string> m_loaded_rules_filenames;
+	// sha256 of the loaded rules files
+	std::list<std::string> m_loaded_rules_filenames_sha256sum;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
 	bool m_json_output;
