@@ -26,25 +26,6 @@ limitations under the License.
 namespace falco {
 namespace app {
 
-// Most bool member variables do not need to be set explicitly, as
-// they are bound to command line options that have default
-// values. However, a few options can be ifdef'd out so explicitly
-// initialize their linked variables.
-options::options()
-	: event_buffer_format(sinsp_evt::PF_NORMAL),
-	  list_fields(false),
-	  list_plugins(false),
-	  list_syscall_events(false),
-	  markdown(false),
-	  unbuffered_outputs(false),
-	  dry_run(false)
-{
-}
-
-options::~options()
-{
-}
-
 bool options::parse(int argc, char **argv, std::string &errstr)
 {
 	cxxopts::Options opts("falco", "Falco - Cloud Native Runtime Security");

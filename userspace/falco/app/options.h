@@ -31,50 +31,50 @@ namespace app {
 
 class options {
 public:
-	options();
-	virtual ~options();
+	options() = default;
+	~options() = default;
 	options(options&&) = default;
 	options& operator = (options&&) = default;
 	options(const options&) = default;
 	options& operator = (const options&) = default;
 
 	// Each of these maps directly to a command line option.
-	bool help;
+	bool help = false;
 	std::string conf_filename;
-	bool all_events;
-	sinsp_evt::param_fmt event_buffer_format;
+	bool all_events = false;
+	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	std::vector<std::string> cri_socket_paths;
-	bool disable_cri_async;
+	bool disable_cri_async = false;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
 	std::vector<std::string> enable_sources;
 	std::string gvisor_generate_config_with_socket;
-	bool describe_all_rules;
+	bool describe_all_rules = false;
 	std::string describe_rule;
 	bool print_ignored_events;
-	bool list_fields;
+	bool list_fields = false;
 	std::string list_source_fields;
-	bool list_plugins;
+	bool list_plugins = false;
 	std::string print_plugin_info;
-	bool list_syscall_events;
-	bool markdown;
-	int duration_to_tot;
-	bool names_only;
+	bool list_syscall_events = false;
+	bool markdown = false;
+	int duration_to_tot = 0;
+	bool names_only = false;
 	std::vector<std::string> cmdline_config_options;
 	std::string print_additional;
 	std::string pidfilename;
 	// Rules list as passed by the user, via cmdline option '-r'
 	std::list<std::string> rules_filenames;
-	uint64_t snaplen;
-	bool print_support;
+	uint64_t snaplen = 0;
+	bool print_support = false;
 	std::set<std::string> disabled_rule_tags;
 	std::set<std::string> enabled_rule_tags;
-	bool unbuffered_outputs;
+	bool unbuffered_outputs = false;
 	std::vector<std::string> validate_rules_filenames;
-	bool verbose;
-	bool print_version_info;
-	bool print_page_size;
-	bool dry_run;
+	bool verbose = false;
+	bool print_version_info = false;
+	bool print_page_size = false;
+	bool dry_run = false;
 
 	bool parse(int argc, char **argv, std::string &errstr);
 
