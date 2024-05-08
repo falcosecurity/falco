@@ -22,6 +22,7 @@ limitations under the License.
 #include <libsinsp/utils.h>
 
 #include <re2/re2.h>
+#include <openssl/sha.h>
 
 #include <cstring>
 #include <fstream>
@@ -115,6 +116,36 @@ uint64_t parse_prometheus_interval(std::string interval_str)
 		}
 	}
 	return interval;
+}
+
+std::string calculate_file_sha256sum(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::binary);
+	if (!file.is_open())
+	{
+		return "";
+	}
+
+	SHA256_CTX sha256_context;
+	SHA256_Init(&sha256_context);
+
+	constexpr size_t buffer_size = 4096;
+	char buffer[buffer_size];
+	while (file.read(buffer, buffer_size))
+	{
+		SHA256_Update(&sha256_context, buffer, buffer_size);
+	}
+	SHA256_Update(&sha256_context, buffer, file.gcount());
+
+	unsigned char digest[SHA256_DIGEST_LENGTH];
+	SHA256_Final(digest, &sha256_context);
+
+	std::stringstream ss;
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
+	{
+		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(digest[i]);
+	}
+	return ss.str();
 }
 
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t line_len)
