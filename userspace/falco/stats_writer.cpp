@@ -23,6 +23,7 @@ limitations under the License.
 #include <atomic>
 
 #include <nlohmann/json.hpp>
+#include <re2/re2.h>
 
 #include "falco_common.h"
 #include "stats_writer.h"
@@ -327,6 +328,30 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
 	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
+
+	auto it_filename = m_writer->m_config->m_loaded_rules_filenames.begin();
+	auto it_sha256 = m_writer->m_config->m_loaded_rules_filenames_sha256sum.begin();
+	while (it_filename != m_writer->m_config->m_loaded_rules_filenames.end() && it_sha256 != m_writer->m_config->m_loaded_rules_filenames_sha256sum.end())
+	{
+		std::string metric_name_file_sha256 = *it_filename;
+		RE2::GlobalReplace(&metric_name_file_sha256, R"([.\\/]|yaml|yml)", "");
+		metric_name_file_sha256 = "falco.sha256_rule_file." + metric_name_file_sha256;
+		output_fields[metric_name_file_sha256] = *it_sha256;
+		++it_filename;
+		++it_sha256;
+	}
+
+	it_filename = m_writer->m_config->m_loaded_configs_filenames.begin();
+	it_sha256 = m_writer->m_config->m_loaded_configs_filenames_sha256sum.begin();
+	while (it_filename != m_writer->m_config->m_loaded_configs_filenames.end() && it_sha256 != m_writer->m_config->m_loaded_configs_filenames_sha256sum.end())
+	{
+		std::string metric_name_file_sha256 = *it_filename;
+		RE2::GlobalReplace(&metric_name_file_sha256, R"([.\\/]|yaml|yml)", "");
+		metric_name_file_sha256 = "falco.sha256_config_file." + metric_name_file_sha256;
+		output_fields[metric_name_file_sha256] = *it_sha256;
+		++it_filename;
+		++it_sha256;
+	}
 
 	output_fields["evt.source"] = src;
 	for (size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++)
