@@ -84,7 +84,9 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		{
 			falco_logger::log(falco_logger::level::WARNING,res->as_string(true, rc) + "\n");
 		}
+#if defined(__linux__)
 		s.config->m_loaded_rules_filenames_sha256sum.push_back(falco::utils::calculate_file_sha256sum(filename));
+#endif
 	}
 
 	// note: we have an egg-and-chicken problem here. We would like to check

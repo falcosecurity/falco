@@ -161,10 +161,12 @@ void falco_configuration::merge_configs_files(const std::string& config_name, st
 		}
 	}
 
+#if defined(__linux__)
 	for(auto &filename : m_loaded_configs_filenames)
 	{
 		m_loaded_configs_filenames_sha256sum.push_back(falco::utils::calculate_file_sha256sum(filename));
 	}
+#endif
 }
 
 void falco_configuration::init_logger()
