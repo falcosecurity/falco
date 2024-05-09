@@ -27,7 +27,9 @@ namespace falco::utils
 {
 uint64_t parse_prometheus_interval(std::string interval_str);
 
+#if defined(__linux__)
 std::string calculate_file_sha256sum(const std::string& filename);
+#endif
 
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t linelen);
 
