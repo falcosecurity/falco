@@ -70,10 +70,10 @@ struct state
     {
     }
 
-    state(const std::string& cmd, const falco::app::options& opts):
-        cmdline(cmd),
-        options(opts)
+    state(const std::string& cmd, const falco::app::options& opts): state()
     {
+	    cmdline = cmd;
+	    options = opts;
     }
 
     std::string cmdline;
