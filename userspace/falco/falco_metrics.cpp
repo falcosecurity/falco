@@ -84,7 +84,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
 
-#if defined(__linux__)
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 		auto it_filename = state.config.get()->m_loaded_rules_filenames.begin();
 		auto it_sha256 = state.config.get()->m_loaded_rules_filenames_sha256sum.begin();
 		while (it_filename != state.config.get()->m_loaded_rules_filenames.end() && it_sha256 != state.config.get()->m_loaded_rules_filenames_sha256sum.end())

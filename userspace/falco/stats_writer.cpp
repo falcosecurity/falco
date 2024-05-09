@@ -330,7 +330,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
 
-#if defined(__linux__)
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	auto it_filename = m_writer->m_config->m_loaded_rules_filenames.begin();
 	auto it_sha256 = m_writer->m_config->m_loaded_rules_filenames_sha256sum.begin();
 	while (it_filename != m_writer->m_config->m_loaded_rules_filenames.end() && it_sha256 != m_writer->m_config->m_loaded_rules_filenames_sha256sum.end())

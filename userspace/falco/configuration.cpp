@@ -161,7 +161,7 @@ void falco_configuration::merge_configs_files(const std::string& config_name, st
 		}
 	}
 
-#if defined(__linux__)
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	for(auto &filename : m_loaded_configs_filenames)
 	{
 		m_loaded_configs_filenames_sha256sum.push_back(falco::utils::calculate_file_sha256sum(filename));
