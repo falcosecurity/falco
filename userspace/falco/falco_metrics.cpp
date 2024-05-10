@@ -85,28 +85,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-		auto it_filename = state.config.get()->m_loaded_rules_filenames.begin();
-		auto it_sha256 = state.config.get()->m_loaded_rules_filenames_sha256sum.begin();
-		while (it_filename != state.config.get()->m_loaded_rules_filenames.end() && it_sha256 != state.config.get()->m_loaded_rules_filenames_sha256sum.end())
+		for (const auto& item : state.config.get()->m_loaded_rules_filenames_sha256sum)
 		{
-			fs::path fs_path = *it_filename;
+			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "sha256_rule_file_" + metric_name_file_sha256;
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, *it_sha256}});
-			++it_filename;
-			++it_sha256;
+			metric_name_file_sha256 = "falco.sha256_rule_file." + metric_name_file_sha256;
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 
-		it_filename = state.config.get()->m_loaded_configs_filenames.begin();
-		it_sha256 = state.config.get()->m_loaded_configs_filenames_sha256sum.begin();
-		while (it_filename != state.config.get()->m_loaded_configs_filenames.end() && it_sha256 != state.config.get()->m_loaded_configs_filenames_sha256sum.end())
+		for (const auto& item : state.config.get()->m_loaded_configs_filenames_sha256sum)
 		{
-			fs::path fs_path = *it_filename;
+			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "sha256_config_file_" + metric_name_file_sha256;
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, *it_sha256}});
-			++it_filename;
-			++it_sha256;
+			metric_name_file_sha256 = "falco.sha256_config_file." + metric_name_file_sha256;
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 #endif
 

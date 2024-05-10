@@ -331,28 +331,20 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-	auto it_filename = m_writer->m_config->m_loaded_rules_filenames.begin();
-	auto it_sha256 = m_writer->m_config->m_loaded_rules_filenames_sha256sum.begin();
-	while (it_filename != m_writer->m_config->m_loaded_rules_filenames.end() && it_sha256 != m_writer->m_config->m_loaded_rules_filenames_sha256sum.end())
+	for (const auto& item : m_writer->m_config->m_loaded_rules_filenames_sha256sum)
 	{
-		fs::path fs_path = *it_filename;
+		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
 		metric_name_file_sha256 = "falco.sha256_rule_file." + metric_name_file_sha256;
-		output_fields[metric_name_file_sha256] = *it_sha256;
-		++it_filename;
-		++it_sha256;
+		output_fields[metric_name_file_sha256] = item.second;
 	}
 
-	it_filename = m_writer->m_config->m_loaded_configs_filenames.begin();
-	it_sha256 = m_writer->m_config->m_loaded_configs_filenames_sha256sum.begin();
-	while (it_filename != m_writer->m_config->m_loaded_configs_filenames.end() && it_sha256 != m_writer->m_config->m_loaded_configs_filenames_sha256sum.end())
+	for (const auto& item : m_writer->m_config->m_loaded_configs_filenames_sha256sum)
 	{
-		fs::path fs_path = *it_filename;
+		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
 		metric_name_file_sha256 = "falco.sha256_config_file." + metric_name_file_sha256;
-		output_fields[metric_name_file_sha256] = *it_sha256;
-		++it_filename;
-		++it_sha256;
+		output_fields[metric_name_file_sha256] = item.second;
 	}
 #endif
 	output_fields["evt.source"] = src;
