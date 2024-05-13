@@ -150,9 +150,19 @@ public:
 	nlohmann::json describe_rule(std::string *rule_name, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 
 	//
+	// Return const /ref to rules stored in the Falco engine.
+	//
+	inline const indexed_vector<falco_rule>& get_rules() const { return m_rules; }
+
+	//
 	// Print statistics on how many events matched each rule.
 	//
 	void print_stats() const;
+
+	//
+	// Return const /ref to stats_manager to access current rules stats (how many events matched each rule so far).
+	//
+	const stats_manager& get_rule_stats_manager() const;
 
 	//
 	// Set the sampling ratio, which can affect which events are

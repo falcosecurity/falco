@@ -981,6 +981,8 @@ syscall_event_drops:
 # as Falco does not automatically rotate the file. It can be used in combination
 # with `output_rule`.
 #
+# `rules_counters_enabled`: Emit counts for each rule.
+#
 # `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
 # is reported as a percentage of one CPU and can be normalized to the total
 # number of CPUs to determine overall usage. Memory metrics are provided in raw
@@ -1025,7 +1027,8 @@ syscall_event_drops:
 # values are included in the output.
 #
 # If metrics are enabled, the web server can be configured to activate the
-# corresponding Prometheus endpoint using webserver.prometheus_metrics_enabled.
+# corresponding Prometheus endpoint using `webserver.prometheus_metrics_enabled`.
+# Prometheus output can be used in combination with the other output options.
 #
 # todo: syscall_counters_enabled option
 metrics:
@@ -1033,8 +1036,10 @@ metrics:
   interval: 1h
   # Typically, in production, you only use `output_rule` or `output_file`, but not both. 
   # However, if you have a very unique use case, you can use both together.
+  # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
   output_rule: true
   # output_file: /tmp/falco_stats.jsonl
+  rules_counters_enabled: true
   resource_utilization_enabled: true
   state_counters_enabled: true
   kernel_event_counters_enabled: true

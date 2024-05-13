@@ -63,7 +63,6 @@ public:
 		const indexed_vector<falco_rule>& rules,
 		std::string& out) const;
 
-private:
 	std::atomic<uint64_t> m_total;
 	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_priority;
 	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_rule_id;

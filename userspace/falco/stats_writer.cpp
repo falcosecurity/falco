@@ -170,8 +170,9 @@ stats_writer::ticker_t stats_writer::get_ticker()
 
 stats_writer::stats_writer(
 		const std::shared_ptr<falco_outputs>& outputs,
-		const std::shared_ptr<const falco_configuration>& config)
-	: m_config(config)
+		const std::shared_ptr<const falco_configuration>& config,
+		const std::shared_ptr<const falco_engine>& engine)
+	: m_config(config), m_engine(engine)
 {
 	if (config->m_metrics_enabled)
 	{
@@ -372,6 +373,23 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		nlohmann::json& output_fields,
 		double stats_snapshot_time_delta_sec)
 {
+	if(m_writer->m_config->m_metrics_flags & METRICS_V2_RULE_COUNTERS)
+	{
+		const stats_manager& rule_stats_manager = m_writer->m_engine->get_rule_stats_manager();
+		const indexed_vector<falco_rule>& rules = m_writer->m_engine->get_rules();
+		output_fields["falco.rules.matches_total"] = rule_stats_manager.m_total.load();
+		for (size_t i = 0; i < rule_stats_manager.m_by_rule_id.size(); i++)
+		{
+			auto rule_count = rule_stats_manager.m_by_rule_id[i]->load();
+			if (rule_count == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+			{
+				continue;
+			}
+			std::string rules_metric_name = "falco.rules." + rules.at(i)->name;
+			output_fields[rules_metric_name] = rule_count;
+		}
+	}
+
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if (m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter)
 	{
