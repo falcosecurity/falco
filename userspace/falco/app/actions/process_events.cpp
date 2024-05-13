@@ -436,7 +436,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	s.engine->complete_rule_loading();
 
 	// Initialize stats writer
-	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config);
+	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config, s.engine);
 	auto res = init_stats_writer(statsw, s.config, s.options.dry_run);
 
 	if (s.options.dry_run)

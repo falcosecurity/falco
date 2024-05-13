@@ -96,7 +96,8 @@ public:
 		\brief Initializes a writer.
 	*/
 	stats_writer(const std::shared_ptr<falco_outputs>& outputs,
-		const std::shared_ptr<const falco_configuration>& config);
+		const std::shared_ptr<const falco_configuration>& config,
+		const std::shared_ptr<const falco_engine>& engine);
 
 	/*!
 		\brief Returns true if the writer is configured with a valid output.
@@ -152,6 +153,7 @@ private:
 #endif
 	std::shared_ptr<falco_outputs> m_outputs;
 	std::shared_ptr<const falco_configuration> m_config;
+	std::shared_ptr<const falco_engine> m_engine;
 	// note: in this way, only collectors can push into the queue
 	friend class stats_writer::collector;
 };

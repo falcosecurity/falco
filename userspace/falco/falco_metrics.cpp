@@ -57,8 +57,8 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 	for (const auto& source_info: state.source_infos)
 	{
 		sinsp *source_inspector = source_info.inspector.get();
-		inspectors.push_back(source_inspector);
-		metrics_collectors.push_back(libs::metrics::libs_metrics_collector(source_inspector, state.config->m_metrics_flags));
+		inspectors.emplace_back(source_inspector);
+		metrics_collectors.emplace_back(libs::metrics::libs_metrics_collector(source_inspector, state.config->m_metrics_flags));
 	}
 
 	libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
@@ -106,26 +106,59 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("evt_source", "falcosecurity", "falco", {{"evt_source", source}});
 		}
-		std::vector<metrics_v2> static_metrics;
-		static_metrics.push_back(libs_metrics_collector.new_metric("start_ts",
+		std::vector<metrics_v2> falco_metrics;
+
+		if(state.config->m_metrics_flags & METRICS_V2_RULE_COUNTERS)
+		{
+			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
+			const indexed_vector<falco_rule>& rules = state.engine->get_rules();
+			falco_metrics.emplace_back(libs_metrics_collector.new_metric("rules.matches_total",
+																	METRICS_V2_RULE_COUNTERS,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_COUNT,
+																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+																	rule_stats_manager.m_total.load()));
+
+			for (size_t i = 0; i < rule_stats_manager.m_by_rule_id.size(); i++)
+			{
+				auto rule = rules.at(i);
+				std::string rules_metric_name = "rules." + rule->name;
+				// Separate processing of rules counter metrics given we add extra tags
+				auto metric = libs_metrics_collector.new_metric(rules_metric_name.c_str(),
+																	METRICS_V2_RULE_COUNTERS,
+																	METRIC_VALUE_TYPE_U64,
+																	METRIC_VALUE_UNIT_COUNT,
+																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+																	rule_stats_manager.m_by_rule_id[i]->load());
+				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+				const std::map<std::string, std::string>& const_labels = {
+					{"priority", std::to_string(rule->priority)},
+					{"source", rule->source},
+					{"tags", concat_set_in_order(rule->tags)}
+				};
+				prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco", const_labels);
+			}
+		}
+
+		falco_metrics.emplace_back(libs_metrics_collector.new_metric("start_ts",
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
 																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 																	agent_info->start_ts_epoch));
-		static_metrics.push_back(libs_metrics_collector.new_metric("host_boot_ts",
+		falco_metrics.emplace_back(libs_metrics_collector.new_metric("host_boot_ts",
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
 																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 																	machine_info->boot_ts_epoch));
-		static_metrics.push_back(libs_metrics_collector.new_metric("host_num_cpus",
+		falco_metrics.emplace_back(libs_metrics_collector.new_metric("host_num_cpus",
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U32,
 																	METRIC_VALUE_UNIT_COUNT,
 																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 																	machine_info->num_cpus));
-		static_metrics.push_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
+		falco_metrics.emplace_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_COUNT,
@@ -134,18 +167,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 
 		auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		static_metrics.push_back(libs_metrics_collector.new_metric("duration_sec",
+		falco_metrics.emplace_back(libs_metrics_collector.new_metric("duration_sec",
 																	METRICS_V2_MISC,
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_TIME_S_COUNT,
 																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 																	(uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS)));
 
-		for (auto metrics: static_metrics)
+
+		for (auto metric: falco_metrics)
 		{
-			prometheus_metrics_converter.convert_metric_to_unit_convention(metrics);
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metrics, "falcosecurity", "falco");
+			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco");
 		}
+
 	}
 
 	for (auto metrics_collector: metrics_collectors)
@@ -153,15 +188,15 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		metrics_collector.snapshot();
 		auto metrics_snapshot = metrics_collector.get_metrics();
 
-		for (auto& metrics: metrics_snapshot)
+		for (auto& metric: metrics_snapshot)
 		{
-			prometheus_metrics_converter.convert_metric_to_unit_convention(metrics);
+			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 			std::string namespace_name = "scap";
-			if (metrics.flags & METRICS_V2_RESOURCE_UTILIZATION || metrics.flags & METRICS_V2_KERNEL_COUNTERS)
+			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION || metric.flags & METRICS_V2_KERNEL_COUNTERS)
 			{
 				namespace_name = "falco";
 			}
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metrics, "falcosecurity", namespace_name);
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", namespace_name);
 		}
 
 	}

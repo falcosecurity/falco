@@ -907,6 +907,11 @@ void falco_engine::print_stats() const
 	fprintf(stdout, "%s", out.c_str());
 }
 
+const stats_manager& falco_engine::get_rule_stats_manager() const
+{
+    return m_rule_stats_manager;
+}
+
 bool falco_engine::is_source_valid(const std::string &source) const
 {
 	return m_sources.at(source) != nullptr;
