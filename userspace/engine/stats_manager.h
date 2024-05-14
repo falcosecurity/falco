@@ -63,6 +63,24 @@ public:
 		const indexed_vector<falco_rule>& rules,
 		std::string& out) const;
 
+	// Getter functions
+	inline const std::atomic<uint64_t>& get_total() const
+	{
+		return m_total;
+	}
+
+	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_priority() const
+	{
+		return m_by_priority;
+	}
+
+	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_rule_id() const
+	{
+		return m_by_rule_id;
+	}
+
+
+private:
 	std::atomic<uint64_t> m_total;
 	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_priority;
 	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_rule_id;

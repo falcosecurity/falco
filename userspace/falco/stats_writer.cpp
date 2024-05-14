@@ -377,10 +377,10 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	{
 		const stats_manager& rule_stats_manager = m_writer->m_engine->get_rule_stats_manager();
 		const indexed_vector<falco_rule>& rules = m_writer->m_engine->get_rules();
-		output_fields["falco.rules.matches_total"] = rule_stats_manager.m_total.load();
-		for (size_t i = 0; i < rule_stats_manager.m_by_rule_id.size(); i++)
+		output_fields["falco.rules.matches_total"] = rule_stats_manager.get_total().load();
+		for (size_t i = 0; i < rule_stats_manager.get_by_rule_id().size(); i++)
 		{
-			auto rule_count = rule_stats_manager.m_by_rule_id[i]->load();
+			auto rule_count = rule_stats_manager.get_by_rule_id()[i]->load();
 			if (rule_count == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 			{
 				continue;
