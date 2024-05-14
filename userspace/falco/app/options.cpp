@@ -98,6 +98,7 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 	// Convert the vectors of enabled/disabled tags into sets to match falco engine API
 	if(m_cmdline_parsed.count("T") > 0)
 	{
+		falco_logger::log(falco_logger::level::WARNING, "The -T option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.tag=<tag> instead.");
 		for(auto &tag : m_cmdline_parsed["T"].as<std::vector<std::string>>())
 		{
 			disabled_rule_tags.insert(tag);
@@ -106,10 +107,16 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	if(m_cmdline_parsed.count("t") > 0)
 	{
+		falco_logger::log(falco_logger::level::WARNING, "The -t option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.rule=* -o rules[].enable.tag=<tag> instead.");
 		for(auto &tag : m_cmdline_parsed["t"].as<std::vector<std::string>>())
 		{
 			enabled_rule_tags.insert(tag);
 		}
+	}
+
+	if(disabled_rule_substrings.size() > 0)
+	{
+		falco_logger::log(falco_logger::level::WARNING, "The -D option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.rule=<wildcard-pattern> instead.");
 	}
 
 	// Some combinations of arguments are not allowed.
