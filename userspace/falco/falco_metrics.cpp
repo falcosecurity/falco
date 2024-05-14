@@ -107,7 +107,6 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("evt_source", "falcosecurity", "falco", {{"evt_source", source}});
 		}
 		std::vector<metrics_v2> falco_metrics;
-
 		if(state.config->m_metrics_flags & METRICS_V2_RULE_COUNTERS)
 		{
 			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
@@ -117,9 +116,9 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_COUNT,
 																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	rule_stats_manager.m_total.load()));
+																	rule_stats_manager.get_total().load()));
 
-			for (size_t i = 0; i < rule_stats_manager.m_by_rule_id.size(); i++)
+			for (size_t i = 0; i < rule_stats_manager.get_by_rule_id().size(); i++)
 			{
 				auto rule = rules.at(i);
 				std::string rules_metric_name = "rules." + rule->name;
@@ -129,7 +128,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	METRIC_VALUE_TYPE_U64,
 																	METRIC_VALUE_UNIT_COUNT,
 																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	rule_stats_manager.m_by_rule_id[i]->load());
+																	rule_stats_manager.get_by_rule_id()[i]->load());
 				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 				const std::map<std::string, std::string>& const_labels = {
 					{"priority", std::to_string(rule->priority)},
