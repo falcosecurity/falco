@@ -177,7 +177,7 @@ rules_files:
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
 
-# [Experimental] `rules`
+# [Incubating] `rules`
 #
 # --- [Description]
 #
