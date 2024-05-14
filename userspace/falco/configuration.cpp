@@ -78,21 +78,14 @@ falco_configuration::falco_configuration():
 {
 }
 
-void falco_configuration::init(const std::vector<std::string>& cmdline_options)
-{
-	config.load_from_string("");
-	init_cmdline_options(cmdline_options);
-	load_yaml("default");
-}
-
-void falco_configuration::init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options)
+void falco_configuration::init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename)
 {
 	config.load_from_string(config_content);
 	init_cmdline_options(cmdline_options);
-	load_yaml("default");
+	load_yaml(filename);
 }
 
-void falco_configuration::init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
+void falco_configuration::init_from_file(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files,
 			       const std::vector<std::string> &cmdline_options)
 {
 	loaded_conf_files.clear();

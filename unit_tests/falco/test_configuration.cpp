@@ -138,7 +138,7 @@ TEST(Configuration, configuration_config_files_secondary_fail)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_ANY_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_ANY_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
@@ -187,7 +187,7 @@ TEST(Configuration, configuration_config_files_ok)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
@@ -260,7 +260,7 @@ TEST(Configuration, configuration_config_files_relative_main)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init(temp_main.string(), loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file(temp_main.string(), loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
@@ -317,7 +317,7 @@ TEST(Configuration, configuration_config_files_override)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3
 	ASSERT_EQ(loaded_conf_files.size(), 3);
@@ -355,7 +355,7 @@ TEST(Configuration, configuration_config_files_unexistent)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
@@ -393,7 +393,7 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
@@ -430,7 +430,7 @@ TEST(Configuration, configuration_config_files_empty_configs_files)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main
 	ASSERT_EQ(loaded_conf_files.size(), 1);
@@ -462,7 +462,7 @@ TEST(Configuration, configuration_config_files_self)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_ANY_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_ANY_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	std::filesystem::remove("main.yaml");
 }
@@ -516,7 +516,7 @@ TEST(Configuration, configuration_config_files_directory)
 	std::vector<std::string> cmdline_config_options;
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2 + conf_3.
 	// test/foo is not parsed.
@@ -567,7 +567,7 @@ TEST(Configuration, configuration_config_files_cmdline)
 
 	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init("main.yaml", loaded_conf_files, cmdline_config_options));
+	ASSERT_NO_THROW(falco_config.init_from_file("main.yaml", loaded_conf_files, cmdline_config_options));
 
 	// main + conf_2
 	ASSERT_EQ(loaded_conf_files.size(), 2);
@@ -799,7 +799,7 @@ TEST(Configuration, configuration_webserver_ip)
         std::vector<std::string> cmdline_config_options;
         cmdline_config_options.push_back(option);
 
-        EXPECT_NO_THROW(falco_config.init(cmdline_config_options));
+        EXPECT_NO_THROW(falco_config.init_from_content("", cmdline_config_options));
 
         ASSERT_EQ(falco_config.m_webserver_config.m_listen_address, address);
     }
@@ -836,6 +836,6 @@ TEST(Configuration, configuration_webserver_ip)
         std::vector<std::string> cmdline_config_options;
         cmdline_config_options.push_back(option);
 
-        EXPECT_ANY_THROW(falco_config.init(cmdline_config_options));
+        EXPECT_ANY_THROW(falco_config.init_from_content("", cmdline_config_options));
     }
 }

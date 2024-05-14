@@ -48,7 +48,7 @@ rules:
 TEST(ConfigurationRuleSelection, cli_options)
 {
 	falco_configuration falco_config;
-	EXPECT_NO_THROW(falco_config.init(std::vector<std::string>{"rules[].disable.tag=maturity_incubating", "rules[].enable.rule=Adding ssh keys to authorized_keys"}));
+	EXPECT_NO_THROW(falco_config.init_from_content("", std::vector<std::string>{"rules[].disable.tag=maturity_incubating", "rules[].enable.rule=Adding ssh keys to authorized_keys"}));
 
 	ASSERT_EQ(falco_config.m_rules_selection.size(), 2);
 
