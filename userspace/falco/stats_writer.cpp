@@ -320,6 +320,9 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
 
+	// Falco wrapper metrics
+	//
+
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
 	output_fields["falco.version"] = FALCO_VERSION;
@@ -373,6 +376,9 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		nlohmann::json& output_fields,
 		double stats_snapshot_time_delta_sec)
 {
+	// Falco metrics categories
+	//
+	// rules_counters_enabled
 	if(m_writer->m_config->m_metrics_flags & METRICS_V2_RULE_COUNTERS)
 	{
 		const stats_manager& rule_stats_manager = m_writer->m_engine->get_rule_stats_manager();
@@ -393,6 +399,13 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if (m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter)
 	{
+		// Libs metrics categories
+		//
+		// resource_utilization_enabled
+		// state_counters_enabled
+		// kernel_event_counters_enabled
+		// libbpf_stats_enabled
+
 		// Refresh / New snapshot
 		m_writer->m_libs_metrics_collector->snapshot();
 		auto metrics_snapshot = m_writer->m_libs_metrics_collector->get_metrics();
