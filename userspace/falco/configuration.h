@@ -107,9 +107,8 @@ public:
 	falco_configuration();
 	virtual ~falco_configuration() = default;
 
-	void init(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files, const std::vector<std::string>& cmdline_options);
-	void init(const std::vector<std::string>& cmdline_options);
-	void init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options);
+	void init_from_file(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files, const std::vector<std::string>& cmdline_options);
+	void init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename="default");
 
 	std::string dump();
 

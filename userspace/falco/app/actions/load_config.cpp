@@ -36,14 +36,14 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 	{
 		if (!s.options.conf_filename.empty())
 		{
-			s.config->init(s.options.conf_filename, loaded_conf_files, s.options.cmdline_config_options);
+			s.config->init_from_file(s.options.conf_filename, loaded_conf_files, s.options.cmdline_config_options);
 		}
 		else
 		{
 			// Is possible to have an empty config file when we want to use some command line
 			// options like `--help`, `--version`, ...
 			// The configs used in `load_yaml` will be initialized to the default values.
-			s.config->init(s.options.cmdline_config_options);
+			s.config->init_from_content("", s.options.cmdline_config_options);
 		}
 	}
 	catch (std::exception& e)
