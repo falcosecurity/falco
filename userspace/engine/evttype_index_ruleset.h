@@ -52,6 +52,10 @@ public:
 
 	void on_loading_complete() override;
 
+	// Print each enabled rule when running Falco with falco logger
+	// log_level=debug; invoked within on_loading_complete()
+	void print_enabled_rules_falco_logger();
+
 	void enable(
 		const std::string &pattern,
 		match_type match,
@@ -117,6 +121,11 @@ private:
 		void remove_filter(std::shared_ptr<filter_wrapper> wrap);
 
 		uint64_t num_filters();
+
+		inline const std::set<std::shared_ptr<filter_wrapper>>& get_filters() const
+		{
+			return m_filters;
+		}
 
 		// Evaluate an event against the ruleset and return the first rule
 		// that matched.
