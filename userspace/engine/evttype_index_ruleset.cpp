@@ -19,6 +19,8 @@ limitations under the License.
 
 #include "falco_utils.h"
 
+#include "../falco/logger.h"
+
 #include <algorithm>
 
 evttype_index_ruleset::evttype_index_ruleset(
@@ -225,7 +227,22 @@ void evttype_index_ruleset::add(
 
 void evttype_index_ruleset::on_loading_complete()
 {
-	// nothing to do for now
+	print_enabled_rules_falco_logger();
+}
+
+void evttype_index_ruleset::print_enabled_rules_falco_logger()
+{
+	falco_logger::log(falco_logger::level::DEBUG, "Enabled rules:\n");
+	for (const auto& ruleset_ptr : m_rulesets)
+	{
+		if (ruleset_ptr)
+		{
+			for (const auto& wrap : ruleset_ptr->get_filters())
+			{
+				falco_logger::log(falco_logger::level::DEBUG, std::string("   ") + wrap->rule.name + "\n");
+			}
+		}
+	}
 }
 
 void evttype_index_ruleset::clear()
