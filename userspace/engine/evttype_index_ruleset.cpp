@@ -233,16 +233,19 @@ void evttype_index_ruleset::on_loading_complete()
 void evttype_index_ruleset::print_enabled_rules_falco_logger()
 {
 	falco_logger::log(falco_logger::level::DEBUG, "Enabled rules:\n");
+	int n = 0;
 	for (const auto& ruleset_ptr : m_rulesets)
 	{
 		if (ruleset_ptr)
 		{
 			for (const auto& wrap : ruleset_ptr->get_filters())
 			{
+				n++;
 				falco_logger::log(falco_logger::level::DEBUG, std::string("   ") + wrap->rule.name + "\n");
 			}
 		}
 	}
+	falco_logger::log(falco_logger::level::DEBUG, "(" + std::to_string(n) + ") enabled rules in total\n");
 }
 
 void evttype_index_ruleset::clear()
