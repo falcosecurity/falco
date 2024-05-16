@@ -680,6 +680,42 @@ TEST_F(test_falco_engine, rule_override_with_enabled)
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
 
+TEST_F(test_falco_engine, rule_override_exceptions_required_fields)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  exceptions:
+    - name: test_exception
+      fields: proc.name
+      comps: in
+      values: ["cat"]
+
+# when appending, it's fine to provide partial exception definitions
+- rule: test_rule
+  exceptions:
+    - name: test_exception
+      values: [echo]
+  override:
+    exceptions: append
+
+# when replacing, we don't allow partial exception definitions
+- rule: test_rule
+  exceptions:
+    - name: test_exception
+      values: [id]
+  override:
+    exceptions: replace
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+  ASSERT_FALSE(has_warnings());
+	ASSERT_TRUE(check_error_message("Item has no mapping for key 'fields'")) << m_load_result_json.dump();
+}
+
 TEST_F(test_falco_engine, rule_not_enabled)
 {
     std::string rules_content = R"END(
