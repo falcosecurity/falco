@@ -384,14 +384,16 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		const stats_manager& rule_stats_manager = m_writer->m_engine->get_rule_stats_manager();
 		const indexed_vector<falco_rule>& rules = m_writer->m_engine->get_rules();
 		output_fields["falco.rules.matches_total"] = rule_stats_manager.get_total().load();
-		for (size_t i = 0; i < rule_stats_manager.get_by_rule_id().size(); i++)
+		const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& rules_by_id = rule_stats_manager.get_by_rule_id();
+		for (size_t i = 0; i < rules_by_id.size(); i++)
 		{
-			auto rule_count = rule_stats_manager.get_by_rule_id()[i]->load();
+			auto rule_count = rules_by_id[i]->load();
 			if (rule_count == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 			{
 				continue;
 			}
-			std::string rules_metric_name = "falco.rules." + rules.at(i)->name;
+			auto rule = rules.at(i);
+			std::string rules_metric_name = "falco.rules." + rule->name;
 			output_fields[rules_metric_name] = rule_count;
 		}
 	}
