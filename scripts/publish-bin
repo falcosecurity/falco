@@ -39,9 +39,15 @@ fi
 s3_bucket_repo="s3://falco-distribution/packages/${repo}/${arch}"
 cloudfront_path="/packages/${repo}/${arch}"
 
+# sign
+
+gpg --detach-sign --digest-algo SHA256 --armor ${file}
+
 # publish
 package=$(basename -- ${file})
 echo "Publishing ${package} to ${s3_bucket_repo}..."
 aws s3 cp ${file} ${s3_bucket_repo}/${package} --acl public-read
+aws s3 cp ${file}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
 
 aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
