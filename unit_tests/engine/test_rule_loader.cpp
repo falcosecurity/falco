@@ -712,7 +712,7 @@ TEST_F(test_falco_engine, rule_override_exceptions_required_fields)
 )END";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-  ASSERT_FALSE(has_warnings());
+	ASSERT_FALSE(has_warnings());
 	ASSERT_TRUE(check_error_message("Item has no mapping for key 'fields'")) << m_load_result_json.dump();
 }
 
