@@ -37,6 +37,7 @@ RUN apt-get update \
 	netcat \
 	patchelf \
 	xz-utils \
+	zstd \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN if [ "$TARGETARCH" = "amd64" ]; \
