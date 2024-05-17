@@ -39,6 +39,7 @@ RUN apt-get update \
 	netcat-openbsd \
 	patchelf \
 	xz-utils \
+	zstd \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
