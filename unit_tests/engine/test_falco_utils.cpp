@@ -73,6 +73,14 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 0UL);
 }
 
+TEST(FalcoUtils, sanitize_metric_name)
+{
+	ASSERT_EQ(falco::utils::sanitize_metric_name("Testing rule   2 (CVE-2244)"), "Testing_rule_2_CVE_2244");
+	ASSERT_EQ(falco::utils::sanitize_metric_name("Testing rule__:2)"), "Testing_rule_:2");
+	ASSERT_EQ(falco::utils::sanitize_metric_name("This@is_a$test rule123"), "This_is_a_test_rule123");
+	ASSERT_EQ(falco::utils::sanitize_metric_name("RULEwith:special#characters"), "RULEwith:special_characters");
+}
+
 TEST(FalcoUtils, matches_wildcard)
 {
 	ASSERT_TRUE(falco::utils::matches_wildcard("*", "anything"));
