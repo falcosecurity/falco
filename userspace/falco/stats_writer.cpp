@@ -28,6 +28,7 @@ limitations under the License.
 #include "stats_writer.h"
 #include "logger.h"
 #include "config_falco.h"
+#include "falco_utils.h"
 #include <libscap/strl.h>
 #include <libscap/scap_vtable.h>
 
@@ -339,7 +340,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	{
 		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
-		metric_name_file_sha256 = "falco.sha256_rule_file." + metric_name_file_sha256;
+		metric_name_file_sha256 = "falco.sha256_rule_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 
@@ -347,7 +348,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	{
 		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
-		metric_name_file_sha256 = "falco.sha256_config_file." + metric_name_file_sha256;
+		metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 #endif
@@ -393,7 +394,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				continue;
 			}
 			auto rule = rules.at(i);
-			std::string rules_metric_name = "falco.rules." + rule->name;
+			std::string rules_metric_name = "falco.rules." + falco::utils::sanitize_metric_name(rule->name);
 			output_fields[rules_metric_name] = rule_count;
 		}
 	}

@@ -17,6 +17,8 @@ limitations under the License.
 
 #include "falco_metrics.h"
 
+#include "falco_utils.h"
+
 #include "app/state.h"
 
 #include <libsinsp/sinsp.h>
@@ -91,7 +93,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco.sha256_rule_file." + metric_name_file_sha256;
+			metric_name_file_sha256 = "falco.sha256_rule_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 
@@ -99,7 +101,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco.sha256_config_file." + metric_name_file_sha256;
+			metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 #endif
@@ -170,7 +172,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			for (size_t i = 0; i < rules_by_id.size(); i++)
 			{
 				auto rule = rules.at(i);
-				std::string rules_metric_name = "rules." + rule->name;
+				std::string rules_metric_name = "rules." + falco::utils::sanitize_metric_name(rule->name);
 				// Separate processing of rules counter metrics given we add extra tags
 				auto metric = libs_metrics_collector.new_metric(rules_metric_name.c_str(),
 																	METRICS_V2_RULE_COUNTERS,

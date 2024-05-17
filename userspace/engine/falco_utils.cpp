@@ -151,6 +151,18 @@ std::string calculate_file_sha256sum(const std::string& filename)
 }
 #endif
 
+std::string sanitize_metric_name(const std::string& name)
+{
+	std::string sanitized_name = name;
+	RE2::GlobalReplace(&sanitized_name, "[^a-zA-Z0-9_:]", "_");
+	RE2::GlobalReplace(&sanitized_name, "_+", "_");
+	if (!sanitized_name.empty() && sanitized_name.back() == '_')
+	{
+		sanitized_name.pop_back();
+	}
+	return sanitized_name;
+}
+
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t line_len)
 {
 	std::istringstream is(in);
