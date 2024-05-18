@@ -182,6 +182,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 																	rules_by_id[i]->load());
 				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 				const std::map<std::string, std::string>& const_labels = {
+					{"rule", rule->name},
 					{"priority", std::to_string(rule->priority)},
 					{"source", rule->source},
 					{"tags", concat_set_in_order(rule->tags)}
