@@ -340,7 +340,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	{
 		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
-		metric_name_file_sha256 = "falco.sha256_rule_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
+		metric_name_file_sha256 = "falco.sha256_rules_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 
