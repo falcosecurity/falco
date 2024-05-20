@@ -17,7 +17,7 @@ limitations under the License.
 
 #include "restart_handler.h"
 #include "signals.h"
-#include "../logger.h"
+#include "logger.h"
 
 #include <string.h>
 #include <fcntl.h>
