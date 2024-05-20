@@ -26,49 +26,50 @@
 #     (Falco command-line arguments)
 #     (Falco environment variables)
 # Falco configs files
-#     configs_files
+#     configs_files [Stable]
+#     watch_config_files [Stable]
 # Falco rules files
-#     rules_files
+#     rules_files [Stable]
+# Falco rules
+#     rules [Incubating]
 # Falco engine
-#     engine
+#     engine [Stable]
 # Falco plugins
-#     load_plugins
-#     plugins
-# Falco config files
-#     watch_config_files
+#     load_plugins [Stable]
+#     plugins [Stable]
 # Falco outputs settings
-#     time_format_iso_8601
-#     priority
-#     json_output
-#     json_include_output_property
-#     json_include_tags_property
-#     buffered_outputs
-#     rule_matching
-#     outputs_queue
+#     time_format_iso_8601 [Stable]
+#     priority [Stable]
+#     json_output [Stable]
+#     json_include_output_property [Stable]
+#     json_include_tags_property [Stable]
+#     buffered_outputs [Stable]
+#     rule_matching [Incubating]
+#     outputs_queue [Stable]
 # Falco outputs channels
-#     stdout_output
-#     syslog_output
-#     file_output
-#     http_output
-#     program_output
-#     grpc_output
+#     stdout_output [Stable]
+#     syslog_output [Stable]
+#     file_output [Stable]
+#     http_output [Stable]
+#     program_output [Stable]
+#     grpc_output [Stable]
 # Falco exposed services
-#     grpc
-#     webserver
+#     grpc [Stable]
+#     webserver [Stable]
 # Falco logging / alerting / metrics related to software functioning (basic)
-#     log_stderr
-#     log_syslog
-#     log_level
-#     libs_logger
+#     log_stderr [Stable]
+#     log_syslog [Stable]
+#     log_level [Stable]
+#     libs_logger [Stable]
 # Falco logging / alerting / metrics related to software functioning (advanced)
-#     output_timeout
-#     syscall_event_timeouts
-#     syscall_event_drops -> [CHANGE NOTICE] Automatic notifications will be simplified in Falco 0.38! If you depend on the detailed drop counters payload, use 'metrics.output_rule' along with 'metrics.kernel_event_counters_enabled' instead
-#     metrics
+#     output_timeout [Stable]
+#     syscall_event_timeouts [Stable]
+#     syscall_event_drops [Stable] -> [CHANGE NOTICE] Automatic notifications will be simplified in Falco 0.38! If you depend on the detailed drop counters payload, use 'metrics.output_rule' along with 'metrics.kernel_event_counters_enabled' instead
+#     metrics [Stable]
 # Falco performance tuning (advanced)
-#     base_syscalls
+#     base_syscalls [Stable]
 # Falco libs
-#     falco_libs
+#     falco_libs [Incubating]
 
 ########################
 # Config maturity tags #
@@ -144,6 +145,16 @@
 # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
 configs_files:
   - /etc/falco/config.d
+
+# [Stable] `watch_config_files`
+#
+# Falco monitors configuration and rule files for changes and automatically
+# reloads itself to apply the updated configuration when any modifications are
+# detected. This feature is particularly useful when you want to make real-time
+# changes to the configuration or rules of Falco without interrupting its
+# operation or losing its state. For more information about Falco's state
+# engine, please refer to the `base_syscalls` section.
+watch_config_files: true
 
 #####################
 # Falco rules files #
@@ -468,21 +479,6 @@ plugins:
     # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
   - name: json
     library_path: libjson.so
-
-
-######################
-# Falco config files #
-######################
-
-# [Stable] `watch_config_files`
-#
-# Falco monitors configuration and rule files for changes and automatically
-# reloads itself to apply the updated configuration when any modifications are
-# detected. This feature is particularly useful when you want to make real-time
-# changes to the configuration or rules of Falco without interrupting its
-# operation or losing its state. For more information about Falco's state
-# engine, please refer to the `base_syscalls` section.
-watch_config_files: true
 
 
 ##########################
