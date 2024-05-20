@@ -368,7 +368,7 @@ TEST(Configuration, configuration_config_files_unexistent)
 	std::filesystem::remove("main.yaml");
 }
 
-TEST(Configuration, configuration_config_files_scalar_configs_files)
+TEST(Configuration, configuration_config_files_scalar_config_files)
 {
 	/* Test that a single file can be included as a scalar (thanks to get_sequence_from_node magic) */
 	const std::string main_conf_yaml =
@@ -413,7 +413,7 @@ TEST(Configuration, configuration_config_files_scalar_configs_files)
 	std::filesystem::remove("conf_2.yaml");
 }
 
-TEST(Configuration, configuration_config_files_empty_configs_files)
+TEST(Configuration, configuration_config_files_empty_config_files)
 {
 	/* Test that empty includes list is accepted */
 	const std::string main_conf_yaml =
@@ -561,7 +561,7 @@ TEST(Configuration, configuration_config_files_cmdline)
 	outfile << conf_yaml_2;
 	outfile.close();
 
-	// Pass "configs_files=..." cmdline option
+	// Pass "config_files=..." cmdline option
 	std::vector<std::string> cmdline_config_options;
 	cmdline_config_options.push_back((yaml_helper::configs_key+"=conf_2.yaml"));
 

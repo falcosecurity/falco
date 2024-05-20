@@ -30,7 +30,7 @@ static falco::app::run_result apply_deprecated_options(const falco::app::state& 
 falco::app::run_result falco::app::actions::load_config(const falco::app::state& s)
 {
 	// List of loaded conf files, ie: s.options.conf_filename
-	// plus all the `configs_files` expanded list of configs.
+	// plus all the `config_files` expanded list of configs.
 	std::vector<std::string> loaded_conf_files;
 	try
 	{

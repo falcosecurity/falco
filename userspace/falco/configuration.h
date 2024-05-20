@@ -195,7 +195,7 @@ public:
 	yaml_helper config;
 
 private:
-	void merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files);
+	void merge_config_files(const std::string& config_name, std::vector<std::string>& loaded_config_files);
 	void load_yaml(const std::string& config_name);
 	void init_logger();
 	void load_engine_config(const std::string& config_name);

@@ -78,7 +78,7 @@ private:
 class yaml_helper
 {
 public:
-	inline static const std::string configs_key = "configs_files";
+	inline static const std::string configs_key = "config_files";
 
 	/**
 	* Load the YAML document represented by the input string.
@@ -104,7 +104,7 @@ public:
 		{
 			/*
 			 * To avoid recursion hell,
-			 * we don't support `configs_files` directives from included config files
+			 * we don't support `config_files` directives from included config files
 			 * (that use load_from_file_int recursively).
 			 */
 			const auto &key = n.first.Scalar();
