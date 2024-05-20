@@ -148,7 +148,7 @@ config_files:
 
 # [Stable] `watch_config_files`
 #
-# Falco monitors configuration and rule files for changes and automatically
+# Falco monitors configuration and rules files for changes and automatically
 # reloads itself to apply the updated configuration when any modifications are
 # detected. This feature is particularly useful when you want to make real-time
 # changes to the configuration or rules of Falco without interrupting its
