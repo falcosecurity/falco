@@ -99,7 +99,7 @@ void falco_configuration::init_from_file(const std::string& conf_filename, std::
 		throw e;
 	}
 	init_cmdline_options(cmdline_options);
-	merge_configs_files(conf_filename, loaded_conf_files);
+	merge_config_files(conf_filename, loaded_conf_files);
 	load_yaml(conf_filename);
 }
 
@@ -108,7 +108,7 @@ std::string falco_configuration::dump()
 	return config.dump();
 }
 
-void falco_configuration::merge_configs_files(const std::string& config_name, std::vector<std::string>& loaded_config_files)
+void falco_configuration::merge_config_files(const std::string& config_name, std::vector<std::string>& loaded_config_files)
 {
 	// Load configs files to be included and merge them into current config
 	// NOTE: loaded_config_files will resolve to the filepaths list of loaded config.
