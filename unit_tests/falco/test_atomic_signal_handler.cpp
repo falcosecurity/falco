@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 #include <falco/atomic_signal_handler.h>
-#include <falco/logger.h>
+#include <engine/logger.h>
 
 #include <gtest/gtest.h>
 

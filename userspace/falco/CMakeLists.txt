@@ -50,7 +50,6 @@ add_library(falco_application STATIC
   app/actions/create_requested_paths.cpp
   app/actions/close_inspectors.cpp
   configuration.cpp
-  logger.cpp
   falco_outputs.cpp
   outputs_file.cpp
   outputs_stdout.cpp
