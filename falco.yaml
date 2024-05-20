@@ -25,7 +25,7 @@
 #
 #     (Falco command-line arguments)
 #     (Falco environment variables)
-# Falco config files
+# Falco configs files
 #     configs_files
 # Falco rules files
 #     rules_files
@@ -69,6 +69,19 @@
 #     base_syscalls
 # Falco libs
 #     falco_libs
+
+########################
+# Config maturity tags #
+########################
+
+# As per features adoption and deprecation proposal we support 4 levels of configuration keys maturity:
+# * Sandbox -> Experimental/alpha features, not recommended for production use, can be removed at any time without further notice.
+# * Incubating -> Beta features, long-term support is not guaranteed.
+# * Stable -> General Availability (GA) features for which long-term support is expected.
+# * Deprecated -> Deprecated keys, soon to be removed.
+#
+# For more info, please take a look at the proposal: https://github.com/falcosecurity/falco/blob/master/proposals/20231220-features-adoption-and-deprecation.md.
+
 
 ################################
 # Falco command-line arguments #
@@ -138,7 +151,7 @@ configs_files:
 
 # [Stable] `rules_files`
 
-NOTICE: Before Falco 0.38, this config key was `rules_file` (singular form), which is now deprecated in favor of `rules_files` (plural form).
+# NOTICE: Before Falco 0.38, this config key was `rules_file` (singular form), which is now deprecated in favor of `rules_files` (plural form).
 #
 # Falco rules can be specified using files or directories, which are loaded at
 # startup.
@@ -525,7 +538,7 @@ json_include_tags_property: true
 # output mechanism. By default, buffering is disabled (false).
 buffered_outputs: false
 
-# [Experimental] `rule_matching`
+# [Incubating] `rule_matching`
 #
 # The `rule_matching` configuration key's values are:
 #  - `first`: Falco stops checking conditions of rules against upcoming event
@@ -749,6 +762,8 @@ webserver:
   # Can be an IPV4 or IPV6 address, defaults to IPV4
   listen_address: 0.0.0.0
   k8s_healthz_endpoint: /healthz
+  # [Incubating] `prometheus_metrics_enabled`
+  #
   # Enable the metrics endpoint providing Prometheus values
   # It will only have an effect if metrics.enabled is set to true as well.
   prometheus_metrics_enabled: false
@@ -1170,7 +1185,7 @@ base_syscalls:
 # Falco libs #
 ##############
 
-# [Experimental] `falco_libs` - Potentially subject to more frequent changes
+# [Incubating] `falco_libs` - Potentially subject to more frequent changes
 #
 # `thread_table_size`
 #
