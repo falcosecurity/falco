@@ -19,7 +19,7 @@ limitations under the License.
 
 #include "falco_utils.h"
 
-#include "../falco/logger.h"
+#include "logger.h"
 
 #include <algorithm>
 
