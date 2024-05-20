@@ -1181,7 +1181,7 @@ base_syscalls:
 # Falco libs #
 ##############
 
-# [Incubating] `falco_libs` - Potentially subject to more frequent changes
+# [Incubating] `falco_libs`
 #
 # `thread_table_size`
 #
