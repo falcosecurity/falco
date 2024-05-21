@@ -64,40 +64,31 @@ jobs:
       # We're pushing the arch-specific manifests to Docker Hub so that we'll be able to easily create the index/multiarch later
       - name: Push arch-specific images to Docker Hub
         run: |
-          docker push docker.io/falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }}
-          docker push docker.io/falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
-          docker push docker.io/falcosecurity/falco-distroless:aarch64-${{ inputs.tag }}
-          docker push docker.io/falcosecurity/falco-distroless:x86_64-${{ inputs.tag }}
           docker push docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}
           docker push docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}-debian
+          docker push docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}-debian
           docker push docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}
           docker push docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
-          docker push docker.io/falcosecurity/falco-driver-loader-legacy:aarch64-${{ inputs.tag }}
-          docker push docker.io/falcosecurity/falco-driver-loader-legacy:x86_64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}-buster
+          docker push docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}-buster
 
-      - name: Create no-driver manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }}
-          images: docker.io/falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
-          push: true
-
-      - name: Create distroless manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco-distroless:${{ inputs.tag }}
-          images: docker.io/falcosecurity/falco-distroless:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-distroless:x86_64-${{ inputs.tag }}
-          push: true
-          
-      - name: Tag slim manifest on Docker Hub
-        run: |
-          crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
-
-      - name: Create falco manifest on Docker Hub
+      - name: Create Falco manifest on Docker Hub
         uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
         with:
           inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}
           images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
+          push: true
+          
+      - name: Tag slim manifest on Docker Hub
+        run: |
+          crane copy docker.io/falcosecurity/falco:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
+
+      - name: Create falco-debian manifest on Docker Hub
+        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
+        with:
+          inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}-debian
+          images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}-debian,docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}-debian
           push: true
           
       - name: Create falco-driver-loader manifest on Docker Hub
@@ -107,47 +98,42 @@ jobs:
           images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
           push: true
 
-      - name: Create falco-driver-loader-legacy manifest on Docker Hub
+      - name: Create falco-driver-loader-buster manifest on Docker Hub
         uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
         with:
-          inputs: docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }}
-          images: docker.io/falcosecurity/falco-driver-loader-legacy:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-driver-loader-legacy:x86_64-${{ inputs.tag }}
+          inputs: docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster
+          images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}-buster,docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}-buster
           push: true
 
       - name: Get Digests for images
         id: digests
         # We could probably use the docker-manifest-action output instead of recomputing those with crane
         run: |
-          echo "falco-no-driver=$(crane digest docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }})" >> $GITHUB_OUTPUT
-          echo "falco-distroless=$(crane digest docker.io/falcosecurity/falco-distroless:${{ inputs.tag }})" >> $GITHUB_OUTPUT
           echo "falco=$(crane digest docker.io/falcosecurity/falco:${{ inputs.tag }})" >> $GITHUB_OUTPUT
+          echo "falco-debian=$(crane digest docker.io/falcosecurity/falco:${{ inputs.tag }}-debian)" >> $GITHUB_OUTPUT
           echo "falco-driver-loader=$(crane digest docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }})" >> $GITHUB_OUTPUT
-          echo "falco-driver-loader-legacy=$(crane digest docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }})" >> $GITHUB_OUTPUT
+          echo "falco-driver-loader-buster=$(crane digest docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster)" >> $GITHUB_OUTPUT
 
       - name: Publish images to ECR
         run: |
-          crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }}
-          crane copy docker.io/falcosecurity/falco-distroless:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-distroless:${{ inputs.tag }}
           crane copy docker.io/falcosecurity/falco:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}
+          crane copy docker.io/falcosecurity/falco:${{ inputs.tag }}-debian public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-debian
           crane copy docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}
-          crane copy docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }}
-          crane copy public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim
+          crane copy docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster
 
       - name: Tag latest on Docker Hub and ECR
         if: inputs.is_latest
         run: |
-          crane tag docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} latest
-          crane tag docker.io/falcosecurity/falco-distroless:${{ inputs.tag }} latest
           crane tag docker.io/falcosecurity/falco:${{ inputs.tag }} latest
+          crane tag docker.io/falcosecurity/falco:${{ inputs.tag }}-debian latest-debian
           crane tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
-          crane tag docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }} latest
+          crane tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster latest-buster
           crane tag docker.io/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
 
-          crane tag public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} latest
-          crane tag public.ecr.aws/falcosecurity/falco-distroless:${{ inputs.tag }} latest
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }} latest
+          crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-debian latest-debian
           crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
-          crane tag public.ecr.aws/falcosecurity/falco-driver-loader-legacy:${{ inputs.tag }} latest
+          crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster latest-buster
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
 
       - name: Setup Cosign
@@ -160,14 +146,12 @@ jobs:
           COSIGN_EXPERIMENTAL: "true"
           COSIGN_YES: "true"
         run: |
-          cosign sign docker.io/falcosecurity/falco-no-driver@${{ steps.digests.outputs.falco-no-driver }}
-          cosign sign docker.io/falcosecurity/falco-distroless@${{ steps.digests.outputs.falco-distroless }}
-          cosign sign docker.io/falcosecurity/falco@${{ steps.digests.outputs.falco }}
-          cosign sign docker.io/falcosecurity/falco-driver-loader@${{ steps.digests.outputs.falco-driver-loader }}
-          cosign sign docker.io/falcosecurity/falco-driver-loader-legacy@${{ steps.digests.outputs.falco-driver-loader-legacy }}
+          cosign sign docker.io/falcosecurity/falco:latest@${{ steps.digests.outputs.falco }}
+          cosign sign docker.io/falcosecurity/falco:latest-debian@${{ steps.digests.outputs.falco-debian }}
+          cosign sign docker.io/falcosecurity/falco-driver-loader:latest@${{ steps.digests.outputs.falco-driver-loader }}
+          cosign sign docker.io/falcosecurity/falco-driver-loader:latest-buster@${{ steps.digests.outputs.falco-driver-loader-buster }}
 
-          cosign sign public.ecr.aws/falcosecurity/falco-no-driver@${{ steps.digests.outputs.falco-no-driver }}
-          cosign sign public.ecr.aws/falcosecurity/falco-distroless@${{ steps.digests.outputs.falco-distroless }}
-          cosign sign public.ecr.aws/falcosecurity/falco@${{ steps.digests.outputs.falco }}
-          cosign sign public.ecr.aws/falcosecurity/falco-driver-loader@${{ steps.digests.outputs.falco-driver-loader }}
-          cosign sign public.ecr.aws/falcosecurity/falco-driver-loader-legacy@${{ steps.digests.outputs.falco-driver-loader-legacy }}
+          cosign sign public.ecr.aws/falcosecurity/falco:latest@${{ steps.digests.outputs.falco }}
+          cosign sign public.ecr.aws/falcosecurity/falco:latest-debian@${{ steps.digests.outputs.falco-debian }}
+          cosign sign public.ecr.aws/falcosecurity/falco-driver-loader:latest@${{ steps.digests.outputs.falco-driver-loader }}
+          cosign sign public.ecr.aws/falcosecurity/falco-driver-loader:latest-buster@${{ steps.digests.outputs.falco-driver-loader-buster }}
