@@ -79,10 +79,6 @@ jobs:
           inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}
           images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
           push: true
-          
-      - name: Tag slim manifest on Docker Hub
-        run: |
-          crane copy docker.io/falcosecurity/falco:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
 
       - name: Create falco-debian manifest on Docker Hub
         uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
@@ -128,13 +124,11 @@ jobs:
           crane tag docker.io/falcosecurity/falco:${{ inputs.tag }}-debian latest-debian
           crane tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
           crane tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster latest-buster
-          crane tag docker.io/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
 
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }} latest
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-debian latest-debian
           crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
           crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster latest-buster
-          crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
 
       - name: Setup Cosign
         if: inputs.sign
