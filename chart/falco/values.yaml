@@ -489,7 +489,40 @@ falco:
     - /etc/falco/falco_rules.local.yaml
     - /etc/falco/rules.d
 
-  # [Experimental] `rule_matching`
+  # [Incubating] `rules`
+  #
+  # --- [Description]
+  #
+  # Falco rules can be enabled or disabled by name (with wildcards *) and/or by tag.
+  #
+  # This configuration is applied after all rules files have been loaded, including
+  # their overrides, and will take precedence over the enabled/disabled configuration
+  # specified or overridden in the rules files.
+  #
+  # The ordering matters and selections are evaluated in order. For instance, if you
+  # need to only enable a rule you would first disable all of them and then only
+  # enable what you need, regardless of the enabled status in the files.
+  #
+  # --- [Examples]
+  #
+  # Only enable two rules:
+  #
+  # rules:
+  #   - disable:
+  #       rule: "*"
+  #   - enable:
+  #       rule: Netcat Remote Code Execution in Container
+  #   - enable:
+  #       rule: Delete or rename shell history
+  #
+  # Disable all rules with a specific tag:
+  #
+  # rules:
+  #   - disable:
+  #       tag: network
+  #
+
+  # [Incubating] `rule_matching`
   #
   # - Falco has to be performant when evaluating rules against events. To quickly
   # understand which rules could trigger on a specific event, Falco maintains
@@ -508,7 +541,7 @@ falco:
   rule_matching: first
 
 
-  # [Experimental] `outputs_queue`
+  # [Incubating] `outputs_queue`
   #
   # -- Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
   # allows you to customize the queue capacity. Please refer to the official documentation:
@@ -592,6 +625,18 @@ falco:
   ######################
   # Falco config files #
   ######################
+
+  # [Stable] `config_files`
+  #
+  # Falco will load additional configs files specified here.
+  # Their loading is assumed to be made *after* main config file has been processed,
+  # exactly in the order they are specified.
+  # Therefore, loaded config files *can* override values from main config file.
+  # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
+  #
+  # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
+  config_files:
+    - /etc/falco/config.d
 
   # [Stable] `watch_config_files`
   #
@@ -861,6 +906,11 @@ falco:
     threadiness: 0
     listen_port: 8765
     k8s_healthz_endpoint: /healthz
+    # [Incubating] `prometheus_metrics_enabled`
+    #
+    # Enable the metrics endpoint providing Prometheus values
+    # It will only have an effect if metrics.enabled is set to true as well.
+    prometheus_metrics_enabled: false
     ssl_enabled: false
     ssl_certificate: /etc/falco/falco.pem
 
@@ -1107,6 +1157,25 @@ falco:
   # Falco's monitoring. These metrics help assess Falco's usage in relation to the
   # server's workload intensity.
   #
+  # `rules_counters_enabled`: Emit counts for each rule.
+  #
+  # `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
+  # is reported as a percentage of one CPU and can be normalized to the total
+  # number of CPUs to determine overall usage. Memory metrics are provided in raw
+  # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
+  # and can be uniformly converted to megabytes (MB) using the
+  # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
+  # deployed as daemonset, it is crucial to track Falco's container memory usage.
+  # To customize the path of the memory metric file, you can create an environment
+  # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
+  # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
+  # monitor container memory usage, which aligns with Kubernetes'
+  # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
+  # CPU and memory usages, along with the total number of processes and open file
+  # descriptors (fds) on the host, obtained from the proc file system unrelated to
+  # Falco's monitoring. These metrics help assess Falco's usage in relation to the
+  # server's workload intensity.
+  #
   # `state_counters_enabled`: Emit counters related to Falco's state engine, including
   # added, removed threads or file descriptors (fds), and failed lookup, store, or
   # retrieve actions in relation to Falco's underlying process cache table (threadtable).
@@ -1139,6 +1208,7 @@ falco:
     interval: 1h
     output_rule: true
     # output_file: /tmp/falco_stats.jsonl
+    rules_counters_enabled: true
     resource_utilization_enabled: true
     state_counters_enabled: true
     kernel_event_counters_enabled: true
@@ -1266,9 +1336,29 @@ falco:
     custom_set: []
     repair: false
 
-  #################################################
-  # Falco cloud orchestration systems integration #
-  #################################################
+
+  ##############
+  # Falco libs #
+  ##############
+
+  # [Experimental] `falco_libs` - Potentially subject to more frequent changes
+  #
+  # `thread_table_size`
+  #
+  # Set the maximum number of entries (the absolute maximum value can only be MAX UINT32)
+  # for Falco's internal threadtable (process cache). Please note that Falco operates at a
+  # granular level, focusing on individual threads. Falco rules reference the thread leader
+  # as the process. The size of the threadtable should typically be much higher than the
+  # number of currently alive processes. The default value should work well on modern
+  # infrastructures and be sufficient to absorb bursts.
+  #
+  # Reducing its size can help in better memory management, but as a consequence, your
+  # process tree may be more frequently disrupted due to missing threads. You can explore
+  # `metrics.state_counters_enabled` to measure how the internal state handling is performing,
+  # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
+  # if you should increase this value for optimal performance.
+  falco_libs:
+    thread_table_size: 262144
 
   # [Stable] Guidance for Kubernetes container engine command-line args settings
   #
