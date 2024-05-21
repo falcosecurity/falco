@@ -28,12 +28,16 @@ podAnnotations: {}
 
 serviceAccount:
   # -- Specifies whether a service account should be created.
-  create: false
+  create: true
   # -- Annotations to add to the service account.
   annotations: {}
   # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+rbac:
+  # Create and use rbac resources when set to true. Needed to list and update configmaps in Falco's namespace.
+  create: true
 
 # -- Add additional pod labels
 podLabels: {}
@@ -175,7 +179,7 @@ driver:
   # Always set it to false when using Falco with plugins.
   enabled: true
   # -- kind tells Falco which driver to use. Available options: kmod (kernel driver), ebpf (eBPF probe), modern_ebpf (modern eBPF probe).
-  kind: kmod
+  kind: auto
   # -- kmod holds the configuration for the kernel module.
   kmod:
     # -- bufSizePreset determines the size of the shared space between Falco and its drivers.

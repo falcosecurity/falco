@@ -346,9 +346,13 @@ spec:
   {{- with .Values.driver.loader.initContainer.args }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if eq .Values.driver.kind "ebpf" }}
-    - ebpf
-   {{- end }}
+  {{- if eq .Values.driver.kind "module" }}
+    - kmod
+  {{- else if eq .Values.driver.kind "modern-bpf"}}
+    - modern_ebpf
+  {{- else }}
+    - {{ .Values.driver.kind }}
+  {{- end }}
   {{- with .Values.driver.loader.initContainer.resources }}
   resources:
     {{- toYaml . | nindent 4 }}
@@ -356,7 +360,7 @@ spec:
   securityContext:
   {{- if .Values.driver.loader.initContainer.securityContext }}
     {{- toYaml .Values.driver.loader.initContainer.securityContext | nindent 4 }}
-  {{- else if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
+  {{- else if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") (eq .Values.driver.kind "auto")) }}
     privileged: true
   {{- end }}
   volumeMounts:
@@ -382,12 +386,21 @@ spec:
   {{- if .Values.driver.loader.initContainer.env }}
   {{- include "falco.renderTemplate" ( dict "value" .Values.driver.loader.initContainer.env "context" $) | nindent 4 }}
   {{- end }}
+  {{- if eq .Values.driver.kind "auto" }}
+    - name: FALCOCTL_DRIVER_CONFIG_NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+  {{- else }}
+    - name: FALCOCTL_DRIVER_CONFIG_UPDATE_FALCO
+      value: "false"
+  {{- end }}
 {{- end -}}
 
 {{- define "falco.securityContext" -}}
 {{- $securityContext := dict -}}
 {{- if .Values.driver.enabled -}}
-  {{- if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) -}}
+  {{- if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") (eq .Values.driver.kind "auto")) -}}
     {{- $securityContext := set $securityContext "privileged" true -}}
   {{- end -}}
   {{- if eq .Values.driver.kind "ebpf" -}}
