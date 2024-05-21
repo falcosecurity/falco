@@ -1,0 +1,17 @@
+{{- if and .Values.rbac.create (eq .Values.driver.kind "auto")}}
+kind: Role
+apiVersion: {{ include "rbac.apiVersion" . }}
+metadata:
+  name: {{ include "falco.fullname" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - update
+{{- end }}

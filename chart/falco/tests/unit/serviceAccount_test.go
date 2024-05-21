@@ -24,16 +24,16 @@ func TestServiceAccount(t *testing.T) {
 			"defaultValues",
 			nil,
 			func(t *testing.T, sa *corev1.ServiceAccount) {
-				require.Equal(t, sa.Name, "")
+				require.Equal(t, sa.Name, "rendered-resources-falco")
 			},
 		},
 		{
-			"kind=kmod",
+			"kind=auto",
 			map[string]string{
-				"serviceAccount.create": "true",
+				"serviceAccount.create": "false",
 			},
 			func(t *testing.T, sa *corev1.ServiceAccount) {
-				require.Equal(t, sa.Name, "rendered-resources-falco")
+				require.Equal(t, sa.Name, "")
 			},
 		},
 	}
