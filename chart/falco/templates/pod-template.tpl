@@ -323,7 +323,7 @@ spec:
         secretName: {{ include "falco.fullname" . }}-certs
         {{- end }}
     {{- end }}
-    {{- if or .Values.certs.existingSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
+    {{- if or .Values.certs.existingClientSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
     - name: client-certs-volume
       secret:
         {{- if .Values.certs.existingClientSecret }}
