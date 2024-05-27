@@ -2,6 +2,11 @@
 
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
+
+## v4.4.2
+
+* fix wrong check in pod template where `existingSecret` was used instead of `existingClientSecret`
+
 ## v4.4.1
 
 * bump k8s-metacollector dependency version to v0.1.1. See: https://github.com/falcosecurity/k8s-metacollector/releases
