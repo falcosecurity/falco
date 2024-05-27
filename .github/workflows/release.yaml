@@ -6,13 +6,13 @@ on:
 # Checks if any concurrent jobs is running for release CI and eventually cancel it.
 concurrency:
   group: ci-release
-  cancel-in-progress: true  
-  
+  cancel-in-progress: true
+
 jobs:
   release-settings:
     runs-on: ubuntu-latest
     outputs:
-      is_latest: ${{ steps.get_settings.outputs.is_latest }} 
+      is_latest: ${{ steps.get_settings.outputs.is_latest }}
       bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
     steps:
       - name: Get latest release
@@ -80,14 +80,14 @@ jobs:
       arch: x86_64
       # static: ${{ matrix.static != '' && true || false }}
       version: ${{ github.event.release.tag_name }}
-  
+
   test-packages-arm64:
     needs: [release-settings, build-packages-arm64]
     uses: ./.github/workflows/reusable_test_packages.yaml
     with:
       arch: aarch64
       version: ${{ github.event.release.tag_name }}
-    
+
   publish-packages:
     needs: [release-settings, test-packages, test-packages-arm64]
     uses: ./.github/workflows/reusable_publish_packages.yaml
@@ -95,7 +95,7 @@ jobs:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
       version: ${{ github.event.release.tag_name }}
     secrets: inherit
-  
+
   # Both build-docker and its arm64 counterpart require build-packages because they use its output
   build-docker:
     needs: [release-settings, build-packages, publish-packages]
@@ -106,7 +106,7 @@ jobs:
       version: ${{ github.event.release.tag_name }}
       tag: ${{ github.event.release.tag_name }}
     secrets: inherit
-    
+
   build-docker-arm64:
     needs: [release-settings, build-packages, publish-packages]
     uses: ./.github/workflows/reusable_build_docker.yaml
@@ -125,7 +125,7 @@ jobs:
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       tag: ${{ github.event.release.tag_name }}
       sign: true
-      
+
   release-body:
     needs: [release-settings, publish-docker]
     if: ${{ needs.release-settings.outputs.is_latest == 'true' }} # only for latest releases
@@ -135,7 +135,7 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-          
+
       - name: Extract LIBS and DRIVER versions
         run: |
           cp .github/release_template.md release-body.md
@@ -143,26 +143,26 @@ jobs:
           DRIVER_VERS=$(cat cmake/modules/driver.cmake | grep 'set(DRIVER_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*+driver')
           sed -i s/LIBSVER/$LIBS_VERS/g release-body.md
           sed -i s/DRIVERVER/$DRIVER_VERS/g release-body.md
-          
+
       - name: Append release matrixes
         run: |
           sed -i s/FALCOBUCKET/${{ needs.release-settings.outputs.bucket_suffix }}/g release-body.md
           sed -i s/FALCOVER/${{ github.event.release.tag_name }}/g release-body.md
-          
+
       - name: Generate release notes
         uses: leodido/rn2md@9c351d81278644c0e17b1ca68edbdba305276c73
         with:
           milestone: ${{ github.event.release.tag_name }}
           output: ./notes.md
-        
+
       - name: Merge release notes to pre existent body
         run: cat notes.md >> release-body.md
-        
+
       - name: Attach release creator to release body
         run: |
           echo "" >> release-body.md
           echo "#### Release Manager @${{ github.event.release.author.login }}" >> release-body.md
-        
+
       - name: Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
