@@ -335,7 +335,7 @@ typedef struct
 	// the type of the value they return (string, integer...).
 	// Required: no
 	// Arguments:
-	// - evtnum: the number of the event that is bein processed
+	// - evtnum: the number of the event that is being processed
 	// - id: the numeric identifier of the field to extract. It corresponds to the
 	//   position of the field in the array returned by get_fields().
 	// - arg: the field argument, if an argument has been specified for the field,
