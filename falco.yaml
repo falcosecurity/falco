@@ -1037,6 +1037,11 @@ syscall_event_drops:
 # beneficial for exploring the data schema and ensuring that fields with empty
 # values are included in the output.
 #
+# `plugins_metrics_enabled`: Falco can now expose your custom plugins' 
+# metrics. Please note that if the respective plugin has no metrics implemented, 
+# there will be no metrics available. In other words, there are no default or 
+# generic plugin metrics at this time. This may be subject to change.
+#
 # If metrics are enabled, the web server can be configured to activate the
 # corresponding Prometheus endpoint using `webserver.prometheus_metrics_enabled`.
 # Prometheus output can be used in combination with the other output options.
@@ -1055,6 +1060,7 @@ metrics:
   state_counters_enabled: true
   kernel_event_counters_enabled: true
   libbpf_stats_enabled: true
+  plugins_metrics_enabled: true
   convert_memory_to_mb: true
   include_empty_values: false
 

@@ -222,10 +222,17 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 			std::string namespace_name = "scap";
+			
 			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION || metric.flags & METRICS_V2_KERNEL_COUNTERS)
 			{
 				namespace_name = "falco";
 			}
+
+			if (metric.flags & METRICS_V2_PLUGINS)
+			{
+				namespace_name = "plugins";
+			}
+
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", namespace_name);
 		}
 
