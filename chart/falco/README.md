@@ -721,7 +721,7 @@ The following table lists the main configurable parameters of the falco chart v4
 | falcoctl.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy. |
 | falcoctl.image.registry | string | `"docker.io"` | The image registry to pull from. |
 | falcoctl.image.repository | string | `"falcosecurity/falcoctl"` | The image repository to pull from. |
-| falcoctl.image.tag | string | `"0.7.2"` | The image tag to pull. |
+| falcoctl.image.tag | string | `"0.8.0"` | The image tag to pull. |
 | falcosidekick | object | `{"enabled":false,"fullfqdn":false,"listenPort":""}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml |
 | falcosidekick.enabled | bool | `false` | Enable falcosidekick deployment. |
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
