@@ -440,6 +440,10 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			{
 				strlcpy(metric_name, "scap.", sizeof(metric_name));
 			}
+			if(metric.flags & METRICS_V2_PLUGINS)
+			{
+				strlcpy(metric_name, "plugins.", sizeof(metric_name));
+			}
 			strlcat(metric_name, metric.name, sizeof(metric_name));
 
 			switch (metric.type)
@@ -450,6 +454,13 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					break;
 				}
 				output_fields[metric_name] = metric.value.u32;
+				break;
+			case METRIC_VALUE_TYPE_S32:
+				if (metric.value.s32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = metric.value.s32;
 				break;
 			case METRIC_VALUE_TYPE_U64:
 				if (strncmp(metric.name, "n_evts", 7) == 0)
@@ -492,12 +503,33 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				}
 				output_fields[metric_name] = metric.value.u64;
 				break;
+			case METRIC_VALUE_TYPE_S64:
+				if (metric.value.s64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = metric.value.s64;
+				break;
 			case METRIC_VALUE_TYPE_D:
 				if (metric.value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
 					break;
 				}
 				output_fields[metric_name] = metric.value.d;
+				break;
+			case METRIC_VALUE_TYPE_F:
+				if (metric.value.f == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = metric.value.f;
+				break;
+			case METRIC_VALUE_TYPE_I:
+				if (metric.value.i == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = metric.value.i;
 				break;
 			default:
 				break;
