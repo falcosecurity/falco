@@ -72,7 +72,7 @@ falco_configuration::falco_configuration():
 	m_metrics_interval(5000),
 	m_metrics_stats_rule_enabled(false),
 	m_metrics_output_file(""),
-	m_metrics_flags((METRICS_V2_KERNEL_COUNTERS | METRICS_V2_LIBBPF_STATS | METRICS_V2_RESOURCE_UTILIZATION | METRICS_V2_STATE_COUNTERS | METRICS_V2_RULE_COUNTERS)),
+	m_metrics_flags(0),
 	m_metrics_convert_memory_to_mb(true),
 	m_metrics_include_empty_values(false)
 {
@@ -554,6 +554,10 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	if (config.get_scalar<bool>("metrics.libbpf_stats_enabled", true))
 	{
 		m_metrics_flags |= METRICS_V2_LIBBPF_STATS;
+	}
+	if (config.get_scalar<bool>("metrics.plugins_metrics_enabled", true))
+	{
+		m_metrics_flags |= METRICS_V2_PLUGINS;
 	}
 
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
