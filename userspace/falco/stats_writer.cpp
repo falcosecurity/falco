@@ -327,12 +327,18 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
 	output_fields["falco.version"] = FALCO_VERSION;
-	output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
-	output_fields["falco.duration_sec"] = (uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
-	output_fields["falco.kernel_release"] = agent_info->uname_r;
-	output_fields["evt.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
-	output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
-	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
+	if (agent_info)
+	{
+		output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
+		output_fields["falco.duration_sec"] = (uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
+		output_fields["falco.kernel_release"] = agent_info->uname_r;
+	}
+	if (machine_info)
+	{
+		output_fields["evt.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
+		output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
+		output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
+	}
 	output_fields["falco.outputs_queue_num_drops"] = m_writer->m_outputs->get_outputs_queue_num_drops();
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
