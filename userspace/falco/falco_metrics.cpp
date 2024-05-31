@@ -53,20 +53,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		BPF_ENGINE, KMOD_ENGINE, MODERN_BPF_ENGINE,
 		SOURCE_PLUGIN_ENGINE, NODRIVER_ENGINE, GVISOR_ENGINE };
 
-	std::vector<sinsp*> inspectors;
+	std::vector<std::shared_ptr<sinsp>> inspectors;
 	std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
 
-	for (const auto& source_info: state.source_infos)
+	for (const auto& source: state.enabled_sources)
 	{
-		sinsp *source_inspector = source_info.inspector.get();
+		auto source_info = state.source_infos.at(source);
+		auto source_inspector = source_info->inspector;
 		inspectors.emplace_back(source_inspector);
-		metrics_collectors.emplace_back(libs::metrics::libs_metrics_collector(source_inspector, state.config->m_metrics_flags));
+		metrics_collectors.emplace_back(libs::metrics::libs_metrics_collector(source_inspector.get(), state.config->m_metrics_flags));
 	}
-
 	libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
 	std::string prometheus_text;
 
-	for (auto* inspector: inspectors)
+	for (auto inspector: inspectors)
 	{
 		// Falco wrapper metrics
 		//
@@ -79,14 +79,21 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			}
 		}
 
+
 		const scap_agent_info* agent_info = inspector->get_agent_info();
 		const scap_machine_info* machine_info = inspector->get_machine_info();
-
-		libs::metrics::libs_metrics_collector libs_metrics_collector(inspector, 0);
-
+		libs::metrics::libs_metrics_collector libs_metrics_collector(inspector.get(), 0);
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("version", "falcosecurity", "falco", {{"version", FALCO_VERSION}});
-		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
-		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
+
+		// Not all scap engines report agent and machine infos.
+		if (agent_info)
+		{
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("kernel_release", "falcosecurity", "falco", {{"kernel_release", agent_info->uname_r}});
+		}
+		if (machine_info)
+		{
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("hostname", "falcosecurity", "evt", {{"hostname", machine_info->hostname}});
+		}
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 		for (const auto& item : state.config.get()->m_loaded_rules_filenames_sha256sum)
@@ -112,39 +119,47 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		}
 		std::vector<metrics_v2> additional_wrapper_metrics;
 
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("start_ts",
-																	METRICS_V2_MISC,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
-																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
-																	agent_info->start_ts_epoch));
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_boot_ts",
-																	METRICS_V2_MISC,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
-																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
-																	machine_info->boot_ts_epoch));
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_num_cpus",
-																	METRICS_V2_MISC,
-																	METRIC_VALUE_TYPE_U32,
-																	METRIC_VALUE_UNIT_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
-																	machine_info->num_cpus));
+		if (agent_info)
+		{
+			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("start_ts",
+												  METRICS_V2_MISC,
+												  METRIC_VALUE_TYPE_U64,
+												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
+												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+												  agent_info->start_ts_epoch));
+		}
+		if (machine_info)
+		{
+			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_boot_ts",
+												  METRICS_V2_MISC,
+												  METRIC_VALUE_TYPE_U64,
+												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
+												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+												  machine_info->boot_ts_epoch));
+			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_num_cpus",
+												  METRICS_V2_MISC,
+												  METRIC_VALUE_TYPE_U32,
+												  METRIC_VALUE_UNIT_COUNT,
+												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
+												  machine_info->num_cpus));
+		}
 		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
-																	METRICS_V2_MISC,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	state.outputs->get_outputs_queue_num_drops()));
+												METRICS_V2_MISC,
+												METRIC_VALUE_TYPE_U64,
+												METRIC_VALUE_UNIT_COUNT,
+												METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+												state.outputs->get_outputs_queue_num_drops()));
 
-		auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("duration_sec",
-																	METRICS_V2_MISC,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_TIME_S_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	(uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS)));
+		if (agent_info)
+		{
+			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("duration_sec",
+												  METRICS_V2_MISC,
+												  METRIC_VALUE_TYPE_U64,
+												  METRIC_VALUE_UNIT_TIME_S_COUNT,
+												  METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+												  (uint64_t)((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS)));
+		}
 
 		for (auto metric: additional_wrapper_metrics)
 		{
@@ -160,11 +175,11 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
 			const indexed_vector<falco_rule>& rules = state.engine->get_rules();
 			auto metric = libs_metrics_collector.new_metric("rules.matches_total",
-																	METRICS_V2_RULE_COUNTERS,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	rule_stats_manager.get_total().load());
+										METRICS_V2_RULE_COUNTERS,
+										METRIC_VALUE_TYPE_U64,
+										METRIC_VALUE_UNIT_COUNT,
+										METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+										rule_stats_manager.get_total().load());
 
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco");
@@ -175,11 +190,11 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				std::string rules_metric_name = "rules." + falco::utils::sanitize_metric_name(rule->name);
 				// Separate processing of rules counter metrics given we add extra tags
 				auto metric = libs_metrics_collector.new_metric(rules_metric_name.c_str(),
-																	METRICS_V2_RULE_COUNTERS,
-																	METRIC_VALUE_TYPE_U64,
-																	METRIC_VALUE_UNIT_COUNT,
-																	METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-																	rules_by_id[i]->load());
+											METRICS_V2_RULE_COUNTERS,
+											METRIC_VALUE_TYPE_U64,
+											METRIC_VALUE_UNIT_COUNT,
+											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+											rules_by_id[i]->load());
 				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 				const std::map<std::string, std::string>& const_labels = {
 					{"rule", rule->name},
