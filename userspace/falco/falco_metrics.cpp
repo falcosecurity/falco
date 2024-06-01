@@ -93,7 +93,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco.sha256_rules_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
+			metric_name_file_sha256 = "falco_sha256_rules_file_" + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 
@@ -101,7 +101,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			fs::path fs_path = item.first;
 			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
+			metric_name_file_sha256 = "falco_sha256_config_file_" + falco::utils::sanitize_metric_name(metric_name_file_sha256);
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
 		}
 #endif
