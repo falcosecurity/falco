@@ -413,9 +413,9 @@ static falco::app::run_result init_stats_writer(
 		return falco::app::run_result::fatal("Metrics interval was passed as numeric value without Prometheus time unit. Please specify a time unit");
 	}
 
-	if (config->m_metrics_enabled && !sw->has_output())
+	if (config->m_metrics_enabled && !(sw->has_output() || config->m_webserver_config.m_prometheus_metrics_enabled))
 	{
-		return falco::app::run_result::fatal("Metrics are enabled with no output configured. Please enable at least one output channel");
+		return falco::app::run_result::fatal("Metrics are enabled with no output configured. Please enable at least one output channel ('metrics.output_rule', 'metrics.output_file' or 'webserver.prometheus_metrics_enabled')");
 	}
 
 	falco_logger::log(falco_logger::level::INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
