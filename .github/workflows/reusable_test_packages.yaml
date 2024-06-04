@@ -59,6 +59,7 @@ jobs:
           test-falco: 'true'
           test-falcoctl: 'true'
           test-k8saudit: 'true'
+          test-dummy: 'true'
           static: ${{ inputs.static && 'true' || 'false' }}
           test-drivers: ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}
           show-all: 'true'
