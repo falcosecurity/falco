@@ -509,7 +509,10 @@ void rule_loader::compiler::compile_rule_infos(
 
 		// build rule output message
 		rule.output = r.output;
-		apply_output_substitutions(cfg, rule.output);
+		if (r.source == falco_common::syscall_source)
+		{
+			apply_output_substitutions(cfg, rule.output);
+		}
 
 		// validate the rule's output
 		if(!is_format_valid(*cfg.sources.at(r.source), rule.output, err))
