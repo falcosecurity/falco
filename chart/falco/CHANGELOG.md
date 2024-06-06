@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.4.3
+
+* Added a `labels` field in the controller to provide extra labeling for the daemonset/deployment
+
 ## v4.4.2
 
 * fix wrong check in pod template where `existingSecret` was used instead of `existingClientSecret`

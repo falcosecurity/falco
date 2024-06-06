@@ -139,6 +139,8 @@ controller:
   kind: daemonset
   # Annotations to add to the daemonset or deployment
   annotations: {}
+  # -- Extra labels to add to the daemonset or deployment
+  labels: {}
   daemonset:
     updateStrategy:
       # You can also customize maxUnavailable or minReadySeconds if you
