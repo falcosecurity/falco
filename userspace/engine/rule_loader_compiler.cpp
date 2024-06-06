@@ -509,7 +509,12 @@ void rule_loader::compiler::compile_rule_infos(
 
 		// build rule output message
 		rule.output = r.output;
-		if (r.source == falco_common::syscall_source)
+
+		// plugins sources do not have any container info and so we won't apply -pk, -pc, etc.
+		// on the other hand, when using plugins you might want to append custom output based on the plugin
+		// TODO: this is not flexible enough (esp. if you mix plugin with syscalls),
+		// it would be better to add configuration options to control the output.
+		if (!cfg.replace_output_container_info || r.source == falco_common::syscall_source)
 		{
 			apply_output_substitutions(cfg, rule.output);
 		}
