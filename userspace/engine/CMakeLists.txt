@@ -22,6 +22,7 @@ add_library(falco_engine STATIC
     filter_details_resolver.cpp
     filter_macro_resolver.cpp
     filter_warning_resolver.cpp
+    indexable_ruleset.cpp
     logger.cpp
     stats_manager.cpp
     rule_loader.cpp
