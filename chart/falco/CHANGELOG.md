@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.5.0
+
+* bump Falco version to 0.38.1
+
 ## v4.4.3
 
 * Added a `labels` field in the controller to provide extra labeling for the daemonset/deployment
