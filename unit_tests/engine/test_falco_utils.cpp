@@ -101,3 +101,28 @@ TEST(FalcoUtils, matches_wildcard)
 	ASSERT_FALSE(falco::utils::matches_wildcard("*hello*world", "come on hello this world yes"));
 	ASSERT_FALSE(falco::utils::matches_wildcard("*hello*world*", "come on hello this yes"));
 }
+
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+TEST(FalcoUtils, ipv4addr_to_string)
+{
+	ASSERT_EQ(falco::utils::network::ipv4addr_to_string(0x0101A8C0), "192.168.1.1");
+	ASSERT_EQ(falco::utils::network::ipv4addr_to_string(0x0100007F), "127.0.0.1");
+	ASSERT_EQ(falco::utils::network::ipv4addr_to_string(0xFFFFFFFF), "255.255.255.255");
+	ASSERT_EQ(falco::utils::network::ipv4addr_to_string(0x00000000), "0.0.0.0");
+}
+
+TEST(FalcoUtils, ipv6addr_to_string)
+{
+	ipv6addr addr1("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+	ASSERT_EQ(falco::utils::network::ipv6addr_to_string(addr1), "2001:db8:85a3:0:0:8a2e:370:7334");
+
+	ipv6addr addr2("fe80:0:0:0:2aa:ff:fe9a:4ca3");
+	ASSERT_EQ(falco::utils::network::ipv6addr_to_string(addr2), "fe80:0:0:0:2aa:ff:fe9a:4ca3");
+
+	ipv6addr addr3("0:0:0:0:0:0:0:0");
+	ASSERT_EQ(falco::utils::network::ipv6addr_to_string(addr3), "0:0:0:0:0:0:0:0");
+
+	ipv6addr addr4("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+	ASSERT_EQ(falco::utils::network::ipv6addr_to_string(addr4), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+}
+#endif

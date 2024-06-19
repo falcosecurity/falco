@@ -22,6 +22,10 @@ limitations under the License.
 
 #include <cstdint>
 #include <string>
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#include <arpa/inet.h>
+#include <libsinsp/tuples.h>
+#endif
 
 namespace falco::utils
 {
@@ -45,5 +49,11 @@ namespace network
 {
 static const std::string UNIX_SCHEME("unix://");
 bool is_unix_scheme(const std::string& url);
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+// todo: consider extending libs and expose API for ipv4 and ipv6 to string conversion
+std::string ipv4addr_to_string(uint32_t addr);
+std::string ipv6addr_to_string(const ipv6addr& addr);
+#endif
+
 } // namespace network
 } // namespace falco::utils
