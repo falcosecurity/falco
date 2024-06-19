@@ -108,6 +108,45 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			fs::path fs_path = item.first;
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_sha256_config_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
 		}
+
+		static bool is_first_call = true;
+		static std::string ifinfo_json_escaped;
+		if (is_first_call)
+		{
+			is_first_call = false;
+			auto ipv4list = inspector->get_ifaddr_list().get_ipv4_list();
+			auto ipv6list = inspector->get_ifaddr_list().get_ipv6_list();
+			nlohmann::json ipv4_json;
+			nlohmann::json ipv6_json;
+			if(ipv4list)
+			{
+				for (const auto& item : *ipv4list)
+				{
+					if(item.m_name == "lo")
+					{
+						continue;
+					}
+					ipv4_json[item.m_name] = falco::utils::network::ipv4addr_to_string(item.m_addr);
+				}
+			}
+
+			if(ipv6list)
+			{
+				for (const auto& item : *ipv6list)
+				{
+					if(item.m_name == "lo")
+					{
+						continue;
+					}
+					ipv6_json[item.m_name] = falco::utils::network::ipv6addr_to_string(item.m_net);
+				}
+			}
+			nlohmann::json ifinfo_json;
+			ifinfo_json["ipv4"] = ipv4_json;
+			ifinfo_json["ipv6"] = ipv6_json;
+			ifinfo_json_escaped = ifinfo_json.dump();
+		}
+		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("host_ifinfo", "falcosecurity", "falco", {{"host_ifinfo", ifinfo_json_escaped}});
 #endif
 
 		for (const std::string& source: inspector->event_sources())
