@@ -1,5 +1,36 @@
 # Change Log
 
+## v0.38.1
+
+Released on 2024-06-19
+
+### Major Changes
+
+* new(metrics): enable plugins metrics [[#3228](https://github.com/falcosecurity/falco/pull/3228)] - [@mrgian](https://github.com/mrgian)
+
+
+### Minor Changes
+
+* cleanup(falco): clarify that --print variants only affect syscalls [[#3238](https://github.com/falcosecurity/falco/pull/3238)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(engine): enable -p option for all sources, -pk, -pc etc only for syscall sources [[#3239](https://github.com/falcosecurity/falco/pull/3239)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+
+### Bug Fixes
+
+* fix(engine): enable output substitution only for syscall rules, prevent engine from exiting with validation errors when a plugin is loaded and -pc/pk is specified [[#3236](https://github.com/falcosecurity/falco/pull/3236)] - [@mrgian](https://github.com/mrgian)
+* fix(metrics): allow each metric output channel to be selected independently [[#3232](https://github.com/falcosecurity/falco/pull/3232)] - [@incertum](https://github.com/incertum)
+* fix(userspace/falco): fixed `falco_metrics::to_text` implementation when running with plugins [[#3230](https://github.com/falcosecurity/falco/pull/3230)] - [@FedeDP](https://github.com/FedeDP)
+
+
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      6 |
+| Total           |      6 |
+
 ## v0.38.0
 
 Released on 2024-05-30
