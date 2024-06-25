@@ -204,6 +204,11 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		m_last_compile_output = m_rule_compiler->new_compile_output();
 		m_rule_compiler->compile(cfg, *m_rule_collector, *m_last_compile_output);
 
+		if(!cfg.res->successful())
+		{
+			return std::move(cfg.res);
+		}
+
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
 		for (auto &src : m_sources)
