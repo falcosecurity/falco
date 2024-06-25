@@ -109,15 +109,29 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	std::unordered_set<std::string> used_plugins;
 	const auto& all_plugins = s.offline_inspector->get_plugin_manager()->plugins();
 
+	if((s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS))
+	{
+
+	}
+
 	for (const auto &src : s.loaded_sources)
 	{
 		auto src_info = s.source_infos.at(src);
 
 		// in capture mode, every event source uses the offline inspector.
 		// in live mode, we create a new inspector for each event source
-		src_info->inspector = s.is_capture_mode()
-			? s.offline_inspector
-			: std::make_shared<sinsp>();
+		if (s.is_capture_mode())
+		{
+			src_info->inspector = s.offline_inspector;
+		}
+		else
+		{
+			src_info->inspector = std::make_shared<sinsp>(false,
+								      "",
+								      "",
+								      "",
+								      s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS);
+		}
 
 		// do extra preparation for the syscall source
 		if (src == falco_common::syscall_source)
