@@ -29,6 +29,22 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 {
 	inspector->set_buffer_format(s.options.event_buffer_format);
 
+	//
+	// Container engines
+	//
+
+	// Container engines configs via falco.yaml
+	inspector->set_container_engine_mask(s.config->m_container_engines_mask);
+	for (auto &p : s.config->m_container_engines_cri_socket_paths)
+	{
+		if (!p.empty())
+		{
+			inspector->add_cri_socket_path(p);
+		}
+	}
+	inspector->set_cri_async(!s.config->m_container_engines_disable_cri_async);
+
+	// Container engines configs via CLI args
 	// If required, set the CRI paths
 	for (auto &p : s.options.cri_socket_paths)
 	{
