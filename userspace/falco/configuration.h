@@ -186,6 +186,11 @@ public:
 	bool m_metrics_include_empty_values;
 	std::vector<plugin_config> m_plugins;
 
+	// container engines
+	uint64_t m_container_engines_mask;
+	uint64_t m_container_engines_disable_cri_async;
+	std::vector<std::string> m_container_engines_cri_socket_paths;
+
 	// Falco engine
 	engine_kind_t m_engine_mode = engine_kind_t::KMOD;
 	kmod_config m_kmod = {};
