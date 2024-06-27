@@ -36,8 +36,8 @@ supplementalGroups:
 users:
 - system:serviceaccount:{{ include "falco.namespace" . }}:{{ include "falco.serviceAccountName" . }}
 volumes:
-- hostPath
-- emptyDir
-- secret
 - configMap
+- emptyDir
+- hostPath
+- secret
 {{- end }}
