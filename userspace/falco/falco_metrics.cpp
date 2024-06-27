@@ -121,7 +121,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 
 		if (agent_info)
 		{
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("start_ts",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("start_ts",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
@@ -130,20 +130,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		}
 		if (machine_info)
 		{
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_boot_ts",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("host_boot_ts",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
 												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 												  machine_info->boot_ts_epoch));
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_num_cpus",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("host_num_cpus",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U32,
 												  METRIC_VALUE_UNIT_COUNT,
 												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 												  machine_info->num_cpus));
 		}
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
+		additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("outputs_queue_num_drops",
 												METRICS_V2_MISC,
 												METRIC_VALUE_TYPE_U64,
 												METRIC_VALUE_UNIT_COUNT,
@@ -153,7 +153,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		if (agent_info)
 		{
 			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("duration_sec",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("duration_sec",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_S_COUNT,
@@ -174,7 +174,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
 			const indexed_vector<falco_rule>& rules = state.engine->get_rules();
-			auto metric = libs_metrics_collector.new_metric("rules.matches_total",
+			auto metric = libs::metrics::libsinsp_metrics::new_metric("rules.matches_total",
 										METRICS_V2_RULE_COUNTERS,
 										METRIC_VALUE_TYPE_U64,
 										METRIC_VALUE_UNIT_COUNT,
@@ -189,7 +189,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				auto rule = rules.at(i);
 				std::string rules_metric_name = "rules." + falco::utils::sanitize_metric_name(rule->name);
 				// Separate processing of rules counter metrics given we add extra tags
-				auto metric = libs_metrics_collector.new_metric(rules_metric_name.c_str(),
+				auto metric = libs::metrics::libsinsp_metrics::new_metric(rules_metric_name.c_str(),
 											METRICS_V2_RULE_COUNTERS,
 											METRIC_VALUE_TYPE_U64,
 											METRIC_VALUE_UNIT_COUNT,
@@ -222,7 +222,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 			std::string namespace_name = "scap";
-			
+
 			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION || metric.flags & METRICS_V2_KERNEL_COUNTERS)
 			{
 				namespace_name = "falco";
