@@ -257,38 +257,6 @@ bool is_unix_scheme(const std::string& url)
 {
 	return sinsp_utils::startswith(url, UNIX_SCHEME);
 }
-
-#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-std::string ipv4addr_to_string(uint32_t addr)
-{
-	char dest[16];
-	snprintf(
-		dest,
-		sizeof(dest),
-		"%d.%d.%d.%d",
-		(addr & 0xFF),
-		((addr & 0xFF00) >> 8),
-		((addr & 0xFF0000) >> 16),
-		((addr & 0xFF000000) >> 24));
-	return std::string(dest);
-}
-
-std::string ipv6addr_to_string(const ipv6addr& addr)
-{
-	std::ostringstream oss;
-	const uint16_t* words = reinterpret_cast<const uint16_t*>(addr.m_b);
-	for (int i = 0; i < 8; ++i)
-	{
-		if (i != 0)
-		{
-			oss << ':';
-		}
-		oss << std::hex << ntohs(words[i]);
-	}
-	return oss.str();
-}
-#endif
-
 } // namespace network
 } // namespace utils
 } // namespace falco
