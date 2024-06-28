@@ -1223,8 +1223,8 @@ falco_libs:
 # default container runtime socket paths, such as `/var/run/docker.sock` for Docker. 
 # However, for Kubernetes settings, you can customize the CRI socket paths:
 # 
-# - `container_engines.cri.cri`: Pass a list of container runtime sockets.
-# - `container_engines.cri.disable-cri-async`: Since API lookups may not always be quick or 
+# - `container_engines.cri.sockets`: Pass a list of container runtime sockets.
+# - `container_engines.cri.disable_async`: Since API lookups may not always be quick or 
 # perfect, resulting in empty fields for container metadata, you can use this option option 
 # to disable asynchronous fetching. Note that missing fields may still occasionally occur.
 # 
@@ -1235,15 +1235,13 @@ container_engines:
     enabled: true
   cri:
     enabled: true
-    cri: ["/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock"]
-    disable-cri-async: false
+    sockets: ["/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock"]
+    disable_async: false
   podman:
     enabled: true
   lxc:
     enabled: true
   libvirt_lxc:
-    enabled: true
-  rocket:
     enabled: true
   bpm:
     enabled: true
