@@ -358,11 +358,8 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 
-	static bool is_first_call = true;
-	static std::string ifinfo_json_escaped;
-	if (is_first_call)
+	if (stats_snapshot_time_delta_sec == 0)
 	{
-		is_first_call = false;
 		auto ipv4list = inspector->get_ifaddr_list().get_ipv4_list();
 		auto ipv6list = inspector->get_ifaddr_list().get_ipv6_list();
 		nlohmann::json ipv4_json;
@@ -375,7 +372,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 				{
 					continue;
 				}
-				ipv4_json[item.m_name] = falco::utils::network::ipv4addr_to_string(item.m_addr);
+				ipv4_json[item.m_name] = item.addr_to_string();
 			}
 		}
 
@@ -387,15 +384,15 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 				{
 					continue;
 				}
-				ipv6_json[item.m_name] = falco::utils::network::ipv6addr_to_string(item.m_net);
+				ipv6_json[item.m_name] = item.addr_to_string();
 			}
 		}
 		nlohmann::json ifinfo_json;
 		ifinfo_json["ipv4"] = ipv4_json;
 		ifinfo_json["ipv6"] = ipv6_json;
-		ifinfo_json_escaped = ifinfo_json.dump();
+		m_ifinfo_json_escaped = ifinfo_json.dump();
 	}
-	output_fields["falco.host_ifinfo"] = ifinfo_json_escaped;
+	output_fields["falco.host_ifinfo_json"] = m_ifinfo_json_escaped;
 
 #endif
 	output_fields["evt.source"] = src;
