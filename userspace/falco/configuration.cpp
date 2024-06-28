@@ -620,14 +620,15 @@ void falco_configuration::load_yaml(const std::string& config_name)
 
 	m_watch_config_files = config.get_scalar<bool>("watch_config_files", true);
 
-	m_container_engines_mask = 0;
 	if(config.get_scalar<bool>("container_engines.docker.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_DOCKER);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'docker'");
 	}
 	if(config.get_scalar<bool>("container_engines.podman.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_PODMAN);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'podman'");
 	}
 	if(config.get_scalar<bool>("container_engines.cri.enabled", true))
 	{
@@ -635,24 +636,24 @@ void falco_configuration::load_yaml(const std::string& config_name)
 			(1 << CT_CRIO) |
 			(1 << CT_CONTAINERD));
 		m_container_engines_cri_socket_paths.clear();
-		config.get_sequence<std::vector<std::string>>(m_container_engines_cri_socket_paths, "container_engines.cri.cri");
-		m_container_engines_disable_cri_async = config.get_scalar<bool>("container_engines.cri.disable-cri-async", false);
+		config.get_sequence<std::vector<std::string>>(m_container_engines_cri_socket_paths, "container_engines.cri.sockets");
+		m_container_engines_disable_cri_async = config.get_scalar<bool>("container_engines.cri.disable_async", false);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'CRI'");
 	}
 	if(config.get_scalar<bool>("container_engines.lxc.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_LXC);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'lxc'");
 	}
 	if(config.get_scalar<bool>("container_engines.libvirt_lxc.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_LIBVIRT_LXC);
-	}
-	if(config.get_scalar<bool>("container_engines.rocket.enabled", true))
-	{
-		m_container_engines_mask |= (1 << CT_RKT);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'libvirt_lxc'");
 	}
 	if(config.get_scalar<bool>("container_engines.bpm.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_BPM);
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'bpm'");
 	}
 }
 

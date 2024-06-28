@@ -40,6 +40,7 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 		if (!p.empty())
 		{
 			inspector->add_cri_socket_path(p);
+			falco_logger::log(falco_logger::level::DEBUG, "Enabled container runtime socket at '" + p + "' via config file");
 		}
 	}
 	inspector->set_cri_async(!s.config->m_container_engines_disable_cri_async);
@@ -51,11 +52,17 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 		if (!p.empty())
 		{
 			inspector->add_cri_socket_path(p);
+			falco_logger::log(falco_logger::level::DEBUG, "Enabled container runtime socket at '" + p + "' via CLI args");
 		}
 	}
 
 	// Decide whether to do sync or async for CRI metadata fetch
 	inspector->set_cri_async(!s.options.disable_cri_async);
+
+	if(s.options.disable_cri_async || s.config->m_container_engines_disable_cri_async)
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Disabling async lookups for 'CRI'");
+	}
 
 	//
 	// If required, set the snaplen
