@@ -80,6 +80,7 @@ public:
 		uint64_t m_last_n_evts = 0;
 		uint64_t m_last_n_drops = 0;
 		uint64_t m_last_num_evts = 0;
+		std::string m_ifinfo_json_escaped;
 	};
 
 	stats_writer(const stats_writer&) = delete;
