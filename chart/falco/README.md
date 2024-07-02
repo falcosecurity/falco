@@ -581,7 +581,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v4.5.3 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v4.6.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -740,6 +740,23 @@ The following table lists the main configurable parameters of the falco chart v4
 | image.repository | string | `"falcosecurity/falco-no-driver"` | The image repository to pull from |
 | image.tag | string | `""` | The image tag to pull. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | Secrets containing credentials when pulling from private/secure registries. |
+| metrics | object | `{"convertMemoryToMB":true,"enabled":false,"includeEmptyValues":false,"interval":"1h","kernelEventCountersEnabled":true,"libbpfStatsEnabled":true,"outputRule":false,"resourceUtilizationEnabled":true,"rulesCountersEnabled":true,"service":{"create":true,"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"},"stateCountersEnabled":true}` | metrics configures Falco to enable and expose the metrics. |
+| metrics.convertMemoryToMB | bool | `true` | convertMemoryToMB specifies whether the memory should be converted to mb. |
+| metrics.enabled | bool | `false` | enabled specifies whether the metrics should be enabled. |
+| metrics.includeEmptyValues | bool | `false` | includeEmptyValues specifies whether the empty values should be included in the metrics. |
+| metrics.interval | string | `"1h"` | interval is stats interval in Falco follows the time duration definitions used by Prometheus. https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations Time durations are specified as a number, followed immediately by one of the following units: ms - millisecond s - second m - minute h - hour d - day - assuming a day has always 24h w - week - assuming a week has always 7d y - year - assuming a year has always 365d Example of a valid time duration: 1h30m20s10ms A minimum interval of 100ms is enforced for metric collection. However, for production environments, we recommend selecting one of the following intervals for optimal monitoring: 15m 30m 1h 4h 6h |
+| metrics.libbpfStatsEnabled | bool | `true` | libbpfStatsEnabled exposes statistics similar to `bpftool prog show`, providing information such as the number of invocations of each BPF program attached by Falco and the time spent in each program measured in nanoseconds. To enable this feature, the kernel must be >= 5.1, and the kernel configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option, or an equivalent statistics feature, is not available for non `*bpf*` drivers. Additionally, please be aware that the current implementation of `libbpf` does not support granularity of statistics at the bpf tail call level. |
+| metrics.outputRule | bool | `false` | outputRule enables seamless metrics and performance monitoring, we recommend emitting metrics as the rule "Falco internal: metrics snapshot". This option is particularly useful when Falco logs are preserved in a data lake. Please note that to use this option, the Falco rules config `priority` must be set to `info` at a minimum. |
+| metrics.resourceUtilizationEnabled | bool | `true` | resourceUtilizationEnabled`: Emit CPU and memory usage metrics. CPU usage is reported as a percentage of one CPU and can be normalized to the total number of CPUs to determine overall usage. Memory metrics are provided in raw units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`) and can be uniformly converted to megabytes (MB) using the `convert_memory_to_mb` functionality. In environments such as Kubernetes when deployed as daemonset, it is crucial to track Falco's container memory usage. To customize the path of the memory metric file, you can create an environment variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor container memory usage, which aligns with Kubernetes' `container_memory_working_set_bytes` metric. Finally, we emit the overall host CPU and memory usages, along with the total number of processes and open file descriptors (fds) on the host, obtained from the proc file system unrelated to Falco's monitoring. These metrics help assess Falco's usage in relation to the server's workload intensity. |
+| metrics.rulesCountersEnabled | bool | `true` | rulesCountersEnabled specifies whether the counts for each rule should be emitted. |
+| metrics.service | object | `{"create":true,"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"}` | service exposes the metrics service to be accessed from within the cluster. ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| metrics.service.create | bool | `true` | create specifies whether a service should be created. |
+| metrics.service.ports | object | `{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}}` | ports denotes all the ports on which the Service will listen. |
+| metrics.service.ports.metrics | object | `{"port":8765,"protocol":"TCP","targetPort":8765}` | metrics denotes a listening service named "metrics". |
+| metrics.service.ports.metrics.port | int | `8765` | port is the port on which the Service will listen. |
+| metrics.service.ports.metrics.protocol | string | `"TCP"` | protocol specifies the network protocol that the Service should use for the associated port. |
+| metrics.service.ports.metrics.targetPort | int | `8765` | targetPort is the port on which the Pod is listening. |
+| metrics.service.type | string | `"ClusterIP"` | type denotes the service type. Setting it to "ClusterIP" we ensure that are accessible from within the cluster. |
 | mounts.enforceProcMount | bool | `false` | By default, `/proc` from the host is only mounted into the Falco pod when `driver.enabled` is set to `true`. This flag allows it to override this behaviour for edge cases where `/proc` is needed but syscall data source is not enabled at the same time (e.g. for specific plugins). |
 | mounts.volumeMounts | list | `[]` | A list of volumes you want to add to the Falco pods. |
 | mounts.volumes | list | `[]` | A list of volumes you want to add to the Falco pods. |
@@ -757,6 +774,18 @@ The following table lists the main configurable parameters of the falco chart v4
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created. |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| serviceMonitor | object | `{"create":false,"endpointPort":"metrics","interval":"15s","labels":{},"path":"/metrics","relabelings":[],"scheme":"http","scrapeTimeout":"10s","selector":{},"targetLabels":[],"tlsConfig":{}}` | serviceMonitor holds the configuration for the ServiceMonitor CRD. A ServiceMonitor is a custom resource definition (CRD) used to configure how Prometheus should discover and scrape metrics from the Falco service. |
+| serviceMonitor.create | bool | `false` | create specifies whether a ServiceMonitor CRD should be created for a prometheus operator. https://github.com/coreos/prometheus-operator Enable it only if the ServiceMonitor CRD is installed in your cluster. |
+| serviceMonitor.endpointPort | string | `"metrics"` | endpointPort is the port in the Falco service that exposes the metrics service. Change the value if you deploy a custom service for Falco's metrics. |
+| serviceMonitor.interval | string | `"15s"` | interval specifies the time interval at which Prometheus should scrape metrics from the service. |
+| serviceMonitor.labels | object | `{}` | labels set of labels to be applied to the ServiceMonitor resource. If your Prometheus deployment is configured to use serviceMonitorSelector, then add the right label here in order for the ServiceMonitor to be selected for target discovery. |
+| serviceMonitor.path | string | `"/metrics"` | path at which the metrics are exposed by Falco. |
+| serviceMonitor.relabelings | list | `[]` | relabelings configures the relabeling rules to apply the target’s metadata labels. |
+| serviceMonitor.scheme | string | `"http"` | scheme specifies network protocol used by the metrics endpoint. In this case HTTP. |
+| serviceMonitor.scrapeTimeout | string | `"10s"` | scrapeTimeout determines the maximum time Prometheus should wait for a target to respond to a scrape request. If the target does not respond within the specified timeout, Prometheus considers the scrape as failed for that target. |
+| serviceMonitor.selector | object | `{}` | selector set of labels that should match the labels on the Service targeted by the current serviceMonitor. |
+| serviceMonitor.targetLabels | list | `[]` | targetLabels defines the labels which are transferred from the associated Kubernetes service object onto the ingested metrics. |
+| serviceMonitor.tlsConfig | object | `{}` | tlsConfig specifies TLS (Transport Layer Security) configuration for secure communication when scraping metrics from a service. It allows you to define the details of the TLS connection, such as CA certificate, client certificate, and client key. Currently, the k8s-metacollector does not support TLS configuration for the metrics endpoint. |
 | services | string | `nil` | Network services configuration (scenario requirement) Add here your services to be deployed together with Falco. |
 | tolerations | list | `[{"effect":"NoSchedule","key":"node-role.kubernetes.io/master"},{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane"}]` | Tolerations to allow Falco to run on Kubernetes masters. |
 | tty | bool | `false` | Attach the Falco process to a tty inside the container. Needed to flush Falco logs as soon as they are emitted. Set it to "true" when you need the Falco logs to be immediately displayed. |

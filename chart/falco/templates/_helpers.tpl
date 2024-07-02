@@ -412,3 +412,23 @@ false
 true
 {{- end -}}
 {{- end -}}
+
+{{/*
+Based on the use input it populates the metrics configuration in the falco config map.
+*/}}
+{{- define "falco.metricsConfiguration" -}}
+{{- if .Values.metrics.enabled -}}
+{{- $_ := set .Values.falco.webserver "prometheus_metrics_enabled" true -}}
+{{- $_ = set .Values.falco.webserver "enabled" true -}}
+{{- $_ = set .Values.falco.metrics "enabled" .Values.metrics.enabled -}}
+{{- $_ = set .Values.falco.metrics "interval" .Values.metrics.interval -}}
+{{- $_ = set .Values.falco.metrics "output_rule" .Values.metrics.outputRule -}}
+{{- $_ = set .Values.falco.metrics "rules_counters_enabled" .Values.metrics.rulesCountersEnabled -}}
+{{- $_ = set .Values.falco.metrics "resource_utilization_enabled" .Values.metrics.resourceUtilizationEnabled -}}
+{{- $_ = set .Values.falco.metrics "state_counters_enabled" .Values.metrics.stateCountersEnabled -}}
+{{- $_ = set .Values.falco.metrics "kernel_event_counters_enabled" .Values.metrics.kernelEventCountersEnabled -}}
+{{- $_ = set .Values.falco.metrics "libbpf_stats_enabled" .Values.metrics.libbpfStatsEnabled -}}
+{{- $_ = set .Values.falco.metrics "convert_memory_to_mb" .Values.metrics.convertMemoryToMB -}}
+{{- $_ = set .Values.falco.metrics "include_empty_values" .Values.metrics.includeEmptyValues -}}
+{{- end -}}
+{{- end -}}

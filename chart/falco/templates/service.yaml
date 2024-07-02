@@ -1,0 +1,19 @@
+{{- if and .Values.metrics.enabled .Values.metrics.service.create }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "falco.fullname" . }}-metrics
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+    type: "falco-metrics"
+spec:
+  type: {{ .Values.metrics.service.type }}
+  ports:
+    - port: {{ .Values.metrics.service.ports.metrics.port }}
+      targetPort: {{ .Values.metrics.service.ports.metrics.targetPort }}
+      protocol: {{ .Values.metrics.service.ports.metrics.protocol }}
+      name: "metrics"
+  selector:
+    {{- include "falco.selectorLabels" . | nindent 4 }}
+{{- end }}
