@@ -5,6 +5,10 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## v4.5.2
 
+* bump falcosidekick dependency version to v0.8.0, for falcosidekick 2.29.0
+
+## v4.5.2
+
 * reording scc configuration, making it more robust to plain yaml comparison
 
 ## v4.5.1
