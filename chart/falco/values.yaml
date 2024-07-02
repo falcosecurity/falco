@@ -166,6 +166,99 @@ services:
   #       nodePort: 30007
   #       protocol: TCP
 
+# -- metrics configures Falco to enable and expose the metrics.
+metrics:
+  # -- enabled specifies whether the metrics should be enabled.
+  enabled: false
+  # -- interval is stats interval in Falco follows the time duration definitions
+  # used by Prometheus.
+  # https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
+  # Time durations are specified as a number, followed immediately by one of the
+  # following units:
+  # ms - millisecond
+  # s - second
+  # m - minute
+  # h - hour
+  # d - day - assuming a day has always 24h
+  # w - week - assuming a week has always 7d
+  # y - year - assuming a year has always 365d
+  # Example of a valid time duration: 1h30m20s10ms
+  # A minimum interval of 100ms is enforced for metric collection. However, for
+  # production environments, we recommend selecting one of the following intervals
+  # for optimal monitoring:
+  # 15m
+  # 30m
+  # 1h
+  # 4h
+  # 6h
+  interval: 1h
+  # -- outputRule enables seamless metrics and performance monitoring, we
+  # recommend emitting metrics as the rule "Falco internal: metrics snapshot".
+  # This option is particularly useful when Falco logs are preserved in a data
+  # lake. Please note that to use this option, the Falco rules config `priority`
+  # must be set to `info` at a minimum.
+  outputRule: false
+  # -- rulesCountersEnabled specifies whether the counts for each rule should be emitted.
+  rulesCountersEnabled: true
+  # -- resourceUtilizationEnabled`: Emit CPU and memory usage metrics. CPU usage
+  # is reported as a percentage of one CPU and can be normalized to the total
+  # number of CPUs to determine overall usage. Memory metrics are provided in raw
+  # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
+  # and can be uniformly converted to megabytes (MB) using the
+  # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
+  # deployed as daemonset, it is crucial to track Falco's container memory usage.
+  # To customize the path of the memory metric file, you can create an environment
+  # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
+  # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
+  # monitor container memory usage, which aligns with Kubernetes'
+  # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
+  # CPU and memory usages, along with the total number of processes and open file
+  # descriptors (fds) on the host, obtained from the proc file system unrelated to
+  # Falco's monitoring. These metrics help assess Falco's usage in relation to the
+  # server's workload intensity.
+  resourceUtilizationEnabled: true
+  # stateCountersEnabled emits counters related to Falco's state engine, including
+  # added, removed threads or file descriptors (fds), and failed lookup, store, or
+  # retrieve actions in relation to Falco's underlying process cache table (threadtable).
+  # We also log the number of currently cached containers if applicable.
+  stateCountersEnabled: true
+  # kernelEventCountersEnabled emits kernel side event and drop counters, as
+  # an alternative to `syscall_event_drops`, but with some differences. These
+  # counters reflect monotonic values since Falco's start and are exported at a
+  # constant stats interval.
+  kernelEventCountersEnabled: true
+  # -- libbpfStatsEnabled exposes statistics similar to `bpftool prog show`,
+  # providing information such as the number of invocations of each BPF program
+  # attached by Falco and the time spent in each program measured in nanoseconds.
+  # To enable this feature, the kernel must be >= 5.1, and the kernel
+  # configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
+  # or an equivalent statistics feature, is not available for non `*bpf*` drivers.
+  # Additionally, please be aware that the current implementation of `libbpf` does
+  # not support granularity of statistics at the bpf tail call level.
+  libbpfStatsEnabled: true
+  # -- convertMemoryToMB specifies whether the memory should be converted to mb.
+  convertMemoryToMB: true
+  # -- includeEmptyValues specifies whether the empty values should be included in the metrics.
+  includeEmptyValues: false
+  # -- service exposes the metrics service to be accessed from within the cluster.
+  # ref: https://kubernetes.io/docs/concepts/services-networking/service/
+  service:
+    # -- create specifies whether a service should be created.
+    create: true
+    # -- type denotes the service type. Setting it to "ClusterIP" we ensure that are accessible
+    # from within the cluster.
+    type: ClusterIP
+    # -- ports denotes all the ports on which the Service will listen.
+    ports:
+      # -- metrics denotes a listening service named "metrics".
+      metrics:
+        # -- port is the port on which the Service will listen.
+        port: 8765
+        # -- targetPort is the port on which the Pod is listening.
+        targetPort: 8765
+        # -- protocol specifies the network protocol that the Service should use for the associated port.
+        protocol: "TCP"
+
 # File access configuration (scenario requirement)
 mounts:
   # -- A list of volumes you want to add to the Falco pods.
@@ -449,6 +542,48 @@ falcoctl:
         rulesfilesDir: /rulesfiles
         # -- See the fields of the artifact.install section.
         pluginsDir: /plugins
+
+# -- serviceMonitor holds the configuration for the ServiceMonitor CRD.
+# A ServiceMonitor is a custom resource definition (CRD) used to configure how Prometheus should
+# discover and scrape metrics from the Falco service.
+serviceMonitor:
+  # -- create specifies whether a ServiceMonitor CRD should be created for a prometheus operator.
+  # https://github.com/coreos/prometheus-operator
+  # Enable it only if the ServiceMonitor CRD is installed in your cluster.
+  create: false
+  # -- path at which the metrics are exposed by Falco.
+  path: /metrics
+  # -- labels set of labels to be applied to the ServiceMonitor resource.
+  # If your Prometheus deployment is configured to use serviceMonitorSelector, then add the right
+  # label here in order for the ServiceMonitor to be selected for target discovery.
+  labels: {}
+  # -- selector set of labels that should match the labels on the Service targeted by the current serviceMonitor.
+  selector: {}
+  # -- interval specifies the time interval at which Prometheus should scrape metrics from the service.
+  interval: 15s
+  # -- scheme specifies network protocol used by the metrics endpoint. In this case HTTP.
+  scheme: http
+  # -- tlsConfig specifies TLS (Transport Layer Security) configuration for secure communication when
+  # scraping metrics from a service. It allows you to define the details of the TLS connection, such as
+  # CA certificate, client certificate, and client key. Currently, the k8s-metacollector does not support
+  # TLS configuration for the metrics endpoint.
+  tlsConfig: {}
+    # insecureSkipVerify: false
+    # caFile: /path/to/ca.crt
+    # certFile: /path/to/client.crt
+  # keyFile: /path/to/client.key
+  # -- scrapeTimeout determines the maximum time Prometheus should wait for a target to respond to a scrape request.
+  # If the target does not respond within the specified timeout, Prometheus considers the scrape as failed for
+  # that target.
+  scrapeTimeout: 10s
+  # -- relabelings configures the relabeling rules to apply the target’s metadata labels.
+  relabelings: []
+  # -- targetLabels defines the labels which are transferred from the associated Kubernetes service object onto the ingested metrics.
+  targetLabels: []
+  # -- endpointPort is the port in the Falco service that exposes the metrics service. Change the value if you deploy a custom service
+  # for Falco's metrics.
+  endpointPort: "metrics"
+
 
 ######################
 # falco.yaml config  #

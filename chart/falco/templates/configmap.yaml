@@ -10,4 +10,5 @@ data:
     {{- include "falco.falcosidekickConfig" . }}
     {{- include "k8smeta.configuration" . -}}
     {{- include "falco.engineConfiguration" . -}}
+    {{- include "falco.metricsConfiguration" . -}}
     {{- toYaml .Values.falco | nindent 4 }}
