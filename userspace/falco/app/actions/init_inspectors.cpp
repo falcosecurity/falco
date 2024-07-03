@@ -33,6 +33,37 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 	// Container engines
 	//
 
+	// Debug log messages
+	if(s.config->m_container_engines_mask & (1 << CT_DOCKER))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'docker'");
+	}
+
+	if(s.config->m_container_engines_mask & (1 << CT_PODMAN))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'podman'");
+	}
+
+	if(s.config->m_container_engines_mask & ((1 << CT_CRI) | (1 << CT_CRIO) | (1 << CT_CONTAINERD)))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'CRI'");
+	}
+
+	if(s.config->m_container_engines_mask & (1 << CT_LXC))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'lxc'");
+	}
+
+	if(s.config->m_container_engines_mask & (1 << CT_LIBVIRT_LXC))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'libvirt_lxc'");
+	}
+
+	if(s.config->m_container_engines_mask & (1 << CT_BPM))
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'bpm'");
+	}
+
 	// Container engines configs via falco.yaml
 	inspector->set_container_engine_mask(s.config->m_container_engines_mask);
 	for (auto &p : s.config->m_container_engines_cri_socket_paths)
