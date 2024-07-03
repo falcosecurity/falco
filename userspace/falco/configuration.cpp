@@ -623,12 +623,10 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	if(config.get_scalar<bool>("container_engines.docker.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_DOCKER);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'docker'");
 	}
 	if(config.get_scalar<bool>("container_engines.podman.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_PODMAN);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'podman'");
 	}
 	if(config.get_scalar<bool>("container_engines.cri.enabled", true))
 	{
@@ -638,22 +636,18 @@ void falco_configuration::load_yaml(const std::string& config_name)
 		m_container_engines_cri_socket_paths.clear();
 		config.get_sequence<std::vector<std::string>>(m_container_engines_cri_socket_paths, "container_engines.cri.sockets");
 		m_container_engines_disable_cri_async = config.get_scalar<bool>("container_engines.cri.disable_async", false);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'CRI'");
 	}
 	if(config.get_scalar<bool>("container_engines.lxc.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_LXC);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'lxc'");
 	}
 	if(config.get_scalar<bool>("container_engines.libvirt_lxc.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_LIBVIRT_LXC);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'libvirt_lxc'");
 	}
 	if(config.get_scalar<bool>("container_engines.bpm.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_BPM);
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'bpm'");
 	}
 }
 
