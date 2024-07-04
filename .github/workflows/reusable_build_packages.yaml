@@ -57,7 +57,18 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
+          # fix broken mirrors
+          sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+          sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
+          sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
+          
           yum -y install centos-release-scl
+          
+          # fix broken mirrors (again)
+          sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+          sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
+          sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
+          
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
           yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd devtoolset-9-libasan-devel devtoolset-9-libubsan-devel
