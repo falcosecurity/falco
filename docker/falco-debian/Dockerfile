@@ -14,7 +14,7 @@ ENV VERSION_BUCKET=${VERSION_BUCKET}
 ENV HOST_ROOT /host
 ENV HOME /root
 
-RUN apt-get -y update && apt-get -y install ca-certificates curl jq libelf1 ca-certificates \
+RUN apt-get -y update && apt-get -y install ca-certificates curl jq libelf1 ca-certificates gnupg2 \
     && apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
@@ -29,6 +29,6 @@ RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 # Falcoctl is not included here.
 RUN rm -rf /usr/bin/falcoctl /etc/falcoctl/
 
-RUN sed -e -i 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml
+RUN sed -i -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' /etc/falco/falco.yaml
 
 CMD ["/usr/bin/falco"]
