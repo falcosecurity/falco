@@ -55,20 +55,29 @@ jobs:
     container: centos:7
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
-      - name: Install build dependencies
+      - name: Fix mirrors to use vault.centos.org
         run: |
-          # fix broken mirrors
           sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
           sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
           sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
-          
+
+      - name: Install scl repos
+        run: |
           yum -y install centos-release-scl
-          
-          # fix broken mirrors (again)
+
+      - name: Fix new mirrors to use vault.centos.org
+        run: |
           sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
           sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
           sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
-          
+
+      - name: Fix arm64 scl repos to use correct mirror
+        if: inputs.arch == 'aarch64'
+        run: |
+          sed -i 's/vault.centos.org\/centos/vault.centos.org\/altarch/g' /etc/yum.repos.d/CentOS-SCLo-scl*.repo
+
+      - name: Install build deps
+        run: |
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
           yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd devtoolset-9-libasan-devel devtoolset-9-libubsan-devel
