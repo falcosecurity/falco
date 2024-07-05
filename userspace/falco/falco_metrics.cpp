@@ -96,20 +96,17 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		}
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+		// Distinguish between config and rules files using labels, following Prometheus best practices: https://prometheus.io/docs/practices/naming/#labels
 		for (const auto& item : state.config.get()->m_loaded_rules_filenames_sha256sum)
 		{
 			fs::path fs_path = item.first;
-			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco_sha256_rules_file_" + falco::utils::sanitize_metric_name(metric_name_file_sha256);
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_sha256_rules_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
 		}
 
 		for (const auto& item : state.config.get()->m_loaded_configs_filenames_sha256sum)
 		{
 			fs::path fs_path = item.first;
-			std::string metric_name_file_sha256 = fs_path.filename().stem();
-			metric_name_file_sha256 = "falco_sha256_config_file_" + falco::utils::sanitize_metric_name(metric_name_file_sha256);
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_name_file_sha256, "falcosecurity", "falco", {{metric_name_file_sha256, item.second}});
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_sha256_config_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
 		}
 #endif
 
@@ -174,35 +171,29 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		{
 			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
 			const indexed_vector<falco_rule>& rules = state.engine->get_rules();
-			auto metric = libs_metrics_collector.new_metric("rules.matches_total",
-										METRICS_V2_RULE_COUNTERS,
-										METRIC_VALUE_TYPE_U64,
-										METRIC_VALUE_UNIT_COUNT,
-										METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-										rule_stats_manager.get_total().load());
-
-			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco");
 			const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& rules_by_id = rule_stats_manager.get_by_rule_id();
+			// Distinguish between rules counters using labels, following Prometheus best practices: https://prometheus.io/docs/practices/naming/#labels
 			for (size_t i = 0; i < rules_by_id.size(); i++)
 			{
 				auto rule = rules.at(i);
-				std::string rules_metric_name = "rules." + falco::utils::sanitize_metric_name(rule->name);
-				// Separate processing of rules counter metrics given we add extra tags
-				auto metric = libs_metrics_collector.new_metric(rules_metric_name.c_str(),
+				auto count = rules_by_id[i]->load();
+				if (count > 0)
+				{
+					auto metric = libs_metrics_collector.new_metric("rules_counters",
 											METRICS_V2_RULE_COUNTERS,
 											METRIC_VALUE_TYPE_U64,
 											METRIC_VALUE_UNIT_COUNT,
 											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 											rules_by_id[i]->load());
-				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-				const std::map<std::string, std::string>& const_labels = {
-					{"rule", rule->name},
-					{"priority", std::to_string(rule->priority)},
-					{"source", rule->source},
-					{"tags", concat_set_in_order(rule->tags)}
-				};
-				prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco", const_labels);
+					prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+					const std::map<std::string, std::string>& const_labels = {
+						{"rule_name", rule->name},
+						{"priority", std::to_string(rule->priority)},
+						{"source", rule->source},
+						{"tags", concat_set_in_order(rule->tags)}
+					};
+					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco", const_labels);
+				}
 			}
 		}
 	}
