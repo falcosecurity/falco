@@ -49,6 +49,8 @@ jobs:
           retention-days: 1
 
   build-packages:
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     needs: [build-modern-bpf-skeleton]
