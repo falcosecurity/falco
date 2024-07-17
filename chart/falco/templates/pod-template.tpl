@@ -190,7 +190,7 @@ spec:
           name: certs-volume
           readOnly: true
         {{- end }}
-        {{- if or .Values.certs.existingSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
+        {{- if or .Values.certs.existingClientSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
         - mountPath: /etc/falco/certs/client
           name: client-certs-volume
           readOnly: true

@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.6.3
+
+* fix(falco): mount client-certs-volume only if certs.existingClientSecret is defined
+
 ## v4.6.2
 
 * bump falcosidekick dependency to v0.8.* to match with future versions
