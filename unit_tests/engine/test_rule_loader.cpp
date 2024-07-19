@@ -1034,7 +1034,7 @@ TEST_F(test_falco_engine, exceptions_values_rhs_field_ambiguous)
 
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   EXPECT_EQ(get_compiled_rule_condition("test_rule"), "(evt.type = open and not proc.name = proc.pname)");
-  EXPECT_TRUE(check_warning_message("string 'proc.pname' may be a valid field wrongly interpreted as a string value"));
+  EXPECT_TRUE(check_warning_message("'proc.pname' may be a valid field misused as a const string value"));
 }
 
 TEST_F(test_falco_engine, exceptions_values_rhs_field_ambiguous_quoted)
@@ -1050,7 +1050,7 @@ TEST_F(test_falco_engine, exceptions_values_rhs_field_ambiguous_quoted)
 
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   EXPECT_EQ(get_compiled_rule_condition("test_rule"), "(evt.type = open and not proc.name = proc.pname)");
-  EXPECT_TRUE(check_warning_message("string 'proc.pname' may be a valid field wrongly interpreted as a string value"));
+  EXPECT_TRUE(check_warning_message("'proc.pname' may be a valid field misused as a const string value"));
 }
 
 TEST_F(test_falco_engine, exceptions_values_rhs_field_ambiguous_space_quoted)
@@ -1066,7 +1066,7 @@ TEST_F(test_falco_engine, exceptions_values_rhs_field_ambiguous_space_quoted)
 
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   EXPECT_EQ(get_compiled_rule_condition("test_rule"), "(evt.type = open and not proc.name = \"proc.pname \")");
-  EXPECT_TRUE(check_warning_message("string 'proc.pname ' may be a valid field wrongly interpreted as a string value"));
+  EXPECT_TRUE(check_warning_message("'proc.pname ' may be a valid field misused as a const string value"));
 }
 
 TEST_F(test_falco_engine, exceptions_values_rhs_transformer)
@@ -1112,7 +1112,7 @@ TEST_F(test_falco_engine, exceptions_values_transformer_space)
 
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   EXPECT_EQ(get_compiled_rule_condition("test_rule"), "(evt.type = open and not proc.name = \"toupper( proc.pname)\")");
-  EXPECT_TRUE(check_warning_message("string 'toupper( proc.pname)' may be a valid field transformer wrongly interpreted as a string value"));
+  EXPECT_TRUE(check_warning_message("'toupper( proc.pname)' may be a valid field transformer misused as a const string value"));
 }
 
 TEST_F(test_falco_engine, exceptions_values_transformer_space_quoted)
@@ -1128,7 +1128,7 @@ TEST_F(test_falco_engine, exceptions_values_transformer_space_quoted)
 
   ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
   EXPECT_EQ(get_compiled_rule_condition("test_rule"), "(evt.type = open and not proc.name = \"toupper( proc.pname)\")");
-  EXPECT_TRUE(check_warning_message("string 'toupper( proc.pname)' may be a valid field transformer wrongly interpreted as a string value"));
+  EXPECT_TRUE(check_warning_message("'toupper( proc.pname)' may be a valid field transformer misused as a const string value"));
 }
 
 TEST_F(test_falco_engine, exceptions_fields_transformer)
