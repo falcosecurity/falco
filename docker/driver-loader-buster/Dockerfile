@@ -123,6 +123,9 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 	&& curl -L -o binutils-common_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-common_2.30-22_${TARGETARCH}.deb \
 	&& dpkg -i *binutils*.deb \
 	&& rm -f *binutils*.deb
+	
+# Install latest falcoctl
+RUN curl -L -o falcoct.tar.gz $(curl -s "https://api.github.com/repos/falcosecurity/falcoctl/releases/latest" | jq -r '.assets[] | select(.name|test(".linux_$TARGETARCH.tar.gz")) | .browser_download_url') && tar -xvf falcoctl.tar.gz && mv falcoctl /usr/bin
 
 COPY ./docker-entrypoint.sh /
 
