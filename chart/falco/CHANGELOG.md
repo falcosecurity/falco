@@ -3,6 +3,13 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.7.0
+
+* bump k8smeta plugin to version 0.2.0. The new version, resolves a bug that prevented the plugin
+  from populating the k8smeta fields. For more info see:
+  * https://github.com/falcosecurity/plugins/issues/514
+  * https://github.com/falcosecurity/plugins/pull/517
+
 ## v4.6.3
 
 * fix(falco): mount client-certs-volume only if certs.existingClientSecret is defined
