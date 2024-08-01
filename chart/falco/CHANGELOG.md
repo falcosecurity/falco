@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.7.2
+
+* use rules_files key in the preset values files
+
 ## v4.7.1
 
 * fix(falco/config): use rules_files instead of deprecated key rules_file
