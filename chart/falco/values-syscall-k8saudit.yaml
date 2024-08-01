@@ -44,7 +44,7 @@ services:
         protocol: TCP
 
 falco:
-  rules_file:
+  rules_files:
     - /etc/falco/falco_rules.yaml
     - /etc/falco/k8s_audit_rules.yaml
     - /etc/falco/rules.d
