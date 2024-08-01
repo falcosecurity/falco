@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.7.1
+
+* fix(falco/config): use rules_files instead of deprecated key rules_file
+
 ## v4.7.0
 
 * bump k8smeta plugin to version 0.2.0. The new version, resolves a bug that prevented the plugin
