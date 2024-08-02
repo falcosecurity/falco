@@ -43,9 +43,6 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 
 	formatter = m_falco_engine->create_formatter(source, format);
 
-	// Format the original output string, regardless of output format
-	formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_NORMAL);
-
 	if(formatter->get_output_format() == sinsp_evt_formatter::OF_JSON)
 	{
 		std::string json_line;
@@ -89,6 +86,7 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 		if(m_json_include_output_property)
 		{
 			// This is the filled-in output line.
+			formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_JSON);
 			event["output"] = line;
 		}
 
@@ -126,6 +124,10 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 		full_line.append(json_line);
 		full_line.append("}");
 		line = full_line;
+	}
+    else
+	{
+		formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_NORMAL);
 	}
 
 	return line;
