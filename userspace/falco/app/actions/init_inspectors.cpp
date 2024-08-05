@@ -115,10 +115,19 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 
 		// in capture mode, every event source uses the offline inspector.
 		// in live mode, we create a new inspector for each event source
-		src_info->inspector = s.is_capture_mode()
-			? s.offline_inspector
-			: std::make_shared<sinsp>();
-
+		if (s.is_capture_mode())
+		{
+			src_info->inspector = s.offline_inspector;
+		}
+		else
+		{
+			src_info->inspector = std::make_shared<sinsp>(false,
+								      "",
+								      "",
+								      "",
+								      s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS);
+		}
+		
 		// do extra preparation for the syscall source
 		if (src == falco_common::syscall_source)
 		{
