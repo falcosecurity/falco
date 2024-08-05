@@ -48,11 +48,6 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 {
 	try
 	{
-		if((s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS))
-		{
-			inspector->set_sinsp_stats_v2_enabled();
-		}
-
 		if(s.config->m_falco_libs_thread_table_size > 0)
 		{
 			// Default value is set in libs as part of the sinsp_thread_manager setup
