@@ -74,6 +74,8 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [Thought Machine](https://www.thoughtmachine.net) Thought Machine builds Vault Core and Vault Payments: cloud-native core and payments technology enabling banks and fintechs to remain competitive and flourish into the future. Vault Core and Vault Payments are the foundation layer of a bank's technology stack. They can run any bank, any product, and any payment set. Thought Machine uses Falco to perform cloud agnostic real time detections of suspicious container behaviour.
 
+* [Tulip Retail](https://tulip.com) Tulip Retail uses Falco to monitor container activity in our environments. It's numerous integration points, easy deployment and easily customizable rules were the main reasons we chose Falco.
+
 * [Vinted](https://vinted.com/) Vinted uses Falco to continuously monitor container activities, identifying security threats, and ensuring compliance. The container-native approach, rule-based real-time threat detection, community support, extensibility, and compliance capabilities are the main factors why we chose it to enhance Vinted Kubernetes security. Falco Sidekick is used to send critical and warning severity alerts to our incident management solution (RTIR).
 
 * [Xenit AB](https://xenit.se/contact/) Xenit is a growth company with services within cloud and digital transformation. We provide an open-source Kubernetes framework that we leverage to help our customers get their applications to production as quickly and as securely as possible. We use Falco's detection capabilities to identify anomalous behaviour within our clusters in both Azure and AWS.
