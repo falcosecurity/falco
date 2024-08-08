@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.38.2
+
+Released on 2024-08-19
+
+### Bug Fixes
+
+* fix(engine): fix metrics names to better adhere to best practices [[#3272](https://github.com/falcosecurity/falco/pull/3272)] - [@incertum](https://github.com/incertum)
+* fix(ci): use vault.centos.org for centos:7 CI build. [[#3274](https://github.com/falcosecurity/falco/pull/3274)] - [@FedeDP](https://github.com/FedeDP)
+
 ## v0.38.1
 
 Released on 2024-06-19
