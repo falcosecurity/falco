@@ -1,0 +1,34 @@
+version: "3"
+services:
+  falco:
+    container_name: falco
+    cap_drop:
+      - all
+    cap_add:
+      - sys_admin
+      - sys_resource
+      - sys_ptrace
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - /proc:/host/proc:ro
+      - /etc:/host/etc:ro
+    command: '/usr/bin/falco -o http_output.enabled=true -o http_output.url="http://falco-sidekick:2801/"'
+    image: falcosecurity/falco-no-driver:latest
+
+  sidekick:
+    container_name: falco-sidekick
+    image: falcosecurity/falcosidekick
+    environment:
+      WEBUI_URL: http://falco-webui:2802
+
+  webui:
+    container_name: falco-webui
+    image: falcosecurity/falcosidekick-ui:2.2.0
+    ports:
+      - 2802:2802
+    depends_on:
+      - redis
+    command: ['-r', 'redis:6379', '-d']
+
+  redis:
+    image: redis/redis-stack:7.2.0-v11
