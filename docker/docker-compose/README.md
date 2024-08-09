@@ -1,4 +1,4 @@
-# A Warning
+# Warning
 This environment is provided for demonstration purposes only and does not represent a production ready deployment of falco
 
 # Components
@@ -6,6 +6,7 @@ The components that this docker-compose file spins up are falco, falcosidekick, 
 
 # Running
 To start this environment run `docker-compose up`
+Note: You may need to use sudo for falco to start correctly.
 
 # Cleaning up
 To clean up run `docker-compose rm`
