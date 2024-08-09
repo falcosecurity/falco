@@ -1,0 +1,11 @@
+# [Stable] `http_output`
+#
+# Send logs to an HTTP endpoint or webhook.
+#
+# When using falcosidekick, it is necessary to set `json_output` to true.
+json_output: true
+json_include_output_property: true
+http_output:
+  enabled: true
+  url: "http://falco-sidekick:2801/"
+  
