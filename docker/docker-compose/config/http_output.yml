@@ -8,3 +8,4 @@ json_include_output_property: true
 http_output:
   enabled: true
   url: "http://falco-sidekick:2801/"
+  
