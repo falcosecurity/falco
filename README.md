@@ -44,7 +44,7 @@ Considerations and guidance for Falco adopters:
 5. Integrate with output destinations: Integrate Falco with SIEM, data lake systems, or other preferred output destinations to establish a robust foundation for comprehensive data analysis and enable effective incident response workflows.
 
 ### Demo Environment
-A demo environemnt is provided via a docker-compose file that can be started on a docker host which includes falco, falcosidekick, falcosidekick-ui and its required redis database. For more information see the [docker-compose section](docker/docker-compose/)
+A demo environment is provided via a docker-compose file that can be started on a docker host which includes falco, falcosidekick, falcosidekick-ui and its required redis database. For more information see the [docker-compose section](docker/docker-compose/)
 
 ## How to Contribute
 
