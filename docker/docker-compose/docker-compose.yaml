@@ -12,7 +12,7 @@ services:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - /proc:/host/proc:ro
       - /etc:/host/etc:ro
-    command: '/usr/bin/falco -o http_output.enabled=true -o http_output.url="http://falco-sidekick:2801/"'
+      - ./config/http_output.yml:/etc/falco/config.d/http_output.yml
     image: falcosecurity/falco-no-driver:latest
 
   sidekick:
