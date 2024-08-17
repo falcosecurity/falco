@@ -1,6 +1,9 @@
 name: StaticAnalysis
 on:
   pull_request:
+permissions:  
+  contents: read
+
 jobs:
   staticanalysis:
     runs-on: ubuntu-22.04

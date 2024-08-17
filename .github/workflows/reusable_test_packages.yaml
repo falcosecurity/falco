@@ -21,6 +21,9 @@ on:
         default: false
         type: boolean
 
+permissions:  
+  contents: read
+  
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
@@ -54,7 +57,7 @@ jobs:
       - name: Run tests
         env:
           LSAN_OPTIONS: "intercept_tls_get_addr=0"
-        uses: falcosecurity/testing@main    
+        uses: falcosecurity/testing@32e319ae505fb330ae74db4502e605a5e517ff22 # main    
         with:
           test-falco: 'true'
           test-falcoctl: 'true'

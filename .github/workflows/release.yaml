@@ -8,6 +8,9 @@ concurrency:
   group: ci-release
   cancel-in-progress: true  
 
+permissions:  
+  contents: read
+  
 jobs:
   release-settings:
     runs-on: ubuntu-latest
@@ -16,7 +19,7 @@ jobs:
       bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
     steps:
       - name: Get latest release
-        uses: rez0n/actions-github-release@v2.0
+        uses: rez0n/actions-github-release@27a57820ee808f8fd940c8a9d1f7188f854aa2b5 # v2.0
         id: latest_release
         env:
           token: ${{ secrets.GITHUB_TOKEN }}

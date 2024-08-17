@@ -9,6 +9,9 @@ on:
       - 'userspace/engine/*.cpp'
       - 'userspace/engine/*.h'
 
+permissions:  
+  contents: read
+
 jobs:
   paths-filter:
     runs-on: ubuntu-latest
