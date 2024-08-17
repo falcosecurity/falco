@@ -6,6 +6,9 @@ on:
         description: "Falco version"
         value: ${{ jobs.fetch-version.outputs.version }}
 
+permissions:  
+  contents: read
+
 jobs:
   # We need to use an ubuntu-latest to fetch Falco version because
   # Falco version is computed by some cmake scripts that do git sorceries

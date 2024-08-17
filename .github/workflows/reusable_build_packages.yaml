@@ -21,6 +21,9 @@ on:
         type: boolean
         default: false
 
+permissions:  
+  contents: read
+
 jobs:
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936

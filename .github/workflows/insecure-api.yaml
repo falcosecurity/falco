@@ -6,6 +6,9 @@ on:
       - 'release/**'
       - 'maintainers/**'
 
+permissions:  
+  contents: read
+
 jobs:
   insecure-api:
     name: check-insecure-api

@@ -24,6 +24,9 @@ on:
 # then we upload all the tarballs to be later downloaded by reusable_publish_docker workflow.
 # In this way, we don't need to publish any arch specific image, 
 # and this "build" workflow is actually only building images.
+permissions:  
+  contents: read
+
 jobs:
   build-docker:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
