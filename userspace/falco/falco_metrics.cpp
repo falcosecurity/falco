@@ -118,7 +118,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 
 		if (agent_info)
 		{
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("start_ts",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("start_ts",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
@@ -127,20 +127,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		}
 		if (machine_info)
 		{
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_boot_ts",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("host_boot_ts",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
 												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 												  machine_info->boot_ts_epoch));
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("host_num_cpus",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("host_num_cpus",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U32,
 												  METRIC_VALUE_UNIT_COUNT,
 												  METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
 												  machine_info->num_cpus));
 		}
-		additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("outputs_queue_num_drops",
+		additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("outputs_queue_num_drops",
 												METRICS_V2_MISC,
 												METRIC_VALUE_TYPE_U64,
 												METRIC_VALUE_UNIT_COUNT,
@@ -150,7 +150,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		if (agent_info)
 		{
 			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			additional_wrapper_metrics.emplace_back(libs_metrics_collector.new_metric("duration_sec",
+			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric("duration_sec",
 												  METRICS_V2_MISC,
 												  METRIC_VALUE_TYPE_U64,
 												  METRIC_VALUE_UNIT_TIME_S_COUNT,
@@ -179,7 +179,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				auto count = rules_by_id[i]->load();
 				if (count > 0)
 				{
-					auto metric = libs_metrics_collector.new_metric("rules_counters",
+					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_counters",
 											METRICS_V2_RULE_COUNTERS,
 											METRIC_VALUE_TYPE_U64,
 											METRIC_VALUE_UNIT_COUNT,
