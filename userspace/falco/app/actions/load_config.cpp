@@ -177,18 +177,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
-            "anyOf": [
-		{
- 		    "required": [
-			"custom_set"
-		    ]
-                },
-		{
-		    "required": [
-			"repair"
-		    ]
-		}
-	    ],
+            "minProperties": 1,
             "title": "BaseSyscalls"
         },
         "Engine": {
@@ -266,6 +255,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
+	    "minProperties": 1,
             "title": "Kmod"
         },
         "ModernEbpf": {
@@ -305,9 +295,7 @@ static const std::string schema_json_string = R"(
                     "type": "integer"
                 }
             },
-            "required": [
-                "thread_table_size"
-            ],
+            "minProperties": 1,
             "title": "FalcoLibs"
         },
         "FileOutput": {
@@ -324,11 +312,7 @@ static const std::string schema_json_string = R"(
                     "type": "string"
                 }
             },
-            "required": [
-                "enabled",
-                "filename",
-                "keep_alive"
-            ],
+            "minProperties": 1,
             "title": "FileOutput"
         },
         "Grpc": {
@@ -345,11 +329,7 @@ static const std::string schema_json_string = R"(
                     "type": "integer"
                 }
             },
-            "required": [
-                "bind_address",
-                "enabled",
-                "threadiness"
-            ],
+            "minProperties": 1,
             "title": "Grpc"
         },
         "Output": {
@@ -360,9 +340,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
-            "required": [
-                "enabled"
-            ],
+            "minProperties": 1,
             "title": "Output"
         },
         "HTTPOutput": {
@@ -413,21 +391,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
-            "required": [
-                "ca_bundle",
-                "ca_cert",
-                "ca_path",
-                "client_cert",
-                "client_key",
-                "compress_uploads",
-                "echo",
-                "enabled",
-                "insecure",
-                "keep_alive",
-                "mtls",
-                "url",
-                "user_agent"
-            ],
+            "minProperties": 1,
             "title": "HTTPOutput"
         },
         "LibsLogger": {
@@ -441,10 +405,7 @@ static const std::string schema_json_string = R"(
                     "type": "string"
                 }
             },
-            "required": [
-                "enabled",
-                "severity"
-            ],
+            "minProperties": 1,
             "title": "LibsLogger"
         },
         "Metrics": {
@@ -488,20 +449,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
-            "required": [
-                "convert_memory_to_mb",
-                "enabled",
-                "include_empty_values",
-                "interval",
-                "kernel_event_counters_enabled",
-                "libbpf_stats_enabled",
-                "output_file",
-                "output_rule",
-                "plugins_metrics_enabled",
-                "resource_utilization_enabled",
-                "rules_counters_enabled",
-                "state_counters_enabled"
-            ],
+            "minProperties": 1,
             "title": "Metrics"
         },
         "OutputsQueue": {
@@ -512,9 +460,7 @@ static const std::string schema_json_string = R"(
                     "type": "integer"
                 }
             },
-            "required": [
-                "capacity"
-            ],
+            "minProperties": 1,
             "title": "OutputsQueue"
         },
         "Plugin": {
@@ -555,8 +501,6 @@ static const std::string schema_json_string = R"(
                 }
             },
             "required": [
-                "enabled",
-                "keep_alive",
                 "program"
             ],
             "title": "ProgramOutput"
@@ -572,7 +516,7 @@ static const std::string schema_json_string = R"(
                     "$ref": "#/definitions/Able"
                 }
             },
-            "required": [],
+            "minProperties": 1,
             "title": "Rule"
         },
         "Able": {
@@ -586,6 +530,7 @@ static const std::string schema_json_string = R"(
 		    "type": "string"
 		}
             },
+	    "minProperties": 1,
             "title": "Able"
         },
         "SyscallEventDrops": {
@@ -611,13 +556,7 @@ static const std::string schema_json_string = R"(
                     "type": "boolean"
                 }
             },
-            "required": [
-                "actions",
-                "max_burst",
-                "rate",
-                "simulate_drops",
-                "threshold"
-            ],
+            "minProperties": 1,
             "title": "SyscallEventDrops"
         },
         "SyscallEventTimeouts": {
@@ -628,9 +567,7 @@ static const std::string schema_json_string = R"(
                     "type": "integer"
                 }
             },
-            "required": [
-                "max_consecutives"
-            ],
+            "minProperties": 1,
             "title": "SyscallEventTimeouts"
         },
         "Webserver": {
@@ -662,16 +599,7 @@ static const std::string schema_json_string = R"(
                     "type": "string"
                 }
             },
-            "required": [
-                "enabled",
-                "k8s_healthz_endpoint",
-                "listen_address",
-                "listen_port",
-                "prometheus_metrics_enabled",
-                "ssl_certificate",
-                "ssl_enabled",
-                "threadiness"
-            ],
+            "minProperties": 1,
             "title": "Webserver"
         }
     }
