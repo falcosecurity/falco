@@ -468,7 +468,7 @@ load_plugins: []
 plugins:
   - name: k8saudit
     library_path: libk8saudit.so
-    init_config:
+    init_config: ""
     #   maxEventSize: 262144
     #   webhookMaxBatchSize: 12582912
     #   sslCertificate: /etc/falco/falco.pem
