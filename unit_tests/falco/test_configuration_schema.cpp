@@ -34,6 +34,10 @@ TEST(Configuration, schema_validate_config)
 	falco_configuration falco_config;
 	config_loaded_res res;
 
+	if (!std::filesystem::exists(TEST_FALCO_CONFIG))
+	{
+		GTEST_SKIP() << "Falco config not present under " << TEST_FALCO_CONFIG;
+	}
 	EXPECT_NO_THROW(res = falco_config.init_from_file(TEST_FALCO_CONFIG, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
 }
