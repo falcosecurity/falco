@@ -33,6 +33,12 @@ limitations under the License.
 #include <fstream>
 #include <filesystem>
 
+#include <valijson/adapters/jsoncpp_adapter.hpp>
+#include <valijson/adapters/yaml_cpp_adapter.hpp>
+#include <valijson/schema.hpp>
+#include <valijson/schema_parser.hpp>
+#include <valijson/validator.hpp>
+
 #include "config_falco.h"
 
 #include "event_drops.h"
@@ -83,23 +89,35 @@ public:
 	/**
 	* Load the YAML document represented by the input string.
 	*/
-	void load_from_string(const std::string& input)
+	void load_from_string(const std::string& input, const Json::Value& schema={}, std::string *validation=nullptr)
 	{
 		m_root = YAML::Load(input);
 		pre_process_env_vars(m_root);
+
+		if (validation)
+		{
+			if(!schema.empty())
+			{
+				*validation = validate_node(m_root, schema);
+			}
+			else
+			{
+				*validation = "no schema provided";
+			}
+		}
 	}
 
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path)
+	void load_from_file(const std::string& path, const Json::Value& schema={}, std::string *validation=nullptr)
 	{
-		m_root = load_from_file_int(path);
+		m_root = load_from_file_int(path, schema, validation);
 	}
 
-	void include_config_file(const std::string& include_file_path)
+	void include_config_file(const std::string& include_file_path, const Json::Value& schema={}, std::string *validation=nullptr)
 	{
-		auto loaded_nodes = load_from_file_int(include_file_path);
+		auto loaded_nodes = load_from_file_int(include_file_path, schema, validation);
 		for(auto n : loaded_nodes)
 		{
 			/*
@@ -185,11 +203,50 @@ public:
 private:
 	YAML::Node m_root;
 
-	YAML::Node load_from_file_int(const std::string& path)
+	YAML::Node load_from_file_int(const std::string& path, const Json::Value& schema={}, std::string *validation=nullptr)
 	{
 		auto root = YAML::LoadFile(path);
 		pre_process_env_vars(root);
+
+		if (validation)
+		{
+			if(!schema.empty())
+			{
+				*validation = validate_node(root, schema);
+			}
+			else
+			{
+				*validation = "no schema provided";
+			}
+		}
 		return root;
+	}
+
+	std::string validate_node(const YAML::Node &node, const Json::Value& schema={})
+	{
+		// Validate the yaml against our json schema
+		valijson::Schema schemaDef;
+		valijson::SchemaParser schemaParser;
+		valijson::Validator validator(valijson::Validator::kWeakTypes);
+		valijson::ValidationResults validationResults;
+		valijson::adapters::YamlCppAdapter configAdapter(node);
+		valijson::adapters::JsonCppAdapter schemaAdapter(schema);
+		schemaParser.populateSchema(schemaAdapter, schemaDef);
+
+		if (!validator.validate(schemaDef, configAdapter, &validationResults))
+		{
+			valijson::ValidationResults::Error error;
+			// report only the top-most error
+			if (validationResults.popError(error))
+			{
+				return std::string("validation failed for ")
+				       + std::accumulate(error.context.begin(), error.context.end(), std::string(""))
+				       + ": "
+				       + error.description;
+			}
+			return "validation failed";
+		}
+		return "validated";
 	}
 
 	/*
