@@ -690,7 +690,8 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 		for (const auto& path : loaded_conf_files)
 		{
 			auto validation_status = validate_config_files(path);
-			falco_logger::log(falco_logger::level::INFO, std::string("   ") + path + " | " + validation_status + "\n");
+			auto priority = validation_status == "validated" ? falco_logger::level::INFO : falco_logger::level::WARNING;
+			falco_logger::log(priority, std::string("   ") + path + " | " + validation_status + "\n");
 		}
 	}
 
