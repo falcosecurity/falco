@@ -151,6 +151,7 @@ if (NOT EMSCRIPTEN)
 endif()
 
 include(zlib)
+include(valijson)
 if (NOT MINIMAL_BUILD)
   if (NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN)
     include(cares)

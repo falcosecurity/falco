@@ -651,10 +651,7 @@ falco_configuration::falco_configuration():
 	m_metrics_convert_memory_to_mb(true),
 	m_metrics_include_empty_values(false)
 {
-	if(!Json::Reader().parse(schema_json_string, m_config_schema) || m_config_schema.type() != Json::objectValue)
-	{
-		throw falco_exception("failed to parse config schema");
-	}
+	m_config_schema = nlohmann::json::parse(schema_json_string);
 }
 
 config_loaded_res falco_configuration::init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename)

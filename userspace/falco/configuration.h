@@ -31,7 +31,6 @@ limitations under the License.
 #include <set>
 #include <iostream>
 #include <fstream>
-#include <json/json.h>
 
 #include "config_falco.h"
 #include "yaml_helper.h"
@@ -197,7 +196,7 @@ public:
 
 	// Needed by tests
 	yaml_helper m_config;
-	Json::Value m_config_schema;
+	nlohmann::json m_config_schema;
 
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res &res);
