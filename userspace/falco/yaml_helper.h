@@ -32,6 +32,7 @@ limitations under the License.
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <numeric>
 
 #include <nlohmann/json.hpp>
 #include <valijson/adapters/nlohmann_json_adapter.hpp>
