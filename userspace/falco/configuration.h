@@ -31,6 +31,7 @@ limitations under the License.
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <json/json.h>
 
 #include "config_falco.h"
 #include "yaml_helper.h"
@@ -46,6 +47,9 @@ enum class engine_kind_t : uint8_t
 	GVISOR,
 	NODRIVER
 };
+
+// Map that holds { config filename | validation status } for each loaded config file.
+typedef std::map<std::string, std::string> config_loaded_res;
 
 class falco_configuration
 {
@@ -107,8 +111,8 @@ public:
 	falco_configuration();
 	virtual ~falco_configuration() = default;
 
-	void init_from_file(const std::string& conf_filename, std::vector<std::string>& loaded_conf_files, const std::vector<std::string>& cmdline_options);
-	void init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename="default");
+	config_loaded_res init_from_file(const std::string& conf_filename, const std::vector<std::string>& cmdline_options);
+	config_loaded_res init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename="default");
 
 	std::string dump();
 
@@ -192,10 +196,12 @@ public:
 	gvisor_config m_gvisor = {};
 
 	// Needed by tests
-	yaml_helper config;
+	yaml_helper m_config;
 
 private:
-	void merge_config_files(const std::string& config_name, std::vector<std::string>& loaded_config_files);
+	Json::Value m_config_schema;
+
+	void merge_config_files(const std::string& config_name, config_loaded_res &res);
 	void load_yaml(const std::string& config_name);
 	void init_logger();
 	void load_engine_config(const std::string& config_name);
