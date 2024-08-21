@@ -197,10 +197,9 @@ public:
 
 	// Needed by tests
 	yaml_helper m_config;
-
-private:
 	Json::Value m_config_schema;
 
+private:
 	void merge_config_files(const std::string& config_name, config_loaded_res &res);
 	void load_yaml(const std::string& config_name);
 	void init_logger();

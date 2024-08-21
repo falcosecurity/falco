@@ -2,3 +2,4 @@
 
 #define TEST_ENGINE_KMOD_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/engine_kmod_config.yaml"
 #define TEST_ENGINE_MODERN_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/engine_modern_config.yaml"
+#define TEST_FALCO_CONFIG "${CMAKE_SOURCE_DIR}/falco.yaml"

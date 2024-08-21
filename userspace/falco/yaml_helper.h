@@ -85,6 +85,9 @@ class yaml_helper
 {
 public:
 	inline static const std::string configs_key = "config_files";
+	inline static const std::string validation_ok = "ok";
+	inline static const std::string validation_failed = "failed";
+	inline static const std::string validation_none = "schema not provided";
 
 	/**
 	* Load the YAML document represented by the input string.
@@ -102,7 +105,7 @@ public:
 			}
 			else
 			{
-				*validation = "no schema provided";
+				*validation = validation_none;
 			}
 		}
 	}
@@ -216,7 +219,7 @@ private:
 			}
 			else
 			{
-				*validation = "no schema provided";
+				*validation = validation_none;
 			}
 		}
 		return root;
@@ -239,14 +242,14 @@ private:
 			// report only the top-most error
 			if (validationResults.popError(error))
 			{
-				return std::string("validation failed for ")
+				return std::string(validation_failed + " for ")
 				       + std::accumulate(error.context.begin(), error.context.end(), std::string(""))
 				       + ": "
 				       + error.description;
 			}
-			return "validation failed";
+			return validation_failed;
 		}
-		return "validated";
+		return validation_ok;
 	}
 
 	/*
