@@ -33,7 +33,8 @@ limitations under the License.
 #include <fstream>
 #include <filesystem>
 
-#include <valijson/adapters/jsoncpp_adapter.hpp>
+#include <nlohmann/json.hpp>
+#include <valijson/adapters/nlohmann_json_adapter.hpp>
 #include <valijson/adapters/yaml_cpp_adapter.hpp>
 #include <valijson/schema.hpp>
 #include <valijson/schema_parser.hpp>
@@ -92,7 +93,7 @@ public:
 	/**
 	* Load the YAML document represented by the input string.
 	*/
-	void load_from_string(const std::string& input, const Json::Value& schema={}, std::string *validation=nullptr)
+	void load_from_string(const std::string& input, const nlohmann::json& schema={}, std::string *validation=nullptr)
 	{
 		m_root = YAML::Load(input);
 		pre_process_env_vars(m_root);
@@ -113,12 +114,12 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path, const Json::Value& schema={}, std::string *validation=nullptr)
+	void load_from_file(const std::string& path, const nlohmann::json& schema={}, std::string *validation=nullptr)
 	{
 		m_root = load_from_file_int(path, schema, validation);
 	}
 
-	void include_config_file(const std::string& include_file_path, const Json::Value& schema={}, std::string *validation=nullptr)
+	void include_config_file(const std::string& include_file_path, const nlohmann::json& schema={}, std::string *validation=nullptr)
 	{
 		auto loaded_nodes = load_from_file_int(include_file_path, schema, validation);
 		for(auto n : loaded_nodes)
@@ -206,7 +207,7 @@ public:
 private:
 	YAML::Node m_root;
 
-	YAML::Node load_from_file_int(const std::string& path, const Json::Value& schema={}, std::string *validation=nullptr)
+	YAML::Node load_from_file_int(const std::string& path, const nlohmann::json& schema={}, std::string *validation=nullptr)
 	{
 		auto root = YAML::LoadFile(path);
 		pre_process_env_vars(root);
@@ -225,7 +226,7 @@ private:
 		return root;
 	}
 
-	std::string validate_node(const YAML::Node &node, const Json::Value& schema={})
+	std::string validate_node(const YAML::Node &node, const nlohmann::json& schema={})
 	{
 		// Validate the yaml against our json schema
 		valijson::Schema schemaDef;
@@ -233,7 +234,7 @@ private:
 		valijson::Validator validator(valijson::Validator::kWeakTypes);
 		valijson::ValidationResults validationResults;
 		valijson::adapters::YamlCppAdapter configAdapter(node);
-		valijson::adapters::JsonCppAdapter schemaAdapter(schema);
+		valijson::adapters::NlohmannJsonAdapter schemaAdapter(schema);
 		schemaParser.populateSchema(schemaAdapter, schemaDef);
 
 		if (!validator.validate(schemaDef, configAdapter, &validationResults))

@@ -108,7 +108,7 @@ TEST(Configuration, schema_yaml_helper_validator)
 
 	// We pass a string variable but not a schema
 	std::string validation;
-	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, Json::Value{}, &validation));
+	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, nlohmann::json{}, &validation));
 	EXPECT_EQ(validation, yaml_helper::validation_none);
 
 	// We pass a schema but not a string storage for the validation; no validation takes place
