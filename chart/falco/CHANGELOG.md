@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.8.1
+
+* fix(falcosidekick): add support for custom service type for webui redis
+
 ## v4.8.0
 
 * Upgrade Falco version to 0.38.2
