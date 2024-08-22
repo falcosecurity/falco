@@ -88,15 +88,17 @@ else() # MSVC
 	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 	# The WIN32_LEAN_AND_MEAN define avoids possible macro pollution
-	# when a libsinsp consumer includes the windows.h header.
-	# See: https://stackoverflow.com/a/28380820
-
+	# when a libsinsp consumer includes the windows.h header:
+	# https://stackoverflow.com/a/28380820
+	# Same goes for NOMINMAX:
+	# https://stackoverflow.com/questions/5004858/why-is-stdmin-failing-when-windows-h-is-included
 	add_compile_definitions(
 		_HAS_STD_BYTE=0
 		_CRT_SECURE_NO_WARNINGS
 		WIN32
 		MINIMAL_BUILD
 		WIN32_LEAN_AND_MEAN
+		NOMINMAX
 	)
 
 	set(FALCOSECURITY_LIBS_COMMON_FLAGS "/EHsc /W3 /Zi /std:c++17")
