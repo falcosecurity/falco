@@ -15,6 +15,7 @@
 include(GNUInstallDirs)
 include(ExternalProject)
 
+if(NOT DEFINED FALCOSECURITY_RULES_FALCO_PATH)
 # falco_rules.yaml
 set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-3.1.0")
 set(FALCOSECURITY_RULES_FALCO_CHECKSUM "SHA256=3b617920c0b66128627613e591a954eb9572747a4c287bc13b53b38786250162")
@@ -28,10 +29,13 @@ ExternalProject_Add(
   INSTALL_COMMAND ""
   TEST_COMMAND ""
 )
+endif()
 
+if(NOT DEFINED FALCOSECURITY_RULES_LOCAL_PATH)
 # falco_rules.local.yaml
 set(FALCOSECURITY_RULES_LOCAL_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-local-prefix/falco_rules.local.yaml")
 file(WRITE "${FALCOSECURITY_RULES_LOCAL_PATH}" "# Your custom rules!\n")
+endif()
 
 if(NOT DEFINED FALCO_ETC_DIR)
 	set(FALCO_ETC_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/falco")
