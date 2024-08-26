@@ -127,7 +127,8 @@ void falco_outputs::add_output(const falco::outputs::config &oc)
 }
 
 void falco_outputs::handle_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
-				 falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags)
+				 falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags,
+				 std::unordered_map<std::string, std::pair<std::string, bool>> &extra_fields)
 {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();
@@ -157,9 +158,30 @@ void falco_outputs::handle_event(sinsp_evt *evt, const std::string &rule, const 
 	}
 
 	cmsg.msg = m_formats->format_event(
-		evt, rule, source, falco_common::format_priority(priority), sformat, tags, m_hostname
+		evt, rule, source, falco_common::format_priority(priority), sformat, tags, m_hostname, extra_fields
 	);
-	cmsg.fields = m_formats->get_field_values(evt, source, sformat);
+
+	auto fields = m_formats->get_field_values(evt, source, sformat);
+	for (auto const& ef : extra_fields)
+	{
+		// when formatting for the control message we always want strings,
+		// so we can simply format raw fields as string
+		std::string fformat = ef.second.first;
+		if (fformat.size() == 0)
+		{
+			continue;
+		}
+
+		if (!(fformat[0] == '*'))
+		{
+			fformat = "*" + fformat;
+		}
+
+		fields[ef.first] = m_formats->format_string(evt, fformat, source);
+	}
+
+	cmsg.fields = fields;
+
 	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;

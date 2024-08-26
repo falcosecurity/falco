@@ -322,22 +322,6 @@ static std::shared_ptr<ast::expr> parse_condition(
 	}
 }
 
-static void apply_output_substitutions(
-	rule_loader::configuration& cfg,
-	std::string& out)
-{
-	if (out.find(s_container_info_fmt) != std::string::npos)
-	{
-		if (cfg.replace_output_container_info)
-		{
-			out = replace(out, s_container_info_fmt, cfg.output_extra);
-			return;
-		}
-		out = replace(out, s_container_info_fmt, s_default_extra_fmt);
-	}
-	out += cfg.output_extra.empty() ? "" : " " + cfg.output_extra;
-}
-
 void rule_loader::compiler::compile_list_infos(
 		configuration& cfg,
 		const collector& col,
@@ -510,13 +494,64 @@ void rule_loader::compiler::compile_rule_infos(
 		// build rule output message
 		rule.output = r.output;
 
-		// plugins sources do not have any container info and so we won't apply -pk, -pc, etc.
-		// on the other hand, when using plugins you might want to append custom output based on the plugin
-		// TODO: this is not flexible enough (esp. if you mix plugin with syscalls),
-		// it would be better to add configuration options to control the output.
-		if (!cfg.replace_output_container_info || r.source == falco_common::syscall_source)
+		for (auto& extra : cfg.extra_output_format)
 		{
-			apply_output_substitutions(cfg, rule.output);
+			if (extra.m_source != "" && r.source != extra.m_source)
+			{
+				continue;
+			}
+
+			if (extra.m_tag != "" && r.tags.count(extra.m_tag) == 0)
+			{
+				continue;
+			}
+
+			if (extra.m_rule != "" && r.name != extra.m_rule)
+			{
+				continue;
+			}
+
+			if (extra.m_replace_container_info)
+			{
+				if (rule.output.find(s_container_info_fmt) != std::string::npos)
+				{
+					rule.output = replace(rule.output, s_container_info_fmt, extra.m_format);
+				}
+				else
+				{
+					rule.output = rule.output + " " + extra.m_format;
+				}
+			} else
+			{
+				rule.output = rule.output + " " + extra.m_format;
+			}
+		}
+
+		if (rule.output.find(s_container_info_fmt) != std::string::npos)
+		{
+			rule.output = replace(rule.output, s_container_info_fmt, s_default_extra_fmt);
+		}
+
+		// build extra output fields if required
+
+		for (auto const& extra : cfg.extra_output_fields)
+		{
+			if (extra.m_source != "" && r.source != extra.m_source)
+			{
+				continue;
+			}
+
+			if (extra.m_tag != "" && r.tags.count(extra.m_tag) == 0)
+			{
+				continue;
+			}
+
+			if (extra.m_rule != "" && r.name != extra.m_rule)
+			{
+				continue;
+			}
+
+			rule.extra_output_fields[extra.m_key] = {extra.m_format, extra.m_raw};
 		}
 
 		// validate the rule's output
@@ -536,6 +571,18 @@ void rule_loader::compiler::compile_rule_infos(
 				falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
 				err,
 				r.output_ctx);
+		}
+
+		// validate the rule's extra fields if any
+		for (auto const& ef : rule.extra_output_fields)
+		{
+			if(!is_format_valid(*cfg.sources.at(r.source), ef.second.first, err))
+			{
+				throw rule_load_exception(
+					falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
+					err,
+					r.output_ctx);
+			}
 		}
 
 		if (!compile_condition(cfg,

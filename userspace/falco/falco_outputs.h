@@ -59,7 +59,8 @@ public:
 		is an event that has matched some rule).
 	*/
 	void handle_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
-			  falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags);
+			falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags,
+			std::unordered_map<std::string, std::pair<std::string, bool>> &extra_fields);
 
 	/*!
 		\brief Format then send a generic message to all outputs.

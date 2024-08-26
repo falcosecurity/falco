@@ -312,7 +312,9 @@ static falco::app::run_result do_inspect(
 		{
 			for(auto& rule_res : *res)
 			{
-				s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
+				s.outputs->handle_event(
+					rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num,
+					rule_res.format, rule_res.tags, rule_res.extra_output_fields);
 			}
 		}
 

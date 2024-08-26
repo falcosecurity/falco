@@ -176,15 +176,40 @@ public:
 	//
 	void set_sampling_multiplier(double sampling_multiplier);
 
-	//
-	// You can optionally add "extra" formatting fields to the end
+	// You can optionally add "extra" output to the end
 	// of all output expressions. You can also choose to replace
 	// %container.info with the extra information or add it to the
 	// end of the expression. This is used in open source falco to
 	// add k8s/container information to outputs when
 	// available.
 	//
-	void set_extra(const std::string &extra, bool replace_container_info);
+	void add_extra_output_format(
+		const std::string &format,
+		const std::string &source,
+		const std::string &tag,
+		const std::string &rule,
+		bool replace_container_info
+	);
+
+	// You can optionally add fields that will only show up in the object
+	// output (e.g. json, gRPC) alongside other output_fields
+	// and not in the text message output.
+	// You can add two types of fields: formatted which will act like
+	// an additional output format that appears in the output field
+	void add_extra_output_formatted_field(
+		const std::string &key,
+		const std::string &format,
+		const std::string &source,
+		const std::string &tag,
+		const std::string &rule
+	);
+
+	void add_extra_output_raw_field(
+		const std::string &key,
+		const std::string &source,
+		const std::string &tag,
+		const std::string &rule
+	);
 
 	// Represents the result of matching an event against a set of
 	// rules.
@@ -196,6 +221,7 @@ public:
 		std::string format;
 		std::set<std::string> exception_fields;
 		std::set<std::string> tags;
+		std::unordered_map<std::string, std::pair<std::string, bool>> extra_output_fields;
 	};
 
 	//
@@ -461,6 +487,6 @@ private:
 	static const std::string s_default_ruleset;
 	uint32_t m_default_ruleset_id;
 
-	std::string m_extra;
-	bool m_replace_container_info;
+	std::vector<rule_loader::extra_output_format_conf> m_extra_output_format;
+	std::vector<rule_loader::extra_output_field_conf> m_extra_output_fields;
 };

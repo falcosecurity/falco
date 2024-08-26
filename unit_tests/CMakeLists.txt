@@ -36,6 +36,7 @@ add_executable(falco_unit_tests
     engine/test_add_source.cpp
     engine/test_alt_rule_loader.cpp
     engine/test_enable_rule.cpp
+    engine/test_extra_output.cpp
     engine/test_falco_utils.cpp
     engine/test_filter_details_resolver.cpp
     engine/test_filter_macro_resolver.cpp
@@ -47,6 +48,7 @@ add_executable(falco_unit_tests
     falco/test_configuration_rule_selection.cpp
     falco/test_configuration_config_files.cpp
     falco/test_configuration_env_vars.cpp
+    falco/test_configuration_output_options.cpp
     falco/test_configuration_schema.cpp
     falco/app/actions/test_select_event_sources.cpp
     falco/app/actions/test_load_config.cpp

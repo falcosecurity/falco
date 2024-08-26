@@ -31,7 +31,9 @@ public:
 
 	std::string format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
 				 const std::string &level, const std::string &format, const std::set<std::string> &tags,
-				 const std::string &hostname) const;
+				 const std::string &hostname, const std::unordered_map<std::string, std::pair<std::string, bool>> &extra_fields) const;
+
+	std::string format_string(sinsp_evt *evt, const std::string &format, const std::string &source) const;
 
 	std::map<std::string, std::string> get_field_values(sinsp_evt *evt, const std::string &source,
 					     const std::string &format) const ;

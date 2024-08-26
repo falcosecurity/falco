@@ -17,49 +17,55 @@ limitations under the License.
 
 #include "actions.h"
 #include <libsinsp/plugin_manager.h>
+#include <falco_common.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
 
 void configure_output_format(falco::app::state& s)
 {
+	for (auto& eo : s.config->m_append_output)
+	{
+		if (eo.m_format != "")
+		{
+			s.engine->add_extra_output_format(eo.m_format, eo.m_source, eo.m_tag, eo.m_rule, false);
+		}
+
+		for (auto const& ff : eo.m_formatted_fields)
+		{
+			s.engine->add_extra_output_formatted_field(ff.first, ff.second, eo.m_source, eo.m_tag, eo.m_rule);
+		}
+
+		for (auto const& rf : eo.m_raw_fields)
+		{
+			s.engine->add_extra_output_raw_field(rf, eo.m_source, eo.m_tag, eo.m_rule);
+		}
+	}
+
 	// See https://falco.org/docs/rules/style-guide/
 	const std::string container_info = "container_id=%container.id container_image=%container.image.repository container_image_tag=%container.image.tag container_name=%container.name";
 	const std::string k8s_info = "k8s_ns=%k8s.ns.name k8s_pod_name=%k8s.pod.name";
 	const std::string gvisor_info = "vpid=%proc.vpid vtid=%thread.vtid";
 
-	std::string output_format;
-	bool replace_container_info = false;
-
 	if(s.options.print_additional == "c" || s.options.print_additional == "container")
 	{
-		output_format = container_info;
-		replace_container_info = true;
+		s.engine->add_extra_output_format(container_info, falco_common::syscall_source, "", "", true);
 	}
 	else if(s.options.print_additional == "cg" || s.options.print_additional == "container-gvisor")
 	{
-		output_format = gvisor_info + " " + container_info;
-		replace_container_info = true;
+		s.engine->add_extra_output_format(gvisor_info + " " + container_info, falco_common::syscall_source, "", "", true);
 	}
 	else if(s.options.print_additional == "k" || s.options.print_additional == "kubernetes")
 	{
-		output_format = container_info + " " + k8s_info;
-		replace_container_info = true;
+		s.engine->add_extra_output_format(container_info + " " + k8s_info, falco_common::syscall_source, "", "", true);
 	}
 	else if(s.options.print_additional == "kg" || s.options.print_additional == "kubernetes-gvisor")
 	{
-		output_format = gvisor_info + " " + container_info + " " + k8s_info;
-		replace_container_info = true;
+		s.engine->add_extra_output_format(gvisor_info + " " + container_info + " " + k8s_info, falco_common::syscall_source, "", "", true);
 	}
 	else if(!s.options.print_additional.empty())
 	{
-		output_format = s.options.print_additional;
-		replace_container_info = false;
-	}
-
-	if(!output_format.empty())
-	{
-		s.engine->set_extra(output_format, replace_container_info);
+		s.engine->add_extra_output_format(s.options.print_additional, "", "", "", false);
 	}
 }
 

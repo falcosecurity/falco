@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 #include "formats.h"
 #include "falco_engine.h"
@@ -35,7 +35,7 @@ falco_formats::~falco_formats()
 
 std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format, const std::set<std::string> &tags,
-				   const std::string &hostname) const
+				   const std::string &hostname, const std::unordered_map<std::string, std::pair<std::string, bool>> &extra_fields) const
 {
 	std::string line;
 
@@ -48,27 +48,17 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 
 	if(formatter->get_output_format() == sinsp_evt_formatter::OF_JSON)
 	{
-		std::string json_line;
+		std::string json_fields;
 
 		// Format the event into a json object with all fields resolved
-		formatter->tostring(evt, json_line);
-
-		// The formatted string might have a leading newline. If it does, remove it.
-		if(json_line[0] == '\n')
-		{
-			json_line.erase(0, 1);
-		}
+		formatter->tostring(evt, json_fields);
 
 		// For JSON output, the formatter returned a json-as-text
 		// object containing all the fields in the original format
 		// message as well as the event time in ns. Use this to build
 		// a more detailed object containing the event time, rule,
 		// severity, full output, and fields.
-		Json::Value event;
-		Json::Value rule_tags;
-		Json::FastWriter writer;
-		std::string full_line;
-		unsigned int rule_tags_idx = 0;
+		nlohmann::json event;
 
 		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
 		time_t evttime = evt->get_ts() / 1000000000;
@@ -94,39 +84,50 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 
 		if(m_json_include_tags_property)
 		{
-			if (tags.size() == 0)
-			{
-				// This sets an empty array
-				rule_tags = Json::arrayValue;
-			}
-			else
-			{
-				for (const auto &tag : tags)
-				{
-					rule_tags[rule_tags_idx++] = tag;
-				}
-			}
-			event["tags"] = rule_tags;
+			event["tags"] = tags;
 		}
 
-		full_line = writer.write(event);
+		event["output_fields"] = nlohmann::json::parse(json_fields);
 
-		// Json::FastWriter may add a trailing newline. If it
-		// does, remove it.
-		if(full_line[full_line.length() - 1] == '\n')
+		for (auto const& ef : extra_fields)
 		{
-			full_line.resize(full_line.length() - 1);
+			std::string fformat = ef.second.first;
+			if (fformat.size() == 0)
+			{
+				continue;
+			}
+
+			if (!(fformat[0] == '*'))
+			{
+				fformat = "*" + fformat;
+			}
+
+			if(ef.second.second) // raw field
+			{
+				std::string json_field_map;
+				formatter = m_falco_engine->create_formatter(source, fformat);
+				formatter->tostring_withformat(evt, json_field_map, sinsp_evt_formatter::OF_JSON);
+				auto json_obj = nlohmann::json::parse(json_field_map);
+				event["output_fields"][ef.first] = json_obj[ef.first];
+			} else
+			{
+				event["output_fields"][ef.first] = format_string(evt, fformat, source);
+			}
 		}
 
-		// Cheat-graft the output from the formatter into this
-		// string. Avoids an unnecessary json parse just to
-		// merge the formatted fields at the object level.
-		full_line.pop_back();
-		full_line.append(", \"output_fields\": ");
-		full_line.append(json_line);
-		full_line.append("}");
-		line = full_line;
+		line = event.dump();
 	}
+
+	return line;
+}
+
+std::string falco_formats::format_string(sinsp_evt *evt, const std::string &format, const std::string &source) const
+{
+	std::string line;
+	std::shared_ptr<sinsp_evt_formatter> formatter;
+
+	formatter = m_falco_engine->create_formatter(source, format);
+	formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_NORMAL);
 
 	return line;
 }

@@ -588,6 +588,7 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	m_metrics_include_empty_values = m_config.get_scalar<bool>("metrics.include_empty_values", false);
 
 	m_config.get_sequence<std::vector<rule_selection_config>>(m_rules_selection, "rules");
+	m_config.get_sequence<std::vector<append_output_config>>(m_append_output, "append_output");
 
 	std::vector<std::string> load_plugins;
 

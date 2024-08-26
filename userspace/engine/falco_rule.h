@@ -79,6 +79,7 @@ struct falco_rule
 	std::string name;
 	std::string description;
 	std::string output;
+	std::unordered_map<std::string, std::pair<std::string, bool>> extra_output_fields;
 	std::set<std::string> tags;
 	std::set<std::string> exception_fields;
 	falco_common::priority_type priority;

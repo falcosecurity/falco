@@ -20,6 +20,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <optional>
+#include <unordered_map>
 #include <yaml-cpp/yaml.h>
 #include <nlohmann/json.hpp>
 #include "falco_source.h"
@@ -261,6 +262,25 @@ namespace rule_loader
 		nlohmann::json res_json;
 	};
 
+	struct extra_output_format_conf
+	{
+		std::string m_format;
+		std::string m_source;
+		std::string m_tag;
+		std::string m_rule;
+		bool m_replace_container_info;
+	};
+
+	struct extra_output_field_conf
+	{
+		std::string m_key;
+		std::string m_format;
+		std::string m_source;
+		std::string m_tag;
+		std::string m_rule;
+		bool m_raw;
+	};
+
 	/*!
 		\brief Contains the info required to load rule definitions
 	*/
@@ -278,8 +298,9 @@ namespace rule_loader
 		const std::string& content;
 		const indexed_vector<falco_source>& sources;
 		std::string name;
-		std::string output_extra;
-		bool replace_output_container_info = false;
+
+		std::vector<extra_output_format_conf> extra_output_format;
+		std::vector<extra_output_field_conf> extra_output_fields;
 
 		// outputs
 		std::unique_ptr<result> res;
