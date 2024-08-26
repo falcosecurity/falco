@@ -57,8 +57,7 @@ falco_engine::falco_engine(bool seed_rng)
 	  m_rule_compiler(std::make_shared<rule_loader::compiler>()),
 	  m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
-	  m_sampling_ratio(1), m_sampling_multiplier(0),
-	  m_replace_container_info(false)
+	  m_sampling_ratio(1), m_sampling_multiplier(0)
 {
 	if(seed_rng)
 	{
@@ -76,6 +75,7 @@ falco_engine::~falco_engine()
 	m_rule_collector->clear();
 	m_rule_stats_manager.clear();
 	m_sources.clear();
+	m_extra_output_format.clear();
 }
 
 sinsp_version falco_engine::engine_version()
@@ -194,8 +194,8 @@ void falco_engine::list_fields(const std::string &source, bool verbose, bool nam
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
 {
 	rule_loader::configuration cfg(rules_content, m_sources, name);
-	cfg.output_extra = m_extra;
-	cfg.replace_output_container_info = m_replace_container_info;
+	cfg.extra_output_format = m_extra_output_format;
+	cfg.extra_output_fields = m_extra_output_fields;
 
 	// read rules YAML file and collect its definitions
 	if(m_rule_reader->read(cfg, *m_rule_collector))
@@ -455,6 +455,7 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 		rule_result.priority_num = rule.priority;
 		rule_result.tags = rule.tags;
 		rule_result.exception_fields = rule.exception_fields;
+		rule_result.extra_output_fields = rule.extra_output_fields;
 		m_rule_stats_manager.on_event(rule);
 		res->push_back(rule_result);
 	}
@@ -646,9 +647,22 @@ void falco_engine::get_json_details(
 	out["details"]["condition_operators"] = sequence_to_json_array(compiled_details.operators);
 	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
+	// Get extra requested fields
+	std::vector<std::string> out_fields;
+
+	for(auto const& f : r.extra_output_fields)
+	{
+		// add all the field keys
+		out_fields.emplace_back(f.second.first);
+
+		if (!f.second.second) // formatted field
+		{
+			out["details"]["extra_output_formatted_fields"][f.first] = f.second.first;
+		}
+	}
+
 	// Get fields from output string
 	auto fmt = create_formatter(r.source, r.output);
-	std::vector<std::string> out_fields;
 	fmt->get_field_names(out_fields);
 	out["details"]["output_fields"] = sequence_to_json_array(out_fields);
 
@@ -1082,10 +1096,37 @@ void falco_engine::set_sampling_multiplier(double sampling_multiplier)
 	m_sampling_multiplier = sampling_multiplier;
 }
 
-void falco_engine::set_extra(const std::string &extra, bool replace_container_info)
+void falco_engine::add_extra_output_format(
+	const std::string &format,
+	const std::string &source,
+	const std::string &tag,
+	const std::string &rule,
+	bool replace_container_info
+)
 {
-	m_extra = extra;
-	m_replace_container_info = replace_container_info;
+	m_extra_output_format.push_back({format, source, tag, rule, replace_container_info});
+}
+
+void falco_engine::add_extra_output_formatted_field(
+	const std::string &key,
+	const std::string &format,
+	const std::string &source,
+	const std::string &tag,
+	const std::string &rule
+)
+{
+	m_extra_output_fields.push_back({key, format, source, tag, rule, false});
+}
+
+void falco_engine::add_extra_output_raw_field(
+	const std::string &key,
+	const std::string &source,
+	const std::string &tag,
+	const std::string &rule
+)
+{
+	std::string format = "%" + key;
+	m_extra_output_fields.push_back({key, format, source, tag, rule, true});
 }
 
 inline bool falco_engine::should_drop_evt() const

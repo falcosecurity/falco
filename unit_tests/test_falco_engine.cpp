@@ -85,3 +85,15 @@ std::string test_falco_engine::get_compiled_rule_condition(std::string rule_name
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	return rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>();
 }
+
+std::string test_falco_engine::get_compiled_rule_output(std::string rule_name) const
+{
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	return rule_description["rules"][0]["details"]["output_compiled"].template get<std::string>();
+}
+
+std::unordered_map<std::string, std::string> test_falco_engine::get_compiled_rule_formatted_fields(std::string rule_name) const
+{
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	return rule_description["rules"][0]["details"]["extra_output_formatted_fields"].template get<std::unordered_map<std::string, std::string>>();
+}
