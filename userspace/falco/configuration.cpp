@@ -642,7 +642,6 @@ void falco_configuration::load_yaml(const std::string& config_name)
 
 	m_watch_config_files = m_config.get_scalar<bool>("watch_config_files", true);
 
-	m_container_engines_mask = 0;
 	if(m_config.get_scalar<bool>("container_engines.docker.enabled", true))
 	{
 		m_container_engines_mask |= (1 << CT_DOCKER);

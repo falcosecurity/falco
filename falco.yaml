@@ -1209,18 +1209,19 @@ falco_libs:
 # [Incubating] `container_engines`
 #
 # This option allows you to explicitly enable or disable API lookups against container 
-# runtime sockets for each supported container runtime, tracked internally as `container_engines`. 
-# Access to these sockets enables Falco to provide container and Kubernetes fields, which 
-# are crucial for identifying workload owners in modern containerized environments. 
+# runtime sockets for each supported container runtime. 
+# Access to these sockets enables Falco to retrieve container and Kubernetes fields, 
+# helping identify workload owners in modern containerized environments. 
 # Refer to the fields docs:
 # 
 # - [Kubernetes fields](https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s)
 # - [Container fields](https://falco.org/docs/reference/rules/supported-fields/#container)
 # 
-# Additionally, Falco uses container events as a data source for alerting.
+# Additionally, Falco can use container events as a data source for alerting (evt.type = container).
 # 
-# For most container engines, you can enable or disable them, and Falco will search the 
-# default container runtime socket paths, such as `/var/run/docker.sock` for Docker. 
+# For most container engines, you can solely enable or disable them, and Falco will search the 
+# default (hard-coded) container runtime socket paths, such as `/var/run/docker.sock` for Docker.
+#
 # However, for Kubernetes settings, you can customize the CRI socket paths:
 # 
 # - `container_engines.cri.sockets`: Pass a list of container runtime sockets.
