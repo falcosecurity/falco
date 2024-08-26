@@ -14,9 +14,14 @@
 
 include(ExternalProject)
 
+option(ADD_FALCOCTL_DEPENDENCY "Add falcoctl dependency while building falco" ON)
+
+if(ADD_FALCOCTL_DEPENDENCY)
 string(TOLOWER ${CMAKE_HOST_SYSTEM_NAME} FALCOCTL_SYSTEM_NAME)
 
 set(FALCOCTL_VERSION "0.8.0")
+
+message(STATUS "Building with falcoctl: ${FALCOCTL_VERSION}")
 
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
     set(FALCOCTL_SYSTEM_PROC_GO "amd64")
@@ -36,3 +41,6 @@ ExternalProject_Add(
 
 install(PROGRAMS "${PROJECT_BINARY_DIR}/falcoctl-prefix/src/falcoctl/falcoctl" DESTINATION "${FALCO_BIN_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
 install(DIRECTORY DESTINATION "${FALCO_ABSOLUTE_SHARE_DIR}/plugins" COMPONENT "${FALCO_COMPONENT_NAME}")
+else()
+    message(STATUS "Won't build with falcoctl")
+endif()
