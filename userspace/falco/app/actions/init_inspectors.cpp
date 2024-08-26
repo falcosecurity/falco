@@ -126,11 +126,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		}
 		else
 		{
-			src_info->inspector = std::make_shared<sinsp>(false,
-								      "",
-								      "",
-								      "",
-								      s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS);
+			src_info->inspector = std::make_shared<sinsp>(s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS);
 		}
 
 		// do extra preparation for the syscall source
