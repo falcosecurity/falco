@@ -360,7 +360,9 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 		output_fields["evt.hostname"] =
 		        machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule
 		                                   output field is disabled. */
-		output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
+		// This line generates a SIGTRAP in zig debug builds if the casting is removed.
+		// It seems caused by the pragma pack for the scap_machine_info structure.
+		output_fields["falco.host_boot_ts"] = (uint64_t)machine_info->boot_ts_epoch;
 		output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
 	}
 	output_fields["falco.outputs_queue_num_drops"] =
