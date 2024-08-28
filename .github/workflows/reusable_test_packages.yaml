@@ -57,7 +57,7 @@ jobs:
       - name: Run tests
         env:
           LSAN_OPTIONS: "intercept_tls_get_addr=0"
-        uses: falcosecurity/testing@32e319ae505fb330ae74db4502e605a5e517ff22 # main    
+        uses: falcosecurity/testing@main 
         with:
           test-falco: 'true'
           test-falcoctl: 'true'
