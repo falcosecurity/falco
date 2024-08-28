@@ -52,44 +52,17 @@ jobs:
           retention-days: 1
 
   build-packages:
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     needs: [build-modern-bpf-skeleton]
-    container: centos:7
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
-      - name: Fix mirrors to use vault.centos.org
-        run: |
-          sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
-          sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
-          sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
-
-      - name: Install scl repos
-        run: |
-          yum -y install centos-release-scl
-
-      - name: Fix new mirrors to use vault.centos.org
-        run: |
-          sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
-          sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo
-          sed -i s/^mirrorlist=http/#mirrorlist=https/g /etc/yum.repos.d/*.repo
-
-      - name: Fix arm64 scl repos to use correct mirror
-        if: inputs.arch == 'aarch64'
-        run: |
-          sed -i 's/vault.centos.org\/centos/vault.centos.org\/altarch/g' /etc/yum.repos.d/CentOS-SCLo-scl*.repo
-
       - name: Install build deps
         run: |
-          yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
-          source /opt/rh/devtoolset-9/enable
-          yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd devtoolset-9-libasan-devel devtoolset-9-libubsan-devel
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
 
       - name: Checkout
-        # It is not possible to upgrade the checkout action to versions >= v4.0.0 because of incompatibilities with centos 7's libc.
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Download skeleton
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -97,14 +70,12 @@ jobs:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
 
-      - name: Install updated cmake
-        run: |
-          curl -L https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5-linux-$(uname -m).tar.gz \
-            | tar --directory=/usr --strip-components=1 -xzp
+      - name: Install zig
+        if: inputs.sanitizers == false
+        uses: falcosecurity/libs/.github/actions/install-zig@master
 
       - name: Prepare project
         run: |
-          source /opt/rh/devtoolset-9/enable
           cmake -B build -S . \
               -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
               -DUSE_BUNDLED_DEPS=On \
@@ -117,12 +88,10 @@ jobs:
 
       - name: Build project
         run: |
-          source /opt/rh/devtoolset-9/enable
           cmake --build build --target falco -j6
 
       - name: Build packages
         run: |
-          source /opt/rh/devtoolset-9/enable
           cmake --build build --target package
 
       - name: Upload Falco tar.gz package

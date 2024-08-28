@@ -42,9 +42,9 @@ else()
 	# version (or branch, or commit) just pass the variable - ie., `cmake
 	# -DFALCOSECURITY_LIBS_VERSION=dev ..`
 	if(NOT FALCOSECURITY_LIBS_VERSION)
-		set(FALCOSECURITY_LIBS_VERSION "0.18.1")
+		set(FALCOSECURITY_LIBS_VERSION "aeb87935dcdd6b3bffb50302269353f2468f612c")
 		set(FALCOSECURITY_LIBS_CHECKSUM
-			"SHA256=1812e8236c4cb51d3fe5dd066d71be99f25da7ed22d8feeeebeed09bdc26325f"
+			"SHA256=fc2f18ed2f9e4bdcb93f32eee326a813a3614af50b82d30a7ccf96ac2a7cfbf0"
 		)
 	endif()
 
@@ -73,7 +73,6 @@ set(LIBS_PACKAGE_NAME "falcosecurity")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_definitions(-D_GNU_SOURCE)
-	add_definitions(-DHAS_CAPTURE)
 endif()
 
 if(MUSL_OPTIMIZED_BUILD)
