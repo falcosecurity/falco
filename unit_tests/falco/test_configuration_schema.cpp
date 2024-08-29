@@ -23,7 +23,7 @@ limitations under the License.
         do { \
 		for(const auto& pair : res) { \
 			auto validation_status = pair.second; \
-			EXPECT_TRUE(sinsp_utils::startswith(validation_status, status)); \
+			EXPECT_TRUE(sinsp_utils::startswith(validation_status, status)) << validation_status; \
 		}                                           \
 	} \
 	while (0)
