@@ -576,6 +576,42 @@ rule_matching: first
 outputs_queue:
   capacity: 0
 
+# [Sandbox] `append_output`
+#
+# Add information to the Falco output.
+# With this setting you can add more information to the Falco output message, customizable by
+# rule, tag or source.
+# You can also add additional data that will appear in the output_fields property
+# of JSON formatted messages or gRPC output but will not be part of the regular output message.
+# This allows you to add custom fields that can help you filter your Falco events without
+# polluting the message text.
+#
+# Each append_output entry has optional fields (ANDed together) to filter events:
+#   `rule`: append output only to a specific rule
+#   `source`: append output only to a specific source
+#   `tag`: append output only to a specific tag
+# If none of the above are specified output is appended to all events, if more than one is
+# specified output will be appended to events that match all conditions.
+# And several options to add output:
+#   `format`: add output to the Falco message
+#   `fields`: add new fields to the JSON output and structured output, which will not
+#             affect the regular Falco message in any way. These can be specified as a
+#             custom name with a custom format or as any supported field
+#             (see: https://falco.org/docs/reference/rules/supported-fields/)
+#
+# Example:
+#
+#   - source: syscall
+#     format: "on CPU %evt.cpu"
+#     fields:
+#       - home_directory: "${HOME}"
+#       - evt.hostname
+#
+# In the example above every event coming from the syscall source will get an extra message
+# at the end telling the CPU number. In addition, if `json_output` is true, in the "output_fields"
+# property you will find three new ones: "evt.cpu", "home_directory" which will contain the value of the
+# environment variable $HOME, and "evt.hostname" which will contain the hostname.
+
 
 ##########################
 # Falco outputs channels #
