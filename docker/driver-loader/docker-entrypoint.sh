@@ -137,4 +137,4 @@ fi
 
 /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS" $extra_args
 
-exec /usr/bin/falco
+exec "$@"
