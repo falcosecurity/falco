@@ -84,8 +84,8 @@ falco_configuration::falco_configuration():
 	m_metrics_convert_memory_to_mb(true),
 	m_metrics_include_empty_values(false),
 	m_container_engines_mask(0),
-	m_container_engines_cri_socket_paths({"/run/containerd/containerd.sock", "/run/crio/crio.sock","/run/k3s/containerd/containerd.sock"}),
-	m_container_engines_disable_cri_async(false)
+	m_container_engines_disable_cri_async(false),
+	m_container_engines_cri_socket_paths({"/run/containerd/containerd.sock", "/run/crio/crio.sock","/run/k3s/containerd/containerd.sock"})
 {
 	m_config_schema = nlohmann::json::parse(schema_json_string);
 }
@@ -749,5 +749,12 @@ void falco_configuration::set_cmdline_option(const std::string &opt)
 		throw std::logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	m_config.set_scalar(keyval.first, keyval.second);
+	if (keyval.second[0] == '{' && keyval.second[keyval.second.size() - 1] == '}')
+	{
+		YAML::Node node = YAML::Load(keyval.second);
+		m_config.set_object(keyval.first, node);
+	} else
+	{
+		m_config.set_scalar(keyval.first, keyval.second);
+	}
 }

@@ -178,6 +178,16 @@ public:
 	}
 
 	/**
+	 * Set the node identified by key to an object value
+	 */
+	void set_object(const std::string& key, const YAML::Node& value)
+	{
+		YAML::Node node;
+		get_node(node, key, true);
+		node = value;
+	}
+
+	/**
 	* Get the sequence value from the node identified by key.
 	*/
 	template<typename T>
@@ -482,5 +492,6 @@ namespace YAML {
 
 			return true;
 		}
+		// The "encode" function is not needed here, in fact you can simply YAML::load any json string.
 	};
 }
