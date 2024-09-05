@@ -46,7 +46,6 @@ public:
 	std::vector<std::string> cri_socket_paths;
 	bool disable_cri_async = false;
 	std::vector<std::string> disable_sources;
-	std::vector<std::string> disabled_rule_substrings;
 	std::vector<std::string> enable_sources;
 	std::string gvisor_generate_config_with_socket;
 	bool describe_all_rules = false;
@@ -67,8 +66,6 @@ public:
 	std::list<std::string> rules_filenames;
 	uint64_t snaplen = 0;
 	bool print_support = false;
-	std::set<std::string> disabled_rule_tags;
-	std::set<std::string> enabled_rule_tags;
 	bool unbuffered_outputs = false;
 	std::vector<std::string> validate_rules_filenames;
 	bool verbose = false;
