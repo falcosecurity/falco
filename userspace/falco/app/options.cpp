@@ -95,40 +95,6 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 		}
 	}
 
-	// Convert the vectors of enabled/disabled tags into sets to match falco engine API
-	if(m_cmdline_parsed.count("T") > 0)
-	{
-		falco_logger::log(falco_logger::level::WARNING, "The -T option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.tag=<tag> instead.");
-		for(auto &tag : m_cmdline_parsed["T"].as<std::vector<std::string>>())
-		{
-			disabled_rule_tags.insert(tag);
-		}
-	}
-
-	if(m_cmdline_parsed.count("t") > 0)
-	{
-		falco_logger::log(falco_logger::level::WARNING, "The -t option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.rule=* -o rules[].enable.tag=<tag> instead.");
-		for(auto &tag : m_cmdline_parsed["t"].as<std::vector<std::string>>())
-		{
-			enabled_rule_tags.insert(tag);
-		}
-	}
-
-	if(disabled_rule_substrings.size() > 0)
-	{
-		falco_logger::log(falco_logger::level::WARNING, "The -D option is deprecated and will be removed in Falco 0.39.0. Use -o rules[].disable.rule=<wildcard-pattern> instead.");
-	}
-
-	// Some combinations of arguments are not allowed.
-
-	// You can't both disable and enable rules
-	if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
-	   !enabled_rule_tags.empty())
-	{
-		errstr = std::string("You can not specify both disabled (-D/-T) and enabled (-t) rules");
-		return false;
-	}
-
 	list_fields = m_cmdline_parsed.count("list") > 0;
 
 	return true;
@@ -156,7 +122,6 @@ void options::define(cxxopts::Options& opts)
 #endif
 		("disable-source",                "Turn off a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times, but turning off all event sources simultaneously is not permitted. This option can not be mixed with --enable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(disable_sources), "<event_source>")
 		("dry-run",                       "Run Falco without processing events. It can help check that the configuration and rules do not have any errors.", cxxopts::value(dry_run)->default_value("false"))
-		("D",                             "DEPRECATED: use -o rules[].disable.rule=<wildcard-pattern> instead. Turn off any rules with names having the substring <substring>. This option can be passed multiple times. It cannot be mixed with -t.", cxxopts::value(disabled_rule_substrings), "<substring>")
 		("enable-source",                 "Enable a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times. When using this option, only the event sources specified by it will be enabled. This option can not be mixed with --disable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(enable_sources), "<event_source>")
 #ifdef HAS_GVISOR
 		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor and exit. See --gvisor-config for more details.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/run/falco/gvisor.sock"), "<socket_path>")
@@ -177,8 +142,6 @@ void options::define(cxxopts::Options& opts)
 		("r",                             "Rules file or directory to be loaded. This option can be passed multiple times. Falco defaults to the values in the configuration file when this option is not specified.", cxxopts::value<std::vector<std::string>>(), "<rules_file>")
 		("S,snaplen",                     "Collect only the first <len> bytes of each I/O buffer for 'syscall' events. By default, the first 80 bytes are collected by the driver and sent to the user space for processing. Use this option with caution since it can have a strong performance impact.", cxxopts::value(snaplen)->default_value("0"), "<len>")
 		("support",                       "Print support information, including version, rules files used, loaded configuration, etc., and exit. The output is in JSON format.", cxxopts::value(print_support)->default_value("false"))
-		("T",                             "DEPRECATED: use -o rules[].disable.tag=<tag> instead. Turn off any rules with a tag=<tag>. This option can be passed multiple times. This option can not be mixed with -t.", cxxopts::value<std::vector<std::string>>(), "<tag>")
-		("t",                             "DEPRECATED: use -o rules[].disable.rule=* -o rules[].enable.tag=<tag> instead. Only enable those rules with a tag=<tag>. This option can be passed multiple times. This option can not be mixed with -T/-D.", cxxopts::value<std::vector<std::string>>(), "<tag>")
 		("U,unbuffered",                  "Turn off output buffering for configured outputs. This causes every single line emitted by Falco to be flushed, which generates higher CPU usage but is useful when piping those outputs into another process or a script.", cxxopts::value(unbuffered_outputs)->default_value("false"))
 		("V,validate",                    "Read the contents of the specified <rules_file> file(s), validate the loaded rules, and exit. This option can be passed multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Enable verbose output.", cxxopts::value(verbose)->default_value("false"))
