@@ -57,7 +57,6 @@ void read_files(InputIterator begin, InputIterator end,
 
 		std::string rules_content((std::istreambuf_iterator<char>(is)),
 						std::istreambuf_iterator<char>());
-
 		rules_contents.emplace_back(std::move(rules_content));
 	}
 
