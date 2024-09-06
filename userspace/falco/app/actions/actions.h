@@ -45,6 +45,7 @@ falco::app::run_result print_ignored_events(const falco::app::state& s);
 falco::app::run_result print_kernel_version(const falco::app::state& s);
 falco::app::run_result print_page_size(const falco::app::state& s);
 falco::app::run_result print_plugin_info(const falco::app::state& s);
+falco::app::run_result print_rule_schema(falco::app::state& s);
 falco::app::run_result print_support(falco::app::state& s);
 falco::app::run_result print_syscall_events(falco::app::state& s);
 falco::app::run_result print_version(falco::app::state& s);

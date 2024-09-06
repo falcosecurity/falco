@@ -54,11 +54,12 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 	std::vector<std::string> rules_contents;
 	falco::load_result::rules_contents_t rc;
 
+	rule_read_res validation_res;
 	try {
-		read_files(s.config->m_loaded_rules_filenames.begin(),
+		validation_res = read_files(s.config->m_loaded_rules_filenames.begin(),
 			   s.config->m_loaded_rules_filenames.end(),
 			   rules_contents,
-			   rc);
+			   rc, s.config->m_rule_schema);
 	}
 	catch(falco_exception& e)
 	{
@@ -66,9 +67,12 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 	}
 
 	std::string err = "";
+	falco_logger::log(falco_logger::level::INFO, "Loading rules from:\n");
 	for(auto &filename : s.config->m_loaded_rules_filenames)
 	{
-		falco_logger::log(falco_logger::level::INFO, "Loading rules from file " + filename + "\n");
+		auto validation = validation_res[filename];
+		auto priority = validation == yaml_helper::validation_ok ? falco_logger::level::INFO : falco_logger::level::WARNING;
+		falco_logger::log(priority, std::string("   ") + filename + " | schema validation: " + validation + "\n");
 		std::unique_ptr<falco::load_result> res;
 
 		res = s.engine->load_rules(rc.at(filename), filename);

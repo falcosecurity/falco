@@ -41,6 +41,7 @@ public:
 	// Each of these maps directly to a command line option.
 	bool help = false;
 	bool print_config_schema = false;
+	bool print_rule_schema = false;
 	std::string conf_filename;
 	bool all_events = false;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
