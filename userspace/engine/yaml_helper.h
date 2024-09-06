@@ -41,11 +41,6 @@ limitations under the License.
 #include <valijson/schema_parser.hpp>
 #include <valijson/validator.hpp>
 
-//#include "config_falco.h"
-
-//#include "event_drops.h"
-//#include "falco_outputs.h"
-
 class yaml_helper;
 
 class yaml_visitor {
