@@ -128,7 +128,7 @@ void falco_outputs::add_output(const falco::outputs::config &oc)
 
 void falco_outputs::handle_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
 				 falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags,
-				 std::unordered_map<std::string, std::pair<std::string, bool>> &extra_fields)
+				 extra_output_field_t &extra_fields)
 {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();

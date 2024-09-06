@@ -72,3 +72,5 @@ namespace falco_common
 
 	bool parse_rule_matching(const std::string& v, rule_matching& out);
 };
+
+typedef std::unordered_map<std::string, std::pair<std::string, bool>> extra_output_field_t;

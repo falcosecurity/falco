@@ -221,7 +221,7 @@ public:
 		std::string format;
 		std::set<std::string> exception_fields;
 		std::set<std::string> tags;
-		std::unordered_map<std::string, std::pair<std::string, bool>> extra_output_fields;
+		extra_output_field_t extra_output_fields;
 	};
 
 	//
