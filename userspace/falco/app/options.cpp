@@ -115,6 +115,7 @@ void options::define(cxxopts::Options& opts)
 		("c",                             "Configuration file. If not specified tries " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
 #endif
 		("config-schema",                 "Print the config json schema and exit.", cxxopts::value(print_config_schema)->default_value("false"))
+		("rule-schema",                   "Print the rule json schema and exit.", cxxopts::value(print_rule_schema)->default_value("false"))
 		("A",                             "Monitor all events supported by Falco and defined in rules and configs. Some events are ignored by default when -A is not specified (the -i option lists these events ignored). Using -A can impact performance. This option has no effect when reproducing events from a capture file.", cxxopts::value(all_events)->default_value("false"))
 		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)

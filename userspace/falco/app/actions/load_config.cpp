@@ -66,7 +66,7 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 			auto config_path = pair.first;
 			auto validation = pair.second;
 			auto priority = validation == yaml_helper::validation_ok ? falco_logger::level::INFO : falco_logger::level::WARNING;
-			falco_logger::log(priority, std::string("   ") + config_path + " | validation: " + validation + "\n");
+			falco_logger::log(priority, std::string("   ") + config_path + " | schema validation: " + validation + "\n");
 		}
 	}
 

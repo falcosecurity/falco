@@ -210,9 +210,9 @@ public:
 	replay_config m_replay = {};
 	gvisor_config m_gvisor = {};
 
-	// Needed by tests
 	yaml_helper m_config;
 	nlohmann::json m_config_schema;
+	nlohmann::json m_rule_schema;
 
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res &res);

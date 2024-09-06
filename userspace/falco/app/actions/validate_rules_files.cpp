@@ -33,11 +33,12 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		std::vector<std::string> rules_contents;
 		falco::load_result::rules_contents_t rc;
 
+		rule_read_res validation_res;
 		try {
-			read_files(s.options.validate_rules_filenames.begin(),
+			validation_res = read_files(s.options.validate_rules_filenames.begin(),
 				   s.options.validate_rules_filenames.end(),
 				   rules_contents,
-				   rc);
+				   rc,s.config->m_rule_schema);
 		}
 		catch(falco_exception& e)
 		{
@@ -71,7 +72,9 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
 		for(const auto& file : s.options.validate_rules_filenames)
 		{
-			falco_logger::log(falco_logger::level::INFO, "   " + file + "\n");
+			auto validation = validation_res[file];
+			auto priority = validation == yaml_helper::validation_ok ? falco_logger::level::INFO : falco_logger::level::WARNING;
+			falco_logger::log(priority, std::string("   ") + file + " | schema validation: " + validation + "\n");
 		}
 
 		// The json output encompasses all files so the
