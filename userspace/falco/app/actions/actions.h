@@ -38,6 +38,7 @@ falco::app::run_result list_plugins(const falco::app::state& s);
 falco::app::run_result load_config(const falco::app::state& s);
 falco::app::run_result load_plugins(falco::app::state& s);
 falco::app::run_result load_rules_files(falco::app::state& s);
+falco::app::run_result print_config_schema(falco::app::state& s);
 falco::app::run_result print_generated_gvisor_config(falco::app::state& s);
 falco::app::run_result print_help(falco::app::state& s);
 falco::app::run_result print_ignored_events(const falco::app::state& s);
