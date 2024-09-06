@@ -47,6 +47,153 @@ limitations under the License.
 
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
+static const std::string rule_schema_string = R"(
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "array",
+    "items": {
+        "$ref": "#/definitions/FalcoRule"
+    },
+    "definitions": {
+        "FalcoRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "required_engine_version": {
+                    "type": "string"
+                },
+                "macro": {
+                    "type": "string"
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "list": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Item"
+                    }
+                },
+                "rule": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "output": {
+                    "type": "string"
+                },
+		"append": {
+		    "type": "boolean"
+		},
+                "priority": {
+                    "$ref": "#/definitions/Priority"
+                },
+		"exceptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Exception"
+                    }
+                },
+		"override": {
+                    "$ref": "#/definitions/Override"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [],
+            "title": "FalcoRule"
+        },
+        "Item": {
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "string"
+                }
+            ],
+            "title": "Item"
+        },
+	"Exception": {
+	    "type": "object",
+	    "additionalProperties": false,
+	    "properties": {
+		"name": {
+		    "type": "string"
+		},
+		"fields": {},
+		"comps": {},
+		"values": {}
+	    },
+	    "required": [
+		"name",
+		"values"
+	    ],
+	    "title": "Exception"
+	},
+        "Priority": {
+            "type": "string",
+            "enum": [
+                "WARNING",
+                "NOTICE",
+                "INFO",
+		"ERROR",
+                "CRITICAL"
+            ],
+            "title": "Priority"
+        },
+	"OverriddenItem": {
+	    "type": "string",
+	    "enum": [
+		"append",
+		"replace"
+	    ],
+	    "title": "Priority"
+	},
+	"Override": {
+	    "type": "object",
+	    "additionalProperties": false,
+	    "properties": {
+		"items": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"desc": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"condition": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"output": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"priority": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"enabled": {
+		    "$ref": "#/definitions/OverriddenItem"
+		},
+		"exceptions": {
+		    "$ref": "#/definitions/OverriddenItem"
+		}
+	    },
+	    "minProperties":1,
+	    "title": "Override"
+	}
+    }
+}
+)";
+
 using namespace falco;
 
 falco_engine::falco_engine(bool seed_rng)
@@ -67,6 +214,8 @@ falco_engine::falco_engine(bool seed_rng)
 	m_default_ruleset_id = find_ruleset_id(s_default_ruleset);
 
 	fill_engine_state_funcs(m_engine_state);
+
+	m_rule_schema = nlohmann::json::parse(rule_schema_string);
 }
 
 falco_engine::~falco_engine()
@@ -198,7 +347,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	cfg.extra_output_fields = m_extra_output_fields;
 
 	// read rules YAML file and collect its definitions
-	if(m_rule_reader->read(cfg, *m_rule_collector))
+	if(m_rule_reader->read(cfg, *m_rule_collector, m_rule_schema))
 	{
 		// compile the definitions (resolve macro/list refs, exceptions, ...)
 		m_last_compile_output = m_rule_compiler->new_compile_output();

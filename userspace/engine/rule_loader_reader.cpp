@@ -23,6 +23,7 @@ limitations under the License.
 #include "rule_loader_reader.h"
 #include "falco_engine_version.h"
 #include "rule_loading_messages.h"
+#include "yaml_helper.h"
 #include <libsinsp/logger.h>
 
 #include <re2/re2.h>
@@ -783,13 +784,15 @@ void rule_loader::reader::read_item(
 	}
 }
 
-bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& collector)
+bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& collector, const nlohmann::json& schema)
 {
 	std::vector<YAML::Node> docs;
+	yaml_helper reader;
+	std::string schema_validation;
 	rule_loader::context ctx(cfg.name);
 	try
 	{
-		docs = YAML::LoadAll(cfg.content);
+		docs = reader.loadall_from_string(cfg.content, schema, &schema_validation);
 	}
 	catch (YAML::ParserException& e)
 	{
@@ -807,7 +810,7 @@ bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& colle
 		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, "unknown YAML parsing error", ctx);
 		return false;
 	}
-
+	cfg.res->set_schema_validation_status(schema_validation);
 	for (auto doc = docs.begin(); doc != docs.end(); doc++)
 	{
 		if (doc->IsDefined() && !doc->IsNull())

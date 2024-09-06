@@ -43,7 +43,7 @@ public:
 		\brief Reads the contents of a ruleset and uses a collector to store
         thew new definitions
 	*/
-	virtual bool read(configuration& cfg, collector& loader);
+	virtual bool read(configuration& cfg, collector& loader, const nlohmann::json& schema={});
     
     /*!
         \brief Engine version used to be represented as a simple progressive

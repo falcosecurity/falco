@@ -41,10 +41,10 @@ limitations under the License.
 #include <valijson/schema_parser.hpp>
 #include <valijson/validator.hpp>
 
-#include "config_falco.h"
+//#include "config_falco.h"
 
-#include "event_drops.h"
-#include "falco_outputs.h"
+//#include "event_drops.h"
+//#include "falco_outputs.h"
 
 class yaml_helper;
 
@@ -89,7 +89,37 @@ public:
 	inline static const std::string configs_key = "config_files";
 	inline static const std::string validation_ok = "ok";
 	inline static const std::string validation_failed = "failed";
-	inline static const std::string validation_none = "schema not provided";
+	inline static const std::string validation_none = "none";
+
+	/**
+	* Load all the YAML document represented by the input string.
+	* Since this is used by rule loader, does not process env vars.
+	*/
+	std::vector<YAML::Node> loadall_from_string(const std::string& input, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	{
+		auto nodes = YAML::LoadAll(input);
+		if (validation)
+		{
+			if(!schema.empty())
+			{
+				// Validate each node.
+				for (const auto& node : nodes)
+				{
+					*validation = validate_node(node, schema);
+					if (*validation != validation_ok)
+					{
+						// Return first error
+						break;
+					}
+				}
+			}
+			else
+			{
+				*validation = validation_none;
+			}
+		}
+		return nodes;
+	}
 
 	/**
 	* Load the YAML document represented by the input string.
