@@ -45,12 +45,16 @@ falco_outputs::falco_outputs(
 	bool json_output,
 	bool json_include_output_property,
 	bool json_include_tags_property,
+	bool json_include_message_property,
 	uint32_t timeout,
 	bool buffered,
 	size_t outputs_queue_capacity,
 	bool time_format_iso_8601,
 	const std::string& hostname)
-	: m_formats(std::make_unique<falco_formats>(engine, json_include_output_property, json_include_tags_property)),
+	: m_formats(std::make_unique<falco_formats>(
+		engine,
+		json_include_output_property, json_include_tags_property, json_include_message_property,
+		time_format_iso_8601)),
 	  m_buffered(buffered),
 	  m_json_output(json_output),
 	  m_time_format_iso_8601(time_format_iso_8601),
@@ -136,32 +140,11 @@ void falco_outputs::handle_event(sinsp_evt *evt, const std::string &rule, const 
 	cmsg.source = source;
 	cmsg.rule = rule;
 
-	std::string sformat;
-	if(m_time_format_iso_8601)
-	{
-		sformat = "*%evt.time.iso8601: ";
-	}
-	else
-	{
-		sformat = "*%evt.time: ";
-	}
-	sformat += falco_common::format_priority(priority);
-
-	// if format starts with a *, remove it, as we added our own prefix
-	if(format[0] == '*')
-	{
-		sformat += " " + format.substr(1, format.length() - 1);
-	}
-	else
-	{
-		sformat += " " + format;
-	}
-
 	cmsg.msg = m_formats->format_event(
-		evt, rule, source, falco_common::format_priority(priority), sformat, tags, m_hostname, extra_fields
+		evt, rule, source, falco_common::format_priority(priority), format, tags, m_hostname, extra_fields
 	);
 
-	auto fields = m_formats->get_field_values(evt, source, sformat);
+	auto fields = m_formats->get_field_values(evt, source, format);
 	for (auto const& ef : extra_fields)
 	{
 		// when formatting for the control message we always want strings,

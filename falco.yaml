@@ -518,6 +518,15 @@ json_output: false
 # case.
 json_include_output_property: true
 
+# [Incubating] `json_include_message_property`
+#
+# When using JSON output in Falco, you have the option to include the formatted
+# rule output without timestamp or priority. For instance, if a rule specifies
+# an "output" property like "Opened process %proc.name" the "message" field will
+# only contain "Opened process bash" whereas the "output" field will contain more
+# information.
+json_include_message_property: false
+
 # [Stable] `json_include_tags_property`
 #
 # When using JSON output in Falco, you have the option to include the "tags"
