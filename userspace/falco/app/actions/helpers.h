@@ -26,9 +26,6 @@ namespace falco {
 namespace app {
 namespace actions {
 
-// Map that holds { rule filename | validation status } for each rule file read.
-typedef std::map<std::string, std::string> rule_read_res;
-
 bool check_rules_plugin_requirements(falco::app::state& s, std::string& err);
 void print_enabled_event_sources(falco::app::state& s);
 void activate_interesting_kernel_tracepoints(falco::app::state& s, std::unique_ptr<sinsp>& inspector);
@@ -43,14 +40,10 @@ falco::app::run_result open_live_inspector(
     const std::string& source);
 
 template<class InputIterator>
-rule_read_res read_files(InputIterator begin, InputIterator end,
+void read_files(InputIterator begin, InputIterator end,
 		std::vector<std::string>& rules_contents,
-		falco::load_result::rules_contents_t& rc,
-		const nlohmann::json& schema={})
+		falco::load_result::rules_contents_t& rc)
 {
-	rule_read_res res;
-	yaml_helper reader;
-	std::string validation;
 	// Read the contents in a first pass
 	for(auto it = begin; it != end; it++)
 	{
@@ -65,8 +58,6 @@ rule_read_res read_files(InputIterator begin, InputIterator end,
 		std::string rules_content((std::istreambuf_iterator<char>(is)),
 						std::istreambuf_iterator<char>());
 
-		reader.load_from_string(rules_content, schema, &validation);
-		res[filename] = validation;
 		rules_contents.emplace_back(std::move(rules_content));
 	}
 
@@ -85,8 +76,6 @@ rule_read_res read_files(InputIterator begin, InputIterator end,
 	{
 		throw falco_exception("Unexpected mismatch in rules content name/rules content sets?");
 	}
-
-	return res;
 }
 
 

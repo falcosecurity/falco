@@ -24,7 +24,7 @@ falco::app::run_result falco::app::actions::print_rule_schema(falco::app::state 
 {
 	if(s.options.print_rule_schema)
 	{
-		printf("%s", s.config->m_rule_schema.dump(2).c_str());
+		printf("%s", s.engine->m_rule_schema.dump(2).c_str());
 		return run_result::exit();
 	}
 	return run_result::ok();

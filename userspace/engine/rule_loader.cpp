@@ -18,6 +18,7 @@ limitations under the License.
 #include <string>
 
 #include "rule_loader.h"
+#include "yaml_helper.h"
 
 
 static const std::string item_type_strings[] = {
@@ -282,7 +283,8 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 
 rule_loader::result::result(const std::string &name)
 	: name(name),
-	  success(true)
+	  success(true),
+	  schema_validation_str(yaml_helper::validation_none)
 {
 }
 
@@ -294,6 +296,11 @@ bool rule_loader::result::successful()
 bool rule_loader::result::has_warnings()
 {
 	return (warnings.size() > 0);
+}
+
+std::string rule_loader::result::schema_validation()
+{
+	return schema_validation_str;
 }
 
 void rule_loader::result::add_error(load_result::error_code ec, const std::string& msg, const context& ctx)
@@ -309,6 +316,11 @@ void rule_loader::result::add_warning(load_result::warning_code wc, const std::s
 	warning warn = {wc, msg, ctx};
 
 	warnings.push_back(warn);
+}
+
+void rule_loader::result::set_schema_validation_status(const std::string& status)
+{
+	schema_validation_str = status;
 }
 
 const std::string& rule_loader::result::as_string(bool verbose, const rules_contents_t& contents)

@@ -247,12 +247,16 @@ namespace rule_loader
 		void add_warning(falco::load_result::warning_code ec,
 				 const std::string& msg,
 				 const context& ctx);
+
+		void set_schema_validation_status(const std::string& status);
+		std::string schema_validation();
 	protected:
 
 		const std::string& as_summary_string();
 		const std::string& as_verbose_string(const falco::load_result::rules_contents_t& contents);
 		std::string name;
 		bool success;
+		std::string schema_validation_str;
 
 		std::vector<error> errors;
 		std::vector<warning> warnings;

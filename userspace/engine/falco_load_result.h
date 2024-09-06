@@ -87,6 +87,9 @@ public:
 	// has_warnings() can both be true if there were only warnings.
 	virtual bool has_warnings() = 0;
 
+	// Return json schema validation status.
+	virtual std::string schema_validation() = 0;
+
 	// This represents a set of rules contents as a mapping from
 	// rules content name (usually filename) to rules content. The
 	// rules content is actually a reference to the actual string
