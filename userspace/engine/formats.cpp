@@ -22,10 +22,14 @@ limitations under the License.
 
 falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
 			     bool json_include_output_property,
-			     bool json_include_tags_property)
+			     bool json_include_tags_property,
+				 bool json_include_message_property,
+				 bool time_format_iso_8601)
 	: m_falco_engine(engine),
 	m_json_include_output_property(json_include_output_property),
-	m_json_include_tags_property(json_include_tags_property)
+	m_json_include_tags_property(json_include_tags_property),
+	m_json_include_message_property(json_include_message_property),
+	m_time_format_iso_8601(time_format_iso_8601)
 {
 }
 
@@ -37,21 +41,53 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 				   const std::string &level, const std::string &format, const std::set<std::string> &tags,
 				   const std::string &hostname, const extra_output_field_t &extra_fields) const
 {
-	std::string line;
+	std::string prefix_format;
+	std::string message_format = format;
+
+	if(m_time_format_iso_8601)
+	{
+		prefix_format = "*%evt.time.iso8601: ";
+	}
+	else
+	{
+		prefix_format = "*%evt.time: ";
+	}
+	prefix_format += level;
+
+	if(message_format[0] != '*')
+	{
+		message_format = "*" + message_format;
+	}
 
 	std::shared_ptr<sinsp_evt_formatter> formatter;
 
-	formatter = m_falco_engine->create_formatter(source, format);
+	auto prefix_formatter = m_falco_engine->create_formatter(source, prefix_format);
+	auto message_formatter = m_falco_engine->create_formatter(source, message_format);
 
-	// Format the original output string, regardless of output format
-	formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_NORMAL);
+	// The classic Falco output prefix with time and priority e.g. "13:53:31.726060287: Critical"
+	std::string prefix;
+	prefix_formatter->tostring_withformat(evt, prefix, sinsp_evt_formatter::OF_NORMAL);
 
-	if(formatter->get_output_format() == sinsp_evt_formatter::OF_JSON)
+	// The formatted rule message/output
+	std::string message;
+	message_formatter->tostring_withformat(evt, message, sinsp_evt_formatter::OF_NORMAL);
+
+	// The complete Falco output, e.g. "13:53:31.726060287: Critical Some Event Description (proc_exe=bash)..."
+	std::string output = prefix + " " + message;
+
+	if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_NORMAL)
 	{
-		std::string json_fields;
+		return output;
+	}
+	else if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_JSON)
+	{
+		std::string json_fields_message;
+		std::string json_fields_prefix;
 
-		// Format the event into a json object with all fields resolved
-		formatter->tostring(evt, json_fields);
+		// Resolve message fields
+		message_formatter->tostring(evt, json_fields_message);
+		// Resolve prefix (e.g. time) fields
+		prefix_formatter->tostring(evt, json_fields_prefix);
 
 		// For JSON output, the formatter returned a json-as-text
 		// object containing all the fields in the original format
@@ -78,8 +114,7 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 
 		if(m_json_include_output_property)
 		{
-			// This is the filled-in output line.
-			event["output"] = line;
+			event["output"] = output;
 		}
 
 		if(m_json_include_tags_property)
@@ -87,7 +122,19 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 			event["tags"] = tags;
 		}
 
-		event["output_fields"] = nlohmann::json::parse(json_fields);
+		if(m_json_include_message_property)
+		{
+			event["message"] = message;
+		}
+
+		event["output_fields"] = nlohmann::json::parse(json_fields_message);
+
+		auto prefix_fields = nlohmann::json::parse(json_fields_prefix);
+		if (prefix_fields.is_object()) {
+			for (auto const& el : prefix_fields.items()) {
+				event["output_fields"][el.key()] = el.value();
+			}
+		}
 
 		for (auto const& ef : extra_fields)
 		{
@@ -105,8 +152,8 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 			if(ef.second.second) // raw field
 			{
 				std::string json_field_map;
-				formatter = m_falco_engine->create_formatter(source, fformat);
-				formatter->tostring_withformat(evt, json_field_map, sinsp_evt_formatter::OF_JSON);
+				auto field_formatter = m_falco_engine->create_formatter(source, fformat);
+				field_formatter->tostring_withformat(evt, json_field_map, sinsp_evt_formatter::OF_JSON);
 				auto json_obj = nlohmann::json::parse(json_field_map);
 				event["output_fields"][ef.first] = json_obj[ef.first];
 			} else
@@ -115,10 +162,11 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 			}
 		}
 
-		line = event.dump();
+		return event.dump();
 	}
 
-	return line;
+	// should never get here until we only have OF_NORMAL and OF_JSON
+	return "INVALID_OUTPUT_FORMAT";
 }
 
 std::string falco_formats::format_string(sinsp_evt *evt, const std::string &format, const std::string &source) const
@@ -137,7 +185,13 @@ std::map<std::string, std::string> falco_formats::get_field_values(sinsp_evt *ev
 {
 	std::shared_ptr<sinsp_evt_formatter> formatter;
 
-	formatter = m_falco_engine->create_formatter(source, format);
+	std::string fformat = format;
+	if(fformat[0] != '*')
+	{
+		fformat = "*" + fformat;
+	}
+
+	formatter = m_falco_engine->create_formatter(source, fformat);
 
 	std::map<std::string, std::string> ret;
 

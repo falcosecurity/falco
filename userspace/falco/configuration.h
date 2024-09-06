@@ -149,6 +149,7 @@ public:
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
+	bool m_json_include_message_property;
 	std::string m_log_level;
 	std::vector<falco::outputs::config> m_outputs;
 
