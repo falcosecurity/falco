@@ -49,6 +49,7 @@ add_library(falco_application STATIC
   app/actions/validate_rules_files.cpp
   app/actions/create_requested_paths.cpp
   app/actions/close_inspectors.cpp
+  app/actions/print_config_schema.cpp
   configuration.cpp
   falco_outputs.cpp
   outputs_file.cpp

@@ -60,6 +60,7 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr)
 	// dependencies are honored (e.g. don't process events before
 	// loading plugins, opening inspector, etc.).
 	std::list<app_action> run_steps = {
+		falco::app::actions::print_config_schema,
 		falco::app::actions::load_config,
 		falco::app::actions::print_help,
 		falco::app::actions::print_kernel_version,
