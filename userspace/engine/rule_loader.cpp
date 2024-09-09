@@ -363,6 +363,12 @@ const std::string& rule_loader::result::as_summary_string()
 		os << "Invalid";
 	}
 
+	// Only print schema validation info if any validation was requested
+	if (schema_validation_str != yaml_helper::validation_none)
+	{
+		os << " | schema validation: " << schema_validation_str;
+	}
+
 	if(!errors.empty())
 	{
 		os << std::endl;
@@ -435,6 +441,12 @@ const std::string& rule_loader::result::as_verbose_string(const rules_contents_t
 		os << "Invalid";
 	}
 
+	// Only print schema validation info if any validation was requested
+	if (schema_validation_str != yaml_helper::validation_none)
+	{
+		os << " | schema validation: " << schema_validation_str;
+	}
+
 	if (!errors.empty())
 	{
 		os << std::endl;
@@ -494,8 +506,19 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 	j["name"] = name;
 	j["successful"] = success;
 
-	j["errors"] = nlohmann::json::array();
+	// Only print schema validation info if any validation was requested
+	if (schema_validation_str != yaml_helper::validation_none)
+	{
+		bool schema_valid = schema_validation_str == yaml_helper::validation_ok;
+		j["schema_valid"] = schema_valid;
+		j["schema_warnings"] = nlohmann::json::array();
+		if (!schema_valid)
+		{
+			j["schema_warnings"].push_back(schema_validation_str);
+		}
+	}
 
+	j["errors"] = nlohmann::json::array();
 	for(auto &err : errors)
 	{
 		nlohmann::json jerr;
@@ -511,7 +534,6 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 	}
 
 	j["warnings"] = nlohmann::json::array();
-
 	for(auto &warn : warnings)
 	{
 		nlohmann::json jwarn;
