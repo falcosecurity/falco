@@ -14,7 +14,7 @@ jobs:
     name: check-insecure-api
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep:1.41.0@sha256:85956fbe795a0e8a3825d5252f175887c0e0c6ce7a766a07062c0fb68415cd67
+      image: semgrep/semgrep:1.85.0@sha256:b4c2272e0a2e59ca551ff96d3bbae657bd2b7356e339af557b27a96d9e751544
     steps:
       - name: Checkout Falco ⤵️
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
