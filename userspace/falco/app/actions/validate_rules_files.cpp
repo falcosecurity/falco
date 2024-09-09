@@ -68,21 +68,22 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		// printed when verbose is true.
 		std::string summary;
 
+		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
+		for(const auto& file : s.options.validate_rules_filenames)
+		{
+			falco_logger::log(falco_logger::level::INFO, "   " + file + "\n");
+		}
+
 		// The json output encompasses all files so the
 		// validation result is a single json object.
 		std::string err = "";
 		nlohmann::json results = nlohmann::json::array();
 
-		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
 		for(auto &filename : s.options.validate_rules_filenames)
 		{
 			std::unique_ptr<falco::load_result> res;
 
 			res = s.engine->load_rules(rc.at(filename), filename);
-
-			auto priority = res->schema_validation() == yaml_helper::validation_ok ? falco_logger::level::INFO : falco_logger::level::WARNING;
-			falco_logger::log(priority, std::string("   ") + filename + " | schema validation: " + res->schema_validation() + "\n");
-
 			if (!check_rules_plugin_requirements(s, err))
 			{
 				return run_result::fatal(err);
