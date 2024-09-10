@@ -7,9 +7,6 @@ on:
 concurrency:
   group: ci-release
   cancel-in-progress: true  
-
-permissions:  
-  contents: read
   
 jobs:
   release-settings:
