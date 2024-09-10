@@ -3,6 +3,33 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.8.3
+
+* The init container, when driver.kind=auto, automatically generates
+  a new Falco configuration file and selects the appropriate engine
+  kind based on the environment where Falco is deployed.
+
+  With this commit, along with falcoctl PR #630, the Helm charts now 
+  support different driver kinds for Falco instances based on the 
+  specific node they are running on. When driver.kind=auto is set,
+  each Falco instance dynamically selects the most suitable 
+  driver (e.g., ebpf, kmod, modern_ebpf) for the node.
+  +-------------------------------------------------------+
+  | Kubernetes Cluster                                    |
+  |                                                       |
+  |  +-------------------+  +-------------------+        |
+  |  | Node 1             |  | Node 2             |        |
+  |  |                   |  |                   |        |
+  |  | Falco (ebpf) |  | Falco (kmod)       |        |
+  |  +-------------------+  +-------------------+        |
+  |                                                       |
+  |                 +-------------------+                |
+  |                 | Node 3             |                |
+  |                 |                   |                |
+  |                 | Falco (modern_ebpf)|                |
+  |                 +-------------------+                |
+  +-------------------------------------------------------+
+
 ## v4.8.2
 
 * fix(falco): correctly mount host filesystems when driver.kind is auto
