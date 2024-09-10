@@ -283,8 +283,7 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 
 rule_loader::result::result(const std::string &name)
 	: name(name),
-	  success(true),
-	  schema_validation_str(yaml_helper::validation_none)
+	  success(true)
 {
 }
 
@@ -300,7 +299,11 @@ bool rule_loader::result::has_warnings()
 
 std::string rule_loader::result::schema_validation()
 {
-	return schema_validation_str;
+	if (schema_validation_status.empty())
+	{
+		return yaml_helper::validation_none;
+	}
+	return schema_validation_status[0];
 }
 
 void rule_loader::result::add_error(load_result::error_code ec, const std::string& msg, const context& ctx)
@@ -318,9 +321,9 @@ void rule_loader::result::add_warning(load_result::warning_code wc, const std::s
 	warnings.push_back(warn);
 }
 
-void rule_loader::result::set_schema_validation_status(const std::string& status)
+void rule_loader::result::set_schema_validation_status(const std::vector<std::string>& status)
 {
-	schema_validation_str = status;
+	schema_validation_status = status;
 }
 
 const std::string& rule_loader::result::as_string(bool verbose, const rules_contents_t& contents)
@@ -364,9 +367,28 @@ const std::string& rule_loader::result::as_summary_string()
 	}
 
 	// Only print schema validation info if any validation was requested
-	if (schema_validation_str != yaml_helper::validation_none)
+	if (!schema_validation_status.empty())
 	{
-		os << " | schema validation: " << schema_validation_str;
+		bool schema_valid = schema_validation() == yaml_helper::validation_ok;
+		// Only print info when there are validation warnings
+		if (!schema_valid)
+		{
+			os << std::endl;
+
+			os << schema_validation_status.size() << " schema warnings: [";
+			bool first = true;
+			for(auto& status : schema_validation_status)
+			{
+				if(!first)
+				{
+					os << " ";
+				}
+				first = false;
+
+				os << status;
+			}
+			os << "]";
+		}
 	}
 
 	if(!errors.empty())
@@ -442,9 +464,28 @@ const std::string& rule_loader::result::as_verbose_string(const rules_contents_t
 	}
 
 	// Only print schema validation info if any validation was requested
-	if (schema_validation_str != yaml_helper::validation_none)
+	if (!schema_validation_status.empty())
 	{
-		os << " | schema validation: " << schema_validation_str;
+		bool schema_valid = schema_validation() == yaml_helper::validation_ok;
+		// Only print info when there are validation warnings
+		if (!schema_valid)
+		{
+			os << std::endl;
+
+			os << schema_validation_status.size() << " schema warnings: [";
+			bool first = true;
+			for(auto& status : schema_validation_status)
+			{
+				if(!first)
+				{
+					os << " ";
+				}
+				first = false;
+
+				os << status;
+			}
+			os << "]";
+		}
 	}
 
 	if (!errors.empty())
@@ -507,14 +548,17 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 	j["successful"] = success;
 
 	// Only print schema validation info if any validation was requested
-	if (schema_validation_str != yaml_helper::validation_none)
+	if (!schema_validation_status.empty())
 	{
-		bool schema_valid = schema_validation_str == yaml_helper::validation_ok;
+		bool schema_valid = schema_validation() == yaml_helper::validation_ok;
 		j["schema_valid"] = schema_valid;
 		j["schema_warnings"] = nlohmann::json::array();
 		if (!schema_valid)
 		{
-			j["schema_warnings"].push_back(schema_validation_str);
+			for (const auto &schema_warning : schema_validation_status)
+			{
+				j["schema_warnings"].push_back(schema_warning);
+			}
 		}
 	}
 

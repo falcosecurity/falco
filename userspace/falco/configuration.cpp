@@ -93,12 +93,13 @@ falco_configuration::falco_configuration():
 config_loaded_res falco_configuration::init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename)
 {
 	config_loaded_res res;
-	std::string validation_status;
+	std::vector<std::string> validation_status;
 
 	m_config.load_from_string(config_content, m_config_schema, &validation_status);
 	init_cmdline_options(cmdline_options);
 
-	res[filename] = validation_status;
+	// Only report top most schema validation status
+	res[filename] = validation_status[0];
 
 	load_yaml(filename);
 	return res;
@@ -107,7 +108,7 @@ config_loaded_res falco_configuration::init_from_content(const std::string& conf
 config_loaded_res falco_configuration::init_from_file(const std::string& conf_filename, const std::vector<std::string> &cmdline_options)
 {
 	config_loaded_res res;
-	std::string validation_status;
+	std::vector<std::string> validation_status;
 	try
 	{
 		m_config.load_from_file(conf_filename, m_config_schema, &validation_status);
@@ -119,7 +120,8 @@ config_loaded_res falco_configuration::init_from_file(const std::string& conf_fi
 	}
 	init_cmdline_options(cmdline_options);
 
-	res[conf_filename] = validation_status;
+	// Only report top most schema validation status
+	res[conf_filename] = validation_status[0];
 
 	merge_config_files(conf_filename, res);
 	load_yaml(conf_filename);
@@ -138,7 +140,7 @@ std::string falco_configuration::dump()
 // filenames and folders specified in config (minus the skipped ones).
 void falco_configuration::merge_config_files(const std::string& config_name, config_loaded_res &res)
 {
-	std::string validation_status;
+	std::vector<std::string> validation_status;
 	m_loaded_configs_filenames.push_back(config_name);
 	const auto ppath = std::filesystem::path(config_name);
 	// Parse files to be included
@@ -161,7 +163,8 @@ void falco_configuration::merge_config_files(const std::string& config_name, con
 		{
 			m_loaded_configs_filenames.push_back(include_file);
 			m_config.include_config_file(include_file_path.string(), m_config_schema, &validation_status);
-			res[include_file_path.string()] = validation_status;
+			// Only report top most schema validation status
+			res[include_file_path.string()] = validation_status[0];
 		}
 		else if (std::filesystem::is_directory(include_file_path))
 		{
@@ -180,7 +183,8 @@ void falco_configuration::merge_config_files(const std::string& config_name, con
 			for (const auto &f : v)
 			{
 				m_config.include_config_file(f, m_config_schema, &validation_status);
-				res[f] = validation_status;
+				// Only report top most schema validation status
+				res[f] = validation_status[0];
 			}
 		}
 	}
