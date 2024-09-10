@@ -248,7 +248,7 @@ namespace rule_loader
 				 const std::string& msg,
 				 const context& ctx);
 
-		void set_schema_validation_status(const std::string& status);
+		void set_schema_validation_status(const std::vector<std::string>& status);
 		std::string schema_validation();
 	protected:
 
@@ -256,7 +256,7 @@ namespace rule_loader
 		const std::string& as_verbose_string(const falco::load_result::rules_contents_t& contents);
 		std::string name;
 		bool success;
-		std::string schema_validation_str;
+		std::vector<std::string> schema_validation_status;
 
 		std::vector<error> errors;
 		std::vector<warning> warnings;

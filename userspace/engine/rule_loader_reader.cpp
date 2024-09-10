@@ -788,11 +788,11 @@ bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& colle
 {
 	std::vector<YAML::Node> docs;
 	yaml_helper reader;
-	std::string schema_validation;
+	std::vector<std::string> schema_warnings;
 	rule_loader::context ctx(cfg.name);
 	try
 	{
-		docs = reader.loadall_from_string(cfg.content, schema, &schema_validation);
+		docs = reader.loadall_from_string(cfg.content, schema, &schema_warnings);
 	}
 	catch (YAML::ParserException& e)
 	{
@@ -810,7 +810,7 @@ bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& colle
 		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, "unknown YAML parsing error", ctx);
 		return false;
 	}
-	cfg.res->set_schema_validation_status(schema_validation);
+	cfg.res->set_schema_validation_status(schema_warnings);
 	for (auto doc = docs.begin(); doc != docs.end(); doc++)
 	{
 		if (doc->IsDefined() && !doc->IsNull())

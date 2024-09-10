@@ -90,27 +90,23 @@ public:
 	* Load all the YAML document represented by the input string.
 	* Since this is used by rule loader, does not process env vars.
 	*/
-	std::vector<YAML::Node> loadall_from_string(const std::string& input, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	std::vector<YAML::Node> loadall_from_string(const std::string& input, const nlohmann::json& schema={}, std::vector<std::string> *schema_warnings=nullptr)
 	{
 		auto nodes = YAML::LoadAll(input);
-		if (validation)
+		if (schema_warnings)
 		{
+			schema_warnings->clear();
 			if(!schema.empty())
 			{
 				// Validate each node.
-				for (const auto& node : nodes)
+				for(const auto& node : nodes)
 				{
-					*validation = validate_node(node, schema);
-					if (*validation != validation_ok)
-					{
-						// Return first error
-						break;
-					}
+					validate_node(node, schema, schema_warnings);
 				}
 			}
 			else
 			{
-				*validation = validation_none;
+				schema_warnings->push_back(validation_none);
 			}
 		}
 		return nodes;
@@ -119,20 +115,21 @@ public:
 	/**
 	* Load the YAML document represented by the input string.
 	*/
-	void load_from_string(const std::string& input, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	void load_from_string(const std::string& input, const nlohmann::json& schema={}, std::vector<std::string> *schema_warnings=nullptr)
 	{
 		m_root = YAML::Load(input);
 		pre_process_env_vars(m_root);
 
-		if (validation)
+		if (schema_warnings)
 		{
+			schema_warnings->clear();
 			if(!schema.empty())
 			{
-				*validation = validate_node(m_root, schema);
+				validate_node(m_root, schema, schema_warnings);
 			}
 			else
 			{
-				*validation = validation_none;
+				schema_warnings->push_back(validation_none);
 			}
 		}
 	}
@@ -140,14 +137,14 @@ public:
 	/**
 	* Load the YAML document from the given file path.
 	*/
-	void load_from_file(const std::string& path, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	void load_from_file(const std::string& path, const nlohmann::json& schema={}, std::vector<std::string> *schema_warnings=nullptr)
 	{
-		m_root = load_from_file_int(path, schema, validation);
+		m_root = load_from_file_int(path, schema, schema_warnings);
 	}
 
-	void include_config_file(const std::string& include_file_path, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	void include_config_file(const std::string& include_file_path, const nlohmann::json& schema={}, std::vector<std::string> *schema_warnings=nullptr)
 	{
-		auto loaded_nodes = load_from_file_int(include_file_path, schema, validation);
+		auto loaded_nodes = load_from_file_int(include_file_path, schema, schema_warnings);
 		for(auto n : loaded_nodes)
 		{
 			/*
@@ -243,26 +240,27 @@ public:
 private:
 	YAML::Node m_root;
 
-	YAML::Node load_from_file_int(const std::string& path, const nlohmann::json& schema={}, std::string *validation=nullptr)
+	YAML::Node load_from_file_int(const std::string& path, const nlohmann::json& schema, std::vector<std::string> *schema_warnings)
 	{
 		auto root = YAML::LoadFile(path);
 		pre_process_env_vars(root);
 
-		if (validation)
+		if (schema_warnings)
 		{
+			schema_warnings->clear();
 			if(!schema.empty())
 			{
-				*validation = validate_node(root, schema);
+				validate_node(root, schema, schema_warnings);
 			}
 			else
 			{
-				*validation = validation_none;
+				schema_warnings->push_back(validation_none);
 			}
 		}
 		return root;
 	}
 
-	std::string validate_node(const YAML::Node &node, const nlohmann::json& schema={})
+	void validate_node(const YAML::Node &node, const nlohmann::json& schema, std::vector<std::string> *schema_warnings)
 	{
 		// Validate the yaml against our json schema
 		valijson::Schema schemaDef;
@@ -277,16 +275,18 @@ private:
 		{
 			valijson::ValidationResults::Error error;
 			// report only the top-most error
-			if (validationResults.popError(error))
+			while (validationResults.popError(error))
 			{
-				return std::string(validation_failed + " for ")
+				schema_warnings->push_back(std::string(validation_failed + " for ")
 				       + std::accumulate(error.context.begin(), error.context.end(), std::string(""))
 				       + ": "
-				       + error.description;
+				       + error.description);
 			}
-			return validation_failed;
 		}
-		return validation_ok;
+		else
+		{
+			schema_warnings->push_back(validation_ok);
+		}
 	}
 
 	/*

@@ -111,14 +111,14 @@ TEST(Configuration, schema_yaml_helper_validator)
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml));
 
 	// We pass a string variable but not a schema
-	std::string validation;
+	std::vector<std::string> validation;
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, nlohmann::json{}, &validation));
-	EXPECT_EQ(validation, yaml_helper::validation_none);
+	EXPECT_EQ(validation[0], yaml_helper::validation_none);
 
 	// We pass a schema but not a string storage for the validation; no validation takes place
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, falco_config.m_config_schema, nullptr));
 
 	// We pass everything
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, falco_config.m_config_schema, &validation));
-	EXPECT_EQ(validation, yaml_helper::validation_ok);
+	EXPECT_EQ(validation[0], yaml_helper::validation_ok);
 }
