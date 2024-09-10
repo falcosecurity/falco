@@ -3,6 +3,20 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.8.2
+
+* fix(falco): correctly mount host filesystems when driver.kind is auto
+
+  When falco runs with kmod/module driver it needs special filesystems
+  to be mounted from the host such /dev and /sys/module/falco.
+  This commit ensures that we mount them in the falco container.
+
+  Note that, the /sys/module/falco is now mounted as /sys/module since
+  we do not know which kind of driver will be used. The falco folder 
+  exists under /sys/module only when the kernel module is loaded, 
+  hence it's not possible to use the /sys/module/falco hostpath when driver.kind 
+  is set to auto.
+
 ## v4.8.1
 
 * fix(falcosidekick): add support for custom service type for webui redis
