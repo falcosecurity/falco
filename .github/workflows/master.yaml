@@ -6,10 +6,7 @@ on:
 # Checks if any concurrent jobs is running for master CI and eventually cancel it
 concurrency:
   group: ci-master
-  cancel-in-progress: true  
-
-permissions:  
-  contents: read
+  cancel-in-progress: true
 
 jobs:
   fetch-version:
