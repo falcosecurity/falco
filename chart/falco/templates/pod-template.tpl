@@ -129,6 +129,10 @@ spec:
           name: plugins-install-dir
       {{- end }}
       {{- end }}
+      {{- if eq (include "driverLoader.enabled" .) "true" }}
+        - mountPath: /etc/falco/config.d
+          name: specialized-falco-configs
+      {{- end }}
         - mountPath: /root/.falco
           name: root-falco-fs
         {{- if or .Values.driver.enabled .Values.mounts.enforceProcMount }}
@@ -227,6 +231,10 @@ spec:
     {{- include "falcoctl.initContainer" . | nindent 4 }}
   {{- end }}
   volumes:
+    {{- if eq (include "driverLoader.enabled" .) "true" }}
+    - name: specialized-falco-configs
+      emptyDir: {}
+    {{- end }}
     {{- if or .Values.falcoctl.artifact.install.enabled .Values.falcoctl.artifact.follow.enabled }}
     - name: plugins-install-dir
       emptyDir: {}
@@ -384,6 +392,8 @@ spec:
     - mountPath: /host/etc
       name: etc-fs
       readOnly: true
+    - mountPath: /etc/falco/config.d
+      name: specialized-falco-configs
   env:
     - name: HOST_ROOT
       value: /host
@@ -395,6 +405,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: metadata.namespace
+    - name: FALCOCTL_DRIVER_CONFIG_CONFIGMAP
+      value: {{ include "falco.fullname" . }}
   {{- else }}
     - name: FALCOCTL_DRIVER_CONFIG_UPDATE_FALCO
       value: "false"

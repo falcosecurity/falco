@@ -36,6 +36,11 @@ var (
 			},
 		}}
 
+	configmapEnvVar = v1.EnvVar{
+		Name:  "FALCOCTL_DRIVER_CONFIG_CONFIGMAP",
+		Value: releaseName + "-falco",
+	}
+
 	updateConfigMapEnvVar = v1.EnvVar{
 		Name:  "FALCOCTL_DRIVER_CONFIG_UPDATE_FALCO",
 		Value: "false",
@@ -64,7 +69,11 @@ func TestDriverLoaderEnabled(t *testing.T) {
 				require.Contains(t, container.Args, "auto")
 				require.True(t, *container.SecurityContext.Privileged)
 				require.Contains(t, container.Env, namespaceEnvVar)
+				require.Contains(t, container.Env, configmapEnvVar)
 				require.NotContains(t, container.Env, updateConfigMapEnvVar)
+
+				// Check that the expected volumes are there.
+				volumeMounts(t, container.VolumeMounts)
 			},
 		},
 		{
@@ -124,7 +133,11 @@ func TestDriverLoaderEnabled(t *testing.T) {
 				require.Contains(t, container.Args, "kmod")
 				require.True(t, *container.SecurityContext.Privileged)
 				require.NotContains(t, container.Env, namespaceEnvVar)
+				require.NotContains(t, container.Env, configmapEnvVar)
 				require.Contains(t, container.Env, updateConfigMapEnvVar)
+
+				// Check that the expected volumes are there.
+				volumeMounts(t, container.VolumeMounts)
 			},
 		},
 		{
@@ -139,7 +152,11 @@ func TestDriverLoaderEnabled(t *testing.T) {
 				require.Contains(t, container.Args, "kmod")
 				require.True(t, *container.SecurityContext.Privileged)
 				require.NotContains(t, container.Env, namespaceEnvVar)
+				require.NotContains(t, container.Env, configmapEnvVar)
 				require.Contains(t, container.Env, updateConfigMapEnvVar)
+
+				// Check that the expected volumes are there.
+				volumeMounts(t, container.VolumeMounts)
 			},
 		},
 		{
@@ -155,6 +172,10 @@ func TestDriverLoaderEnabled(t *testing.T) {
 				require.Nil(t, container.SecurityContext)
 				require.NotContains(t, container.Env, namespaceEnvVar)
 				require.Contains(t, container.Env, updateConfigMapEnvVar)
+				require.NotContains(t, container.Env, configmapEnvVar)
+
+				// Check that the expected volumes are there.
+				volumeMounts(t, container.VolumeMounts)
 			},
 		},
 		{
@@ -189,4 +210,56 @@ func TestDriverLoaderEnabled(t *testing.T) {
 			testCase.expected(t, nil)
 		})
 	}
+}
+
+// volumenMounts checks that the expected volume mounts have been configured.
+func volumeMounts(t *testing.T, volumeMounts []v1.VolumeMount) {
+	rootFalcoFS := v1.VolumeMount{
+		Name:      "root-falco-fs",
+		ReadOnly:  false,
+		MountPath: "/root/.falco",
+	}
+	require.Contains(t, volumeMounts, rootFalcoFS)
+
+	procFS := v1.VolumeMount{
+		Name:      "proc-fs",
+		ReadOnly:  true,
+		MountPath: "/host/proc",
+	}
+	require.Contains(t, volumeMounts, procFS)
+
+	bootFS := v1.VolumeMount{
+		Name:      "boot-fs",
+		ReadOnly:  true,
+		MountPath: "/host/boot",
+	}
+	require.Contains(t, volumeMounts, bootFS)
+
+	libModulesFS := v1.VolumeMount{
+		Name:      "lib-modules",
+		ReadOnly:  false,
+		MountPath: "/host/lib/modules",
+	}
+	require.Contains(t, volumeMounts, libModulesFS)
+
+	usrFS := v1.VolumeMount{
+		Name:      "usr-fs",
+		ReadOnly:  true,
+		MountPath: "/host/usr",
+	}
+	require.Contains(t, volumeMounts, usrFS)
+
+	etcFS := v1.VolumeMount{
+		Name:      "etc-fs",
+		ReadOnly:  true,
+		MountPath: "/host/etc",
+	}
+	require.Contains(t, volumeMounts, etcFS)
+
+	specializedFalcoConfigs := v1.VolumeMount{
+		Name:      "specialized-falco-configs",
+		ReadOnly:  false,
+		MountPath: "/etc/falco/config.d",
+	}
+	require.Contains(t, volumeMounts, specializedFalcoConfigs)
 }
