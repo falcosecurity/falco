@@ -151,12 +151,12 @@ spec:
           name: etc-fs
           readOnly: true
         {{- end -}}
-        {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
+        {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") (eq .Values.driver.kind "auto")) }}
         - mountPath: /host/dev
           name: dev-fs
           readOnly: true
         - name: sys-fs
-          mountPath: /sys/module/falco
+          mountPath: /sys/module
         {{- end }}
         {{- if and .Values.driver.enabled (and (eq .Values.driver.kind "ebpf") (contains "falco-no-driver" .Values.image.repository)) }}
         - name: debugfs
@@ -249,13 +249,13 @@ spec:
       hostPath:
         path: /etc
     {{- end }}
-    {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
+    {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") (eq .Values.driver.kind "auto")) }}
     - name: dev-fs
       hostPath:
         path: /dev
     - name: sys-fs
       hostPath:
-        path: /sys/module/falco
+        path: /sys/module
     {{- end }}
     {{- if and .Values.driver.enabled (and (eq .Values.driver.kind "ebpf") (contains "falco-no-driver" .Values.image.repository)) }}
     - name: debugfs
