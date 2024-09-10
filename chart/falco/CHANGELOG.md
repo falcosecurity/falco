@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.9.1
+
+* feat(falco): add labels and annotations to the metrics service
+
 ## v4.9.0
 * Bump Falco to v0.39.0
 * update(falco): add new configuration entries for Falco

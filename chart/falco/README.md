@@ -581,7 +581,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v4.9.0 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v4.9.1 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -741,7 +741,7 @@ The following table lists the main configurable parameters of the falco chart v4
 | image.repository | string | `"falcosecurity/falco-no-driver"` | The image repository to pull from |
 | image.tag | string | `""` | The image tag to pull. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | Secrets containing credentials when pulling from private/secure registries. |
-| metrics | object | `{"convertMemoryToMB":true,"enabled":false,"includeEmptyValues":false,"interval":"1h","kernelEventCountersEnabled":true,"kernelEventCountersPerCPUEnabled":false,"libbpfStatsEnabled":true,"outputRule":false,"resourceUtilizationEnabled":true,"rulesCountersEnabled":true,"service":{"create":true,"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"},"stateCountersEnabled":true}` | metrics configures Falco to enable and expose the metrics. |
+| metrics | object | `{"convertMemoryToMB":true,"enabled":false,"includeEmptyValues":false,"interval":"1h","kernelEventCountersEnabled":true,"kernelEventCountersPerCPUEnabled":false,"libbpfStatsEnabled":true,"outputRule":false,"resourceUtilizationEnabled":true,"rulesCountersEnabled":true,"service":{"annotations":{},"create":true,"labels":{},"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"},"stateCountersEnabled":true}` | metrics configures Falco to enable and expose the metrics. |
 | metrics.convertMemoryToMB | bool | `true` | convertMemoryToMB specifies whether the memory should be converted to mb. |
 | metrics.enabled | bool | `false` | enabled specifies whether the metrics should be enabled. |
 | metrics.includeEmptyValues | bool | `false` | includeEmptyValues specifies whether the empty values should be included in the metrics. |
@@ -751,8 +751,10 @@ The following table lists the main configurable parameters of the falco chart v4
 | metrics.outputRule | bool | `false` | outputRule enables seamless metrics and performance monitoring, we recommend emitting metrics as the rule "Falco internal: metrics snapshot". This option is particularly useful when Falco logs are preserved in a data lake. Please note that to use this option, the Falco rules config `priority` must be set to `info` at a minimum. |
 | metrics.resourceUtilizationEnabled | bool | `true` | resourceUtilizationEnabled`: Emit CPU and memory usage metrics. CPU usage is reported as a percentage of one CPU and can be normalized to the total number of CPUs to determine overall usage. Memory metrics are provided in raw units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`) and can be uniformly converted to megabytes (MB) using the `convert_memory_to_mb` functionality. In environments such as Kubernetes when deployed as daemonset, it is crucial to track Falco's container memory usage. To customize the path of the memory metric file, you can create an environment variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor container memory usage, which aligns with Kubernetes' `container_memory_working_set_bytes` metric. Finally, we emit the overall host CPU and memory usages, along with the total number of processes and open file descriptors (fds) on the host, obtained from the proc file system unrelated to Falco's monitoring. These metrics help assess Falco's usage in relation to the server's workload intensity. |
 | metrics.rulesCountersEnabled | bool | `true` | rulesCountersEnabled specifies whether the counts for each rule should be emitted. |
-| metrics.service | object | `{"create":true,"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"}` | service exposes the metrics service to be accessed from within the cluster. ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| metrics.service | object | `{"annotations":{},"create":true,"labels":{},"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"}` | service exposes the metrics service to be accessed from within the cluster. ref: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| metrics.service.annotations | object | `{}` | annotations to add to the service. |
 | metrics.service.create | bool | `true` | create specifies whether a service should be created. |
+| metrics.service.labels | object | `{}` | labels to add to the service. |
 | metrics.service.ports | object | `{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}}` | ports denotes all the ports on which the Service will listen. |
 | metrics.service.ports.metrics | object | `{"port":8765,"protocol":"TCP","targetPort":8765}` | metrics denotes a listening service named "metrics". |
 | metrics.service.ports.metrics.port | int | `8765` | port is the port on which the Service will listen. |
