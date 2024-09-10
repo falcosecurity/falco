@@ -250,6 +250,10 @@ metrics:
     # -- type denotes the service type. Setting it to "ClusterIP" we ensure that are accessible
     # from within the cluster.
     type: ClusterIP
+    # -- labels to add to the service.
+    labels: {}
+    # -- annotations to add to the service.
+    annotations: {}
     # -- ports denotes all the ports on which the Service will listen.
     ports:
       # -- metrics denotes a listening service named "metrics".
