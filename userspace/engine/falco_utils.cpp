@@ -151,7 +151,7 @@ std::string calculate_file_sha256sum(const std::string& filename)
 }
 #endif
 
-std::string sanitize_metric_name(const std::string& name)
+std::string sanitize_rule_name(const std::string& name)
 {
 	std::string sanitized_name = name;
 	RE2::GlobalReplace(&sanitized_name, "[^a-zA-Z0-9_:]", "_");
