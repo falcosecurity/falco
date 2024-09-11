@@ -15,6 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <re2/re2.h>
+
 #include "falco_metrics.h"
 
 #include "falco_utils.h"
@@ -246,21 +248,68 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		for (auto& metric: metrics_snapshot)
 		{
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-			std::string namespace_name = "scap";
+			std::string prometheus_subsystem = "scap";
 			
 			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION || metric.flags & METRICS_V2_KERNEL_COUNTERS)
 			{
-				namespace_name = "falco";
+				prometheus_subsystem = "falco";
 			}
 
 			if (metric.flags & METRICS_V2_PLUGINS)
 			{
-				namespace_name = "plugins";
+				prometheus_subsystem = "plugins";
 			}
 
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", namespace_name);
+			if (strncmp(metric.name, "n_evts_cpu", 10) == 0 || strncmp(metric.name, "n_drops_cpu", 11) == 0) // prefix match
+			{
+				std::string name_str(metric.name);
+				re2::RE2 pattern("(\\d+)");
+				std::string cpu_number;
+				if (re2::RE2::PartialMatch(name_str, pattern, &cpu_number))
+				{
+					re2::RE2::GlobalReplace(&name_str, pattern, "");
+					auto metric_new = libs::metrics::libsinsp_metrics::new_metric(name_str.c_str(),
+								METRICS_V2_KERNEL_COUNTERS, // todo replace with new METRICS_V2_KERNEL_COUNTERS_PER_CPU after bumping libs the next time
+								METRIC_VALUE_TYPE_U64,
+								METRIC_VALUE_UNIT_COUNT,
+								METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+								metric.value.u64);
+					const std::map<std::string, std::string>& const_labels = {
+						{"cpu", cpu_number}
+					};
+					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
+				}
+			}
+			else if (strncmp(metric.name, "n_drops_buffer_total", 21) == 0) // exact match
+			{
+				continue;
+			}
+			else if (strncmp(metric.name, "n_drops_buffer", 14) == 0) // prefix match
+			{
+				re2::RE2 pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_(enter|exit)$");
+				std::string drop;
+				std::string dir;
+				std::string name_str(metric.name);
+				if (re2::RE2::FullMatch(name_str, pattern, &drop, &dir))
+				{
+					auto metric_new = libs::metrics::libsinsp_metrics::new_metric("n_drops_buffer",
+								METRICS_V2_KERNEL_COUNTERS,
+								METRIC_VALUE_TYPE_U64,
+								METRIC_VALUE_UNIT_COUNT,
+								METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+								metric.value.u64);
+					const std::map<std::string, std::string>& const_labels = {
+						{"drop", drop},
+						{"dir", dir}
+					};
+					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
+				}
+			}
+			else
+			{
+				prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", prometheus_subsystem);
+			}
 		}
-
 	}
 	return prometheus_text;
 }

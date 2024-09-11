@@ -346,7 +346,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	{
 		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
-		metric_name_file_sha256 = "falco.sha256_rules_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
+		metric_name_file_sha256 = "falco.sha256_rules_file." + falco::utils::sanitize_rule_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 
@@ -354,7 +354,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	{
 		fs::path fs_path = item.first;
 		std::string metric_name_file_sha256 = fs_path.filename().stem();
-		metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_metric_name(metric_name_file_sha256);
+		metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_rule_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
 
@@ -434,7 +434,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				continue;
 			}
 			auto rule = rules.at(i);
-			std::string rules_metric_name = "falco.rules." + falco::utils::sanitize_metric_name(rule->name);
+			std::string rules_metric_name = "falco.rules." + falco::utils::sanitize_rule_name(rule->name);
 			output_fields[rules_metric_name] = rule_count;
 		}
 	}
