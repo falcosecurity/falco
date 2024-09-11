@@ -1,16 +1,36 @@
----
 Language: Cpp
-BasedOnStyle: LLVM
-AccessModifierOffset: -8
-BreakBeforeBraces: Allman
+BasedOnStyle: Google
+AccessModifierOffset: -4
+BreakBeforeBraces: Attach
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+ColumnLimit: 100
+DerivePointerBinding: false
+IndentCaseLabels: false
+IndentWidth: 4
+SpaceAfterTemplateKeyword: false
+TabWidth: 4
+UseTab: ForIndentation
 BreakConstructorInitializers: AfterColon
-ColumnLimit: 0
 ConstructorInitializerIndentWidth: 8
 ContinuationIndentWidth: 8
 DerivePointerAlignment: true
-IndentWidth: 8
-SortIncludes: false
-SpaceAfterTemplateKeyword: false
+SortIncludes: Never
 SpaceBeforeCtorInitializerColon: false
 SpaceBeforeParens: Never
-UseTab: Always
+InsertNewlineAtEOF: true
+---
+Language: Proto
+DisableFormat: true
+---
+Language: JavaScript
+DisableFormat: true
+---
+Language: Java
+DisableFormat: true
