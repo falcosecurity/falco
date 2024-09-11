@@ -1,0 +1,23 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+fail_fast: false
+minimum_pre_commit_version: '0'
+repos:
+- repo: https://github.com/cheshirekow/cmake-format-precommit
+  rev: v0.6.13
+  hooks:
+  - id: cmake-format
+    stages: [commit]
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: v18.1.8
+  hooks:
+  - id: clang-format
+    types_or: [c++, c]
+    stages: [commit]
+- repo: local
+  hooks:
+  - id: dco-hook-local
+    name: DCO hook local
+    entry: ./tools/local_hooks/dco-pre-commit-msg.sh
+    language: script
+    stages: [prepare-commit-msg]

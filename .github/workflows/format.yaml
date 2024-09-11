@@ -1,0 +1,38 @@
+name: Format code
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - "release/**"
+
+jobs:
+  format:
+    name: format code 🐲
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository 🎉
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Install deps ⛓️
+        run: |
+          sudo apt update -y
+          sudo apt install -y --no-install-recommends ca-certificates pip git
+          pip install pre-commit
+
+      - name: Run pre-commit ©️
+        run: |
+          pre-commit run --all-files
+
+      - name: Generate the git-diff 🚒
+        if: failure()
+        run: git diff > format_diff.patch
+
+      - name: Upload the git diff artifact 📦
+        if: failure()
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: format_diff.patch
+          path: ./format_diff.patch
