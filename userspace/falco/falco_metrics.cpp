@@ -102,13 +102,13 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 		for (const auto& item : state.config.get()->m_loaded_rules_filenames_sha256sum)
 		{
 			fs::path fs_path = item.first;
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_sha256_rules_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("sha256_rules_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
 		}
 
 		for (const auto& item : state.config.get()->m_loaded_configs_filenames_sha256sum)
 		{
 			fs::path fs_path = item.first;
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("falco_sha256_config_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus("sha256_config_files", "falcosecurity", "falco", {{"file_name", fs_path.filename().stem()}, {"sha256", item.second}});
 		}
 
 		static std::string ifinfo_json_escaped;
