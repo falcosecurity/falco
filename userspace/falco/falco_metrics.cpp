@@ -218,10 +218,10 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 					/* Examples ...
 						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
 						# TYPE falcosecurity_falco_rules_counters_total counter
-						falcosecurity_falco_rules_counters_total{raw_name="rules_counters",priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
+						falcosecurity_falco_rules_counters_total{priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
 						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
 						# TYPE falcosecurity_falco_rules_counters_total counter
-						falcosecurity_falco_rules_counters_total{raw_name="rules_counters",priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
+						falcosecurity_falco_rules_counters_total{priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
 					*/
 					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_counters",
 											METRICS_V2_RULE_COUNTERS,
@@ -258,7 +258,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 			std::string prometheus_subsystem = "scap";
 			
-			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION || metric.flags & METRICS_V2_KERNEL_COUNTERS)
+			if (metric.flags & METRICS_V2_RESOURCE_UTILIZATION)
 			{
 				prometheus_subsystem = "falco";
 			}
@@ -279,7 +279,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 					re2::RE2::GlobalReplace(&name_str, pattern, "");
 					// possible double __ will be sanitized within libs
 					auto metric_new = libs::metrics::libsinsp_metrics::new_metric(name_str.c_str(),
-								METRICS_V2_KERNEL_COUNTERS, // todo replace with new METRICS_V2_KERNEL_COUNTERS_PER_CPU after bumping libs the next time
+								METRICS_V2_KERNEL_COUNTERS_PER_CPU,
 								METRIC_VALUE_TYPE_U64,
 								METRIC_VALUE_UNIT_COUNT,
 								METRIC_VALUE_METRIC_TYPE_MONOTONIC,
@@ -288,12 +288,12 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 						{"cpu", cpu_number}
 					};
 					/* Examples ...
-						# HELP falcosecurity_falco_n_evts_cpu_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_n_evts_cpu_total counter
-						falcosecurity_falco_n_evts_cpu_total{cpu="7"} 237
-						# HELP falcosecurity_falco_n_drops_cpu_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_n_drops_cpu_total counter
-						falcosecurity_falco_n_drops_cpu_total{cpu="7"} 0
+						# HELP falcosecurity_scap_n_evts_cpu_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_scap_n_evts_cpu_total counter
+						falcosecurity_scap_n_evts_cpu_total{cpu="7"} 237
+						# HELP falcosecurity_scap_n_drops_cpu_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_scap_n_drops_cpu_total counter
+						falcosecurity_scap_n_drops_cpu_total{cpu="7"} 0
 					*/
 					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
 				}
@@ -322,12 +322,12 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 						{"dir", dir}
 					};
 					/* Examples ...
-						# HELP falcosecurity_falco_n_drops_buffer_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_n_drops_buffer_total counter
-						falcosecurity_falco_n_drops_buffer_total{dir="enter",drop="clone_fork"} 0
-						# HELP falcosecurity_falco_n_drops_buffer_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_n_drops_buffer_total counter
-						falcosecurity_falco_n_drops_buffer_total{dir="exit",drop="clone_fork"} 0
+						# HELP falcosecurity_scap_n_drops_buffer_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_scap_n_drops_buffer_total counter
+						falcosecurity_scap_n_drops_buffer_total{dir="enter",drop="clone_fork"} 0
+						# HELP falcosecurity_scap_n_drops_buffer_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_scap_n_drops_buffer_total counter
+						falcosecurity_scap_n_drops_buffer_total{dir="exit",drop="clone_fork"} 0
 					*/
 					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
 				}
