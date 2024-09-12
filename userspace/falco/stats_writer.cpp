@@ -470,7 +470,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				m_writer->m_output_rule_metrics_converter->convert_metric_to_unit_convention(metric);
 			}
 			char metric_name[METRIC_NAME_MAX] = "falco.";
-			if((metric.flags & METRICS_V2_LIBBPF_STATS) || (metric.flags & METRICS_V2_KERNEL_COUNTERS) )
+			if((metric.flags & METRICS_V2_LIBBPF_STATS) || (metric.flags & METRICS_V2_KERNEL_COUNTERS) || (metric.flags & METRICS_V2_KERNEL_COUNTERS_PER_CPU) )
 			{
 				strlcpy(metric_name, "scap.", sizeof(metric_name));
 			}
@@ -600,7 +600,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 			// Note: src is static for live captures
 			if (src != falco_common::syscall_source)
 			{
-				flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS);
+				flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_KERNEL_COUNTERS_PER_CPU | METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS);
 
 			}
 			m_writer->m_libs_metrics_collector = std::make_unique<libs::metrics::libs_metrics_collector>(inspector.get(), flags);

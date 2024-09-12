@@ -581,6 +581,10 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	{
 		m_metrics_flags |= METRICS_V2_KERNEL_COUNTERS;
 	}
+	if (m_config.get_scalar<bool>("metrics.kernel_event_counters_per_cpu_enabled", true))
+	{
+		m_metrics_flags |= METRICS_V2_KERNEL_COUNTERS_PER_CPU;
+	}
 	if (m_config.get_scalar<bool>("metrics.libbpf_stats_enabled", true))
 	{
 		m_metrics_flags |= METRICS_V2_LIBBPF_STATS;

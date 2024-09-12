@@ -1066,6 +1066,9 @@ syscall_event_drops:
 # counters reflect monotonic values since Falco's start and are exported at a
 # constant stats interval.
 #
+# `kernel_event_counters_per_cpu_enabled`: Detailed kernel event and drop counters
+# per CPU. typically used when debugging and not in production.
+#
 # `libbpf_stats_enabled`: Exposes statistics similar to `bpftool prog show`,
 # providing information such as the number of invocations of each BPF program
 # attached by Falco and the time spent in each program measured in nanoseconds.
@@ -1104,6 +1107,8 @@ metrics:
   resource_utilization_enabled: true
   state_counters_enabled: true
   kernel_event_counters_enabled: true
+  # Enabling `kernel_event_counters_per_cpu_enabled` automatically enables `kernel_event_counters_enabled`
+  kernel_event_counters_per_cpu_enabled: false
   libbpf_stats_enabled: true
   plugins_metrics_enabled: true
   convert_memory_to_mb: true
