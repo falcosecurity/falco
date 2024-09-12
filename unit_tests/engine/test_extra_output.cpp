@@ -29,7 +29,7 @@ TEST_F(test_falco_engine, extra_format_all)
   priority: INFO
 )END";
 
-	m_engine->add_extra_output_format("evt.type=%evt.type", "", "", "", false);
+	m_engine->add_extra_output_format("evt.type=%evt.type", "", {}, "", false);
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"user=%user.name command=%proc.cmdline file=%fd.name evt.type=%evt.type");
@@ -51,7 +51,7 @@ TEST_F(test_falco_engine, extra_format_by_rule)
   priority: INFO
 )END";
 
-	m_engine->add_extra_output_format("evt.type=%evt.type", "", "", "legit_rule", false);
+	m_engine->add_extra_output_format("evt.type=%evt.type", "", {}, "legit_rule", false);
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"out 1 evt.type=%evt.type");
@@ -74,15 +74,24 @@ TEST_F(test_falco_engine, extra_format_by_tag_rule)
   output: out 2
   priority: INFO
   tags: [tag1]
+
+- rule: a_third_rule
+  desc: legit rule description
+  condition: evt.type=open
+  output: out 3
+  priority: INFO
+  tags: [tag1, tag2]
 )END";
 
-	m_engine->add_extra_output_format("extra 1", "", "tag1", "", false);
-	m_engine->add_extra_output_format("extra 2", "", "", "another_rule", false);
+	m_engine->add_extra_output_format("extra 1", "", {"tag1"}, "", false);
+	m_engine->add_extra_output_format("extra 2", "", {}, "another_rule", false);
+	m_engine->add_extra_output_format("extra 3", "", {"tag1", "tag2"}, "", false);
 
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"out 1 extra 1");
 	EXPECT_EQ(get_compiled_rule_output("another_rule"),"out 2 extra 1 extra 2");
+	EXPECT_EQ(get_compiled_rule_output("a_third_rule"),"out 3 extra 1 extra 3");
 }
 
 TEST_F(test_falco_engine, extra_format_replace_container_info)
@@ -103,7 +112,7 @@ TEST_F(test_falco_engine, extra_format_replace_container_info)
   tags: [tag1]
 )END";
 
-	m_engine->add_extra_output_format("extra 1", "", "", "", true);
+	m_engine->add_extra_output_format("extra 1", "", {}, "", true);
 
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
@@ -141,7 +150,7 @@ TEST_F(test_falco_engine, extra_fields_all)
 	std::unordered_map<std::string, std::string> extra_formatted_fields = {{"my_field", "hello %evt.num"}};
   for (auto const& f : extra_formatted_fields)
   {
-    m_engine->add_extra_output_formatted_field(f.first, f.second, "", "", "");
+    m_engine->add_extra_output_formatted_field(f.first, f.second, "", {}, "");
   }
 
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;

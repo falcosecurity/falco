@@ -19,6 +19,7 @@ limitations under the License.
 #include <memory>
 #include <set>
 #include <vector>
+#include <functional>
 
 #include "rule_loader_compiler.h"
 #include "filter_warning_resolver.h"
@@ -501,9 +502,18 @@ void rule_loader::compiler::compile_rule_infos(
 				continue;
 			}
 
-			if (extra.m_tag != "" && r.tags.count(extra.m_tag) == 0)
+			if (extra.m_tags.size() != 0)
 			{
-				continue;
+				std::set<std::string> intersect;
+
+				set_intersection(extra.m_tags.begin(), extra.m_tags.end(),
+					r.tags.begin(), r.tags.end(),
+					inserter(intersect, intersect.begin()));
+
+				if (intersect.size() != extra.m_tags.size())
+				{
+					continue;
+				}
 			}
 
 			if (extra.m_rule != "" && r.name != extra.m_rule)
@@ -541,9 +551,18 @@ void rule_loader::compiler::compile_rule_infos(
 				continue;
 			}
 
-			if (extra.m_tag != "" && r.tags.count(extra.m_tag) == 0)
+			if (extra.m_tags.size() != 0)
 			{
-				continue;
+				std::set<std::string> intersect;
+
+				set_intersection(extra.m_tags.begin(), extra.m_tags.end(),
+					r.tags.begin(), r.tags.end(),
+					inserter(intersect, intersect.begin()));
+
+				if (intersect.size() != extra.m_tags.size())
+				{
+					continue;
+				}
 			}
 
 			if (extra.m_rule != "" && r.name != extra.m_rule)

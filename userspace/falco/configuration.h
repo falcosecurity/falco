@@ -109,7 +109,7 @@ public:
 
 	struct append_output_config {
 		std::string m_source;
-		std::string m_tag;
+		std::set<std::string> m_tags;
 		std::string m_rule;
 		std::string m_format;
 		std::unordered_map<std::string, std::string> m_formatted_fields;
@@ -232,78 +232,53 @@ private:
 namespace YAML {
 	template<>
 	struct convert<falco_configuration::append_output_config> {
-		static Node encode(const falco_configuration::append_output_config & rhs) {
-			Node node;
-
-			if(rhs.m_source != "")
-			{
-				node["source"] = rhs.m_source;
-			}
-
-			if(rhs.m_rule != "")
-			{
-				node["rule"] = rhs.m_rule;
-			}
-
-			if(rhs.m_tag != "")
-			{
-				node["tag"] = rhs.m_tag;
-			}
-
-			if(rhs.m_format != "")
-			{
-				node["format"] = rhs.m_format;
-			}
-
-			for(auto const& field : rhs.m_formatted_fields)
-			{
-				YAML::Node field_node;
-				field_node[field.first] = field.second;
-				node["fields"].push_back(field_node);
-			}
-
-			for(auto const& field : rhs.m_raw_fields)
-			{
-				node["fields"].push_back(field);
-			}
-
-			return node;
-		}
-
 		static bool decode(const Node& node, falco_configuration::append_output_config & rhs) {
 			if(!node.IsMap())
 			{
 				return false;
 			}
 
-			if(node["source"])
+			if(node["match"])
 			{
-				rhs.m_source = node["source"].as<std::string>();
+				auto& match = node["match"];
+
+				if(match["source"])
+				{
+					rhs.m_source = match["source"].as<std::string>();
+				}
+
+				if(match["tags"] && match["tags"].IsSequence())
+				{
+					for(auto& tag : match["tags"])
+					{
+						if (!tag.IsScalar())
+						{
+							return false;
+						}
+
+						rhs.m_tags.insert(tag.as<std::string>());
+					}
+				}
+
+				if(match["rule"])
+				{
+					rhs.m_rule = match["rule"].as<std::string>();
+				}
 			}
 
-			if(node["tag"])
+			if(node["extra_output"])
 			{
-				rhs.m_tag = node["tag"].as<std::string>();
+				rhs.m_format = node["extra_output"].as<std::string>();
 			}
 
-			if(node["rule"])
+			if(node["extra_fields"])
 			{
-				rhs.m_rule = node["rule"].as<std::string>();
-			}
-
-			if(node["format"])
-			{
-				rhs.m_format = node["format"].as<std::string>();
-			}
-
-			if(node["fields"])
-			{
-				if(!node["fields"].IsSequence())
+				if(!node["extra_fields"].IsSequence())
 				{
 					return false;
 				}
 
-				for(auto& field_definition : node["fields"])
+				for(auto& field_definition : node["extra_fields"])
 				{
 					if(field_definition.IsMap() && field_definition.size() == 1)
 					{

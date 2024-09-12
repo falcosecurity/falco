@@ -270,7 +270,7 @@ namespace rule_loader
 	{
 		std::string m_format;
 		std::string m_source;
-		std::string m_tag;
+		std::set<std::string> m_tags;
 		std::string m_rule;
 		bool m_replace_container_info;
 	};
@@ -280,7 +280,7 @@ namespace rule_loader
 		std::string m_key;
 		std::string m_format;
 		std::string m_source;
-		std::string m_tag;
+		std::set<std::string> m_tags;
 		std::string m_rule;
 		bool m_raw;
 	};
