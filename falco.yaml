@@ -595,24 +595,30 @@ outputs_queue:
 # This allows you to add custom fields that can help you filter your Falco events without
 # polluting the message text.
 #
-# Each append_output entry has optional fields (ANDed together) to filter events:
+# Each append_output entry has an optional `match` map which specifies which rules will be
+# affected.
+# `match`:
 #   `rule`: append output only to a specific rule
 #   `source`: append output only to a specific source
-#   `tag`: append output only to a specific tag
-# If none of the above are specified output is appended to all events, if more than one is
-# specified output will be appended to events that match all conditions.
+#   `tags`: append output only to rules that have all of the specified tags
+# If none of the above are specified (or `match` is omitted)
+# output is appended to all events.
+# If more than one match condition is specified output will be appended to events 
+# that match all conditions.
 # And several options to add output:
-#   `format`: add output to the Falco message
-#   `fields`: add new fields to the JSON output and structured output, which will not
+#   `extra_output`: add output to the Falco message
+#   `extra_fields`: add new fields to the JSON output and structured output, which will not
 #             affect the regular Falco message in any way. These can be specified as a
 #             custom name with a custom format or as any supported field
 #             (see: https://falco.org/docs/reference/rules/supported-fields/)
 #
 # Example:
-#
-#   - source: syscall
-#     format: "on CPU %evt.cpu"
-#     fields:
+# 
+# append_output:
+#   - match:
+#       source: syscall
+#     extra_output: "on CPU %evt.cpu"
+#     extra_fields:
 #       - home_directory: "${HOME}"
 #       - evt.hostname
 #

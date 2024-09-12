@@ -186,7 +186,7 @@ public:
 	void add_extra_output_format(
 		const std::string &format,
 		const std::string &source,
-		const std::string &tag,
+		const std::set<std::string> &tags,
 		const std::string &rule,
 		bool replace_container_info
 	);
@@ -200,14 +200,14 @@ public:
 		const std::string &key,
 		const std::string &format,
 		const std::string &source,
-		const std::string &tag,
+		const std::set<std::string> &tags,
 		const std::string &rule
 	);
 
 	void add_extra_output_raw_field(
 		const std::string &key,
 		const std::string &source,
-		const std::string &tag,
+		const std::set<std::string> &tags,
 		const std::string &rule
 	);
 

@@ -1103,34 +1103,34 @@ void falco_engine::set_sampling_multiplier(double sampling_multiplier)
 void falco_engine::add_extra_output_format(
 	const std::string &format,
 	const std::string &source,
-	const std::string &tag,
+	const std::set<std::string> &tags,
 	const std::string &rule,
 	bool replace_container_info
 )
 {
-	m_extra_output_format.push_back({format, source, tag, rule, replace_container_info});
+	m_extra_output_format.push_back({format, source, tags, rule, replace_container_info});
 }
 
 void falco_engine::add_extra_output_formatted_field(
 	const std::string &key,
 	const std::string &format,
 	const std::string &source,
-	const std::string &tag,
+	const std::set<std::string> &tags,
 	const std::string &rule
 )
 {
-	m_extra_output_fields.push_back({key, format, source, tag, rule, false});
+	m_extra_output_fields.push_back({key, format, source, tags, rule, false});
 }
 
 void falco_engine::add_extra_output_raw_field(
 	const std::string &key,
 	const std::string &source,
-	const std::string &tag,
+	const std::set<std::string> &tags,
 	const std::string &rule
 )
 {
 	std::string format = "%" + key;
-	m_extra_output_fields.push_back({key, format, source, tag, rule, true});
+	m_extra_output_fields.push_back({key, format, source, tags, rule, true});
 }
 
 inline bool falco_engine::should_drop_evt() const

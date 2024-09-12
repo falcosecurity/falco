@@ -28,17 +28,17 @@ void configure_output_format(falco::app::state& s)
 	{
 		if (eo.m_format != "")
 		{
-			s.engine->add_extra_output_format(eo.m_format, eo.m_source, eo.m_tag, eo.m_rule, false);
+			s.engine->add_extra_output_format(eo.m_format, eo.m_source, eo.m_tags, eo.m_rule, false);
 		}
 
 		for (auto const& ff : eo.m_formatted_fields)
 		{
-			s.engine->add_extra_output_formatted_field(ff.first, ff.second, eo.m_source, eo.m_tag, eo.m_rule);
+			s.engine->add_extra_output_formatted_field(ff.first, ff.second, eo.m_source, eo.m_tags, eo.m_rule);
 		}
 
 		for (auto const& rf : eo.m_raw_fields)
 		{
-			s.engine->add_extra_output_raw_field(rf, eo.m_source, eo.m_tag, eo.m_rule);
+			s.engine->add_extra_output_raw_field(rf, eo.m_source, eo.m_tags, eo.m_rule);
 		}
 	}
 
@@ -49,23 +49,23 @@ void configure_output_format(falco::app::state& s)
 
 	if(s.options.print_additional == "c" || s.options.print_additional == "container")
 	{
-		s.engine->add_extra_output_format(container_info, falco_common::syscall_source, "", "", true);
+		s.engine->add_extra_output_format(container_info, falco_common::syscall_source, {}, "", true);
 	}
 	else if(s.options.print_additional == "cg" || s.options.print_additional == "container-gvisor")
 	{
-		s.engine->add_extra_output_format(gvisor_info + " " + container_info, falco_common::syscall_source, "", "", true);
+		s.engine->add_extra_output_format(gvisor_info + " " + container_info, falco_common::syscall_source, {}, "", true);
 	}
 	else if(s.options.print_additional == "k" || s.options.print_additional == "kubernetes")
 	{
-		s.engine->add_extra_output_format(container_info + " " + k8s_info, falco_common::syscall_source, "", "", true);
+		s.engine->add_extra_output_format(container_info + " " + k8s_info, falco_common::syscall_source, {}, "", true);
 	}
 	else if(s.options.print_additional == "kg" || s.options.print_additional == "kubernetes-gvisor")
 	{
-		s.engine->add_extra_output_format(gvisor_info + " " + container_info + " " + k8s_info, falco_common::syscall_source, "", "", true);
+		s.engine->add_extra_output_format(gvisor_info + " " + container_info + " " + k8s_info, falco_common::syscall_source, {}, "", true);
 	}
 	else if(!s.options.print_additional.empty())
 	{
-		s.engine->add_extra_output_format(s.options.print_additional, "", "", "", false);
+		s.engine->add_extra_output_format(s.options.print_additional, "", {}, "", false);
 	}
 }
 

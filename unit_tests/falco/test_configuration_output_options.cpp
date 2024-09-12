@@ -23,20 +23,24 @@ TEST(ConfigurationRuleOutputOptions, parse_yaml)
 	falco_configuration falco_config;
 	ASSERT_NO_THROW(falco_config.init_from_content(R"(
 append_output:
-  - source: syscall
-    tag: persistence
-    rule: some rule name
-    format: "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"
+  - match:
+      source: syscall
+      tags: ["persistence"]
+      rule: some rule name
+    
+    extra_output: "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"
 
-  - tag: persistence
-    fields:
+  - match:
+      tags: ["persistence", "execution"]
+    extra_fields:
       - proc.aname[2]: "%proc.aname[2]"
       - proc.aname[3]: "%proc.aname[3]"
       - proc.aname[4]: "%proc.aname[4]"
-    format: "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"
+    extra_output: "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"
 
-  - source: k8s_audit
-    fields:
+  - match:
+      source: k8s_audit
+    extra_fields:
       - ka.verb
       - static_field: "static content"
 
@@ -45,12 +49,15 @@ append_output:
 	EXPECT_EQ(falco_config.m_append_output.size(), 3);
 
 	EXPECT_EQ(falco_config.m_append_output[0].m_source, "syscall");
-	EXPECT_EQ(falco_config.m_append_output[0].m_tag, "persistence");
+	EXPECT_EQ(falco_config.m_append_output[0].m_tags.size(), 1);
+	EXPECT_EQ(falco_config.m_append_output[0].m_tags.count("persistence"), 1);
 	EXPECT_EQ(falco_config.m_append_output[0].m_rule, "some rule name");
 	EXPECT_EQ(falco_config.m_append_output[0].m_formatted_fields.size(), 0);
 	EXPECT_EQ(falco_config.m_append_output[0].m_format, "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]");
 
-	EXPECT_EQ(falco_config.m_append_output[1].m_tag, "persistence");
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.size(), 2);
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.count("persistence"), 1);
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.count("execution"), 1);
 	EXPECT_EQ(falco_config.m_append_output[1].m_format, "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]");
 
 	EXPECT_EQ(falco_config.m_append_output[1].m_formatted_fields.size(), 3);
@@ -73,19 +80,22 @@ TEST(ConfigurationRuleOutputOptions, cli_options)
 
 	ASSERT_NO_THROW(falco_config.init_from_content("", 
 		std::vector<std::string>{
-			R"(append_output[]={"source": "syscall", "tag": "persistence", "rule": "some rule name", "format": "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"})",
-			R"(append_output[]={"tag": "persistence", "fields": [{"proc.aname[2]": "%proc.aname[2]"}, {"proc.aname[3]": "%proc.aname[3]"}, {"proc.aname[4]": "%proc.aname[4]"}], "format": "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"})",
-			R"(append_output[]={"source": "k8s_audit", "fields": ["ka.verb", {"static_field": "static content"}]})"}));
+			R"(append_output[]={"match": {"source": "syscall", "tags": ["persistence"], "rule": "some rule name"}, "extra_output": "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"})",
+			R"(append_output[]={"match": {"tags": ["persistence", "execution"]}, "extra_fields": [{"proc.aname[2]": "%proc.aname[2]"}, {"proc.aname[3]": "%proc.aname[3]"}, {"proc.aname[4]": "%proc.aname[4]"}], "extra_output": "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]"})",
+			R"(append_output[]={"match": {"source": "k8s_audit"}, "extra_fields": ["ka.verb", {"static_field": "static content"}]})"}));
 
 	EXPECT_EQ(falco_config.m_append_output.size(), 3);
 
 	EXPECT_EQ(falco_config.m_append_output[0].m_source, "syscall");
-	EXPECT_EQ(falco_config.m_append_output[0].m_tag, "persistence");
+	EXPECT_EQ(falco_config.m_append_output[0].m_tags.size(), 1);
+	EXPECT_EQ(falco_config.m_append_output[0].m_tags.count("persistence"), 1);
 	EXPECT_EQ(falco_config.m_append_output[0].m_rule, "some rule name");
 	EXPECT_EQ(falco_config.m_append_output[0].m_formatted_fields.size(), 0);
 	EXPECT_EQ(falco_config.m_append_output[0].m_format, "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]");
 
-	EXPECT_EQ(falco_config.m_append_output[1].m_tag, "persistence");
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.size(), 2);
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.count("persistence"), 1);
+	EXPECT_EQ(falco_config.m_append_output[1].m_tags.count("execution"), 1);
 	EXPECT_EQ(falco_config.m_append_output[1].m_format, "gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4]");
 
 	EXPECT_EQ(falco_config.m_append_output[1].m_formatted_fields.size(), 3);
