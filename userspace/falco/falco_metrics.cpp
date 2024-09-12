@@ -215,6 +215,14 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				auto count = rules_by_id[i]->load();
 				if (count > 0)
 				{
+					/* Examples ...
+						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_rules_counters_total counter
+						falcosecurity_falco_rules_counters_total{raw_name="rules_counters",priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
+						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_rules_counters_total counter
+						falcosecurity_falco_rules_counters_total{raw_name="rules_counters",priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
+					*/
 					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_counters",
 											METRICS_V2_RULE_COUNTERS,
 											METRIC_VALUE_TYPE_U64,
@@ -260,6 +268,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				prometheus_subsystem = "plugins";
 			}
 
+			// raw incoming in form of for example n_evts_cpu_15 or n_drops_cpu_15
 			if (strncmp(metric.name, "n_evts_cpu", 10) == 0 || strncmp(metric.name, "n_drops_cpu", 11) == 0) // prefix match
 			{
 				std::string name_str(metric.name);
@@ -268,6 +277,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				if (re2::RE2::PartialMatch(name_str, pattern, &cpu_number))
 				{
 					re2::RE2::GlobalReplace(&name_str, pattern, "");
+					// possible double __ will be sanitized within libs
 					auto metric_new = libs::metrics::libsinsp_metrics::new_metric(name_str.c_str(),
 								METRICS_V2_KERNEL_COUNTERS, // todo replace with new METRICS_V2_KERNEL_COUNTERS_PER_CPU after bumping libs the next time
 								METRIC_VALUE_TYPE_U64,
@@ -277,11 +287,20 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 					const std::map<std::string, std::string>& const_labels = {
 						{"cpu", cpu_number}
 					};
+					/* Examples ...
+						# HELP falcosecurity_falco_n_evts_cpu_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_n_evts_cpu_total counter
+						falcosecurity_falco_n_evts_cpu_total{cpu="7"} 237
+						# HELP falcosecurity_falco_n_drops_cpu_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_n_drops_cpu_total counter
+						falcosecurity_falco_n_drops_cpu_total{cpu="7"} 0
+					*/
 					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
 				}
 			}
-			else if (strncmp(metric.name, "n_drops_buffer_total", 21) == 0) // exact match
+			else if (strcmp(metric.name, "n_drops_buffer_total") == 0)
 			{
+				// Skip the libs aggregate metric since we distinguish between buffer drops using labels similar to the rules_counters
 				continue;
 			}
 			else if (strncmp(metric.name, "n_drops_buffer", 14) == 0) // prefix match
@@ -302,6 +321,14 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 						{"drop", drop},
 						{"dir", dir}
 					};
+					/* Examples ...
+						# HELP falcosecurity_falco_n_drops_buffer_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_n_drops_buffer_total counter
+						falcosecurity_falco_n_drops_buffer_total{dir="enter",drop="clone_fork"} 0
+						# HELP falcosecurity_falco_n_drops_buffer_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_n_drops_buffer_total counter
+						falcosecurity_falco_n_drops_buffer_total{dir="exit",drop="clone_fork"} 0
+					*/
 					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric_new, "falcosecurity", prometheus_subsystem, const_labels);
 				}
 			}
