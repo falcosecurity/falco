@@ -36,7 +36,7 @@ limitations under the License.
 #include "configuration.h"
 #include "logger.h"
 
-#include "json_schema.h"
+#include "config_json_schema.h"
 
 #include <re2/re2.h>
 
