@@ -602,6 +602,28 @@ void falco_configuration::load_yaml(const std::string& config_name)
 	m_config.get_sequence<std::vector<rule_selection_config>>(m_rules_selection, "rules");
 	m_config.get_sequence<std::vector<append_output_config>>(m_append_output, "append_output");
 
+	// check if append_output matching conditions are sane, if not emit a warning
+	for (auto const& entry : m_append_output)
+	{
+		if (entry.m_rule != "" && entry.m_tags.size() > 0)
+		{
+			std::string tag_list;
+
+			for (auto const& tag : entry.m_tags)
+			{
+				tag_list += tag;
+				tag_list += ", ";
+			}
+
+			tag_list.pop_back();
+
+			falco_logger::log(falco_logger::level::WARNING,
+				"An append_ouptut entry specifies both a rule (" + entry.m_rule + ") and a list of tags (" + tag_list + std::string("). ") +
+				"This means that output will be appended only to the " + entry.m_rule + " rule and only if it has " +
+				"all the tags: " + tag_list + ".");
+		}
+	}
+
 	std::vector<std::string> load_plugins;
 
 	bool load_plugins_node_defined = m_config.is_defined("load_plugins");
