@@ -502,18 +502,10 @@ void rule_loader::compiler::compile_rule_infos(
 				continue;
 			}
 
-			if (extra.m_tags.size() != 0)
+			if (!std::includes(r.tags.begin(), r.tags.end(),
+					extra.m_tags.begin(), extra.m_tags.end()))
 			{
-				std::set<std::string> intersect;
-
-				set_intersection(extra.m_tags.begin(), extra.m_tags.end(),
-					r.tags.begin(), r.tags.end(),
-					inserter(intersect, intersect.begin()));
-
-				if (intersect.size() != extra.m_tags.size())
-				{
-					continue;
-				}
+				continue;
 			}
 
 			if (extra.m_rule != "" && r.name != extra.m_rule)
@@ -551,18 +543,10 @@ void rule_loader::compiler::compile_rule_infos(
 				continue;
 			}
 
-			if (extra.m_tags.size() != 0)
+			if (!std::includes(r.tags.begin(), r.tags.end(),
+					extra.m_tags.begin(), extra.m_tags.end()))
 			{
-				std::set<std::string> intersect;
-
-				set_intersection(extra.m_tags.begin(), extra.m_tags.end(),
-					r.tags.begin(), r.tags.end(),
-					inserter(intersect, intersect.begin()));
-
-				if (intersect.size() != extra.m_tags.size())
-				{
-					continue;
-				}
+				continue;
 			}
 
 			if (extra.m_rule != "" && r.name != extra.m_rule)
