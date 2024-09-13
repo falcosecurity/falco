@@ -1067,7 +1067,7 @@ syscall_event_drops:
 # constant stats interval.
 #
 # `kernel_event_counters_per_cpu_enabled`: Detailed kernel event and drop counters
-# per CPU. typically used when debugging and not in production.
+# per CPU. Typically used when debugging and not in production.
 #
 # `libbpf_stats_enabled`: Exposes statistics similar to `bpftool prog show`,
 # providing information such as the number of invocations of each BPF program

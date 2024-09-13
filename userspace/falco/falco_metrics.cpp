@@ -216,14 +216,14 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 				if (count > 0)
 				{
 					/* Examples ...
-						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_rules_counters_total counter
-						falcosecurity_falco_rules_counters_total{priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
-						# HELP falcosecurity_falco_rules_counters_total https://falco.org/docs/metrics/
-						# TYPE falcosecurity_falco_rules_counters_total counter
-						falcosecurity_falco_rules_counters_total{priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
+						# HELP falcosecurity_falco_rules_matches_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_rules_matches_total counter
+						falcosecurity_falco_rules_matches_total{priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
+						# HELP falcosecurity_falco_rules_matches_total https://falco.org/docs/metrics/
+						# TYPE falcosecurity_falco_rules_matches_total counter
+						falcosecurity_falco_rules_matches_total{priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
 					*/
-					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_counters",
+					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_matches",
 											METRICS_V2_RULE_COUNTERS,
 											METRIC_VALUE_TYPE_U64,
 											METRIC_VALUE_UNIT_COUNT,
@@ -300,7 +300,7 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 			}
 			else if (strcmp(metric.name, "n_drops_buffer_total") == 0)
 			{
-				// Skip the libs aggregate metric since we distinguish between buffer drops using labels similar to the rules_counters
+				// Skip the libs aggregate metric since we distinguish between buffer drops using labels similar to the rules_matches
 				continue;
 			}
 			else if (strncmp(metric.name, "n_drops_buffer", 14) == 0) // prefix match
