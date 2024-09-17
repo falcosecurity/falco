@@ -3,6 +3,14 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.9.0
+* Bump Falco to v0.39.0
+* update(falco): add new configuration entries for Falco
+  This commit adds new config keys introduces in Falco 0.39.0.
+  Furthermore, updates the unit tests for the latest changes
+  in the values.yaml.
+
+
 ## v4.8.3
 
 * The init container, when driver.kind=auto, automatically generates

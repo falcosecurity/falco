@@ -26,16 +26,17 @@ import (
 )
 
 type metricsConfig struct {
-	Enabled                    bool   `yaml:"enabled"`
-	ConvertMemoryToMB          bool   `yaml:"convert_memory_to_mb"`
-	IncludeEmptyValues         bool   `yaml:"include_empty_values"`
-	KernelEventCountersEnabled bool   `yaml:"kernel_event_counters_enabled"`
-	ResourceUtilizationEnabled bool   `yaml:"resource_utilization_enabled"`
-	RulesCountersEnabled       bool   `yaml:"rules_counters_enabled"`
-	LibbpfStatsEnabled         bool   `yaml:"libbpf_stats_enabled"`
-	OutputRule                 bool   `yaml:"output_rule"`
-	StateCountersEnabled       bool   `yaml:"state_counters_enabled"`
-	Interval                   string `yaml:"interval"`
+	Enabled                          bool   `yaml:"enabled"`
+	ConvertMemoryToMB                bool   `yaml:"convert_memory_to_mb"`
+	IncludeEmptyValues               bool   `yaml:"include_empty_values"`
+	KernelEventCountersEnabled       bool   `yaml:"kernel_event_counters_enabled"`
+	KernelEventCountersPerCPUEnabled bool   `yaml:"kernel_event_counters_per_cpu_enabled"`
+	ResourceUtilizationEnabled       bool   `yaml:"resource_utilization_enabled"`
+	RulesCountersEnabled             bool   `yaml:"rules_counters_enabled"`
+	LibbpfStatsEnabled               bool   `yaml:"libbpf_stats_enabled"`
+	OutputRule                       bool   `yaml:"output_rule"`
+	StateCountersEnabled             bool   `yaml:"state_counters_enabled"`
+	Interval                         string `yaml:"interval"`
 }
 
 type webServerConfig struct {
@@ -63,7 +64,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 			"defaultValues",
 			nil,
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 10, "should have ten items")
+				require.Len(t, metricsConfig, 11, "should have ten items")
 
 				metrics, err := getMetricsConfig(metricsConfig)
 				require.NoError(t, err)
@@ -78,6 +79,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				require.True(t, metrics.LibbpfStatsEnabled)
 				require.True(t, metrics.OutputRule)
 				require.True(t, metrics.StateCountersEnabled)
+				require.False(t, metrics.KernelEventCountersPerCPUEnabled)
 
 				webServer, err := getWebServerConfig(webServerConfig)
 				require.NoError(t, err)
@@ -92,7 +94,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				"metrics.enabled": "true",
 			},
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 10, "should have ten items")
+				require.Len(t, metricsConfig, 11, "should have ten items")
 
 				metrics, err := getMetricsConfig(metricsConfig)
 				require.NoError(t, err)
@@ -107,6 +109,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				require.True(t, metrics.LibbpfStatsEnabled)
 				require.False(t, metrics.OutputRule)
 				require.True(t, metrics.StateCountersEnabled)
+				require.False(t, metrics.KernelEventCountersPerCPUEnabled)
 
 				webServer, err := getWebServerConfig(webServerConfig)
 				require.NoError(t, err)
@@ -118,19 +121,20 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 		{
 			"Flip/Change Values",
 			map[string]string{
-				"metrics.enabled":                    "true",
-				"metrics.convertMemoryToMB":          "false",
-				"metrics.includeEmptyValues":         "true",
-				"metrics.kernelEventCountersEnabled": "false",
-				"metrics.resourceUtilizationEnabled": "false",
-				"metrics.rulesCountersEnabled":       "false",
-				"metrics.libbpfStatsEnabled":         "false",
-				"metrics.outputRule":                 "false",
-				"metrics.stateCountersEnabled":       "false",
-				"metrics.interval":                   "1s",
+				"metrics.enabled":                          "true",
+				"metrics.convertMemoryToMB":                "false",
+				"metrics.includeEmptyValues":               "true",
+				"metrics.kernelEventCountersEnabled":       "false",
+				"metrics.resourceUtilizationEnabled":       "false",
+				"metrics.rulesCountersEnabled":             "false",
+				"metrics.libbpfStatsEnabled":               "false",
+				"metrics.outputRule":                       "false",
+				"metrics.stateCountersEnabled":             "false",
+				"metrics.interval":                         "1s",
+				"metrics.kernelEventCountersPerCPUEnabled": "true",
 			},
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 10, "should have ten items")
+				require.Len(t, metricsConfig, 11, "should have ten items")
 
 				metrics, err := getMetricsConfig(metricsConfig)
 				require.NoError(t, err)
@@ -145,6 +149,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				require.False(t, metrics.LibbpfStatsEnabled)
 				require.False(t, metrics.OutputRule)
 				require.False(t, metrics.StateCountersEnabled)
+				require.True(t, metrics.KernelEventCountersPerCPUEnabled)
 
 				webServer, err := getWebServerConfig(webServerConfig)
 				require.NoError(t, err)
