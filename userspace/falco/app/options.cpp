@@ -95,6 +95,16 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 		}
 	}
 
+	if (m_cmdline_parsed.count("cri") > 0)
+	{
+		falco_logger::log(falco_logger::level::WARNING, "The --cri option is deprecated and will be removed in Falco 0.40.0. Use -o container_engines.cri.sockets[]=<socket_path> instead.");
+	}
+
+	if (m_cmdline_parsed.count("disable-cri-async") > 0)
+	{
+		falco_logger::log(falco_logger::level::WARNING, "The --disable-cri-async option is deprecated and will be removed in Falco 0.40.0. Use -o container_engines.cri.disable_async=true instead.");
+	}
+
 	list_fields = m_cmdline_parsed.count("list") > 0;
 
 	return true;
@@ -119,8 +129,8 @@ void options::define(cxxopts::Options& opts)
 		("A",                             "Monitor all events supported by Falco and defined in rules and configs. Some events are ignored by default when -A is not specified (the -i option lists these events ignored). Using -A can impact performance. This option has no effect when reproducing events from a capture file.", cxxopts::value(all_events)->default_value("false"))
 		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-		("cri",                           "Path to CRI socket for container metadata. Use the specified <path> to fetch data from a CRI-compatible runtime. If not specified, built-in defaults for commonly known paths are used. This option can be passed multiple times to specify a list of sockets to be tried until a successful one is found.", cxxopts::value(cri_socket_paths), "<path>")
-		("disable-cri-async",             "Turn off asynchronous CRI metadata fetching. This is useful to let the input event wait for the container metadata fetch to finish before moving forward. Async fetching, in some environments leads to empty fields for container metadata when the fetch is not fast enough to be completed asynchronously. This can have a performance penalty on your environment depending on the number of containers and the frequency at which they are created/started/stopped.", cxxopts::value(disable_cri_async)->default_value("false"))
+		("cri",                           "DEPRECATED: use -o container_engines.cri.sockets[]=<socket_path> instead. Path to CRI socket for container metadata. Use the specified <path> to fetch data from a CRI-compatible runtime. If not specified, built-in defaults for commonly known paths are used. This option can be passed multiple times to specify a list of sockets to be tried until a successful one is found.", cxxopts::value(cri_socket_paths), "<path>")
+		("disable-cri-async",             "DEPRECATED: use -o container_engines.cri.disable_async=true instead. Turn off asynchronous CRI metadata fetching. This is useful to let the input event wait for the container metadata fetch to finish before moving forward. Async fetching, in some environments leads to empty fields for container metadata when the fetch is not fast enough to be completed asynchronously. This can have a performance penalty on your environment depending on the number of containers and the frequency at which they are created/started/stopped.", cxxopts::value(disable_cri_async)->default_value("false"))
 #endif
 		("disable-source",                "Turn off a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times, but turning off all event sources simultaneously is not permitted. This option can not be mixed with --enable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(disable_sources), "<event_source>")
 		("dry-run",                       "Run Falco without processing events. It can help check that the configuration and rules do not have any errors.", cxxopts::value(dry_run)->default_value("false"))
