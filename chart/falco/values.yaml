@@ -240,6 +240,8 @@ metrics:
   convertMemoryToMB: true
   # -- includeEmptyValues specifies whether the empty values should be included in the metrics.
   includeEmptyValues: false
+  # -- kernelEventCountersPerCPUEnabled specifies whether the event counters per cpu should be enabled.
+  kernelEventCountersPerCPUEnabled: false
   # -- service exposes the metrics service to be accessed from within the cluster.
   # ref: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
@@ -471,7 +473,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.9.0"
+    tag: "0.10.0"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artfacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
@@ -834,6 +836,15 @@ falco:
   # be added at a later stage, it is recommended to turn it off.
   json_include_tags_property: true
 
+  # [Incubating] `json_include_message_property`
+  #
+  # When using JSON output in Falco, you have the option to include the formatted
+  # rule output without timestamp or priority. For instance, if a rule specifies
+  # an "output" property like "Opened process %proc.name" the "message" field will
+  # only contain "Opened process bash" whereas the "output" field will contain more
+  # information.
+  json_include_message_property: false
+
   # [Stable] `buffered_outputs`
   #
   # -- Enabling buffering for the output queue can offer performance optimization,
@@ -865,6 +876,50 @@ falco:
   outputs:
     rate: 0
     max_burst: 1000
+
+  # [Sandbox] `append_output`
+  #
+  # Add information to the Falco output.
+  # With this setting you can add more information to the Falco output message, customizable by
+  # rule, tag or source.
+  # You can also add additional data that will appear in the output_fields property
+  # of JSON formatted messages or gRPC output but will not be part of the regular output message.
+  # This allows you to add custom fields that can help you filter your Falco events without
+  # polluting the message text.
+  #
+  # Each append_output entry has an optional `match` map which specifies which rules will be
+  # affected.
+  # `match`:
+  #   `rule`: append output only to a specific rule
+  #   `source`: append output only to a specific source
+  #   `tags`: append output only to rules that have all of the specified tags
+  # If none of the above are specified (or `match` is omitted)
+  # output is appended to all events.
+  # If more than one match condition is specified output will be appended to events
+  # that match all conditions.
+  # And several options to add output:
+  #   `extra_output`: add output to the Falco message
+  #   `extra_fields`: add new fields to the JSON output and structured output, which will not
+  #             affect the regular Falco message in any way. These can be specified as a
+  #             custom name with a custom format or as any supported field
+  #             (see: https://falco.org/docs/reference/rules/supported-fields/)
+  #
+  # Example:
+  #
+  # append_output:
+  #   - match:
+  #       source: syscall
+  #     extra_output: "on CPU %evt.cpu"
+  #     extra_fields:
+  #       - home_directory: "${HOME}"
+  #       - evt.hostname
+  #
+  # In the example above every event coming from the syscall source will get an extra message
+  # at the end telling the CPU number. In addition, if `json_output` is true, in the "output_fields"
+  # property you will find three new ones: "evt.cpu", "home_directory" which will contain the value of the
+  # environment variable $HOME, and "evt.hostname" which will contain the hostname.
+  append_output: []
+
 
   ##########################
   # Falco outputs channels #
@@ -1323,6 +1378,9 @@ falco:
   # counters reflect monotonic values since Falco's start and are exported at a
   # constant stats interval.
   #
+  # `kernel_event_counters_per_cpu_enabled`: Detailed kernel event and drop counters
+  # per CPU. Typically used when debugging and not in production.
+  #
   # `libbpf_stats_enabled`: Exposes statistics similar to `bpftool prog show`,
   # providing information such as the number of invocations of each BPF program
   # attached by Falco and the time spent in each program measured in nanoseconds.
@@ -1352,6 +1410,7 @@ falco:
     libbpf_stats_enabled: true
     convert_memory_to_mb: true
     include_empty_values: false
+    kernel_event_counters_per_cpu_enabled: false
 
 
   #######################################
