@@ -35,6 +35,12 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 "required_engine_version": {
                     "type": "string"
                 },
+                "required_plugin_versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RequiredPluginVersion"
+                    }
+                },
                 "macro": {
                     "type": "string"
                 },
@@ -67,6 +73,9 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 },
                 "priority": {
                     "$ref": "#/definitions/Priority"
+                },
+                "source": {
+	                "type": "string"
                 },
                 "exceptions": {
                     "type": "array",
@@ -166,6 +175,46 @@ const char rule_schema_string[] = LONG_STRING_CONST(
             },
             "minProperties": 1,
             "title": "Override"
+        },
+        "RequiredPluginVersion": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "alternatives": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Alternative"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "version"
+            ],
+            "title": "RequiredPluginVersion"
+        },
+        "Alternative": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+	            "name": {
+		            "type": "string"
+	            },
+	            "version": {
+		            "type": "string"
+	            }
+            },
+            "required": [
+	            "name",
+	            "version"
+            ],
+            "title": "Alternative"
         }
     }
 }
