@@ -927,7 +927,7 @@ void falco_engine::print_stats() const
 	std::string out;
 	m_rule_stats_manager.format(m_rules, out);
 	// todo(jasondellaluce): introduce a logging callback in Falco
-	fprintf(stdout, "%s", out.c_str());
+	fprintf(stderr, "%s", out.c_str());
 }
 
 const stats_manager& falco_engine::get_rule_stats_manager() const
