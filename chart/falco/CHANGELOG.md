@@ -9,7 +9,9 @@ numbering uses [semantic versioning](http://semver.org).
   This commit adds new config keys introduces in Falco 0.39.0.
   Furthermore, updates the unit tests for the latest changes
   in the values.yaml.
-
+* cleanup(falco): remove deprecated falco configuration
+  This commit removes the "output" config key that has
+  been deprecated in falco.
 
 ## v4.8.3
 
