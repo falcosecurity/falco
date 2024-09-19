@@ -759,7 +759,6 @@ The following table lists the main configurable parameters of the falco chart v4
 | metrics.service.ports.metrics.protocol | string | `"TCP"` | protocol specifies the network protocol that the Service should use for the associated port. |
 | metrics.service.ports.metrics.targetPort | int | `8765` | targetPort is the port on which the Pod is listening. |
 | metrics.service.type | string | `"ClusterIP"` | type denotes the service type. Setting it to "ClusterIP" we ensure that are accessible from within the cluster. |
-| mounts.enforceProcMount | bool | `false` | By default, `/proc` from the host is only mounted into the Falco pod when `driver.enabled` is set to `true`. This flag allows it to override this behaviour for edge cases where `/proc` is needed but syscall data source is not enabled at the same time (e.g. for specific plugins). |
 | mounts.volumeMounts | list | `[]` | A list of volumes you want to add to the Falco pods. |
 | mounts.volumes | list | `[]` | A list of volumes you want to add to the Falco pods. |
 | nameOverride | string | `""` | Put here the new name if you want to override the release name used for Falco components. |

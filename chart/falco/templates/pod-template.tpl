@@ -135,10 +135,8 @@ spec:
       {{- end }}
         - mountPath: /root/.falco
           name: root-falco-fs
-        {{- if or .Values.driver.enabled .Values.mounts.enforceProcMount }}
         - mountPath: /host/proc
           name: proc-fs
-        {{- end }}
         {{- if and .Values.driver.enabled (not .Values.driver.loader.enabled) }}
           readOnly: true
         - mountPath: /host/boot
@@ -289,11 +287,9 @@ spec:
     {{- end }}
     {{- end }}
     {{- end }}
-    {{- if or .Values.driver.enabled .Values.mounts.enforceProcMount }}
     - name: proc-fs
       hostPath:
         path: /proc
-    {{- end }}
     {{- if eq .Values.driver.kind "gvisor" }}
     - name: runsc-path
       hostPath:
