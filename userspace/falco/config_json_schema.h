@@ -587,7 +587,14 @@ const char config_schema_string[] = LONG_STRING_CONST(
                     "type": "string"
                 },
                 "init_config": {
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
                 },
                 "open_params": {
                     "type": "string"
