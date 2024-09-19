@@ -12,6 +12,11 @@ numbering uses [semantic versioning](http://semver.org).
 * cleanup(falco): remove deprecated falco configuration
   This commit removes the "output" config key that has
   been deprecated in falco.
+* update(falco): mount proc filesystem for plugins
+  The following PR in libs https://github.com/falcosecurity/libs/pull/1969
+  introduces a new platform for plugins that requires access to the
+  proc filesystem.
+
 
 ## v4.8.3
 
