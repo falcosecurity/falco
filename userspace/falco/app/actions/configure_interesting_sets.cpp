@@ -18,6 +18,7 @@ limitations under the License.
 #include "actions.h"
 #include "helpers.h"
 #include "../app.h"
+#include <libsinsp/plugin_manager.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -73,6 +74,25 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 			+ ") syscalls in rules: " + concat_set_in_order(rules_names) + "\n");
 	}
 
+	/* Load PPM event codes needed by plugins with parsing capability */
+	libsinsp::events::set<ppm_event_code> plugin_ev_codes;
+	for (const auto &p : s.offline_inspector->get_plugin_manager()->plugins())
+	{
+		if(!(p->caps() & CAP_PARSING))
+		{
+			continue;
+		}
+		plugin_ev_codes.merge(p->parse_event_codes());
+	}
+	const auto plugin_sc_set = libsinsp::events::event_set_to_sc_set(plugin_ev_codes);
+	const auto plugin_names = libsinsp::events::sc_set_to_event_names(plugin_sc_set);
+	if (!plugin_sc_set.empty())
+	{
+		falco_logger::log(falco_logger::level::DEBUG, "(" + std::to_string(plugin_names.size())
+		                                                      + ") syscalls required by plugins: " + concat_set_in_order(plugin_names) + "\n");
+	}
+
+
 	/* DEFAULT OPTION:
 	* Current `sinsp_state_sc_set()` approach includes multiple steps:
 	* (1) Enforce all positive syscalls from each Falco rule
@@ -111,9 +131,10 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 			+ concat_set_in_order(invalid_positive_sc_set_names));
 	}
 
-	// selected events are the union of the rules events set and the
+	// selected events are the union of the rules events set plus
+	// the parsing capability plugins events set and the
 	// base events set (either the default or the user-defined one)
-	s.selected_sc_set = rules_sc_set.merge(base_sc_set);
+	s.selected_sc_set = rules_sc_set.merge(plugin_sc_set).merge(base_sc_set);
 
 	/* REPLACE DEFAULT STATE, nothing else. Need to override s.selected_sc_set and have a separate logic block. */
 	if (s.config->m_base_syscalls_repair && user_positive_sc_set.empty())

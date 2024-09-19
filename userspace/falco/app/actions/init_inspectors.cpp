@@ -163,11 +163,6 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	std::unordered_set<std::string> used_plugins;
 	const auto& all_plugins = s.offline_inspector->get_plugin_manager()->plugins();
 
-	if((s.config->m_metrics_flags & METRICS_V2_STATE_COUNTERS))
-	{
-
-	}
-
 	for (const auto &src : s.loaded_sources)
 	{
 		auto src_info = s.source_infos.at(src);
