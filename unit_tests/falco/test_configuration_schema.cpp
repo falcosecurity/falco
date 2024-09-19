@@ -97,6 +97,34 @@ TEST(Configuration, schema_wrong_embedded_key)
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_failed);
 }
 
+TEST(Configuration, plugin_init_config)
+{
+	falco_configuration falco_config;
+	config_loaded_res res;
+
+	std::string config = R"(
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config:
+      maxEventSize: 262144
+      sslCertificate: /etc/falco/falco.pem
+)";
+
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+
+	config = R"(
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config: '{"maxEventSize": 262144, "sslCertificate": "/etc/falco/falco.pem"}'
+)";
+
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+}
+
 TEST(Configuration, schema_yaml_helper_validator)
 {
 	yaml_helper conf;
