@@ -16,7 +16,9 @@ numbering uses [semantic versioning](http://semver.org).
   The following PR in libs https://github.com/falcosecurity/libs/pull/1969
   introduces a new platform for plugins that requires access to the
   proc filesystem.
-
+* fix(falco): update broken link pointing to Falco docs
+  After the changes made by the following PR to the Falco docs https://github.com/falcosecurity/falco-website/pull/1362
+  this commit updates a broken link.
 
 ## v4.8.3
 
