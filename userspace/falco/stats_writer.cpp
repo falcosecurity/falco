@@ -345,7 +345,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	for (const auto& item : m_writer->m_config->m_loaded_rules_filenames_sha256sum)
 	{
 		fs::path fs_path = item.first;
-		std::string metric_name_file_sha256 = fs_path.filename().stem();
+		std::string metric_name_file_sha256 = fs_path.filename();
 		metric_name_file_sha256 = "falco.sha256_rules_file." + falco::utils::sanitize_rule_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
@@ -353,7 +353,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	for (const auto& item : m_writer->m_config->m_loaded_configs_filenames_sha256sum)
 	{
 		fs::path fs_path = item.first;
-		std::string metric_name_file_sha256 = fs_path.filename().stem();
+		std::string metric_name_file_sha256 = fs_path.filename();
 		metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_rule_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
