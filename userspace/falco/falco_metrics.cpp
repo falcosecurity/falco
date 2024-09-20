@@ -218,10 +218,10 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 					/* Examples ...
 						# HELP falcosecurity_falco_rules_matches_total https://falco.org/docs/metrics/
 						# TYPE falcosecurity_falco_rules_matches_total counter
-						falcosecurity_falco_rules_matches_total{priority="4",rule_name="Read sensitive file untrusted",source="syscall",tags="T1555, container, filesystem, host, maturity_stable, mitre_credential_access"} 10
+						falcosecurity_falco_rules_matches_total{priority="4",rule_name="Read sensitive file untrusted",source="syscall",tag_T1555="true",tag_container="true",tag_filesystem="true",tag_host="true",tag_maturity_stable="true",tag_mitre_credential_access="true"} 10
 						# HELP falcosecurity_falco_rules_matches_total https://falco.org/docs/metrics/
 						# TYPE falcosecurity_falco_rules_matches_total counter
-						falcosecurity_falco_rules_matches_total{priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tags="TA0011, container, host, maturity_incubating, mitre_exfiltration, network"} 1
+						falcosecurity_falco_rules_matches_total{priority="5",rule_name="Unexpected UDP Traffic",source="syscall",tag_TA0011="true",tag_container="true",tag_host="true",tag_maturity_incubating="true",tag_mitre_exfiltration="true",tag_network="true"} 1
 					*/
 					auto metric = libs::metrics::libsinsp_metrics::new_metric("rules_matches",
 											METRICS_V2_RULE_COUNTERS,
@@ -230,12 +230,14 @@ std::string falco_metrics::to_text(const falco::app::state& state)
 											METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 											rules_by_id[i]->load());
 					prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
-					const std::map<std::string, std::string>& const_labels = {
+					std::map<std::string, std::string> const_labels = {
 						{"rule_name", rule->name},
 						{"priority", std::to_string(rule->priority)},
 						{"source", rule->source},
-						{"tags", concat_set_in_order(rule->tags)}
 					};
+					std::for_each(rule->tags.cbegin(), rule->tags.cend(), [&const_labels](std::string const& tag) {
+						const_labels.emplace(std::string{"tag_"} + tag, "true");
+					});
 					prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(metric, "falcosecurity", "falco", const_labels);
 				}
 			}
