@@ -19,8 +19,6 @@ limitations under the License.
 
 #include "falco_metrics.h"
 
-#include "falco_utils.h"
-
 #include "app/state.h"
 
 #include <libsinsp/sinsp.h>
