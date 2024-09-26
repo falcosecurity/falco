@@ -309,6 +309,66 @@ stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
 {
 }
 
+void add_netinfo_metrics_output_fields(
+	nlohmann::json& output_fields,
+	const std::shared_ptr<sinsp>& inspector)
+{
+	const auto ipv4_ifinfo = inspector->get_ifaddr_list().get_ipv4_list();
+	const auto ipv6_ifinfo = inspector->get_ifaddr_list().get_ipv6_list();
+
+	// For each interface name, collect the corresponding list of IPv4/IPv6 addresses
+	std::map<std::string, std::vector<std::string>> ifnames_to_ipv4_addresses;
+	std::map<std::string, std::vector<std::string>> ifnames_to_ipv6_addresses;
+
+	for (const auto& ifinfo : *ipv4_ifinfo)
+	{
+		if(ifinfo.m_name == "lo")
+		{
+			continue;
+		}
+
+		auto it = ifnames_to_ipv4_addresses.find(ifinfo.m_name);
+		auto address = ifinfo.addr_to_string();
+		if (it == ifnames_to_ipv4_addresses.end())
+		{
+			ifnames_to_ipv4_addresses.emplace(ifinfo.m_name, std::vector{address});
+			continue;
+		}
+		it->second.emplace_back(address);
+	}
+
+	for (const auto& ifinfo : *ipv6_ifinfo)
+	{
+		if(ifinfo.m_name == "lo")
+		{
+			continue;
+		}
+
+		auto it = ifnames_to_ipv6_addresses.find(ifinfo.m_name);
+		auto address = ifinfo.addr_to_string();
+		if (it == ifnames_to_ipv6_addresses.end())
+		{
+			ifnames_to_ipv6_addresses.emplace(ifinfo.m_name, std::vector{address});
+			continue;
+		}
+		it->second.emplace_back(address);
+	}
+
+	for (const auto& item : ifnames_to_ipv4_addresses)
+	{
+		auto metric_name = "falco.host_netinfo.interfaces." + item.first + ".protocols.ipv4.addresses";
+		auto addresses =  sinsp_join(item.second.cbegin(), item.second.cend(), ',');
+		output_fields.emplace(metric_name, addresses);
+	}
+
+	for (const auto& item : ifnames_to_ipv6_addresses)
+	{
+		auto metric_name = "falco.host_netinfo.interfaces." + item.first + ".protocols.ipv6.addresses";
+		auto addresses = sinsp_join(item.second.cbegin(), item.second.cend(), ',');
+		output_fields.emplace(metric_name, addresses);
+	}
+}
+
 void stats_writer::collector::get_metrics_output_fields_wrapper(
 		nlohmann::json& output_fields,
 		const std::shared_ptr<sinsp>& inspector,
@@ -357,6 +417,8 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 		metric_name_file_sha256 = "falco.sha256_config_file." + falco::utils::sanitize_rule_name(metric_name_file_sha256);
 		output_fields[metric_name_file_sha256] = item.second;
 	}
+
+	add_netinfo_metrics_output_fields(output_fields, inspector);
 
 #endif
 	output_fields["evt.source"] = src;
