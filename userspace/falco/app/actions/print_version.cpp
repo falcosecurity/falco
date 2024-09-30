@@ -21,17 +21,12 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_version(falco::app::state& s)
-{
-	if(s.options.print_version_info)
-	{
+falco::app::run_result falco::app::actions::print_version(falco::app::state& s) {
+	if(s.options.print_version_info) {
 		const falco::versions_info info(s.offline_inspector);
-		if(s.config->m_json_output)
-		{
+		if(s.config->m_json_output) {
 			printf("%s\n", info.as_json().dump().c_str());
-		}
-		else
-		{
+		} else {
 			printf("Falco version: %s\n", info.falco_version.c_str());
 			printf("Libs version:  %s\n", info.libs_version.c_str());
 			printf("Plugin API:    %s\n", info.plugin_api_version.c_str());

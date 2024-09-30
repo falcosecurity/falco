@@ -21,38 +21,27 @@ limitations under the License.
 #include <atomic>
 
 template<typename _T>
-class watchdog
-{
+class watchdog {
 public:
-	watchdog():
-		m_timeout(nullptr),
-		m_is_running(false)
-	{
-	}
+	watchdog(): m_timeout(nullptr), m_is_running(false) {}
 
-	~watchdog()
-	{
-		stop();
-	}
+	~watchdog() { stop(); }
 
 	void start(std::function<void(_T)> cb,
-		   std::chrono::milliseconds resolution = std::chrono::milliseconds(100))
-	{
+	           std::chrono::milliseconds resolution = std::chrono::milliseconds(100)) {
 		stop();
 		m_is_running.store(true, std::memory_order_release);
 		m_thread = std::thread([this, cb, resolution]() {
 			const auto no_deadline = time_point{};
 			timeout_data curr;
-			while(m_is_running.load(std::memory_order_acquire))
-			{
+			while(m_is_running.load(std::memory_order_acquire)) {
 				auto t = m_timeout.exchange(nullptr, std::memory_order_release);
-				if(t)
-				{
+				if(t) {
 					curr = *t;
 					delete t;
 				}
-				if(curr.deadline != no_deadline && curr.deadline < std::chrono::steady_clock::now())
-				{
+				if(curr.deadline != no_deadline &&
+				   curr.deadline < std::chrono::steady_clock::now()) {
 					cb(curr.payload);
 					curr.deadline = no_deadline;
 				}
@@ -61,33 +50,29 @@ public:
 		});
 	}
 
-	void stop()
-	{
-		if(m_is_running.load(std::memory_order_acquire))
-		{
+	void stop() {
+		if(m_is_running.load(std::memory_order_acquire)) {
 			m_is_running.store(false, std::memory_order_release);
-			if(m_thread.joinable())
-			{
+			if(m_thread.joinable()) {
 				m_thread.join();
 			}
 			delete m_timeout.exchange(nullptr, std::memory_order_release);
 		}
 	}
 
-	inline void set_timeout(std::chrono::milliseconds timeout, _T payload) noexcept
-	{
-		delete m_timeout.exchange(new timeout_data{std::chrono::steady_clock::now() + timeout, payload}, std::memory_order_release);
+	inline void set_timeout(std::chrono::milliseconds timeout, _T payload) noexcept {
+		delete m_timeout.exchange(
+		        new timeout_data{std::chrono::steady_clock::now() + timeout, payload},
+		        std::memory_order_release);
 	}
 
-	inline void cancel_timeout() noexcept
-	{
+	inline void cancel_timeout() noexcept {
 		delete m_timeout.exchange(new timeout_data, std::memory_order_release);
 	}
 
 private:
 	typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
-	struct timeout_data
-	{
+	struct timeout_data {
 		time_point deadline;
 		_T payload;
 	};

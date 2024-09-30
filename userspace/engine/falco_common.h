@@ -36,41 +36,34 @@ limitations under the License.
 // be of this type.
 //
 
-struct falco_exception : std::runtime_error
-{
+struct falco_exception : std::runtime_error {
 	using std::runtime_error::runtime_error;
 };
 
-namespace falco_common
-{
+namespace falco_common {
 
-	const std::string syscall_source = sinsp_syscall_event_source_name;
+const std::string syscall_source = sinsp_syscall_event_source_name;
 
-	// Same as numbers/indices into the above vector
-	enum priority_type
-	{
-		PRIORITY_EMERGENCY = 0,
-		PRIORITY_ALERT = 1,
-		PRIORITY_CRITICAL = 2,
-		PRIORITY_ERROR = 3,
-		PRIORITY_WARNING = 4,
-		PRIORITY_NOTICE = 5,
-		PRIORITY_INFORMATIONAL = 6,
-		PRIORITY_DEBUG = 7
-	};
-	
-	bool parse_priority(const std::string& v, priority_type& out);
-	priority_type parse_priority(const std::string& v);
-	bool format_priority(priority_type v, std::string& out, bool shortfmt=false);
-	std::string format_priority(priority_type v, bool shortfmt=false);
-
-	enum rule_matching
-	{
-		FIRST = 0,
-		ALL = 1
-	};
-
-	bool parse_rule_matching(const std::string& v, rule_matching& out);
+// Same as numbers/indices into the above vector
+enum priority_type {
+	PRIORITY_EMERGENCY = 0,
+	PRIORITY_ALERT = 1,
+	PRIORITY_CRITICAL = 2,
+	PRIORITY_ERROR = 3,
+	PRIORITY_WARNING = 4,
+	PRIORITY_NOTICE = 5,
+	PRIORITY_INFORMATIONAL = 6,
+	PRIORITY_DEBUG = 7
 };
+
+bool parse_priority(const std::string& v, priority_type& out);
+priority_type parse_priority(const std::string& v);
+bool format_priority(priority_type v, std::string& out, bool shortfmt = false);
+std::string format_priority(priority_type v, bool shortfmt = false);
+
+enum rule_matching { FIRST = 0, ALL = 1 };
+
+bool parse_rule_matching(const std::string& v, rule_matching& out);
+};  // namespace falco_common
 
 typedef std::unordered_map<std::string, std::pair<std::string, bool>> extra_output_field_t;

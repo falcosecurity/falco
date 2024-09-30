@@ -19,86 +19,77 @@ limitations under the License.
 #include <falco/configuration.h>
 #include <falco_test_var.h>
 
-#define EXPECT_VALIDATION_STATUS(res, status) \
-        do { \
-		for(const auto& pair : res) { \
-			auto validation_status = pair.second; \
+#define EXPECT_VALIDATION_STATUS(res, status)                                                     \
+	do {                                                                                          \
+		for(const auto& pair : res) {                                                             \
+			auto validation_status = pair.second;                                                 \
 			EXPECT_TRUE(sinsp_utils::startswith(validation_status, status)) << validation_status; \
-		}                                           \
-	} \
-	while (0)
+		}                                                                                         \
+	} while(0)
 
 // Read Falco config from current repo-path
-TEST(Configuration, schema_validate_config)
-{
+TEST(Configuration, schema_validate_config) {
 	falco_configuration falco_config;
 	config_loaded_res res;
 
-	if (!std::filesystem::exists(TEST_FALCO_CONFIG))
-	{
+	if(!std::filesystem::exists(TEST_FALCO_CONFIG)) {
 		GTEST_SKIP() << "Falco config not present under " << TEST_FALCO_CONFIG;
 	}
 	EXPECT_NO_THROW(res = falco_config.init_from_file(TEST_FALCO_CONFIG, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
 }
 
-TEST(Configuration, schema_ok)
-{
+TEST(Configuration, schema_ok) {
 	falco_configuration falco_config;
 	config_loaded_res res;
 
 	/* OK YAML */
 	std::string config =
-		"falco_libs:\n"
-		"    thread_table_size: 50\n";
+	        "falco_libs:\n"
+	        "    thread_table_size: 50\n";
 
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
 }
 
-TEST(Configuration, schema_wrong_key)
-{
+TEST(Configuration, schema_wrong_key) {
 	falco_configuration falco_config;
 	config_loaded_res res;
 
 	/* Miss-typed key YAML */
 	std::string config =
-		"falco_libss:\n"
-		"    thread_table_size: 50\n";
+	        "falco_libss:\n"
+	        "    thread_table_size: 50\n";
 
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_failed);
 }
 
-TEST(Configuration, schema_wrong_type)
-{
+TEST(Configuration, schema_wrong_type) {
 	falco_configuration falco_config;
 
 	/* Wrong value type YAML */
-	std::string config =
-		"falco_libs: 512\n";
+	std::string config = "falco_libs: 512\n";
 
 	// We expect an exception since `falco_configuration::load_yaml()`
 	// will fail to parse `falco_libs` node.
 	ASSERT_ANY_THROW(falco_config.init_from_content(config, {}));
 }
 
-TEST(Configuration, schema_wrong_embedded_key)
-{
+TEST(Configuration, schema_wrong_embedded_key) {
 	falco_configuration falco_config;
 	config_loaded_res res;
 
 	/* Miss-typed sub-key YAML */
 	std::string config =
-		"falco_libs:\n"
-		"    thread_table_sizeee: 50\n";
+	        "falco_libs:\n"
+	        "    thread_table_sizeee: 50\n";
 
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_failed);
 }
 
-TEST(Configuration, plugin_init_config)
-{
+TEST(Configuration, plugin_init_config) {
 	falco_configuration falco_config;
 	config_loaded_res res;
 
@@ -125,15 +116,14 @@ plugins:
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
 }
 
-TEST(Configuration, schema_yaml_helper_validator)
-{
+TEST(Configuration, schema_yaml_helper_validator) {
 	yaml_helper conf;
 	falco_configuration falco_config;
 
 	/* Broken YAML */
 	std::string sample_yaml =
-		"falco_libs:\n"
-		"    thread_table_size: 50\n";
+	        "falco_libs:\n"
+	        "    thread_table_size: 50\n";
 
 	// Ok, we don't ask for any validation
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml));

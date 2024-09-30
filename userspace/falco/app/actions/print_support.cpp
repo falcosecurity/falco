@@ -28,21 +28,17 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-static std::string read_file(const std::string &filename)
-{
+static std::string read_file(const std::string& filename) {
 	std::ifstream t(filename);
-	std::string str((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
+	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
 	return str;
 }
 
 #ifndef _WIN32
-static int get_sysinfo(nlohmann::json &support)
-{
+static int get_sysinfo(nlohmann::json& support) {
 	struct utsname sysinfo;
-	if(uname(&sysinfo) != 0)
-	{
+	if(uname(&sysinfo) != 0) {
 		return -1;
 	}
 
@@ -54,8 +50,7 @@ static int get_sysinfo(nlohmann::json &support)
 	return 0;
 }
 #else
-static int get_sysinfo(nlohmann::json &support)
-{
+static int get_sysinfo(nlohmann::json& support) {
 	OSVERSIONINFO osvi;
 	SYSTEM_INFO sysInfo;
 	TCHAR computerName[256];
@@ -63,8 +58,7 @@ static int get_sysinfo(nlohmann::json &support)
 
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetSystemInfo(&sysInfo);
-	if(!GetVersionEx(&osvi) || !GetComputerName(computerName, &size))
-	{
+	if(!GetVersionEx(&osvi) || !GetComputerName(computerName, &size)) {
 		return -1;
 	}
 
@@ -73,34 +67,31 @@ static int get_sysinfo(nlohmann::json &support)
 	support["system_info"]["release"] = osvi.dwMajorVersion;
 	support["system_info"]["version"] = osvi.dwMinorVersion;
 
-	switch (sysInfo.wProcessorArchitecture) {
-		case PROCESSOR_ARCHITECTURE_AMD64:
-			support["system_info"]["machine"] = "x86_64";
-			break;
-		case PROCESSOR_ARCHITECTURE_ARM:
-			support["system_info"]["machine"] = "ARM";
-			break;
-		case PROCESSOR_ARCHITECTURE_ARM64:
-			support["system_info"]["machine"] = "ARM64";
-			break;
-		case PROCESSOR_ARCHITECTURE_INTEL:
-			support["system_info"]["machine"] = "i386";
-			break;
-		default:
-			support["system_info"]["machine"] = "unknown";
+	switch(sysInfo.wProcessorArchitecture) {
+	case PROCESSOR_ARCHITECTURE_AMD64:
+		support["system_info"]["machine"] = "x86_64";
+		break;
+	case PROCESSOR_ARCHITECTURE_ARM:
+		support["system_info"]["machine"] = "ARM";
+		break;
+	case PROCESSOR_ARCHITECTURE_ARM64:
+		support["system_info"]["machine"] = "ARM64";
+		break;
+	case PROCESSOR_ARCHITECTURE_INTEL:
+		support["system_info"]["machine"] = "i386";
+		break;
+	default:
+		support["system_info"]["machine"] = "unknown";
 	}
 	return 0;
 }
 #endif
 
-falco::app::run_result falco::app::actions::print_support(falco::app::state& s)
-{
-	if(s.options.print_support)
-	{
+falco::app::run_result falco::app::actions::print_support(falco::app::state& s) {
+	if(s.options.print_support) {
 		nlohmann::json support;
 
-		if(get_sysinfo(support) != 0)
-		{
+		if(get_sysinfo(support) != 0) {
 			return run_result::fatal(std::string("Could not get system info: ") + strerror(errno));
 		}
 
@@ -110,8 +101,7 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s)
 		support["cmdline"] = s.cmdline;
 		support["config"] = s.config->dump();
 		support["rules_files"] = nlohmann::json::array();
-		for(const auto& filename : s.config->m_loaded_rules_filenames)
-		{
+		for(const auto& filename : s.config->m_loaded_rules_filenames) {
 			nlohmann::json finfo;
 			finfo["name"] = filename;
 			nlohmann::json variant;

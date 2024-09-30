@@ -41,10 +41,9 @@ limitations under the License.
 // handled in a separate class falco_outputs.
 //
 
-class falco_engine
-{
+class falco_engine {
 public:
-	explicit falco_engine(bool seed_rng=true);
+	explicit falco_engine(bool seed_rng = true);
 	virtual ~falco_engine();
 
 	// A given engine has a version which identifies the fields
@@ -55,10 +54,9 @@ public:
 
 	// Engine version used to be represented as a simple progressive
 	// number. With the new semver schema, the number now represents
-	// the semver minor number. This function converts the legacy version 
+	// the semver minor number. This function converts the legacy version
 	// number to the new semver schema.
-	static inline sinsp_version get_implicit_version(uint32_t minor)
-	{
+	static inline sinsp_version get_implicit_version(uint32_t minor) {
 		return rule_loader::reader::get_implicit_engine_version(minor);
 	}
 
@@ -80,7 +78,8 @@ public:
 	//
 	// Load rules and returns a result object.
 	//
-	std::unique_ptr<falco::load_result> load_rules(const std::string &rules_content, const std::string &name);
+	std::unique_ptr<falco::load_result> load_rules(const std::string &rules_content,
+	                                               const std::string &name);
 
 	//
 	// Enable/Disable any rules matching the provided substring.
@@ -91,30 +90,42 @@ public:
 	// for different sets of rules being active at once.
 	// The rules are matched against the rulesets of all the defined sources.
 	//
-	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset = s_default_ruleset);
+	void enable_rule(const std::string &substring,
+	                 bool enabled,
+	                 const std::string &ruleset = s_default_ruleset);
 
 	// Same as above but providing a ruleset id instead
 	void enable_rule(const std::string &substring, bool enabled, const uint16_t ruleset_id);
 
 	// Like enable_rule, but the rule name must be an exact match.
-	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset = s_default_ruleset);
+	void enable_rule_exact(const std::string &rule_name,
+	                       bool enabled,
+	                       const std::string &ruleset = s_default_ruleset);
 
 	// Same as above but providing a ruleset id instead
 	void enable_rule_exact(const std::string &rule_name, bool enabled, const uint16_t ruleset_id);
 
 	// Like enable_rule, but wildcards are supported and substrings are not matched
-	void enable_rule_wildcard(const std::string &rule_name, bool enabled, const std::string &ruleset = s_default_ruleset);
+	void enable_rule_wildcard(const std::string &rule_name,
+	                          bool enabled,
+	                          const std::string &ruleset = s_default_ruleset);
 
 	// Same as above but providing a ruleset id instead
-	void enable_rule_wildcard(const std::string &rule_name, bool enabled, const uint16_t ruleset_id);
+	void enable_rule_wildcard(const std::string &rule_name,
+	                          bool enabled,
+	                          const uint16_t ruleset_id);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//
-	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset = s_default_ruleset);
+	void enable_rule_by_tag(const std::set<std::string> &tags,
+	                        bool enabled,
+	                        const std::string &ruleset = s_default_ruleset);
 
 	// Same as above but providing a ruleset id instead
-	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const uint16_t ruleset_id);
+	void enable_rule_by_tag(const std::set<std::string> &tags,
+	                        bool enabled,
+	                        const uint16_t ruleset_id);
 
 	//
 	// Must be called after the engine has been configured and all rulesets
@@ -147,12 +158,13 @@ public:
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
-	nlohmann::json describe_rule(std::string *rule_name, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+	nlohmann::json describe_rule(std::string *rule_name,
+	                             const std::vector<std::shared_ptr<sinsp_plugin>> &plugins) const;
 
 	//
 	// Return const /ref to rules stored in the Falco engine.
 	//
-	inline const indexed_vector<falco_rule>& get_rules() const { return m_rules; }
+	inline const indexed_vector<falco_rule> &get_rules() const { return m_rules; }
 
 	//
 	// Print statistics on how many events matched each rule.
@@ -160,9 +172,10 @@ public:
 	void print_stats() const;
 
 	//
-	// Return const /ref to stats_manager to access current rules stats (how many events matched each rule so far).
+	// Return const /ref to stats_manager to access current rules stats (how many events matched
+	// each rule so far).
 	//
-	const stats_manager& get_rule_stats_manager() const;
+	const stats_manager &get_rule_stats_manager() const;
 
 	//
 	// Set the sampling ratio, which can affect which events are
@@ -183,33 +196,27 @@ public:
 	// add k8s/container information to outputs when
 	// available.
 	//
-	void add_extra_output_format(
-		const std::string &format,
-		const std::string &source,
-		const std::set<std::string> &tags,
-		const std::string &rule,
-		bool replace_container_info
-	);
+	void add_extra_output_format(const std::string &format,
+	                             const std::string &source,
+	                             const std::set<std::string> &tags,
+	                             const std::string &rule,
+	                             bool replace_container_info);
 
 	// You can optionally add fields that will only show up in the object
 	// output (e.g. json, gRPC) alongside other output_fields
 	// and not in the text message output.
 	// You can add two types of fields: formatted which will act like
 	// an additional output format that appears in the output field
-	void add_extra_output_formatted_field(
-		const std::string &key,
-		const std::string &format,
-		const std::string &source,
-		const std::set<std::string> &tags,
-		const std::string &rule
-	);
+	void add_extra_output_formatted_field(const std::string &key,
+	                                      const std::string &format,
+	                                      const std::string &source,
+	                                      const std::set<std::string> &tags,
+	                                      const std::string &rule);
 
-	void add_extra_output_raw_field(
-		const std::string &key,
-		const std::string &source,
-		const std::set<std::string> &tags,
-		const std::string &rule
-	);
+	void add_extra_output_raw_field(const std::string &key,
+	                                const std::string &source,
+	                                const std::set<std::string> &tags,
+	                                const std::string &rule);
 
 	// Represents the result of matching an event against a set of
 	// rules.
@@ -249,7 +256,9 @@ public:
 	// concurrently with the same source_idx would inherently cause data races
 	// and lead to undefined behavior.
 	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx,
-		sinsp_evt *ev, uint16_t ruleset_id, falco_common::rule_matching strategy);
+	                                                        sinsp_evt *ev,
+	                                                        uint16_t ruleset_id,
+	                                                        falco_common::rule_matching strategy);
 
 	//
 	// Wrapper assuming the default ruleset.
@@ -257,7 +266,8 @@ public:
 	// This inherits the same thread-safety guarantees.
 	//
 	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx,
-		sinsp_evt *ev, falco_common::rule_matching strategy);
+	                                                        sinsp_evt *ev,
+	                                                        falco_common::rule_matching strategy);
 
 	//
 	// Configure the engine to support events with the provided
@@ -265,17 +275,17 @@ public:
 	// Return source index for fast lookup.
 	//
 	std::size_t add_source(const std::string &source,
-			       std::shared_ptr<sinsp_filter_factory> filter_factory,
-			       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory);
+	                       std::shared_ptr<sinsp_filter_factory> filter_factory,
+	                       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory);
 
 	//
 	// Equivalent to above, but allows specifying a ruleset factory
 	// for the newly added source.
 	//
 	std::size_t add_source(const std::string &source,
-			       std::shared_ptr<sinsp_filter_factory> filter_factory,
-			       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory,
-			       std::shared_ptr<filter_ruleset_factory> ruleset_factory);
+	                       std::shared_ptr<sinsp_filter_factory> filter_factory,
+	                       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory,
+	                       std::shared_ptr<filter_ruleset_factory> ruleset_factory);
 
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.
@@ -285,25 +295,27 @@ public:
 	// Given a source, return a formatter factory that can create
 	// filters for events of that source.
 	//
-	std::shared_ptr<sinsp_filter_factory> filter_factory_for_source(const std::string& source);
+	std::shared_ptr<sinsp_filter_factory> filter_factory_for_source(const std::string &source);
 	std::shared_ptr<sinsp_filter_factory> filter_factory_for_source(std::size_t source_idx);
 
 	//
 	// Given a source, return a formatter factory that can create
 	// formatters for an event.
 	//
-	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(const std::string& source);
-	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(std::size_t source_idx);
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(
+	        const std::string &source);
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(
+	        std::size_t source_idx);
 
 	//
 	// Given a source, return a ruleset factory that can create
 	// rulesets for that source.
 	//
-	std::shared_ptr<filter_ruleset_factory> ruleset_factory_for_source(const std::string& source);
+	std::shared_ptr<filter_ruleset_factory> ruleset_factory_for_source(const std::string &source);
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory_for_source(std::size_t source_idx);
 
 	// Return the filter_ruleset used for a given source.
-	std::shared_ptr<filter_ruleset> ruleset_for_source(const std::string& source);
+	std::shared_ptr<filter_ruleset> ruleset_for_source(const std::string &source);
 	std::shared_ptr<filter_ruleset> ruleset_for_source(std::size_t source_idx);
 
 	//
@@ -314,24 +326,24 @@ public:
 	// todo(jasondellaluce): remove this in future code refactors
 	//
 	void evttypes_for_ruleset(const std::string &source,
-				  std::set<uint16_t> &evttypes,
-				  const std::string &ruleset = s_default_ruleset);
+	                          std::set<uint16_t> &evttypes,
+	                          const std::string &ruleset = s_default_ruleset);
 
 	//
 	// Given an event source and ruleset, return the set of ppm_sc_codes
 	// for which this ruleset can run and match events.
 	//
 	libsinsp::events::set<ppm_sc_code> sc_codes_for_ruleset(
-				  const std::string &source,
-				  const std::string &ruleset = s_default_ruleset);
-	
+	        const std::string &source,
+	        const std::string &ruleset = s_default_ruleset);
+
 	//
 	// Given an event source and ruleset, return the set of ppm_event_codes
 	// for which this ruleset can run and match events.
 	//
 	libsinsp::events::set<ppm_event_code> event_codes_for_ruleset(
-				  const std::string &source,
-				  const std::string &ruleset = s_default_ruleset);
+	        const std::string &source,
+	        const std::string &ruleset = s_default_ruleset);
 
 	//
 	// Given a source and output string, return an
@@ -339,7 +351,7 @@ public:
 	// event.
 	//
 	std::shared_ptr<sinsp_evt_formatter> create_formatter(const std::string &source,
-							      const std::string &output) const;
+	                                                      const std::string &output) const;
 
 	// The rule loader definition is aliased as it is exactly what we need
 	typedef rule_loader::plugin_version_info::requirement plugin_version_requirement;
@@ -351,49 +363,42 @@ public:
 	// the name of the plugin and the second element is its version.
 	// If false is returned, err is filled with error causing the check failure.
 	//
-	bool check_plugin_requirements(
-		const std::vector<plugin_version_requirement>& plugins,
-		std::string& err) const;
+	bool check_plugin_requirements(const std::vector<plugin_version_requirement> &plugins,
+	                               std::string &err) const;
 
 	nlohmann::json m_rule_schema;
 
 private:
 	// Create a ruleset using the provided factory and set the
 	// engine state funcs for it.
-	std::shared_ptr<filter_ruleset> create_ruleset(std::shared_ptr<filter_ruleset_factory>& ruleset_factory);
+	std::shared_ptr<filter_ruleset> create_ruleset(
+	        std::shared_ptr<filter_ruleset_factory> &ruleset_factory);
 
 	// Functions to retrieve state from this engine
-	void fill_engine_state_funcs(filter_ruleset::engine_state_funcs& engine_state);
+	void fill_engine_state_funcs(filter_ruleset::engine_state_funcs &engine_state);
 
 	filter_ruleset::engine_state_funcs m_engine_state;
 
 	// Throws falco_exception if the file can not be read
-	void read_file(const std::string& filename, std::string& contents);
+	void read_file(const std::string &filename, std::string &contents);
 
 	indexed_vector<falco_source> m_sources;
 
-	inline const falco_source* find_source(std::size_t index)
-	{
+	inline const falco_source *find_source(std::size_t index) {
 		const falco_source *source;
 
-		if(index == m_syscall_source_idx)
-		{
-			if(m_syscall_source == NULL)
-			{
+		if(index == m_syscall_source_idx) {
+			if(m_syscall_source == NULL) {
 				m_syscall_source = m_sources.at(m_syscall_source_idx);
-				if(!m_syscall_source)
-				{
+				if(!m_syscall_source) {
 					throw falco_exception("Unknown event source index " + std::to_string(index));
 				}
 			}
 
 			source = m_syscall_source;
-		}
-		else
-		{
+		} else {
 			source = m_sources.at(index);
-			if(!source)
-			{
+			if(!source) {
 				throw falco_exception("Unknown event source index " + std::to_string(index));
 			}
 		}
@@ -401,11 +406,9 @@ private:
 		return source;
 	}
 
-	inline const falco_source* find_source(const std::string& name) const
-	{
+	inline const falco_source *find_source(const std::string &name) const {
 		auto ret = m_sources.at(name);
-		if(!ret)
-		{
+		if(!ret) {
 			throw falco_exception("Unknown event source " + name);
 		}
 		return ret;
@@ -414,7 +417,7 @@ private:
 	// To allow the engine to be extremely fast for syscalls (can
 	// be > 1M events/sec), we save the syscall source/source_idx
 	// separately and check it explicitly in process_event()
-	const falco_source* m_syscall_source;
+	const falco_source *m_syscall_source;
 	std::atomic<size_t> m_syscall_source_idx;
 
 	//
@@ -425,31 +428,26 @@ private:
 	inline bool should_drop_evt() const;
 
 	// Retrieve json details from rules, macros, lists
-	void get_json_details(
-		nlohmann::json& out,
-		const falco_rule& r,
-		const rule_loader::rule_info& info,
-		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
-	void get_json_details(
-		nlohmann::json& out,
-		const falco_macro& m,
-		const rule_loader::macro_info& info,
-		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
-	void get_json_details(
-		nlohmann::json& out,
-		const falco_list& l,
-		const rule_loader::list_info& info,
-		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
-	void get_json_evt_types(
-		nlohmann::json& out,
-		const std::string& source,
-		libsinsp::filter::ast::expr* ast) const;
-	void get_json_used_plugins(
-		nlohmann::json& out,
-		const std::string& source,
-		const std::unordered_set<std::string>& evttypes,
-		const std::unordered_set<std::string>& fields,
-		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+	void get_json_details(nlohmann::json &out,
+	                      const falco_rule &r,
+	                      const rule_loader::rule_info &info,
+	                      const std::vector<std::shared_ptr<sinsp_plugin>> &plugins) const;
+	void get_json_details(nlohmann::json &out,
+	                      const falco_macro &m,
+	                      const rule_loader::macro_info &info,
+	                      const std::vector<std::shared_ptr<sinsp_plugin>> &plugins) const;
+	void get_json_details(nlohmann::json &out,
+	                      const falco_list &l,
+	                      const rule_loader::list_info &info,
+	                      const std::vector<std::shared_ptr<sinsp_plugin>> &plugins) const;
+	void get_json_evt_types(nlohmann::json &out,
+	                        const std::string &source,
+	                        libsinsp::filter::ast::expr *ast) const;
+	void get_json_used_plugins(nlohmann::json &out,
+	                           const std::string &source,
+	                           const std::unordered_set<std::string> &evttypes,
+	                           const std::unordered_set<std::string> &fields,
+	                           const std::vector<std::shared_ptr<sinsp_plugin>> &plugins) const;
 
 	indexed_vector<falco_rule> m_rules;
 	std::shared_ptr<rule_loader::reader> m_rule_reader;

@@ -21,13 +21,10 @@ limitations under the License.
 #include <iostream>
 #include <fstream>
 
-namespace falco
-{
-namespace outputs
-{
+namespace falco {
+namespace outputs {
 
-class output_file : public abstract_output
-{
+class output_file : public abstract_output {
 	void output(const message *msg) override;
 
 	void cleanup() override;
@@ -40,5 +37,5 @@ private:
 	std::ofstream m_outfile;
 };
 
-} // namespace outputs
-} // namespace falco
+}  // namespace outputs
+}  // namespace falco

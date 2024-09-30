@@ -25,17 +25,17 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_kernel_version(const falco::app::state& s)
-{
+falco::app::run_result falco::app::actions::print_kernel_version(const falco::app::state& s) {
 #ifdef __linux__
 	// We print this info only when a kernel driver is injected
-	if(s.is_modern_ebpf() || s.is_ebpf() || s.is_kmod())
-	{
+	if(s.is_modern_ebpf() || s.is_ebpf() || s.is_kmod()) {
 		std::ifstream input_file("/proc/version");
-		if(!input_file.is_open())
-		{
+		if(!input_file.is_open()) {
 			// We don't want to fail, we just need to log something
-			falco_logger::log(falco_logger::level::INFO, "Cannot read under '/proc/version' (err_message: '" + std::string(strerror(errno)) + "', err_code: " + std::to_string(errno) + "). No info provided, go on.");
+			falco_logger::log(falco_logger::level::INFO,
+			                  "Cannot read under '/proc/version' (err_message: '" +
+			                          std::string(strerror(errno)) + "', err_code: " +
+			                          std::to_string(errno) + "). No info provided, go on.");
 			return run_result::ok();
 		}
 

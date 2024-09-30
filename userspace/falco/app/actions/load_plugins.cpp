@@ -21,12 +21,11 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
-{
+falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s) {
 #if defined(MUSL_OPTIMIZED) or defined(__EMSCRIPTEN__)
-	if (!s.config->m_plugins.empty())
-	{
-		return run_result::fatal("Loading plugins dynamic libraries is not supported by this Falco build");
+	if(!s.config->m_plugins.empty()) {
+		return run_result::fatal(
+		        "Loading plugins dynamic libraries is not supported by this Falco build");
 	}
 #endif
 	// Initialize the set of loaded event sources.
@@ -35,7 +34,7 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 	syscall_src_info.filterchecks = std::make_shared<sinsp_filter_check_list>();
 	s.source_infos.clear();
 	s.source_infos.insert(syscall_src_info, falco_common::syscall_source);
-	s.loaded_sources = { falco_common::syscall_source };
+	s.loaded_sources = {falco_common::syscall_source};
 
 	// Initialize map of plugin configs
 	s.plugin_configs.clear();
@@ -47,20 +46,19 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 	s.offline_inspector = std::make_shared<sinsp>();
 
 	// Load all the configured plugins
-	for(auto &p : s.config->m_plugins)
-	{
-		falco_logger::log(falco_logger::level::INFO, "Loading plugin '" + p.m_name + "' from file " + p.m_library_path + "\n");
+	for(auto& p : s.config->m_plugins) {
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Loading plugin '" + p.m_name + "' from file " + p.m_library_path + "\n");
 		auto plugin = s.offline_inspector->register_plugin(p.m_library_path);
 		s.plugin_configs.insert(p, plugin->name());
-		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0)
-		{
+		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0) {
 			state::source_info src_info;
 			src_info.filterchecks = std::make_shared<filter_check_list>();
 			auto sname = plugin->event_source();
 			s.source_infos.insert(src_info, sname);
 			// note: this avoids duplicate values
-			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), sname) == s.loaded_sources.end())
-			{
+			if(std::find(s.loaded_sources.begin(), s.loaded_sources.end(), sname) ==
+			   s.loaded_sources.end()) {
 				s.loaded_sources.push_back(sname);
 			}
 		}

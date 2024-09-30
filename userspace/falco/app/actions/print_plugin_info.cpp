@@ -23,16 +23,12 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::state& s)
-{
-	if(!s.options.print_plugin_info.empty())
-	{
+falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::state &s) {
+	if(!s.options.print_plugin_info.empty()) {
 		sinsp inspector;
-		for(auto &pc : s.config->m_plugins)
-		{
-			if (pc.m_name == s.options.print_plugin_info
-				|| pc.m_library_path == s.options.print_plugin_info)
-			{
+		for(auto &pc : s.config->m_plugins) {
+			if(pc.m_name == s.options.print_plugin_info ||
+			   pc.m_library_path == s.options.print_plugin_info) {
 				// load the plugin
 				auto p = inspector.register_plugin(pc.m_library_path);
 
@@ -48,15 +44,16 @@ falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::
 				ss_plugin_schema_type type;
 				auto schema = p->get_init_schema(type);
 				os << "Init config schema type: ";
-				switch (type)
-				{
-					case SS_PLUGIN_SCHEMA_JSON:
-						os << "JSON" << std::endl;
-						break;
-					case SS_PLUGIN_SCHEMA_NONE:
-					default:
-						os << "Not available, plugin does not implement the init config schema functionality" << std::endl;
-						break;
+				switch(type) {
+				case SS_PLUGIN_SCHEMA_JSON:
+					os << "JSON" << std::endl;
+					break;
+				case SS_PLUGIN_SCHEMA_NONE:
+				default:
+					os << "Not available, plugin does not implement the init config schema "
+					      "functionality"
+					   << std::endl;
+					break;
 				}
 				os << schema << std::endl;
 				os << std::endl;
@@ -64,33 +61,26 @@ falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::
 
 				// init the plugin
 				std::string err;
-				if (!p->init(pc.m_init_config, err))
-				{
+				if(!p->init(pc.m_init_config, err)) {
 					return run_result::fatal(err);
 				}
 
 				// print plugin suggested open parameters
-				if (p->caps() & CAP_SOURCING)
-				{
+				if(p->caps() & CAP_SOURCING) {
 					os.str("");
 					os.clear();
 					auto params = p->list_open_params();
-					if (params.empty())
-					{
+					if(params.empty()) {
 						os << "No suggested open params available: ";
-						os << "plugin has not been configured, or it does not implement the open params suggestion functionality" << std::endl;
-					}
-					else
-					{
+						os << "plugin has not been configured, or it does not implement the open "
+						      "params suggestion functionality"
+						   << std::endl;
+					} else {
 						os << "Suggested open params:" << std::endl;
-						for(const auto &oparam : p->list_open_params())
-						{
-							if(oparam.desc == "")
-							{
+						for(const auto &oparam : p->list_open_params()) {
+							if(oparam.desc == "") {
 								os << oparam.value << std::endl;
-							}
-							else
-							{
+							} else {
 								os << oparam.value << ": " << oparam.desc << std::endl;
 							}
 						}
@@ -103,7 +93,8 @@ falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::
 				return run_result::exit();
 			}
 		}
-		return run_result::fatal("can't find plugin and print its info: " + s.options.print_plugin_info);
+		return run_result::fatal("can't find plugin and print its info: " +
+		                         s.options.print_plugin_info);
 	}
 
 	return run_result::ok();

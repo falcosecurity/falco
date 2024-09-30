@@ -19,9 +19,7 @@ limitations under the License.
 
 #include "grpc_context.h"
 
-falco::grpc::context::context(::grpc::ServerContext* ctx):
-	m_ctx(ctx)
-{
+falco::grpc::context::context(::grpc::ServerContext* ctx): m_ctx(ctx) {
 	std::string session_id;
 	std::string request_id;
 
@@ -30,29 +28,25 @@ falco::grpc::context::context(::grpc::ServerContext* ctx):
 
 	bool has_meta = false;
 	std::stringstream meta;
-	if(!session_id.empty())
-	{
+	if(!session_id.empty()) {
 		meta << "[sid=" << session_id << "]";
 		has_meta = true;
 	}
-	if(!request_id.empty())
-	{
+	if(!request_id.empty()) {
 		meta << "[rid=" << request_id << "]";
 		has_meta = true;
 	}
-	if(has_meta)
-	{
+	if(has_meta) {
 		meta << " ";
 	}
 	m_prefix = meta.str();
 }
 
-void falco::grpc::context::context::get_metadata(std::string key, std::string& val)
-{
-	const std::multimap<::grpc::string_ref, ::grpc::string_ref>& client_metadata = m_ctx->client_metadata();
+void falco::grpc::context::context::get_metadata(std::string key, std::string& val) {
+	const std::multimap<::grpc::string_ref, ::grpc::string_ref>& client_metadata =
+	        m_ctx->client_metadata();
 	auto it = client_metadata.find(key);
-	if(it != client_metadata.end())
-	{
+	if(it != client_metadata.end()) {
 		val.assign(it->second.data(), it->second.size());
 	}
 }

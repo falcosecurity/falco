@@ -18,8 +18,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 
-TEST(ConfigurationRuleSelection, parse_yaml)
-{
+TEST(ConfigurationRuleSelection, parse_yaml) {
 	falco_configuration falco_config;
 	ASSERT_NO_THROW(falco_config.init_from_content(R"(
 rules:
@@ -31,44 +30,57 @@ rules:
 
   - enable:
       rule: 'hello*'
-	)", {}));
+	)",
+	                                               {}));
 
 	EXPECT_EQ(falco_config.m_rules_selection.size(), 3);
 
-	EXPECT_EQ(falco_config.m_rules_selection[0].m_op, falco_configuration::rule_selection_operation::enable);
+	EXPECT_EQ(falco_config.m_rules_selection[0].m_op,
+	          falco_configuration::rule_selection_operation::enable);
 	EXPECT_EQ(falco_config.m_rules_selection[0].m_rule, "Terminal Shell in Container");
 
-	EXPECT_EQ(falco_config.m_rules_selection[1].m_op, falco_configuration::rule_selection_operation::disable);
+	EXPECT_EQ(falco_config.m_rules_selection[1].m_op,
+	          falco_configuration::rule_selection_operation::disable);
 	EXPECT_EQ(falco_config.m_rules_selection[1].m_tag, "experimental");
 
-	EXPECT_EQ(falco_config.m_rules_selection[2].m_op, falco_configuration::rule_selection_operation::enable);
+	EXPECT_EQ(falco_config.m_rules_selection[2].m_op,
+	          falco_configuration::rule_selection_operation::enable);
 	EXPECT_EQ(falco_config.m_rules_selection[2].m_rule, "hello*");
 }
 
-TEST(ConfigurationRuleSelection, cli_options)
-{
+TEST(ConfigurationRuleSelection, cli_options) {
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init_from_content("", std::vector<std::string>{"rules[].disable.tag=maturity_incubating", "rules[].enable.rule=Adding ssh keys to authorized_keys"}));
+	ASSERT_NO_THROW(falco_config.init_from_content(
+	        "",
+	        std::vector<std::string>{"rules[].disable.tag=maturity_incubating",
+	                                 "rules[].enable.rule=Adding ssh keys to authorized_keys"}));
 
 	EXPECT_EQ(falco_config.m_rules_selection.size(), 2);
 
-	EXPECT_EQ(falco_config.m_rules_selection[0].m_op, falco_configuration::rule_selection_operation::disable);
+	EXPECT_EQ(falco_config.m_rules_selection[0].m_op,
+	          falco_configuration::rule_selection_operation::disable);
 	EXPECT_EQ(falco_config.m_rules_selection[0].m_tag, "maturity_incubating");
 
-	EXPECT_EQ(falco_config.m_rules_selection[1].m_op, falco_configuration::rule_selection_operation::enable);
+	EXPECT_EQ(falco_config.m_rules_selection[1].m_op,
+	          falco_configuration::rule_selection_operation::enable);
 	EXPECT_EQ(falco_config.m_rules_selection[1].m_rule, "Adding ssh keys to authorized_keys");
 }
 
-TEST(ConfigurationRuleSelection, cli_options_object)
-{
+TEST(ConfigurationRuleSelection, cli_options_object) {
 	falco_configuration falco_config;
-	ASSERT_NO_THROW(falco_config.init_from_content("", std::vector<std::string>{R"(rules[]={"disable": {"tag": "maturity_incubating"}})", R"(rules[]={"enable": {"rule": "Adding ssh keys to authorized_keys"}})"}));
+	ASSERT_NO_THROW(falco_config.init_from_content(
+	        "",
+	        std::vector<std::string>{
+	                R"(rules[]={"disable": {"tag": "maturity_incubating"}})",
+	                R"(rules[]={"enable": {"rule": "Adding ssh keys to authorized_keys"}})"}));
 
 	EXPECT_EQ(falco_config.m_rules_selection.size(), 2);
 
-	EXPECT_EQ(falco_config.m_rules_selection[0].m_op, falco_configuration::rule_selection_operation::disable);
+	EXPECT_EQ(falco_config.m_rules_selection[0].m_op,
+	          falco_configuration::rule_selection_operation::disable);
 	EXPECT_EQ(falco_config.m_rules_selection[0].m_tag, "maturity_incubating");
 
-	EXPECT_EQ(falco_config.m_rules_selection[1].m_op, falco_configuration::rule_selection_operation::enable);
+	EXPECT_EQ(falco_config.m_rules_selection[1].m_op,
+	          falco_configuration::rule_selection_operation::enable);
 	EXPECT_EQ(falco_config.m_rules_selection[1].m_rule, "Adding ssh keys to authorized_keys");
 }

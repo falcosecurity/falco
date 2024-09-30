@@ -22,107 +22,87 @@ limitations under the License.
 #include "versions_info.h"
 #include <atomic>
 
-falco_webserver::~falco_webserver()
-{
-    stop();
+falco_webserver::~falco_webserver() {
+	stop();
 }
 
-void falco_webserver::start(
-        const falco::app::state& state,
-        const falco_configuration::webserver_config& webserver_config)
-{
-    if (m_running)
-    {
-        throw falco_exception(
-            "attempted restarting webserver without stopping it first");
-    }
+void falco_webserver::start(const falco::app::state &state,
+                            const falco_configuration::webserver_config &webserver_config) {
+	if(m_running) {
+		throw falco_exception("attempted restarting webserver without stopping it first");
+	}
 
-    // allocate and configure server
-    if (webserver_config.m_ssl_enabled)
-    {
-        m_server = std::make_unique<httplib::SSLServer>(
-            webserver_config.m_ssl_certificate.c_str(),
-            webserver_config.m_ssl_certificate.c_str());
-    }
-    else
-    {
-        m_server = std::make_unique<httplib::Server>();
-    }
+	// allocate and configure server
+	if(webserver_config.m_ssl_enabled) {
+		m_server = std::make_unique<httplib::SSLServer>(webserver_config.m_ssl_certificate.c_str(),
+		                                                webserver_config.m_ssl_certificate.c_str());
+	} else {
+		m_server = std::make_unique<httplib::Server>();
+	}
 
-    // configure server
-    m_server->new_task_queue = [webserver_config] { return new httplib::ThreadPool(webserver_config.m_threadiness); };
+	// configure server
+	m_server->new_task_queue = [webserver_config] {
+		return new httplib::ThreadPool(webserver_config.m_threadiness);
+	};
 
-    // setup healthz endpoint
-    m_server->Get(webserver_config.m_k8s_healthz_endpoint,
-        [](const httplib::Request &, httplib::Response &res) {
-            res.set_content("{\"status\": \"ok\"}", "application/json");
-        });
+	// setup healthz endpoint
+	m_server->Get(webserver_config.m_k8s_healthz_endpoint,
+	              [](const httplib::Request &, httplib::Response &res) {
+		              res.set_content("{\"status\": \"ok\"}", "application/json");
+	              });
 
-    // setup versions endpoint
-    const auto versions_json_str = falco::versions_info(state.offline_inspector).as_json().dump();
-    m_server->Get("/versions",
-        [versions_json_str](const httplib::Request &, httplib::Response &res) {
-            res.set_content(versions_json_str, "application/json");
-        });
+	// setup versions endpoint
+	const auto versions_json_str = falco::versions_info(state.offline_inspector).as_json().dump();
+	m_server->Get("/versions",
+	              [versions_json_str](const httplib::Request &, httplib::Response &res) {
+		              res.set_content(versions_json_str, "application/json");
+	              });
 
-    if (state.config->m_metrics_enabled && webserver_config.m_prometheus_metrics_enabled)
-    {
-        m_server->Get("/metrics",
-            [&state](const httplib::Request &, httplib::Response &res) {
-                res.set_content(falco_metrics::to_text(state), falco_metrics::content_type);
-            });
-    }
-    // run server in a separate thread
-    if (!m_server->is_valid())
-    {
-        m_server = nullptr;
-        throw falco_exception("invalid webserver configuration");
-    }
+	if(state.config->m_metrics_enabled && webserver_config.m_prometheus_metrics_enabled) {
+		m_server->Get("/metrics", [&state](const httplib::Request &, httplib::Response &res) {
+			res.set_content(falco_metrics::to_text(state), falco_metrics::content_type);
+		});
+	}
+	// run server in a separate thread
+	if(!m_server->is_valid()) {
+		m_server = nullptr;
+		throw falco_exception("invalid webserver configuration");
+	}
 
-    std::atomic<bool> failed;
-    failed.store(false, std::memory_order_release);
-    m_server_thread = std::thread([this, webserver_config, &failed]
-    {
-        try
-        {
-            this->m_server->listen(webserver_config.m_listen_address, webserver_config.m_listen_port);
-        }
-        catch(std::exception &e)
-        {
-            falco_logger::log(
-                falco_logger::level::ERR,
-                "falco_webserver: " + std::string(e.what()) + "\n");
-        }
-        failed.store(true, std::memory_order_release);
-    });
+	std::atomic<bool> failed;
+	failed.store(false, std::memory_order_release);
+	m_server_thread = std::thread([this, webserver_config, &failed] {
+		try {
+			this->m_server->listen(webserver_config.m_listen_address,
+			                       webserver_config.m_listen_port);
+		} catch(std::exception &e) {
+			falco_logger::log(falco_logger::level::ERR,
+			                  "falco_webserver: " + std::string(e.what()) + "\n");
+		}
+		failed.store(true, std::memory_order_release);
+	});
 
-    // wait for the server to actually start up
-    // note: is_running() is atomic
-    while (!m_server->is_running() && !failed.load(std::memory_order_acquire))
-    {
-        std::this_thread::yield();
-    }
-    m_running = true;
-    if (failed.load(std::memory_order_acquire))
-    {
-        stop();
-        throw falco_exception("an error occurred while starting webserver");
-    }
+	// wait for the server to actually start up
+	// note: is_running() is atomic
+	while(!m_server->is_running() && !failed.load(std::memory_order_acquire)) {
+		std::this_thread::yield();
+	}
+	m_running = true;
+	if(failed.load(std::memory_order_acquire)) {
+		stop();
+		throw falco_exception("an error occurred while starting webserver");
+	}
 }
 
-void falco_webserver::stop()
-{
-    if (m_running)
-    {
-        if (m_server != nullptr)
-        {
-            m_server->stop();
-        }
-        if(m_server_thread.joinable())
-        {
-            m_server_thread.join();
-        }
-        m_server = nullptr;
-        m_running = false;
-    }
+void falco_webserver::stop() {
+	if(m_running) {
+		if(m_server != nullptr) {
+			m_server->stop();
+		}
+		if(m_server_thread.joinable()) {
+			m_server_thread.join();
+		}
+		m_server = nullptr;
+		m_running = false;
+	}
 }

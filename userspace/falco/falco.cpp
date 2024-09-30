@@ -23,13 +23,11 @@ limitations under the License.
 #include "app/app.h"
 #include "logger.h"
 
-static void display_fatal_err(const std::string &&msg)
-{
+static void display_fatal_err(const std::string &&msg) {
 	/**
 	 * If stderr logging is not enabled, also log to stderr.
 	 */
-	if (! falco_logger::log_stderr)
-	{
+	if(!falco_logger::log_stderr) {
 		std::cerr << msg;
 	}
 
@@ -39,20 +37,15 @@ static void display_fatal_err(const std::string &&msg)
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
-int falco_run(int argc, char **argv, bool &restart)
-{
+int falco_run(int argc, char **argv, bool &restart) {
 	restart = false;
 	std::string errstr;
-	try
-	{
-		if (!falco::app::run(argc, argv, restart, errstr))
-		{
+	try {
+		if(!falco::app::run(argc, argv, restart, errstr)) {
 			fprintf(stderr, "Error: %s\n", errstr.c_str());
 			return EXIT_FAILURE;
 		}
-	}
-	catch(std::exception &e)
-	{
+	} catch(std::exception &e) {
 		display_fatal_err("Runtime error: " + std::string(e.what()) + ". Exiting.\n");
 		return EXIT_FAILURE;
 	}
@@ -63,8 +56,7 @@ int falco_run(int argc, char **argv, bool &restart)
 //
 // MAIN
 //
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	int rc;
 	bool restart;
 
@@ -72,8 +64,7 @@ int main(int argc, char **argv)
 	// returned by falco_run. However, when restart (set by
 	// signal handlers, returned in application::run()) is true,
 	// falco_run() is called again.
-	while((rc = falco_run(argc, argv, restart)) == EXIT_SUCCESS && restart)
-	{
+	while((rc = falco_run(argc, argv, restart)) == EXIT_SUCCESS && restart) {
 	}
 
 	return rc;

@@ -19,8 +19,7 @@ limitations under the License.
 
 #include "../test_falco_engine.h"
 
-TEST_F(test_falco_engine, extra_format_all)
-{
+TEST_F(test_falco_engine, extra_format_all) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -32,11 +31,11 @@ TEST_F(test_falco_engine, extra_format_all)
 	m_engine->add_extra_output_format("evt.type=%evt.type", "", {}, "", false);
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
-	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"user=%user.name command=%proc.cmdline file=%fd.name evt.type=%evt.type");
+	EXPECT_EQ(get_compiled_rule_output("legit_rule"),
+	          "user=%user.name command=%proc.cmdline file=%fd.name evt.type=%evt.type");
 }
 
-TEST_F(test_falco_engine, extra_format_by_rule)
-{
+TEST_F(test_falco_engine, extra_format_by_rule) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -54,12 +53,11 @@ TEST_F(test_falco_engine, extra_format_by_rule)
 	m_engine->add_extra_output_format("evt.type=%evt.type", "", {}, "legit_rule", false);
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
-	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"out 1 evt.type=%evt.type");
-	EXPECT_EQ(get_compiled_rule_output("another_rule"),"out 2");
+	EXPECT_EQ(get_compiled_rule_output("legit_rule"), "out 1 evt.type=%evt.type");
+	EXPECT_EQ(get_compiled_rule_output("another_rule"), "out 2");
 }
 
-TEST_F(test_falco_engine, extra_format_by_tag_rule)
-{
+TEST_F(test_falco_engine, extra_format_by_tag_rule) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -89,13 +87,12 @@ TEST_F(test_falco_engine, extra_format_by_tag_rule)
 
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
-	EXPECT_EQ(get_compiled_rule_output("legit_rule"),"out 1 extra 1");
-	EXPECT_EQ(get_compiled_rule_output("another_rule"),"out 2 extra 1 extra 2");
-	EXPECT_EQ(get_compiled_rule_output("a_third_rule"),"out 3 extra 1 extra 3");
+	EXPECT_EQ(get_compiled_rule_output("legit_rule"), "out 1 extra 1");
+	EXPECT_EQ(get_compiled_rule_output("another_rule"), "out 2 extra 1 extra 2");
+	EXPECT_EQ(get_compiled_rule_output("a_third_rule"), "out 3 extra 1 extra 3");
 }
 
-TEST_F(test_falco_engine, extra_format_replace_container_info)
-{
+TEST_F(test_falco_engine, extra_format_replace_container_info) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -120,8 +117,7 @@ TEST_F(test_falco_engine, extra_format_replace_container_info)
 	EXPECT_EQ(get_compiled_rule_output("another_rule"), "out 2 extra 1");
 }
 
-TEST_F(test_falco_engine, extra_format_do_not_replace_container_info)
-{
+TEST_F(test_falco_engine, extra_format_do_not_replace_container_info) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -130,15 +126,14 @@ TEST_F(test_falco_engine, extra_format_do_not_replace_container_info)
   priority: INFO
   tags: [tag1]
 )END";
-	
+
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	auto output = get_compiled_rule_output("legit_rule");
 	EXPECT_TRUE(output.find("%container.info") == output.npos);
 }
 
-TEST_F(test_falco_engine, extra_fields_all)
-{
+TEST_F(test_falco_engine, extra_fields_all) {
 	std::string rules_content = R"END(
 - rule: legit_rule
   desc: legit rule description
@@ -147,11 +142,11 @@ TEST_F(test_falco_engine, extra_fields_all)
   priority: INFO
 )END";
 
-	std::unordered_map<std::string, std::string> extra_formatted_fields = {{"my_field", "hello %evt.num"}};
-  for (auto const& f : extra_formatted_fields)
-  {
-    m_engine->add_extra_output_formatted_field(f.first, f.second, "", {}, "");
-  }
+	std::unordered_map<std::string, std::string> extra_formatted_fields = {
+	        {"my_field", "hello %evt.num"}};
+	for(auto const& f : extra_formatted_fields) {
+		m_engine->add_extra_output_formatted_field(f.first, f.second, "", {}, "");
+	}
 
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
