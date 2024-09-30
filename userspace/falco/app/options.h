@@ -47,6 +47,7 @@ public:
 	std::string conf_filename;
 	bool all_events = false;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
+	bool print_base64 = false;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> enable_sources;
 	std::string gvisor_generate_config_with_socket;

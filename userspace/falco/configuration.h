@@ -153,6 +153,7 @@ public:
 	bool m_buffered_outputs;
 	size_t m_outputs_queue_capacity;
 	bool m_time_format_iso_8601;
+	bool m_buffer_format_base64;
 	uint32_t m_output_timeout;
 
 	bool m_grpc_enabled;

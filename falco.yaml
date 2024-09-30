@@ -492,6 +492,13 @@ plugins:
 # the /etc/localtime configuration.
 time_format_iso_8601: false
 
+# [Incubating] `buffer_format_base64`
+#
+# When enabled, Falco will output data buffer with base64 encoding. This is useful
+# for encoding binary data that needs to be used over media designed to consume
+# this format.
+buffer_format_base64: false
+
 # [Stable] `priority`
 #
 # Any rule with a priority level more severe than or equal to the specified

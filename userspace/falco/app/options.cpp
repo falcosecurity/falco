@@ -74,7 +74,7 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 	}
 
 	if(m_cmdline_parsed.count("b") > 0) {
-		event_buffer_format = sinsp_evt::PF_BASE64;
+		print_base64 = true;
 	}
 
 	if(m_cmdline_parsed.count("r") > 0) {
