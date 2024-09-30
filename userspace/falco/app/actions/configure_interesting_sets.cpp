@@ -205,7 +205,7 @@ static void select_event_set(falco::app::state& s,
 	       without high volume syscalls
 	 * (2) -A flag set: all syscalls in rules included, sinsp state enforcement
 	       and allowing high volume syscalls */
-	if(!s.options.all_events) {
+	if(!(s.options.all_events || s.config->m_base_syscalls_all)) {
 		auto ignored_sc_set = falco::app::ignored_sc_set();
 		auto erased_sc_set = s.selected_sc_set.intersect(ignored_sc_set);
 		s.selected_sc_set = s.selected_sc_set.diff(ignored_sc_set);

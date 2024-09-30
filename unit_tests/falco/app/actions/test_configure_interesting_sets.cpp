@@ -528,6 +528,43 @@ TEST_F(test_falco_engine, selection_empty_custom_base_set_repair) {
 	ASSERT_EQ(s7.selected_sc_set.size(), s7_state_set.size());
 }
 
+TEST_F(test_falco_engine, selection_base_syscalls_all) {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
+	falco::app::state s7;
+	s7.engine = m_engine;
+
+	// simulate empty custom set but repair option set.
+	s7.config->m_base_syscalls_custom_set = {};
+	s7.config->m_base_syscalls_repair = true;
+	s7.config->m_base_syscalls_all = true;
+	auto result = falco::app::actions::configure_interesting_sets(s7);
+	auto s7_rules_set = s7.engine->sc_codes_for_ruleset(s_sample_source, s_sample_ruleset);
+	ASSERT_TRUE(result.success);
+	ASSERT_EQ(result.errstr, "");
+	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s7.selected_sc_set);
+	auto expected_sc_names = strset_t({// note: expecting syscalls from mock rules and
+	                                   // `sinsp_repair_state_sc_set` enforced syscalls
+	                                   "connect",
+	                                   "accept",
+	                                   "accept4",
+	                                   "umount2",
+	                                   "open",
+	                                   "ptrace",
+	                                   "mmap",
+	                                   "execve",
+	                                   "procexit",
+	                                   "bind",
+	                                   "socket",
+	                                   "clone3",
+	                                   "close",
+	                                   "setuid"});
+	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
+	auto s7_state_set = libsinsp::events::sinsp_repair_state_sc_set(s7_rules_set);
+	ASSERT_EQ(s7.selected_sc_set, s7_state_set);
+	ASSERT_EQ(s7.selected_sc_set.size(), s7_state_set.size());
+}
+
 TEST(ConfigureInterestingSets, ignored_set_expected_size) {
 	// unit test fence to make sure we don't have unexpected regressions
 	// in the ignored set, to be updated in the future

@@ -1155,6 +1155,14 @@ metrics:
 # Falco, the `base_syscalls` option allows for finer end-user control of
 # syscalls traced by Falco.
 #
+# --- [base_syscalls.all]
+#
+# `base_syscalls.all` enables monitoring of all events supported by Falco and
+# defined in rules and configs.
+# By default some events, such as `write`, are ignored (run `falco -i` to get
+# the full list) unless base_syscalls.all is true.
+# This option may negatively impact performance.
+#
 # --- [base_syscalls.custom_set]
 #
 # CAUTION: Misconfiguration of this setting may result in incomplete Falco event
