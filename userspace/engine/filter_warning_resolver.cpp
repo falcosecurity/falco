@@ -22,22 +22,18 @@ using namespace falco;
 
 static const char* no_value = "<NA>";
 
-static inline bool is_unsafe_field(const std::string& f)
-{
-	return !strncmp(f.c_str(), "ka.", strlen("ka."))
-		|| !strncmp(f.c_str(), "jevt.", strlen("jevt."));
+static inline bool is_unsafe_field(const std::string& f) {
+	return !strncmp(f.c_str(), "ka.", strlen("ka.")) ||
+	       !strncmp(f.c_str(), "jevt.", strlen("jevt."));
 }
 
-static inline bool is_equality_operator(const std::string& op)
-{
-	return op == "==" || op == "=" || op == "!="
-		|| op == "in" || op == "intersects" || op == "pmatch";
+static inline bool is_equality_operator(const std::string& op) {
+	return op == "==" || op == "=" || op == "!=" || op == "in" || op == "intersects" ||
+	       op == "pmatch";
 }
 
-bool filter_warning_resolver::run(
-	libsinsp::filter::ast::expr* filter,
-	std::set<load_result::warning_code>& warnings) const
-{
+bool filter_warning_resolver::run(libsinsp::filter::ast::expr* filter,
+                                  std::set<load_result::warning_code>& warnings) const {
 	visitor v;
 	auto size = warnings.size();
 	v.m_is_equality_check = false;
@@ -46,40 +42,29 @@ bool filter_warning_resolver::run(
 	return warnings.size() > size;
 }
 
-void filter_warning_resolver::visitor::visit(
-	libsinsp::filter::ast::binary_check_expr* e)
-{
+void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::binary_check_expr* e) {
 	m_last_node_is_unsafe_field = false;
 	e->left->accept(this);
-	if (m_last_node_is_unsafe_field && is_equality_operator(e->op))
-	{
+	if(m_last_node_is_unsafe_field && is_equality_operator(e->op)) {
 		m_is_equality_check = true;
 		e->right->accept(this);
 		m_is_equality_check = false;
 	}
 }
 
-void filter_warning_resolver::visitor::visit(
-	libsinsp::filter::ast::field_expr* e)
-{
+void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::field_expr* e) {
 	m_last_node_is_unsafe_field = is_unsafe_field(e->field);
 }
 
-void filter_warning_resolver::visitor::visit(
-	libsinsp::filter::ast::value_expr* e)
-{
-	if (m_is_equality_check && e->value == no_value)
-	{
+void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::value_expr* e) {
+	if(m_is_equality_check && e->value == no_value) {
 		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
 	}
 }
 
-void filter_warning_resolver::visitor::visit(
-	libsinsp::filter::ast::list_expr* e)
-{
-	if (m_is_equality_check
-		&& std::find(e->values.begin(), e->values.end(), no_value) != e->values.end())
-	{
+void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::list_expr* e) {
+	if(m_is_equality_check &&
+	   std::find(e->values.begin(), e->values.end(), no_value) != e->values.end()) {
 		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
 	}
 }

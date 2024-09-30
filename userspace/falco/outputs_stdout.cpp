@@ -18,22 +18,19 @@ limitations under the License.
 #include "outputs_stdout.h"
 #include <iostream>
 
-void falco::outputs::output_stdout::output(const message *msg)
-{
+void falco::outputs::output_stdout::output(const message *msg) {
 	//
 	// By default, the stdout stream is fully buffered or line buffered
 	// (if the stream can be determined to refer to an interactive device, e.g. in a TTY).
 	// Just enable automatic flushing when unbuffered output is desired.
 	// Note that it is set every time since other writings to the stdout can disable it.
 	//
-	if(!m_buffered)
-	{
+	if(!m_buffered) {
 		std::cout << std::unitbuf;
 	}
 	std::cout << msg->msg + "\n";
 }
 
-void falco::outputs::output_stdout::cleanup()
-{
+void falco::outputs::output_stdout::cleanup() {
 	std::cout.flush();
 }

@@ -19,13 +19,10 @@ limitations under the License.
 
 #include "outputs.h"
 
-namespace falco
-{
-namespace outputs
-{
+namespace falco {
+namespace outputs {
 
-class output_program : public abstract_output
-{
+class output_program : public abstract_output {
 	void output(const message *msg) override;
 
 	void cleanup() override;
@@ -38,5 +35,5 @@ private:
 	FILE *m_pfile;
 };
 
-} // namespace outputs
-} // namespace falco
+}  // namespace outputs
+}  // namespace falco

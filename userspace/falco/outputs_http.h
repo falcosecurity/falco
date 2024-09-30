@@ -19,14 +19,15 @@ limitations under the License.
 
 #include "outputs.h"
 
-namespace falco
-{
-namespace outputs
-{
+namespace falco {
+namespace outputs {
 
-class output_http : public abstract_output
-{
-	bool init(const config& oc, bool buffered, const std::string& hostname, bool json_output, std::string &err) override;
+class output_http : public abstract_output {
+	bool init(const config &oc,
+	          bool buffered,
+	          const std::string &hostname,
+	          bool json_output,
+	          std::string &err) override;
 	void output(const message *msg) override;
 	void cleanup() override;
 
@@ -35,5 +36,5 @@ private:
 	struct curl_slist *m_http_headers;
 };
 
-} // namespace outputs
-} // namespace falco
+}  // namespace outputs
+}  // namespace falco

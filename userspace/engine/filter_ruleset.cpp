@@ -17,12 +17,10 @@ limitations under the License.
 
 #include "filter_ruleset.h"
 
-void filter_ruleset::set_engine_state(const filter_ruleset::engine_state_funcs& engine_state)
-{
+void filter_ruleset::set_engine_state(const filter_ruleset::engine_state_funcs& engine_state) {
 	m_engine_state = engine_state;
 }
 
-filter_ruleset::engine_state_funcs& filter_ruleset::get_engine_state()
-{
+filter_ruleset::engine_state_funcs& filter_ruleset::get_engine_state() {
 	return m_engine_state;
 }

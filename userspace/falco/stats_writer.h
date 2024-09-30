@@ -30,49 +30,56 @@ limitations under the License.
 #include "configuration.h"
 
 /*!
-	\brief Writes stats samples collected from inspectors into a given output.
-	Users must use a stats_writer::collector in order to collect and write stats
-	into a given stats_writer. This class is thread-safe, and can be shared
-	across multiple stats_writer::collector instances from different threads.
+    \brief Writes stats samples collected from inspectors into a given output.
+    Users must use a stats_writer::collector in order to collect and write stats
+    into a given stats_writer. This class is thread-safe, and can be shared
+    across multiple stats_writer::collector instances from different threads.
 */
-class stats_writer
-{
+class stats_writer {
 public:
 	/*!
-		\brief Value of a ticker that dictates when stats are collected
+	    \brief Value of a ticker that dictates when stats are collected
 	*/
 	typedef uint16_t ticker_t;
 
 	/*!
-		\brief Collects stats samples from an inspector and uses a writer
-		to print them in a given output. Stats are collected periodically every
-		time the value of stats_writer::get_ticker() changes.
-		This class is not thread-safe.
+	    \brief Collects stats samples from an inspector and uses a writer
+	    to print them in a given output. Stats are collected periodically every
+	    time the value of stats_writer::get_ticker() changes.
+	    This class is not thread-safe.
 	*/
-	class collector
-	{
+	class collector {
 	public:
 		/*!
-			\brief Initializes the collector with the given writer
+		    \brief Initializes the collector with the given writer
 		*/
 		explicit collector(const std::shared_ptr<stats_writer>& writer);
 
 		/*!
-			\brief Collects one stats sample from an inspector
-			and for the given event source name
+		    \brief Collects one stats sample from an inspector
+		    and for the given event source name
 		*/
-		void collect(const std::shared_ptr<sinsp>& inspector, const std::string& src, uint64_t num_evts);
+		void collect(const std::shared_ptr<sinsp>& inspector,
+		             const std::string& src,
+		             uint64_t num_evts);
 
 	private:
 		/*!
-			\brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
+		    \brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, const std::string& src, uint64_t num_evts, uint64_t now, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields,
+		                                       const std::shared_ptr<sinsp>& inspector,
+		                                       const std::string& src,
+		                                       uint64_t num_evts,
+		                                       uint64_t now,
+		                                       double stats_snapshot_time_delta_sec);
 
 		/*!
-			\brief Collect the configurable snapshot metrics as internal rule formatted output fields.
+		    \brief Collect the configurable snapshot metrics as internal rule formatted output
+		   fields.
 		*/
-		void get_metrics_output_fields_additional(nlohmann::json& output_fields, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_additional(nlohmann::json& output_fields,
+		                                          double stats_snapshot_time_delta_sec);
 
 		std::shared_ptr<stats_writer> m_writer;
 		stats_writer::ticker_t m_last_tick = 0;
@@ -93,42 +100,38 @@ public:
 	~stats_writer();
 
 	/*!
-		\brief Initializes a writer.
+	    \brief Initializes a writer.
 	*/
 	stats_writer(const std::shared_ptr<falco_outputs>& outputs,
-		const std::shared_ptr<const falco_configuration>& config,
-		const std::shared_ptr<const falco_engine>& engine);
+	             const std::shared_ptr<const falco_configuration>& config,
+	             const std::shared_ptr<const falco_engine>& engine);
 
 	/*!
-		\brief Returns true if the writer is configured with a valid output.
+	    \brief Returns true if the writer is configured with a valid output.
 	*/
-	inline bool has_output() const
-	{
-		return m_initialized;
-	}
+	inline bool has_output() const { return m_initialized; }
 
 	/*!
-		\brief Initializes the ticker with a given interval period defined
-		in milliseconds. Subsequent calls to init_ticker will dismiss the
-		previously-initialized ticker. Internally, this uses a timer
-		signal handler.
+	    \brief Initializes the ticker with a given interval period defined
+	    in milliseconds. Subsequent calls to init_ticker will dismiss the
+	    previously-initialized ticker. Internally, this uses a timer
+	    signal handler.
 	*/
-	static bool init_ticker(uint32_t interval_msec, std::string &err);
+	static bool init_ticker(uint32_t interval_msec, std::string& err);
 
 	/*!
-		\brief Returns the current value of the ticker.
-		This function is thread-safe.
+	    \brief Returns the current value of the ticker.
+	    This function is thread-safe.
 	*/
 	inline static ticker_t get_ticker();
 
 private:
-	struct msg
-	{
+	struct msg {
 		msg() {}
 		msg(msg&&) = default;
-		msg& operator = (msg&&) = default;
+		msg& operator=(msg&&) = default;
 		msg(const msg&) = default;
-		msg& operator = (const msg&) = default;
+		msg& operator=(const msg&) = default;
 
 		bool stop = false;
 		uint64_t ts = 0;

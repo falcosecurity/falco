@@ -25,25 +25,22 @@ limitations under the License.
 #include <libsinsp/events/sinsp_events.h>
 
 /*!
-	\brief Manages a set of rulesets. A ruleset is a set of
-	enabled rules that is able to process events and find matches for those rules.
+    \brief Manages a set of rulesets. A ruleset is a set of
+    enabled rules that is able to process events and find matches for those rules.
 */
 
-class filter_ruleset
-{
+class filter_ruleset {
 public:
 	// A set of functions that can be used to retrieve state from
 	// the falco engine that created this ruleset.
-	struct engine_state_funcs
-	{
-		using ruleset_retriever_func_t = std::function<bool(const std::string &, std::shared_ptr<filter_ruleset> &ruleset)>;
+	struct engine_state_funcs {
+		using ruleset_retriever_func_t =
+		        std::function<bool(const std::string &, std::shared_ptr<filter_ruleset> &ruleset)>;
 
 		ruleset_retriever_func_t get_ruleset;
 	};
 
-	enum class match_type {
-		exact, substring, wildcard
-	};
+	enum class match_type { exact, substring, wildcard };
 
 	virtual ~filter_ruleset() = default;
 
@@ -51,198 +48,171 @@ public:
 	engine_state_funcs &get_engine_state();
 
 	/*!
-		\brief Adds a rule and its filtering filter + condition inside the manager.
+	    \brief Adds a rule and its filtering filter + condition inside the manager.
 	        This method only adds the rule inside the internal collection,
-		but does not enable it for any ruleset.	The rule must be enabled
-		for one or more rulesets with the enable() or enable_tags() methods.
-		The ast representation of the rule's condition is provided to allow
-		the filter_ruleset object to parse the ast to obtain event types
-		or do other analysis/indexing of the condition.
-		\param rule The rule to be added
-		\param the filter representing the rule's filtering condition.
-		\param condition The AST representing the rule's filtering condition
+	    but does not enable it for any ruleset.	The rule must be enabled
+	    for one or more rulesets with the enable() or enable_tags() methods.
+	    The ast representation of the rule's condition is provided to allow
+	    the filter_ruleset object to parse the ast to obtain event types
+	    or do other analysis/indexing of the condition.
+	    \param rule The rule to be added
+	    \param the filter representing the rule's filtering condition.
+	    \param condition The AST representing the rule's filtering condition
 	*/
-	virtual void add(
-		const falco_rule& rule,
-		std::shared_ptr<sinsp_filter> filter,
-		std::shared_ptr<libsinsp::filter::ast::expr> condition) = 0;
+	virtual void add(const falco_rule &rule,
+	                 std::shared_ptr<sinsp_filter> filter,
+	                 std::shared_ptr<libsinsp::filter::ast::expr> condition) = 0;
 
 	/*!
-		\brief Adds all rules contained in the provided
-		rule_loader::compile_output struct. Only
-		those rules with the provided source and those rules
-		with priority >= min_priority should be added. The
-		intent is that this replaces add(). However, we retain
-		add() for backwards compatibility. Any rules added via
-		add() are also added to this ruleset. The default
-		implementation iterates over rules and calls add(),
-		but can be overridden.
-		\param rule The compile output.
-		\param min_priority Only add rules with priority above this priority.
-		\param source Only add rules with source equal to this source.
+	    \brief Adds all rules contained in the provided
+	    rule_loader::compile_output struct. Only
+	    those rules with the provided source and those rules
+	    with priority >= min_priority should be added. The
+	    intent is that this replaces add(). However, we retain
+	    add() for backwards compatibility. Any rules added via
+	    add() are also added to this ruleset. The default
+	    implementation iterates over rules and calls add(),
+	    but can be overridden.
+	    \param rule The compile output.
+	    \param min_priority Only add rules with priority above this priority.
+	    \param source Only add rules with source equal to this source.
 	*/
-	virtual void add_compile_output(
-		const rule_loader::compile_output& compile_output,
-		falco_common::priority_type min_priority,
-		const std::string& source)
-	{
-		for (const auto& rule : compile_output.rules)
-		{
-			if(rule.priority <= min_priority &&
-			   rule.source == source)
-			{
+	virtual void add_compile_output(const rule_loader::compile_output &compile_output,
+	                                falco_common::priority_type min_priority,
+	                                const std::string &source) {
+		for(const auto &rule : compile_output.rules) {
+			if(rule.priority <= min_priority && rule.source == source) {
 				add(rule, rule.filter, rule.condition);
 			}
 		}
 	};
 
 	/*!
-		\brief Erases the internal state. All rules are disabled in each
-		ruleset, and all the rules defined with add() are removed.
+	    \brief Erases the internal state. All rules are disabled in each
+	    ruleset, and all the rules defined with add() are removed.
 	*/
 	virtual void clear() = 0;
 
 	/*!
-		\brief This is meant to be called after all rules have been added
-		with add() and enabled on the given ruleset with enable()/enable_tags().
+	    \brief This is meant to be called after all rules have been added
+	    with add() and enabled on the given ruleset with enable()/enable_tags().
 	*/
 	virtual void on_loading_complete() = 0;
 
 	/*!
-		\brief Processes an event and tries to find a match in a given ruleset.
-		\return true if a match is found, false otherwise
-		\param evt The event to be processed
-		\param match If true is returned, this is filled-out with the first rule
-		that matched the event
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Processes an event and tries to find a match in a given ruleset.
+	    \return true if a match is found, false otherwise
+	    \param evt The event to be processed
+	    \param match If true is returned, this is filled-out with the first rule
+	    that matched the event
+	    \param ruleset_id The id of the ruleset to be used
 	*/
-	virtual bool run(
-		sinsp_evt *evt,
-		falco_rule& match,
-		uint16_t ruleset_id) = 0;
-	
-	/*!
-		\brief Processes an event and tries to find a match in a given ruleset.
-		\return true if a match is found, false otherwise
-		\param evt The event to be processed
-		\param matches If true is returned, this is filled-out with all the rules
-		that matched the event
-		\param ruleset_id The id of the ruleset to be used
-	*/
-	virtual bool run(
-		sinsp_evt *evt,
-		std::vector<falco_rule>& matches,
-		uint16_t ruleset_id) = 0;
+	virtual bool run(sinsp_evt *evt, falco_rule &match, uint16_t ruleset_id) = 0;
 
 	/*!
-		\brief Returns the number of rules enabled in a given ruleset
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Processes an event and tries to find a match in a given ruleset.
+	    \return true if a match is found, false otherwise
+	    \param evt The event to be processed
+	    \param matches If true is returned, this is filled-out with all the rules
+	    that matched the event
+	    \param ruleset_id The id of the ruleset to be used
+	*/
+	virtual bool run(sinsp_evt *evt, std::vector<falco_rule> &matches, uint16_t ruleset_id) = 0;
+
+	/*!
+	    \brief Returns the number of rules enabled in a given ruleset
+	    \param ruleset_id The id of the ruleset to be used
 	*/
 	virtual uint64_t enabled_count(uint16_t ruleset_id) = 0;
 
 	/*!
-		\brief Returns the union of the evttypes of all the rules enabled
-		in a given ruleset
-		\param ruleset_id The id of the ruleset to be used
-		\deprecated Must use the new typing-improved `enabled_event_codes`
-		and `enabled_sc_codes` instead
-		\note todo(jasondellaluce): remove this in future refactors
+	    \brief Returns the union of the evttypes of all the rules enabled
+	    in a given ruleset
+	    \param ruleset_id The id of the ruleset to be used
+	    \deprecated Must use the new typing-improved `enabled_event_codes`
+	    and `enabled_sc_codes` instead
+	    \note todo(jasondellaluce): remove this in future refactors
 	*/
-	virtual void enabled_evttypes(
-		std::set<uint16_t> &evttypes,
-		uint16_t ruleset) = 0;
-	
-	/*!
-		\brief Returns the all the ppm_sc_codes matching the rules
-		enabled in a given ruleset.
-		\param ruleset_id The id of the ruleset to be used
-	*/
-	virtual libsinsp::events::set<ppm_sc_code> enabled_sc_codes(
-		uint16_t ruleset) = 0;
-	
-	/*!
-		\brief Returns the all the ppm_event_codes matching the rules
-		enabled in a given ruleset.
-		\param ruleset_id The id of the ruleset to be used
-	*/
-	virtual libsinsp::events::set<ppm_event_code> enabled_event_codes(
-		uint16_t ruleset) = 0;
+	virtual void enabled_evttypes(std::set<uint16_t> &evttypes, uint16_t ruleset) = 0;
 
 	/*!
-		\brief Find those rules matching the provided substring and enable
-		them in the provided ruleset.
-		\param pattern Pattern used to match rule names.
-		\param match How to match the pattern against rules:
-			- exact: rules that has the same exact name as the pattern are matched
-			- substring: rules having the pattern as a substring in the rule are matched.
-						 An empty pattern matches all rules.
-			- wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
-						 A "*" pattern matches all rules.
-						 Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Returns the all the ppm_sc_codes matching the rules
+	    enabled in a given ruleset.
+	    \param ruleset_id The id of the ruleset to be used
 	*/
-	virtual void enable(
-		const std::string &pattern,
-		match_type match,
-		uint16_t ruleset_id) = 0;
+	virtual libsinsp::events::set<ppm_sc_code> enabled_sc_codes(uint16_t ruleset) = 0;
 
 	/*!
-		\brief Find those rules matching the provided substring and disable
-		them in the provided ruleset.
-		\param pattern Pattern used to match rule names.
-		\param match How to match the pattern against rules:
-			- exact: rules that has the same exact name as the pattern are matched
-			- substring: rules having the pattern as a substring in the rule are matched.
-						 An empty pattern matches all rules.
-			- wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
-						 A "*" pattern matches all rules.
-						 Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Returns the all the ppm_event_codes matching the rules
+	    enabled in a given ruleset.
+	    \param ruleset_id The id of the ruleset to be used
 	*/
-	virtual void disable(
-		const std::string &pattern,
-		match_type match,
-		uint16_t ruleset_id) = 0;
+	virtual libsinsp::events::set<ppm_event_code> enabled_event_codes(uint16_t ruleset) = 0;
 
 	/*!
-		\brief Find those rules that have a tag in the set of tags and
-		enable them for the provided ruleset. Note that the enabled
-		status is on the rules, and not the tags--if a rule R has
-		tags (a, b), and you call enable_tags([a]) and then
-		disable_tags([b]), R will be disabled despite the
-		fact it has tag a and was enabled by the first call to
-		enable_tags.
-		\param substring Tags used to match ruless
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Find those rules matching the provided substring and enable
+	    them in the provided ruleset.
+	    \param pattern Pattern used to match rule names.
+	    \param match How to match the pattern against rules:
+	        - exact: rules that has the same exact name as the pattern are matched
+	        - substring: rules having the pattern as a substring in the rule are matched.
+	                     An empty pattern matches all rules.
+	        - wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
+	                     A "*" pattern matches all rules.
+	                     Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
+	    \param ruleset_id The id of the ruleset to be used
 	*/
-	virtual void enable_tags(
-		const std::set<std::string> &tags,
-		uint16_t ruleset_id) = 0;
+	virtual void enable(const std::string &pattern, match_type match, uint16_t ruleset_id) = 0;
 
 	/*!
-		\brief Find those rules that have a tag in the set of tags and
-		disable them for the provided ruleset. Note that the disabled
-		status is on the rules, and not the tags--if a rule R has
-		tags (a, b), and you call enable_tags([a]) and then
-		disable_tags([b]), R will be disabled despite the
-		fact it has tag a and was enabled by the first call to
-		enable_tags.
-		\param substring Tags used to match ruless
-		\param ruleset_id The id of the ruleset to be used
+	    \brief Find those rules matching the provided substring and disable
+	    them in the provided ruleset.
+	    \param pattern Pattern used to match rule names.
+	    \param match How to match the pattern against rules:
+	        - exact: rules that has the same exact name as the pattern are matched
+	        - substring: rules having the pattern as a substring in the rule are matched.
+	                     An empty pattern matches all rules.
+	        - wildcard: rules with names that satisfies a wildcard (*) pattern are matched.
+	                     A "*" pattern matches all rules.
+	                     Wildcards can appear anywhere in the pattern (e.g. "*hello*world*")
+	    \param ruleset_id The id of the ruleset to be used
 	*/
-	virtual void disable_tags(
-		const std::set<std::string> &tags,
-		uint16_t ruleset_id) = 0;
+	virtual void disable(const std::string &pattern, match_type match, uint16_t ruleset_id) = 0;
+
+	/*!
+	    \brief Find those rules that have a tag in the set of tags and
+	    enable them for the provided ruleset. Note that the enabled
+	    status is on the rules, and not the tags--if a rule R has
+	    tags (a, b), and you call enable_tags([a]) and then
+	    disable_tags([b]), R will be disabled despite the
+	    fact it has tag a and was enabled by the first call to
+	    enable_tags.
+	    \param substring Tags used to match ruless
+	    \param ruleset_id The id of the ruleset to be used
+	*/
+	virtual void enable_tags(const std::set<std::string> &tags, uint16_t ruleset_id) = 0;
+
+	/*!
+	    \brief Find those rules that have a tag in the set of tags and
+	    disable them for the provided ruleset. Note that the disabled
+	    status is on the rules, and not the tags--if a rule R has
+	    tags (a, b), and you call enable_tags([a]) and then
+	    disable_tags([b]), R will be disabled despite the
+	    fact it has tag a and was enabled by the first call to
+	    enable_tags.
+	    \param substring Tags used to match ruless
+	    \param ruleset_id The id of the ruleset to be used
+	*/
+	virtual void disable_tags(const std::set<std::string> &tags, uint16_t ruleset_id) = 0;
 
 private:
 	engine_state_funcs m_engine_state;
 };
 
 /*!
-	\brief Represents a factory that creates filter_ruleset objects
+    \brief Represents a factory that creates filter_ruleset objects
 */
-class filter_ruleset_factory
-{
+class filter_ruleset_factory {
 public:
 	virtual ~filter_ruleset_factory() = default;
 

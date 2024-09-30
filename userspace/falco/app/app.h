@@ -30,5 +30,5 @@ bool run(int argc, char** argv, bool& restart, std::string& errstr);
 
 bool run(falco::app::state& s, bool& restart, std::string& errstr);
 
-}; // namespace app
-}; // namespace falco
+};  // namespace app
+};  // namespace falco

@@ -27,29 +27,22 @@ limitations under the License.
 
 // The possible actions that this class can take upon
 // detecting a syscall event drop.
-enum class syscall_evt_drop_action : uint8_t
-{
-	DISREGARD = 0,
-	LOG,
-	ALERT,
-	EXIT
-};
+enum class syscall_evt_drop_action : uint8_t { DISREGARD = 0, LOG, ALERT, EXIT };
 
 using syscall_evt_drop_actions = std::unordered_set<syscall_evt_drop_action>;
 
-class syscall_evt_drop_mgr
-{
+class syscall_evt_drop_mgr {
 public:
 	syscall_evt_drop_mgr();
 	virtual ~syscall_evt_drop_mgr();
 
 	void init(std::shared_ptr<sinsp> inspector,
-		  std::shared_ptr<falco_outputs> outputs,
-		  const syscall_evt_drop_actions &actions,
-		  double threshold,
-		  double rate,
-		  double max_tokens,
-		  bool simulate_drops);
+	          std::shared_ptr<falco_outputs> outputs,
+	          const syscall_evt_drop_actions &actions,
+	          double threshold,
+	          double rate,
+	          double max_tokens,
+	          bool simulate_drops);
 
 	// Call this for every event. The class will take care of
 	// periodically measuring the scap stats, looking for syscall

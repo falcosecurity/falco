@@ -23,56 +23,52 @@ limitations under the License.
 #include <string>
 #include <functional>
 
-namespace falco
-{
-namespace app
-{
+namespace falco {
+namespace app {
 
 /**
  * @brief A thread-safe helper for handling hot-reload application restarts.
  */
-class restart_handler
-{
+class restart_handler {
 public:
-    /**
-     * @brief A function that performs safety checks before confirming
-     * a triggered application restart. Returns true if the application
-     * can safely be restarted.
-     */
-    using on_check_t = std::function<bool()>;
+	/**
+	 * @brief A function that performs safety checks before confirming
+	 * a triggered application restart. Returns true if the application
+	 * can safely be restarted.
+	 */
+	using on_check_t = std::function<bool()>;
 
-    /**
-     * @brief A list of files or directories paths to watch.
-     */
-    using watch_list_t = std::vector<std::string>;
+	/**
+	 * @brief A list of files or directories paths to watch.
+	 */
+	using watch_list_t = std::vector<std::string>;
 
-    explicit restart_handler(
-        on_check_t on_check,
-        const watch_list_t& watch_files = {},
-        const watch_list_t& watch_dirs = {})
-            : m_inotify_fd(-1),
-              m_stop(false),
-              m_forced(false),
-              m_on_check(on_check),
-              m_watched_dirs(watch_dirs),
-              m_watched_files(watch_files) { }
-    virtual ~restart_handler();
+	explicit restart_handler(on_check_t on_check,
+	                         const watch_list_t& watch_files = {},
+	                         const watch_list_t& watch_dirs = {}):
+	        m_inotify_fd(-1),
+	        m_stop(false),
+	        m_forced(false),
+	        m_on_check(on_check),
+	        m_watched_dirs(watch_dirs),
+	        m_watched_files(watch_files) {}
+	virtual ~restart_handler();
 
-    bool start(std::string& err);
-    void stop();
-    void trigger();
+	bool start(std::string& err);
+	void stop();
+	void trigger();
 
 private:
-    void watcher_loop() noexcept;
+	void watcher_loop() noexcept;
 
-    int m_inotify_fd;
-    std::thread m_watcher;
-    std::atomic<bool> m_stop;
-    std::atomic<bool> m_forced;
-    on_check_t m_on_check;
-    watch_list_t m_watched_dirs;
-    watch_list_t m_watched_files;
+	int m_inotify_fd;
+	std::thread m_watcher;
+	std::atomic<bool> m_stop;
+	std::atomic<bool> m_forced;
+	on_check_t m_on_check;
+	watch_list_t m_watched_dirs;
+	watch_list_t m_watched_files;
 };
 
-}; // namespace app
-}; // namespace falco
+};  // namespace app
+};  // namespace falco

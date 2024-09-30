@@ -23,32 +23,28 @@ limitations under the License.
 #define RULESET_2 2
 
 /* Helpers methods */
-static std::shared_ptr<sinsp_filter_factory> create_factory(sinsp* inspector, filter_check_list& list)
-{
+static std::shared_ptr<sinsp_filter_factory> create_factory(sinsp* inspector,
+                                                            filter_check_list& list) {
 	return std::make_shared<sinsp_filter_factory>(inspector, list);
 }
 
-static std::shared_ptr<filter_ruleset> create_ruleset(std::shared_ptr<sinsp_filter_factory> f)
-{
+static std::shared_ptr<filter_ruleset> create_ruleset(std::shared_ptr<sinsp_filter_factory> f) {
 	return std::make_shared<evttype_index_ruleset>(f);
 }
 
-static std::shared_ptr<libsinsp::filter::ast::expr> create_ast(std::shared_ptr<sinsp_filter_factory> f)
-{
+static std::shared_ptr<libsinsp::filter::ast::expr> create_ast(
+        std::shared_ptr<sinsp_filter_factory> f) {
 	libsinsp::filter::parser parser("evt.type=open");
 	return parser.parse();
 }
 
-static std::shared_ptr<sinsp_filter> create_filter(
-	std::shared_ptr<sinsp_filter_factory> f,
-	libsinsp::filter::ast::expr* ast)
-{
+static std::shared_ptr<sinsp_filter> create_filter(std::shared_ptr<sinsp_filter_factory> f,
+                                                   libsinsp::filter::ast::expr* ast) {
 	sinsp_filter_compiler compiler(f, ast);
 	return std::shared_ptr<sinsp_filter>(compiler.compile());
 }
 
-TEST(Ruleset, enable_disable_rules_using_names)
-{
+TEST(Ruleset, enable_disable_rules_using_names) {
 	sinsp inspector;
 
 	sinsp_filter_check_list filterlist;
@@ -140,8 +136,7 @@ TEST(Ruleset, enable_disable_rules_using_names)
 	ASSERT_EQ(r->enabled_count(RULESET_2), 0);
 }
 
-TEST(Ruleset, enable_disable_rules_using_tags)
-{
+TEST(Ruleset, enable_disable_rules_using_tags) {
 	sinsp inspector;
 
 	sinsp_filter_check_list filterlist;

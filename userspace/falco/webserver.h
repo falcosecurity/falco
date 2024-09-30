@@ -26,21 +26,19 @@ limitations under the License.
 #include <thread>
 
 namespace falco::app {
-	struct state;
+struct state;
 }
 
-class falco_webserver
-{
+class falco_webserver {
 public:
 	falco_webserver() = default;
 	virtual ~falco_webserver();
 	falco_webserver(falco_webserver&&) = default;
-	falco_webserver& operator = (falco_webserver&&) = default;
+	falco_webserver& operator=(falco_webserver&&) = default;
 	falco_webserver(const falco_webserver&) = delete;
-	falco_webserver& operator = (const falco_webserver&) = delete;
-	virtual void start(
-		const falco::app::state& state,
-		const falco_configuration::webserver_config& webserver_config);
+	falco_webserver& operator=(const falco_webserver&) = delete;
+	virtual void start(const falco::app::state& state,
+	                   const falco_configuration::webserver_config& webserver_config);
 	virtual void stop();
 
 private:

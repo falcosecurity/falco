@@ -19,8 +19,7 @@ limitations under the License.
 #include "falco_test_var.h"
 
 #ifndef __EMSCRIPTEN__
-TEST(ActionLoadConfig, check_kmod_engine_config)
-{
+TEST(ActionLoadConfig, check_kmod_engine_config) {
 	falco::app::state s = {};
 	s.options.conf_filename = TEST_ENGINE_KMOD_CONFIG;
 	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
@@ -47,8 +46,7 @@ TEST(ActionLoadConfig, check_kmod_engine_config)
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
 }
 
-TEST(ActionLoadConfig, check_modern_engine_config)
-{
+TEST(ActionLoadConfig, check_modern_engine_config) {
 	falco::app::state s = {};
 	s.options.conf_filename = TEST_ENGINE_MODERN_CONFIG;
 	EXPECT_ACTION_OK(falco::app::actions::load_config(s));

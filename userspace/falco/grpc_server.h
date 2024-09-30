@@ -25,25 +25,20 @@ limitations under the License.
 #include "version.grpc.pb.h"
 #include "grpc_context.h"
 
-namespace falco
-{
-namespace grpc
-{
+namespace falco {
+namespace grpc {
 
-class server
-{
+class server {
 public:
 	server() = default;
 	virtual ~server() = default;
 
-	void init(
-		const std::string& server_addr,
-		int threadiness,
-		const std::string& private_key,
-		const std::string& cert_chain,
-		const std::string& root_certs,
-		const std::string& log_level
-	);
+	void init(const std::string& server_addr,
+	          int threadiness,
+	          const std::string& private_key,
+	          const std::string& cert_chain,
+	          const std::string& root_certs,
+	          const std::string& log_level);
 	void thread_process(int thread_index);
 	void run();
 	void stop();
@@ -80,5 +75,5 @@ private:
 	std::atomic<bool> m_stop{false};
 };
 
-} // namespace grpc
-} // namespace falco
+}  // namespace grpc
+}  // namespace falco

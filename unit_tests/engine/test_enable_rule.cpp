@@ -72,8 +72,6 @@ static std::string multi_rule = R"END(
   tags: [exec]
 )END";
 
-
-
 // This must be kept in line with the (private) falco_engine::s_default_ruleset
 static const std::string default_ruleset = "falco-default-ruleset";
 
@@ -82,8 +80,7 @@ static const std::string ruleset_2 = "ruleset-2";
 static const std::string ruleset_3 = "ruleset-3";
 static const std::string ruleset_4 = "ruleset-4";
 
-TEST_F(test_falco_engine, enable_rule_name)
-{
+TEST_F(test_falco_engine, enable_rule_name) {
 	load_rules(single_rule, "single_rule.yaml");
 
 	// No rules should be enabled yet for any custom rulesets
@@ -119,8 +116,7 @@ TEST_F(test_falco_engine, enable_rule_name)
 	EXPECT_EQ(2, m_engine->num_rules_for_ruleset(ruleset_3));
 }
 
-TEST_F(test_falco_engine, enable_rule_tags)
-{
+TEST_F(test_falco_engine, enable_rule_tags) {
 	std::set<std::string> process_tags = {"process"};
 
 	load_rules(single_rule, "single_rule.yaml");
@@ -147,8 +143,7 @@ TEST_F(test_falco_engine, enable_rule_tags)
 	EXPECT_EQ(0, m_engine->num_rules_for_ruleset(ruleset_2));
 }
 
-TEST_F(test_falco_engine, enable_disabled_rule_by_tag)
-{
+TEST_F(test_falco_engine, enable_disabled_rule_by_tag) {
 	std::set<std::string> exec_process_tags = {"exec process"};
 
 	load_rules(single_rule, "single_rule.yaml");
@@ -163,8 +158,7 @@ TEST_F(test_falco_engine, enable_disabled_rule_by_tag)
 	EXPECT_EQ(2, m_engine->num_rules_for_ruleset(default_ruleset));
 }
 
-TEST_F(test_falco_engine, enable_rule_id)
-{
+TEST_F(test_falco_engine, enable_rule_id) {
 	uint16_t ruleset_1_id;
 	uint16_t ruleset_2_id;
 	uint16_t ruleset_3_id;
@@ -204,8 +198,7 @@ TEST_F(test_falco_engine, enable_rule_id)
 	EXPECT_EQ(2, m_engine->num_rules_for_ruleset(ruleset_3));
 }
 
-TEST_F(test_falco_engine, enable_rule_name_exact)
-{
+TEST_F(test_falco_engine, enable_rule_name_exact) {
 	load_rules(single_rule, "single_rule.yaml");
 
 	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(default_ruleset));
@@ -247,8 +240,7 @@ TEST_F(test_falco_engine, enable_rule_name_exact)
 	EXPECT_EQ(2, m_engine->num_rules_for_ruleset(ruleset_4));
 }
 
-TEST_F(test_falco_engine, enable_rule_name_wildcard)
-{
+TEST_F(test_falco_engine, enable_rule_name_wildcard) {
 	load_rules(multi_rule, "multi_rule.yaml");
 
 	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(default_ruleset));
@@ -283,4 +275,3 @@ TEST_F(test_falco_engine, enable_rule_name_wildcard)
 	EXPECT_EQ(1, m_engine->num_rules_for_ruleset(ruleset_3));
 	EXPECT_EQ(3, m_engine->num_rules_for_ruleset(ruleset_4));
 }
-

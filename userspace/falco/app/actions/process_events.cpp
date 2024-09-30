@@ -40,52 +40,41 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-class source_sync_context
-{
+class source_sync_context {
 public:
-	explicit source_sync_context(falco::semaphore& s)
-		: m_finished(false), m_joined(false), m_semaphore(s) { }
+	explicit source_sync_context(falco::semaphore& s):
+	        m_finished(false),
+	        m_joined(false),
+	        m_semaphore(s) {}
 
-	inline void finish()
-	{
+	inline void finish() {
 		bool v = false;
-		while (!m_finished.compare_exchange_weak(
-				v, true,
-				std::memory_order_seq_cst,
-				std::memory_order_seq_cst))
-		{
-			if (v)
-			{
+		while(!m_finished.compare_exchange_weak(v,
+		                                        true,
+		                                        std::memory_order_seq_cst,
+		                                        std::memory_order_seq_cst)) {
+			if(v) {
 				throw falco_exception("source_sync_context has been finished twice");
 			}
 		}
 		m_semaphore.release();
 	}
 
-	inline void join()
-	{
+	inline void join() {
 		bool v = false;
-		while (!m_joined.compare_exchange_weak(
-				v, true,
-				std::memory_order_seq_cst,
-				std::memory_order_seq_cst))
-		{
-			if (v)
-			{
+		while(!m_joined.compare_exchange_weak(v,
+		                                      true,
+		                                      std::memory_order_seq_cst,
+		                                      std::memory_order_seq_cst)) {
+			if(v) {
 				throw falco_exception("source_sync_context has been joined twice");
 			}
 		}
 	}
 
-	inline bool joined()
-	{
-		return m_joined.load(std::memory_order_seq_cst);
-	}
+	inline bool joined() { return m_joined.load(std::memory_order_seq_cst); }
 
-	inline bool finished()
-	{
-		return m_finished.load(std::memory_order_seq_cst);
-	}
+	inline bool finished() { return m_finished.load(std::memory_order_seq_cst); }
 
 private:
 	// set to true when the event processing loop finishes
@@ -96,8 +85,7 @@ private:
 	falco::semaphore& m_semaphore;
 };
 
-struct live_context
-{
+struct live_context {
 	// the name of the source of which events are processed
 	std::string source;
 	// the result of the event processing loop
@@ -112,15 +100,14 @@ struct live_context
 // Event processing loop
 //
 static falco::app::run_result do_inspect(
-		falco::app::state& s,
-		std::shared_ptr<sinsp> inspector,
-		const std::string& source, // an empty source represents capture mode
-		std::shared_ptr<stats_writer> statsw,
-		syscall_evt_drop_mgr &sdropmgr,
-		bool check_drops_and_timeouts,
-		uint64_t duration_to_tot_ns,
-		uint64_t &num_evts)
-{
+        falco::app::state& s,
+        std::shared_ptr<sinsp> inspector,
+        const std::string& source,  // an empty source represents capture mode
+        std::shared_ptr<stats_writer> statsw,
+        syscall_evt_drop_mgr& sdropmgr,
+        bool check_drops_and_timeouts,
+        uint64_t duration_to_tot_ns,
+        uint64_t& num_evts) {
 	int32_t rc = 0;
 	sinsp_evt* ev = NULL;
 	stats_writer::collector stats_collector(statsw);
@@ -136,8 +123,7 @@ static falco::app::run_result do_inspect(
 	// the only other source loaded in its relative live inspector.
 	size_t expected_live_evt_src_idx = source == falco_common::syscall_source ? 0 : 1;
 
-	if (!is_capture_mode)
-	{
+	if(!is_capture_mode) {
 		// note: in live mode, each inspector gets assigned a distinct event
 		// source that does not change for the whole capture.
 		source_engine_idx = s.source_infos.at(source)->engine_idx;
@@ -147,15 +133,14 @@ static falco::app::run_result do_inspect(
 	num_evts = 0;
 
 	// init drop manager if we are inspecting syscalls
-	if (check_drops_and_timeouts)
-	{
+	if(check_drops_and_timeouts) {
 		sdropmgr.init(inspector,
-				s.outputs, // drop manager has its own rate limiting logic
-				s.config->m_syscall_evt_drop_actions,
-				s.config->m_syscall_evt_drop_threshold,
-				s.config->m_syscall_evt_drop_rate,
-				s.config->m_syscall_evt_drop_max_burst,
-				s.config->m_syscall_evt_simulate_drops);
+		              s.outputs,  // drop manager has its own rate limiting logic
+		              s.config->m_syscall_evt_drop_actions,
+		              s.config->m_syscall_evt_drop_threshold,
+		              s.config->m_syscall_evt_drop_rate,
+		              s.config->m_syscall_evt_drop_max_burst,
+		              s.config->m_syscall_evt_simulate_drops);
 	}
 
 	//
@@ -166,55 +151,54 @@ static falco::app::run_result do_inspect(
 	//
 	// Loop through the events
 	//
-	while(1)
-	{
+	while(1) {
 		rc = inspector->next(&ev);
 
-		if (falco::app::g_reopen_outputs_signal.triggered())
-		{
-			falco::app::g_reopen_outputs_signal.handle([&s](){
-				falco_logger::log(falco_logger::level::INFO, "SIGUSR1 received, reopening outputs...\n");
-				if(s.outputs != nullptr)
-				{
+		if(falco::app::g_reopen_outputs_signal.triggered()) {
+			falco::app::g_reopen_outputs_signal.handle([&s]() {
+				falco_logger::log(falco_logger::level::INFO,
+				                  "SIGUSR1 received, reopening outputs...\n");
+				if(s.outputs != nullptr) {
 					s.outputs->reopen_outputs();
 				}
 				falco::app::g_reopen_outputs_signal.reset();
 			});
 		}
 
-		if(falco::app::g_terminate_signal.triggered())
-		{
-			falco::app::g_terminate_signal.handle([&](){
+		if(falco::app::g_terminate_signal.triggered()) {
+			falco::app::g_terminate_signal.handle([&]() {
 				falco_logger::log(falco_logger::level::INFO, "SIGINT received, exiting...\n");
 			});
 			break;
-		}
-		else if(falco::app::g_restart_signal.triggered())
-		{
-			falco::app::g_restart_signal.handle([&s](){
+		} else if(falco::app::g_restart_signal.triggered()) {
+			falco::app::g_restart_signal.handle([&s]() {
 				falco_logger::log(falco_logger::level::INFO, "SIGHUP received, restarting...\n");
 				s.restart.store(true);
 			});
 			break;
-		}
-		else if(rc == SCAP_TIMEOUT)
-		{
-			if(ev == nullptr) [[unlikely]]
-			{
+		} else if(rc == SCAP_TIMEOUT) {
+			if(ev == nullptr) [[unlikely]] {
 				timeouts_since_last_success_or_msg++;
-				if(timeouts_since_last_success_or_msg > s.config->m_syscall_evt_timeout_max_consecutives
-					&& check_drops_and_timeouts)
-				{
+				if(timeouts_since_last_success_or_msg >
+				           s.config->m_syscall_evt_timeout_max_consecutives &&
+				   check_drops_and_timeouts) {
 					std::string rule = "Falco internal: timeouts notification";
-					std::string msg = rule + ". " + std::to_string(s.config->m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
+					std::string msg =
+					        rule + ". " +
+					        std::to_string(s.config->m_syscall_evt_timeout_max_consecutives) +
+					        " consecutive timeouts without event.";
 					std::string last_event_time_str = "none";
-					if(duration_start > 0)
-					{
-						sinsp_utils::ts_to_string(duration_start, &last_event_time_str, false, true);
+					if(duration_start > 0) {
+						sinsp_utils::ts_to_string(duration_start,
+						                          &last_event_time_str,
+						                          false,
+						                          true);
 					}
 					nlohmann::json fields;
 					fields["last_event_time"] = last_event_time_str;
-					auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
+					                   std::chrono::system_clock::now().time_since_epoch())
+					                   .count();
 					s.outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, fields);
 					// Reset the timeouts counter, Falco alerted
 					timeouts_since_last_success_or_msg = 0;
@@ -222,17 +206,11 @@ static falco::app::run_result do_inspect(
 			}
 
 			continue;
-		}
-		else if(rc == SCAP_FILTERED_EVENT)
-		{
+		} else if(rc == SCAP_FILTERED_EVENT) {
 			continue;
-		}
-		else if(rc == SCAP_EOF)
-		{
+		} else if(rc == SCAP_EOF) {
 			break;
-		}
-		else if(rc != SCAP_SUCCESS)
-		{
+		} else if(rc != SCAP_SUCCESS) {
 			//
 			// Event read error.
 			//
@@ -240,20 +218,16 @@ static falco::app::run_result do_inspect(
 		}
 
 		// if we are in live mode, we already have the right source engine idx
-		if (is_capture_mode)
-		{
+		if(is_capture_mode) {
 			// note: here we can assume that the source index will be the same
 			// in both the falco engine and the inspector. See the
 			// comment in init_falco_engine.cpp for more details.
 			source_engine_idx = ev->get_source_idx();
-			if (source_engine_idx == sinsp_no_event_source_idx)
-			{
+			if(source_engine_idx == sinsp_no_event_source_idx) {
 				std::string msg = "Unknown event source for inspector's event";
-				if (ev->get_type() == PPME_PLUGINEVENT_E || ev->get_type() == PPME_ASYNCEVENT_E)
-				{
-					auto pluginID = *(uint32_t *)ev->get_param(0)->m_val;
-					if (pluginID != 0)
-					{
+				if(ev->get_type() == PPME_PLUGINEVENT_E || ev->get_type() == PPME_ASYNCEVENT_E) {
+					auto pluginID = *(uint32_t*)ev->get_param(0)->m_val;
+					if(pluginID != 0) {
 						msg += " (plugin ID: " + std::to_string(pluginID) + ")";
 					}
 				}
@@ -261,21 +235,22 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx], num_evts);
-		}
-		else
-		{
+			stats_collector.collect(inspector,
+			                        inspector->event_sources()[source_engine_idx],
+			                        num_evts);
+		} else {
 			// in live mode, each inspector gets assigned a distinct event source,
 			// so we report an error if we fetch an event of a different source.
-			if (expected_live_evt_src_idx != ev->get_source_idx())
-			{
+			if(expected_live_evt_src_idx != ev->get_source_idx()) {
 				std::string actual = (ev->get_source_name() != NULL)
-					? ("'" + std::string(ev->get_source_name()) + "'")
-					: ("<NA>");
+				                             ? ("'" + std::string(ev->get_source_name()) + "'")
+				                             : ("<NA>");
 				std::string msg = "Unexpected event source for inspector's event:";
 				msg += " type=" + std::to_string(ev->get_type());
-				msg += ", expected='" + source + " (idx=" + std::to_string(expected_live_evt_src_idx) + ")";
-				msg += "', actual=" + actual + " (idx=" + std::to_string(ev->get_source_idx()) + ")";
+				msg += ", expected='" + source +
+				       " (idx=" + std::to_string(expected_live_evt_src_idx) + ")";
+				msg += "', actual=" + actual + " (idx=" + std::to_string(ev->get_source_idx()) +
+				       ")";
 				return run_result::fatal(msg);
 			}
 
@@ -285,20 +260,15 @@ static falco::app::run_result do_inspect(
 
 		// Reset the timeouts counter, Falco successfully got an event to process
 		timeouts_since_last_success_or_msg = 0;
-		if(duration_start == 0)
-		{
+		if(duration_start == 0) {
 			duration_start = ev->get_ts();
-		}
-		else if(duration_to_tot_ns > 0)
-		{
-			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
-			{
+		} else if(duration_to_tot_ns > 0) {
+			if(ev->get_ts() - duration_start >= duration_to_tot_ns) {
 				break;
 			}
 		}
 
-		if(check_drops_and_timeouts && !sdropmgr.process_event(inspector, ev))
-		{
+		if(check_drops_and_timeouts && !sdropmgr.process_event(inspector, ev)) {
 			return run_result::fatal("Drop manager internal error");
 		}
 
@@ -308,13 +278,15 @@ static falco::app::run_result do_inspect(
 		// of rules. If a match is found, pass the event to
 		// the outputs.
 		auto res = s.engine->process_event(source_engine_idx, ev, s.config->m_rule_matching);
-		if(res != nullptr)
-		{
-			for(auto& rule_res : *res)
-			{
-				s.outputs->handle_event(
-					rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num,
-					rule_res.format, rule_res.tags, rule_res.extra_output_fields);
+		if(res != nullptr) {
+			for(auto& rule_res : *res) {
+				s.outputs->handle_event(rule_res.evt,
+				                        rule_res.rule,
+				                        rule_res.source,
+				                        rule_res.priority_num,
+				                        rule_res.format,
+				                        rule_res.tags,
+				                        rule_res.extra_output_fields);
 			}
 		}
 
@@ -325,68 +297,65 @@ static falco::app::run_result do_inspect(
 }
 
 static void process_inspector_events(
-		falco::app::state& s,
-		std::shared_ptr<sinsp> inspector,
-		std::shared_ptr<stats_writer> statsw,
-		const std::string& source, // an empty source represents capture mode
-		source_sync_context* sync,
-		run_result* res) noexcept
-{
+        falco::app::state& s,
+        std::shared_ptr<sinsp> inspector,
+        std::shared_ptr<stats_writer> statsw,
+        const std::string& source,  // an empty source represents capture mode
+        source_sync_context* sync,
+        run_result* res) noexcept {
 	run_result result;
 
-	try
-	{
+	try {
 		double duration;
 		scap_stats cstats;
 		uint64_t num_evts = 0;
 		syscall_evt_drop_mgr sdropmgr;
 		bool is_capture_mode = source.empty();
-		bool check_drops_timeouts = is_capture_mode
-			|| (source == falco_common::syscall_source && !s.is_gvisor());
+		bool check_drops_timeouts =
+		        is_capture_mode || (source == falco_common::syscall_source && !s.is_gvisor());
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC;
 
-		result = do_inspect(s, inspector, source, statsw, sdropmgr, check_drops_timeouts,
-						uint64_t(s.options.duration_to_tot*ONE_SECOND_IN_NS),
-						num_evts);
+		result = do_inspect(s,
+		                    inspector,
+		                    source,
+		                    statsw,
+		                    sdropmgr,
+		                    check_drops_timeouts,
+		                    uint64_t(s.options.duration_to_tot * ONE_SECOND_IN_NS),
+		                    num_evts);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
 		inspector->get_capture_stats(&cstats);
 
-		if(s.options.verbose)
-		{
-			if (source == falco_common::syscall_source)
-			{
-				fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
-				cstats.n_evts,
-				cstats.n_drops);
+		if(s.options.verbose) {
+			if(source == falco_common::syscall_source) {
+				fprintf(stderr,
+				        "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+				        cstats.n_evts,
+				        cstats.n_drops);
 			}
 
-			fprintf(stderr, "%sElapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
-				(is_capture_mode ? "" : ("("+source+") ").c_str()),
-				duration,
-				num_evts,
-				num_evts / duration);
+			fprintf(stderr,
+			        "%sElapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+			        (is_capture_mode ? "" : ("(" + source + ") ").c_str()),
+			        duration,
+			        num_evts,
+			        num_evts / duration);
 		}
 
-		if (check_drops_timeouts)
-		{
+		if(check_drops_timeouts) {
 			sdropmgr.print_stats();
 		}
-	}
-	catch(const std::exception& e)
-	{
+	} catch(const std::exception& e) {
 		result = run_result::fatal(e.what());
 	}
 
-	if (sync)
-	{
+	if(sync) {
 		try {
 			sync->finish();
-		}
-		catch(const std::exception& e)
-		{
+		} catch(const std::exception& e) {
 			result = run_result::merge(result, run_result::fatal(e.what()));
 		}
 	}
@@ -395,36 +364,44 @@ static void process_inspector_events(
 }
 
 static falco::app::run_result init_stats_writer(
-		const std::shared_ptr<const stats_writer>& sw,
-		const std::shared_ptr<const falco_configuration>& config,
-		bool is_dry_run)
-{
-	if (!config->m_metrics_enabled)
-	{
-		return  falco::app::run_result::ok();
+        const std::shared_ptr<const stats_writer>& sw,
+        const std::shared_ptr<const falco_configuration>& config,
+        bool is_dry_run) {
+	if(!config->m_metrics_enabled) {
+		return falco::app::run_result::ok();
 	}
 
 	/* Enforce minimum bound of 100ms. */
-	if(config->m_metrics_interval < 100)
-	{
-		return falco::app::run_result::fatal("Metrics interval must have a minimum value of 100ms and reflect a Prometheus compliant time duration format: https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations. ");
+	if(config->m_metrics_interval < 100) {
+		return falco::app::run_result::fatal(
+		        "Metrics interval must have a minimum value of 100ms and reflect a Prometheus "
+		        "compliant time duration format: "
+		        "https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations. ");
 	}
 
-	if(std::all_of(config->m_metrics_interval_str.begin(), config->m_metrics_interval_str.end(), ::isdigit))
-	{
-		return falco::app::run_result::fatal("Metrics interval was passed as numeric value without Prometheus time unit. Please specify a time unit");
+	if(std::all_of(config->m_metrics_interval_str.begin(),
+	               config->m_metrics_interval_str.end(),
+	               ::isdigit)) {
+		return falco::app::run_result::fatal(
+		        "Metrics interval was passed as numeric value without Prometheus time unit. Please "
+		        "specify a time unit");
 	}
 
-	if (config->m_metrics_enabled && !(sw->has_output() || config->m_webserver_config.m_prometheus_metrics_enabled))
-	{
-		return falco::app::run_result::fatal("Metrics are enabled with no output configured. Please enable at least one output channel ('metrics.output_rule', 'metrics.output_file' or 'webserver.prometheus_metrics_enabled')");
+	if(config->m_metrics_enabled &&
+	   !(sw->has_output() || config->m_webserver_config.m_prometheus_metrics_enabled)) {
+		return falco::app::run_result::fatal(
+		        "Metrics are enabled with no output configured. Please enable at least one output "
+		        "channel ('metrics.output_rule', 'metrics.output_file' or "
+		        "'webserver.prometheus_metrics_enabled')");
 	}
 
-	falco_logger::log(falco_logger::level::INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
+	falco_logger::log(falco_logger::level::INFO,
+	                  "Setting metrics interval to " + config->m_metrics_interval_str +
+	                          ", equivalent to " + std::to_string(config->m_metrics_interval) +
+	                          " (ms)\n");
 
 	auto res = falco::app::run_result::ok();
-	if (is_dry_run)
-	{
+	if(is_dry_run) {
 		return res;
 	}
 	res.success = stats_writer::init_ticker(config->m_metrics_interval, res.errstr);
@@ -432,8 +409,7 @@ static falco::app::run_result init_stats_writer(
 	return res;
 }
 
-falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
-{
+falco::app::run_result falco::app::actions::process_events(falco::app::state& s) {
 	// Notify engine that we finished loading and enabling all rules
 	s.engine->complete_rule_loading();
 
@@ -441,24 +417,20 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config, s.engine);
 	auto res = init_stats_writer(statsw, s.config, s.options.dry_run);
 
-	if (s.options.dry_run)
-	{
+	if(s.options.dry_run) {
 		falco_logger::log(falco_logger::level::DEBUG, "Skipping event processing in dry-run\n");
 		return res;
 	}
 
-	if (!res.success)
-	{
+	if(!res.success) {
 		return res;
 	}
 
 	// Start processing events
 	bool termination_forced = false;
-	if(s.is_capture_mode())
-	{
+	if(s.is_capture_mode()) {
 		res = open_offline_inspector(s);
-		if (!res.success)
-		{
+		if(!res.success) {
 			return res;
 		}
 
@@ -468,19 +440,16 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		// Honor -M also when using a trace file.
 		// Since inspection stops as soon as all events have been consumed
 		// just await the given duration is reached, if needed.
-		if(s.options.duration_to_tot > 0)
-		{
+		if(s.options.duration_to_tot > 0) {
 			std::this_thread::sleep_for(std::chrono::seconds(s.options.duration_to_tot));
 		}
-	}
-	else
-	{
+	} else {
 		print_enabled_event_sources(s);
 
 #ifdef __EMSCRIPTEN__
-		if(s.enabled_sources.size() > 1)
-		{
-			return run_result::fatal("enabling multiple event sources is not supported by this Falco build");
+		if(s.enabled_sources.size() > 1) {
+			return run_result::fatal(
+			        "enabling multiple event sources is not supported by this Falco build");
 		}
 #endif
 
@@ -488,20 +457,18 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		falco::semaphore termination_sem(s.enabled_sources.size());
 		std::vector<live_context> ctxs;
 		ctxs.reserve(s.enabled_sources.size());
-		for (const auto& source : s.enabled_sources)
-		{
+		for(const auto& source : s.enabled_sources) {
 			auto& ctx = ctxs.emplace_back();
 			ctx.source = source;
 			ctx.sync = std::make_unique<source_sync_context>(termination_sem);
 			auto src_info = s.source_infos.at(source);
 
-			try
-			{
-				falco_logger::log(falco_logger::level::DEBUG, "Opening event source '" + source + "'\n");
+			try {
+				falco_logger::log(falco_logger::level::DEBUG,
+				                  "Opening event source '" + source + "'\n");
 				termination_sem.acquire();
 				res = open_live_inspector(s, src_info->inspector, source);
-				if (!res.success)
-				{
+				if(!res.success) {
 					// note: we don't return here because we need to reach
 					// the thread termination loop below to make sure all
 					// already-spawned threads get terminated gracefully
@@ -509,22 +476,28 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 					break;
 				}
 
-				if (s.enabled_sources.size() == 1)
-				{
+				if(s.enabled_sources.size() == 1) {
 					// optimization: with only one source we don't spawn additional threads
-					process_inspector_events(s, src_info->inspector, statsw, source, ctx.sync.get(), &ctx.res);
-				}
-				else
-				{
+					process_inspector_events(s,
+					                         src_info->inspector,
+					                         statsw,
+					                         source,
+					                         ctx.sync.get(),
+					                         &ctx.res);
+				} else {
 					auto res_ptr = &ctx.res;
 					auto sync_ptr = ctx.sync.get();
-					ctx.thread = std::make_unique<std::thread>([&s, src_info, &statsw, source, sync_ptr, res_ptr]() {
-						process_inspector_events(s, src_info->inspector, statsw, source, sync_ptr, res_ptr);
-					});
+					ctx.thread = std::make_unique<std::thread>(
+					        [&s, src_info, &statsw, source, sync_ptr, res_ptr]() {
+						        process_inspector_events(s,
+						                                 src_info->inspector,
+						                                 statsw,
+						                                 source,
+						                                 sync_ptr,
+						                                 res_ptr);
+					        });
 				}
-			}
-			catch (std::exception &e)
-			{
+			} catch(std::exception& e) {
 				// note: we don't return here because we need to reach
 				// the thread termination loop below to make sure all
 				// already-spawned threads get terminated gracefully
@@ -539,13 +512,12 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		// to force all other event streams to terminate too.
 		// We accumulate the errors in a single run_result.
 		size_t stopped_count = 0;
-		while (stopped_count < ctxs.size())
-		{
-			if (!res.success && !termination_forced)
-			{
-				falco_logger::log(falco_logger::level::INFO, "An error occurred in an event source, forcing termination...\n");
+		while(stopped_count < ctxs.size()) {
+			if(!res.success && !termination_forced) {
+				falco_logger::log(falco_logger::level::INFO,
+				                  "An error occurred in an event source, forcing termination...\n");
 				falco::app::g_terminate_signal.trigger();
-				falco::app::g_terminate_signal.handle([&](){});
+				falco::app::g_terminate_signal.handle([&]() {});
 				termination_forced = true;
 			}
 
@@ -557,14 +529,10 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 			// event source is enabled, in which we have no additional threads.
 			termination_sem.acquire();
 
-			for (auto &ctx : ctxs)
-			{
-				if (ctx.sync->finished() && !ctx.sync->joined())
-				{
-					if (ctx.thread)
-					{
-						if (!ctx.thread->joinable())
-						{
+			for(auto& ctx : ctxs) {
+				if(ctx.sync->finished() && !ctx.sync->joined()) {
+					if(ctx.thread) {
+						if(!ctx.thread->joinable()) {
 							// thread has finished executing but
 							// we already joined it, so we skip to the next one.
 							// technically, we should never get here because
@@ -574,7 +542,8 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 						ctx.thread->join();
 					}
 
-					falco_logger::log(falco_logger::level::DEBUG, "Stopping capture for event source '" + ctx.source + "'\n");
+					falco_logger::log(falco_logger::level::DEBUG,
+					                  "Stopping capture for event source '" + ctx.source + "'\n");
 					s.source_infos.at(ctx.source)->inspector->stop_capture();
 
 					res = run_result::merge(res, ctx.res);

@@ -22,8 +22,7 @@ limitations under the License.
 #include <unordered_set>
 #include <unordered_map>
 
-struct filter_details
-{
+struct filter_details {
 	// input macros and lists
 	std::unordered_set<std::string> known_macros;
 	std::unordered_set<std::string> known_lists;
@@ -40,29 +39,26 @@ struct filter_details
 };
 
 /*!
-	\brief Helper class for getting details about rules' filters.
+    \brief Helper class for getting details about rules' filters.
 */
-class filter_details_resolver
-{
+class filter_details_resolver {
 public:
 	/*!
-		\brief Visits a filter AST and stores details about macros, lists,
-		fields and operators used.
-		\param filter The filter AST to be processed.
-		\param details Helper structure used to state known macros and
-		lists on input, and to store all the retrieved details as output.
+	    \brief Visits a filter AST and stores details about macros, lists,
+	    fields and operators used.
+	    \param filter The filter AST to be processed.
+	    \param details Helper structure used to state known macros and
+	    lists on input, and to store all the retrieved details as output.
 	*/
-	void run(libsinsp::filter::ast::expr* filter,
-		filter_details& details);
+	void run(libsinsp::filter::ast::expr* filter, filter_details& details);
 
 private:
-	struct visitor : public libsinsp::filter::ast::expr_visitor
-	{
-		explicit visitor(filter_details& details) :
-			m_details(details),
-			m_expect_list(false),
-			m_expect_evtname(false),
-			m_last_node_field_name() {}
+	struct visitor : public libsinsp::filter::ast::expr_visitor {
+		explicit visitor(filter_details& details):
+		        m_details(details),
+		        m_expect_list(false),
+		        m_expect_evtname(false),
+		        m_last_node_field_name() {}
 		visitor(visitor&&) = default;
 		visitor(const visitor&) = delete;
 

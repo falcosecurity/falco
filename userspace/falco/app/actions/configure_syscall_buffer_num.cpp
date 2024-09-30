@@ -20,23 +20,25 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::configure_syscall_buffer_num(const falco::app::state& s)
-{
+falco::app::run_result falco::app::actions::configure_syscall_buffer_num(
+        const falco::app::state& s) {
 #ifdef __linux__
-	if(!s.is_modern_ebpf())
-	{
+	if(!s.is_modern_ebpf()) {
 		return run_result::ok();
 	}
 
 	ssize_t online_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-	if(online_cpus <= 0)
-	{
+	if(online_cpus <= 0) {
 		return run_result::fatal("cannot get the number of online CPUs from the system\n");
 	}
 
-	if(s.config->m_modern_ebpf.m_cpus_for_each_buffer > online_cpus)
-	{
-		falco_logger::log(falco_logger::level::WARNING, "you required a buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
+	if(s.config->m_modern_ebpf.m_cpus_for_each_buffer > online_cpus) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "you required a buffer every '" +
+		                          std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
+		                          "' CPUs but there are only '" + std::to_string(online_cpus) +
+		                          "' online CPUs. Falco changed the config to: one buffer every '" +
+		                          std::to_string(online_cpus) + "' CPUs\n");
 		s.config->m_modern_ebpf.m_cpus_for_each_buffer = online_cpus;
 	}
 #endif

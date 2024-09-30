@@ -20,16 +20,16 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::list_fields(falco::app::state& s)
-{
-	if(s.options.list_fields)
-	{
+falco::app::run_result falco::app::actions::list_fields(falco::app::state& s) {
+	if(s.options.list_fields) {
 		if(s.options.list_source_fields != "" &&
-		   !s.engine->is_source_valid(s.options.list_source_fields))
-		{
+		   !s.engine->is_source_valid(s.options.list_source_fields)) {
 			return run_result::fatal("Value for --list must be a valid source type");
 		}
-		s.engine->list_fields(s.options.list_source_fields, s.options.verbose, s.options.names_only, s.options.markdown);
+		s.engine->list_fields(s.options.list_source_fields,
+		                      s.options.verbose,
+		                      s.options.names_only,
+		                      s.options.markdown);
 		return run_result::exit();
 	}
 

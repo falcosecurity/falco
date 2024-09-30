@@ -18,16 +18,14 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <engine/filter_warning_resolver.h>
 
-static bool warns(const std::string& condition)
-{
+static bool warns(const std::string& condition) {
 	std::set<falco::load_result::warning_code> w;
 	auto ast = libsinsp::filter::parser(condition).parse();
 	filter_warning_resolver().run(ast.get(), w);
 	return !w.empty();
 }
 
-TEST(WarningResolver, warnings_in_filtering_conditions)
-{
+TEST(WarningResolver, warnings_in_filtering_conditions) {
 	ASSERT_FALSE(warns("ka.field exists"));
 	ASSERT_FALSE(warns("some.field = <NA>"));
 	ASSERT_TRUE(warns("jevt.field = <NA>"));
