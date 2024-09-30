@@ -85,6 +85,7 @@ falco_configuration::falco_configuration():
         m_syscall_evt_timeout_max_consecutives(1000),
         m_falco_libs_thread_table_size(DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE),
         m_falco_libs_snaplen(0),
+        m_base_syscalls_all(false),
         m_base_syscalls_repair(false),
         m_metrics_enabled(false),
         m_metrics_interval_str("5000"),
@@ -577,6 +578,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set,
 	                                                       std::string("base_syscalls.custom_set"));
 	m_base_syscalls_repair = m_config.get_scalar<bool>("base_syscalls.repair", false);
+	m_base_syscalls_all = m_config.get_scalar<bool>("base_syscalls.all", false);
 
 	m_metrics_enabled = m_config.get_scalar<bool>("metrics.enabled", false);
 	m_metrics_interval_str = m_config.get_scalar<std::string>("metrics.interval", "5000");

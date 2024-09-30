@@ -277,6 +277,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "all": {
+                    "type": "boolean"
+                },
                 "custom_set": {
                     "type": "array",
                     "items": {

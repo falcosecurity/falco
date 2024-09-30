@@ -179,6 +179,7 @@ public:
 
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
 	std::unordered_set<std::string> m_base_syscalls_custom_set;
+	bool m_base_syscalls_all;
 	bool m_base_syscalls_repair;
 
 	// metrics configs
