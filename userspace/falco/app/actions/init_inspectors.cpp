@@ -26,7 +26,12 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> inspector) {
-	inspector->set_buffer_format(s.options.event_buffer_format);
+	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
+	if(s.options.print_base64 || s.config->m_buffer_format_base64) {
+		event_buffer_format = sinsp_evt::PF_BASE64;
+	}
+
+	inspector->set_buffer_format(event_buffer_format);
 
 	//
 	// Container engines

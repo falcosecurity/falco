@@ -74,6 +74,7 @@ falco_configuration::falco_configuration():
         m_buffered_outputs(false),
         m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE),
         m_time_format_iso_8601(false),
+        m_buffer_format_base64(false),
         m_output_timeout(2000),
         m_grpc_enabled(false),
         m_grpc_threadiness(0),
@@ -491,6 +492,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 
 	m_time_format_iso_8601 = m_config.get_scalar<bool>("time_format_iso_8601", false);
+	m_buffer_format_base64 = m_config.get_scalar<bool>("buffer_format_base64", false);
 
 	m_webserver_enabled = m_config.get_scalar<bool>("webserver.enabled", false);
 	m_webserver_config.m_threadiness = m_config.get_scalar<uint32_t>("webserver.threadiness", 0);

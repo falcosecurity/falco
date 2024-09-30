@@ -80,6 +80,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "time_format_iso_8601": {
                     "type": "boolean"
                 },
+                "buffer_format_base64": {
+                    "type": "boolean"
+                },
                 "priority": {
                     "type": "string"
                 },
