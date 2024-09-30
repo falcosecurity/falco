@@ -20,8 +20,7 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
-bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& filter)
-{
+bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& filter) {
 	m_unknown_macros.clear();
 	m_resolved_macros.clear();
 	m_errors.clear();
@@ -29,110 +28,90 @@ bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& fi
 	visitor v(m_errors, m_unknown_macros, m_resolved_macros, m_macros);
 	v.m_node_substitute = nullptr;
 	filter->accept(&v);
-	if (v.m_node_substitute)
-	{
+	if(v.m_node_substitute) {
 		filter = std::move(v.m_node_substitute);
 	}
 	return !m_resolved_macros.empty();
 }
 
-void filter_macro_resolver::set_macro(
-		const std::string& name,
-		const std::shared_ptr<libsinsp::filter::ast::expr>& macro)
-{
+void filter_macro_resolver::set_macro(const std::string& name,
+                                      const std::shared_ptr<libsinsp::filter::ast::expr>& macro) {
 	m_macros[name] = macro;
 }
 
-const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_unknown_macros() const
-{
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_unknown_macros()
+        const {
 	return m_unknown_macros;
 }
 
-const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_errors() const
-{
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_errors() const {
 	return m_errors;
 }
 
-const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_resolved_macros() const
-{
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_resolved_macros()
+        const {
 	return m_resolved_macros;
 }
 
-void filter_macro_resolver::visitor::visit(ast::and_expr* e)
-{
-	for (size_t i = 0; i < e->children.size(); i++)
-	{
+void filter_macro_resolver::visitor::visit(ast::and_expr* e) {
+	for(size_t i = 0; i < e->children.size(); i++) {
 		e->children[i]->accept(this);
-		if (m_node_substitute)
-		{
+		if(m_node_substitute) {
 			e->children[i] = std::move(m_node_substitute);
 		}
 	}
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::or_expr* e)
-{
-	for (size_t i = 0; i < e->children.size(); i++)
-	{
+void filter_macro_resolver::visitor::visit(ast::or_expr* e) {
+	for(size_t i = 0; i < e->children.size(); i++) {
 		e->children[i]->accept(this);
-		if (m_node_substitute)
-		{
+		if(m_node_substitute) {
 			e->children[i] = std::move(m_node_substitute);
 		}
 	}
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::not_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::not_expr* e) {
 	e->child->accept(this);
-	if (m_node_substitute)
-	{
+	if(m_node_substitute) {
 		e->child = std::move(m_node_substitute);
 	}
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::list_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::list_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::binary_check_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::binary_check_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::unary_check_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::unary_check_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::value_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::value_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::field_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::field_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::field_transformer_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::field_transformer_expr* e) {
 	m_node_substitute = nullptr;
 }
 
-void filter_macro_resolver::visitor::visit(ast::identifier_expr* e)
-{
+void filter_macro_resolver::visitor::visit(ast::identifier_expr* e) {
 	const auto& macro = m_macros.find(e->identifier);
-	if (macro != m_macros.end() && macro->second) // skip null-ptr macros
+	if(macro != m_macros.end() && macro->second)  // skip null-ptr macros
 	{
 		// note: checks for loop detection
 		const auto& prevref = std::find(m_macros_path.begin(), m_macros_path.end(), macro->first);
-		if (prevref != m_macros_path.end())
-		{
+		if(prevref != m_macros_path.end()) {
 			auto msg = "reference loop in macro '" + macro->first + "'";
 			m_errors.push_back({msg, e->get_pos()});
 			m_node_substitute = nullptr;
@@ -146,15 +125,12 @@ void filter_macro_resolver::visitor::visit(ast::identifier_expr* e)
 		new_node->accept(this);
 		// new_node might already have set a non-NULL m_node_substitute.
 		// if not, the right substituted is the newly-cloned node.
-		if (!m_node_substitute)
-		{
+		if(!m_node_substitute) {
 			m_node_substitute = std::move(new_node);
 		}
 		m_resolved_macros.push_back({e->identifier, e->get_pos()});
 		m_macros_path.pop_back();
-	}
-	else
-	{
+	} else {
 		m_node_substitute = nullptr;
 		m_unknown_macros.push_back({e->identifier, e->get_pos()});
 	}

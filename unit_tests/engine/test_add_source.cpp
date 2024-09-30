@@ -26,36 +26,30 @@ static std::string syscall_source_name = "syscall";
 // for the underlying ruleset. This allows testing of
 // ruleset_for_source
 
-namespace
-{
-class test_ruleset_factory : public evttype_index_ruleset_factory
-{
+namespace {
+class test_ruleset_factory : public evttype_index_ruleset_factory {
 public:
 	explicit test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
-		evttype_index_ruleset_factory(factory)
-	{
+	        evttype_index_ruleset_factory(factory) {
 		ruleset = evttype_index_ruleset_factory::new_ruleset();
 	}
 
 	virtual ~test_ruleset_factory() = default;
 
-	inline std::shared_ptr<filter_ruleset> new_ruleset() override
-	{
-		return ruleset;
-	}
+	inline std::shared_ptr<filter_ruleset> new_ruleset() override { return ruleset; }
 
 	std::shared_ptr<filter_ruleset> ruleset;
 };
-}; // namespace
+};  // namespace
 
-TEST(AddSource, basic)
-{
+TEST(AddSource, basic) {
 	falco_engine engine;
 	sinsp inspector;
 	sinsp_filter_check_list filterchecks;
 
 	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
-	auto formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
+	auto formatter_factory =
+	        std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
 	auto ruleset_factory = std::make_shared<test_ruleset_factory>(filter_factory);
 
 	falco_source syscall_source;
@@ -66,9 +60,9 @@ TEST(AddSource, basic)
 	syscall_source.formatter_factory = formatter_factory;
 
 	size_t source_idx = engine.add_source(syscall_source_name,
-					      filter_factory,
-					      formatter_factory,
-					      ruleset_factory);
+	                                      filter_factory,
+	                                      formatter_factory,
+	                                      ruleset_factory);
 
 	ASSERT_TRUE(engine.is_source_valid(syscall_source_name));
 

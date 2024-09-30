@@ -20,10 +20,8 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_help(falco::app::state& s)
-{
-	if(s.options.help)
-	{
+falco::app::run_result falco::app::actions::print_help(falco::app::state& s) {
+	if(s.options.help) {
 		printf("%s", s.options.usage().c_str());
 		return run_result::exit();
 	}

@@ -21,47 +21,38 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::select_event_sources(falco::app::state& s)
-{
-	s.enabled_sources = { s.loaded_sources.begin(), s.loaded_sources.end() };
+falco::app::run_result falco::app::actions::select_event_sources(falco::app::state &s) {
+	s.enabled_sources = {s.loaded_sources.begin(), s.loaded_sources.end()};
 
 	// event sources selection is meaningless when reading trace files
-	if (s.is_capture_mode())
-	{
+	if(s.is_capture_mode()) {
 		return run_result::ok();
 	}
 
-	if (!s.options.enable_sources.empty() && !s.options.disable_sources.empty())
-	{
+	if(!s.options.enable_sources.empty() && !s.options.disable_sources.empty()) {
 		return run_result::fatal("You can not mix --enable-source and --disable-source");
 	}
 
-	if (!s.options.enable_sources.empty())
-	{
+	if(!s.options.enable_sources.empty()) {
 		s.enabled_sources.clear();
-		for(const auto &src : s.options.enable_sources)
-		{
-			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) == s.loaded_sources.end())
-			{
+		for(const auto &src : s.options.enable_sources) {
+			if(std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) ==
+			   s.loaded_sources.end()) {
 				return run_result::fatal("Attempted enabling an unknown event source: " + src);
 			}
 			s.enabled_sources.insert(src);
 		}
-	}
-	else if (!s.options.disable_sources.empty())
-	{
-		for(const auto &src : s.options.disable_sources)
-		{
-			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) == s.loaded_sources.end())
-			{
+	} else if(!s.options.disable_sources.empty()) {
+		for(const auto &src : s.options.disable_sources) {
+			if(std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) ==
+			   s.loaded_sources.end()) {
 				return run_result::fatal("Attempted disabling an unknown event source: " + src);
 			}
 			s.enabled_sources.erase(src);
 		}
 	}
 
-	if(s.enabled_sources.empty())
-	{
+	if(s.enabled_sources.empty()) {
 		return run_result::fatal("Must enable at least one event source");
 	}
 

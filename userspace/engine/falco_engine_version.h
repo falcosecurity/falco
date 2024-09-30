@@ -23,14 +23,16 @@ limitations under the License.
 #define FALCO_ENGINE_VERSION_MINOR 43
 #define FALCO_ENGINE_VERSION_PATCH 0
 
-#define FALCO_ENGINE_VERSION \
-	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MAJOR) "." \
-	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MINOR) "." \
-	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_PATCH)
+#define FALCO_ENGINE_VERSION                                                               \
+	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MAJOR)                                   \
+	"." __FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MINOR) "." __FALCO_ENGINE_STRINGIFY( \
+	        FALCO_ENGINE_VERSION_PATCH)
 
 // This is the result of running the following command:
 //   FALCO="falco -c ./falco.yaml"
-//   echo $($FALCO --version | grep 'Engine:' | awk '{print $2}') $(echo $($FALCO --version | grep 'Schema version:' | awk '{print $3}') $($FALCO --list --markdown | grep '^`' | sort) $($FALCO --list-events | sort) | sha256sum)
+//   echo $($FALCO --version | grep 'Engine:' | awk '{print $2}') $(echo $($FALCO --version | grep
+//   'Schema version:' | awk '{print $3}') $($FALCO --list --markdown | grep '^`' | sort) $($FALCO
+//   --list-events | sort) | sha256sum)
 // It represents the fields supported by this version of Falco,
 // the event types, and the underlying driverevent schema. It's used to
 // detetect changes in engine version in our CI jobs.

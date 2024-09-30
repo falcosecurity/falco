@@ -23,8 +23,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 
-namespace falco::utils
-{
+namespace falco::utils {
 uint64_t parse_prometheus_interval(std::string interval_str);
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
@@ -39,11 +38,10 @@ void readfile(const std::string& filename, std::string& data);
 
 uint32_t hardware_concurrency();
 
-bool matches_wildcard(const std::string &pattern, const std::string &s);
+bool matches_wildcard(const std::string& pattern, const std::string& s);
 
-namespace network
-{
+namespace network {
 static const std::string UNIX_SCHEME("unix://");
 bool is_unix_scheme(const std::string& url);
-} // namespace network
-} // namespace falco::utils
+}  // namespace network
+}  // namespace falco::utils

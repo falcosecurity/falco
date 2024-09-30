@@ -23,23 +23,21 @@ limitations under the License.
 #include <falco/app/app.h>
 #include "app_action_helpers.h"
 
-#define ASSERT_NAMES_EQ(a, b) { \
-	EXPECT_EQ(_order(a).size(), _order(b).size()); \
-	ASSERT_EQ(_order(a), _order(b)); \
-}
+#define ASSERT_NAMES_EQ(a, b)                          \
+	{                                                  \
+		EXPECT_EQ(_order(a).size(), _order(b).size()); \
+		ASSERT_EQ(_order(a), _order(b));               \
+	}
 
-#define ASSERT_NAMES_CONTAIN(a, b) { \
-	ASSERT_NAMES_EQ(unordered_set_intersection(a, b), b); \
-}
+#define ASSERT_NAMES_CONTAIN(a, b) \
+	{ ASSERT_NAMES_EQ(unordered_set_intersection(a, b), b); }
 
-#define ASSERT_NAMES_NOCONTAIN(a, b) { \
-	ASSERT_NAMES_EQ(unordered_set_intersection(a, b), strset_t({})); \
-}
+#define ASSERT_NAMES_NOCONTAIN(a, b) \
+	{ ASSERT_NAMES_EQ(unordered_set_intersection(a, b), strset_t({})); }
 
 using strset_t = std::unordered_set<std::string>;
 
-static std::set<std::string> _order(const strset_t& s) 
-{
+static std::set<std::string> _order(const strset_t& s) {
 	return std::set<std::string>(s.begin(), s.end());
 }
 
@@ -48,38 +46,31 @@ static std::string s_sample_ruleset = "sample-ruleset";
 static std::string s_sample_source = falco_common::syscall_source;
 
 static strset_t s_sample_filters = {
-	"evt.type=connect or evt.type=accept or evt.type=accept4 or evt.type=umount2",
-	"evt.type in (open, ptrace, mmap, execve, read, container)",
-	"evt.type in (open, execve, mprotect) and not evt.type=mprotect"};
+        "evt.type=connect or evt.type=accept or evt.type=accept4 or evt.type=umount2",
+        "evt.type in (open, ptrace, mmap, execve, read, container)",
+        "evt.type in (open, execve, mprotect) and not evt.type=mprotect"};
 
-static strset_t s_sample_generic_filters = {
-	"evt.type=syncfs or evt.type=fanotify_init"};
+static strset_t s_sample_generic_filters = {"evt.type=syncfs or evt.type=fanotify_init"};
 
 static strset_t s_sample_nonsyscall_filters = {
-	"evt.type in (procexit, switch, pluginevent, container)"};
+        "evt.type in (procexit, switch, pluginevent, container)"};
 
-
-static std::string ruleset_from_filters(const strset_t& filters)
-{
+static std::string ruleset_from_filters(const strset_t& filters) {
 	std::string dummy_rules;
 	falco::load_result::rules_contents_t content = {{"dummy_rules.yaml", dummy_rules}};
 	int n_rules = 0;
-	for (const auto& f : filters)
-	{
+	for(const auto& f : filters) {
 		n_rules++;
-		dummy_rules +=
-			"- rule: Dummy Rule " + std::to_string(n_rules) + "\n"
-			+ "  output: Dummy Output " + std::to_string(n_rules) + "\n"
-			+ "  condition: " + f + "\n"
-			+ "  desc: Dummy Desc " + std::to_string(n_rules) + "\n"
-			+ "  priority: CRITICAL\n\n";
+		dummy_rules += "- rule: Dummy Rule " + std::to_string(n_rules) + "\n" +
+		               "  output: Dummy Output " + std::to_string(n_rules) + "\n" +
+		               "  condition: " + f + "\n" + "  desc: Dummy Desc " +
+		               std::to_string(n_rules) + "\n" + "  priority: CRITICAL\n\n";
 	}
 
 	return dummy_rules;
 }
 
-TEST_F(test_falco_engine, engine_codes_syscalls_set)
-{
+TEST_F(test_falco_engine, engine_codes_syscalls_set) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	auto enabled_count = m_engine->num_rules_for_ruleset(s_sample_ruleset);
@@ -88,20 +79,37 @@ TEST_F(test_falco_engine, engine_codes_syscalls_set)
 	// test if event code names were extracted from each rule in test ruleset.
 	auto rules_event_set = m_engine->event_codes_for_ruleset(s_sample_source);
 	auto rules_event_names = libsinsp::events::event_set_to_names(rules_event_set);
-	ASSERT_NAMES_EQ(rules_event_names, strset_t({
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container", "asyncevent"}));
+	ASSERT_NAMES_EQ(rules_event_names,
+	                strset_t({"connect",
+	                          "accept",
+	                          "accept4",
+	                          "umount2",
+	                          "open",
+	                          "ptrace",
+	                          "mmap",
+	                          "execve",
+	                          "read",
+	                          "container",
+	                          "asyncevent"}));
 
 	// test if sc code names were extracted from each rule in test ruleset.
 	// note, this is not supposed to contain "container", as that's an event
 	// not mapped through the ppm_sc_code enumerative.
 	auto rules_sc_set = m_engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
-	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read"}));
+	ASSERT_NAMES_EQ(rules_sc_names,
+	                strset_t({"connect",
+	                          "accept",
+	                          "accept4",
+	                          "umount2",
+	                          "open",
+	                          "ptrace",
+	                          "mmap",
+	                          "execve",
+	                          "read"}));
 }
 
-TEST_F(test_falco_engine, preconditions_postconditions)
-{
+TEST_F(test_falco_engine, preconditions_postconditions) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s1;
@@ -131,8 +139,7 @@ TEST_F(test_falco_engine, preconditions_postconditions)
 	ASSERT_EQ(prev_selection_size, s1.selected_sc_set.size());
 }
 
-TEST_F(test_falco_engine, engine_codes_nonsyscalls_set)
-{
+TEST_F(test_falco_engine, engine_codes_nonsyscalls_set) {
 	auto filters = s_sample_filters;
 	filters.insert(s_sample_generic_filters.begin(), s_sample_generic_filters.end());
 	filters.insert(s_sample_nonsyscall_filters.begin(), s_sample_nonsyscall_filters.end());
@@ -149,22 +156,44 @@ TEST_F(test_falco_engine, engine_codes_nonsyscalls_set)
 	// PPME_GENERIC_E will cause all names of generic events to be added!
 	// This is a good example of information loss from ppm_event_code <-> ppm_sc_code.
 	auto generic_names = libsinsp::events::event_set_to_names({ppm_event_code::PPME_GENERIC_E});
-	auto expected_names = strset_t({
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container", // ruleset
-		"procexit", "switch", "pluginevent", "asyncevent"}); // from non-syscall event filters
+	auto expected_names = strset_t({"connect",
+	                                "accept",
+	                                "accept4",
+	                                "umount2",
+	                                "open",
+	                                "ptrace",
+	                                "mmap",
+	                                "execve",
+	                                "read",
+	                                "container",  // ruleset
+	                                "procexit",
+	                                "switch",
+	                                "pluginevent",
+	                                "asyncevent"});  // from non-syscall event filters
 	expected_names.insert(generic_names.begin(), generic_names.end());
 	ASSERT_NAMES_EQ(rules_event_names, expected_names);
 
 	auto rules_sc_set = m_engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
-	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read",
-		"procexit", "switch", "syncfs", "fanotify_init", // from generic event filters
-	}));
+	ASSERT_NAMES_EQ(rules_sc_names,
+	                strset_t({
+	                        "connect",
+	                        "accept",
+	                        "accept4",
+	                        "umount2",
+	                        "open",
+	                        "ptrace",
+	                        "mmap",
+	                        "execve",
+	                        "read",
+	                        "procexit",
+	                        "switch",
+	                        "syncfs",
+	                        "fanotify_init",  // from generic event filters
+	                }));
 }
 
-TEST_F(test_falco_engine, selection_not_allevents)
-{
+TEST_F(test_falco_engine, selection_not_allevents) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s2;
@@ -184,10 +213,22 @@ TEST_F(test_falco_engine, selection_not_allevents)
 	ASSERT_GT(s2.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s2.selected_sc_set);
 	auto expected_sc_names = strset_t({
-		// note: we expect the "read" syscall to have been erased
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", // from ruleset
-		"clone", "clone3", "fork", "vfork", // from sinsp state set (spawned_process)
-		"socket", "bind", "close" // from sinsp state set (network, files)
+	        // note: we expect the "read" syscall to have been erased
+	        "connect",
+	        "accept",
+	        "accept4",
+	        "umount2",
+	        "open",
+	        "ptrace",
+	        "mmap",
+	        "execve",  // from ruleset
+	        "clone",
+	        "clone3",
+	        "fork",
+	        "vfork",  // from sinsp state set (spawned_process)
+	        "socket",
+	        "bind",
+	        "close"  // from sinsp state set (network, files)
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
 
@@ -199,8 +240,7 @@ TEST_F(test_falco_engine, selection_not_allevents)
 	// check that final selected set is exactly sinsp state + ruleset
 	auto rule_set = s2.engine->sc_codes_for_ruleset(s_sample_source, s_sample_ruleset);
 	auto state_set = libsinsp::events::sinsp_state_sc_set();
-	for (const auto &erased : ignored_set)
-	{
+	for(const auto& erased : ignored_set) {
 		rule_set.remove(erased);
 		state_set.remove(erased);
 	}
@@ -210,8 +250,7 @@ TEST_F(test_falco_engine, selection_not_allevents)
 	ASSERT_EQ(s2.selected_sc_set, union_set);
 }
 
-TEST_F(test_falco_engine, selection_allevents)
-{
+TEST_F(test_falco_engine, selection_allevents) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s3;
@@ -229,10 +268,23 @@ TEST_F(test_falco_engine, selection_allevents)
 	ASSERT_GT(s3.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s3.selected_sc_set);
 	auto expected_sc_names = strset_t({
-		// note: we expect the "read" syscall to not be erased
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", // from ruleset
-		"clone", "clone3", "fork", "vfork", // from sinsp state set (spawned_process)
-		"socket", "bind", "close" // from sinsp state set (network, files)
+	        // note: we expect the "read" syscall to not be erased
+	        "connect",
+	        "accept",
+	        "accept4",
+	        "umount2",
+	        "open",
+	        "ptrace",
+	        "mmap",
+	        "execve",
+	        "read",  // from ruleset
+	        "clone",
+	        "clone3",
+	        "fork",
+	        "vfork",  // from sinsp state set (spawned_process)
+	        "socket",
+	        "bind",
+	        "close"  // from sinsp state set (network, files)
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
 
@@ -245,8 +297,7 @@ TEST_F(test_falco_engine, selection_allevents)
 	ASSERT_EQ(s3.selected_sc_set, union_set);
 }
 
-TEST_F(test_falco_engine, selection_generic_evts)
-{
+TEST_F(test_falco_engine, selection_generic_evts) {
 	falco::app::state s4;
 	// run app action with fake engine and without the `-A` option
 	s4.options.all_events = false;
@@ -262,14 +313,28 @@ TEST_F(test_falco_engine, selection_generic_evts)
 	ASSERT_GT(s4.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s4.selected_sc_set);
 	auto expected_sc_names = strset_t({
-		// note: we expect the "read" syscall to not be erased
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", // from ruleset
-		"syncfs", "fanotify_init",  // from ruleset (generic events)
-		"clone", "clone3", "fork", "vfork", // from sinsp state set (spawned_process)
-		"socket", "bind", "close" // from sinsp state set (network, files)
+	        // note: we expect the "read" syscall to not be erased
+	        "connect",
+	        "accept",
+	        "accept4",
+	        "umount2",
+	        "open",
+	        "ptrace",
+	        "mmap",
+	        "execve",  // from ruleset
+	        "syncfs",
+	        "fanotify_init",  // from ruleset (generic events)
+	        "clone",
+	        "clone3",
+	        "fork",
+	        "vfork",  // from sinsp state set (spawned_process)
+	        "socket",
+	        "bind",
+	        "close"  // from sinsp state set (network, files)
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
-	auto unexpected_sc_names = libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
+	auto unexpected_sc_names =
+	        libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
 	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
@@ -278,8 +343,7 @@ TEST_F(test_falco_engine, selection_generic_evts)
 //   (either default or custom positive set)
 // - events in the custom negative set are removed from the selected set
 // - if `-A` is not set, events from the IO set are removed from the selected set
-TEST_F(test_falco_engine, selection_custom_base_set)
-{
+TEST_F(test_falco_engine, selection_custom_base_set) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s5;
@@ -295,17 +359,24 @@ TEST_F(test_falco_engine, selection_custom_base_set)
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s5.selected_sc_set);
-	auto expected_sc_names = strset_t({
-		// note: `syncfs` has been added due to the custom base set, and `accept`
-		// has been remove due to the negative base set.
-		// note: `read` is not ignored due to the "-A" option being set.
-		// note: `accept` is not included even though it is matched by the rules,
-		// which means that the custom negation base set has precedence over the
-		// final selection set as a whole
-		// note(jasondellaluce): "accept4" should be added, however old versions
-		// of the ACCEPT4 event are actually named "accept" in the event table
-		"connect", "umount2", "open", "ptrace", "mmap", "execve", "read", "syncfs", "procexit"
-	});
+	auto expected_sc_names =
+	        strset_t({// note: `syncfs` has been added due to the custom base set, and `accept`
+	                  // has been remove due to the negative base set.
+	                  // note: `read` is not ignored due to the "-A" option being set.
+	                  // note: `accept` is not included even though it is matched by the rules,
+	                  // which means that the custom negation base set has precedence over the
+	                  // final selection set as a whole
+	                  // note(jasondellaluce): "accept4" should be added, however old versions
+	                  // of the ACCEPT4 event are actually named "accept" in the event table
+	                  "connect",
+	                  "umount2",
+	                  "open",
+	                  "ptrace",
+	                  "mmap",
+	                  "execve",
+	                  "read",
+	                  "syncfs",
+	                  "procexit"});
 	ASSERT_NAMES_EQ(selected_sc_names, expected_sc_names);
 
 	// non-empty custom base set (both positive and negative with collision)
@@ -325,10 +396,18 @@ TEST_F(test_falco_engine, selection_custom_base_set)
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
 	selected_sc_names = libsinsp::events::sc_set_to_event_names(s5.selected_sc_set);
-	expected_sc_names = strset_t({
-		// note: accept is not negated anymore
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "syncfs", "procexit"
-	});
+	expected_sc_names = strset_t({// note: accept is not negated anymore
+	                              "connect",
+	                              "accept",
+	                              "accept4",
+	                              "umount2",
+	                              "open",
+	                              "ptrace",
+	                              "mmap",
+	                              "execve",
+	                              "read",
+	                              "syncfs",
+	                              "procexit"});
 	ASSERT_NAMES_EQ(selected_sc_names, expected_sc_names);
 
 	// non-empty custom base set (only negative)
@@ -338,8 +417,8 @@ TEST_F(test_falco_engine, selection_custom_base_set)
 	ASSERT_EQ(result.errstr, "");
 	selected_sc_names = libsinsp::events::sc_set_to_event_names(s5.selected_sc_set);
 	expected_sc_names = unordered_set_union(
-		libsinsp::events::sc_set_to_event_names(default_base_set),
-		strset_t({ "connect", "umount2", "open", "ptrace", "mmap", "execve", "read"}));
+	        libsinsp::events::sc_set_to_event_names(default_base_set),
+	        strset_t({"connect", "umount2", "open", "ptrace", "mmap", "execve", "read"}));
 	expected_sc_names.erase("accept");
 	// note(jasondellaluce): "accept4" should be included, however old versions
 	// of the ACCEPT4 event are actually named "accept" in the event table
@@ -353,18 +432,24 @@ TEST_F(test_falco_engine, selection_custom_base_set)
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
 	selected_sc_names = libsinsp::events::sc_set_to_event_names(s5.selected_sc_set);
-	expected_sc_names = strset_t({
-		// note: read is both part of the custom base set and the rules set,
-		// but we expect the unset -A option to take precedence
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "procexit"
-	});
+	expected_sc_names = strset_t({// note: read is both part of the custom base set and the rules
+	                              // set, but we expect the unset -A option to take precedence
+	                              "connect",
+	                              "accept",
+	                              "accept4",
+	                              "umount2",
+	                              "open",
+	                              "ptrace",
+	                              "mmap",
+	                              "execve",
+	                              "procexit"});
 	ASSERT_NAMES_EQ(selected_sc_names, expected_sc_names);
-	auto unexpected_sc_names = libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
+	auto unexpected_sc_names =
+	        libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
 	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
-TEST_F(test_falco_engine, selection_custom_base_set_repair)
-{
+TEST_F(test_falco_engine, selection_custom_base_set_repair) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s6;
@@ -383,18 +468,29 @@ TEST_F(test_falco_engine, selection_custom_base_set_repair)
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s6.selected_sc_set);
-	auto expected_sc_names = strset_t({
-		// note: expecting syscalls from mock rules and `sinsp_repair_state_sc_set` enforced syscalls
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "procexit", \
-		"bind", "socket", "clone3", "close", "setuid"
-	});
+	auto expected_sc_names = strset_t({// note: expecting syscalls from mock rules and
+	                                   // `sinsp_repair_state_sc_set` enforced syscalls
+	                                   "connect",
+	                                   "accept",
+	                                   "accept4",
+	                                   "umount2",
+	                                   "open",
+	                                   "ptrace",
+	                                   "mmap",
+	                                   "execve",
+	                                   "procexit",
+	                                   "bind",
+	                                   "socket",
+	                                   "clone3",
+	                                   "close",
+	                                   "setuid"});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
-	auto unexpected_sc_names = libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
+	auto unexpected_sc_names =
+	        libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set());
 	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
-TEST_F(test_falco_engine, selection_empty_custom_base_set_repair)
-{
+TEST_F(test_falco_engine, selection_empty_custom_base_set_repair) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s7;
@@ -410,23 +506,34 @@ TEST_F(test_falco_engine, selection_empty_custom_base_set_repair)
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s7.selected_sc_set);
-	auto expected_sc_names = strset_t({
-		// note: expecting syscalls from mock rules and `sinsp_repair_state_sc_set` enforced syscalls
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "procexit", \
-		"bind", "socket", "clone3", "close", "setuid"
-	});
+	auto expected_sc_names = strset_t({// note: expecting syscalls from mock rules and
+	                                   // `sinsp_repair_state_sc_set` enforced syscalls
+	                                   "connect",
+	                                   "accept",
+	                                   "accept4",
+	                                   "umount2",
+	                                   "open",
+	                                   "ptrace",
+	                                   "mmap",
+	                                   "execve",
+	                                   "procexit",
+	                                   "bind",
+	                                   "socket",
+	                                   "clone3",
+	                                   "close",
+	                                   "setuid"});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
 	auto s7_state_set = libsinsp::events::sinsp_repair_state_sc_set(s7_rules_set);
 	ASSERT_EQ(s7.selected_sc_set, s7_state_set);
 	ASSERT_EQ(s7.selected_sc_set.size(), s7_state_set.size());
 }
 
-TEST(ConfigureInterestingSets, ignored_set_expected_size)
-{
+TEST(ConfigureInterestingSets, ignored_set_expected_size) {
 	// unit test fence to make sure we don't have unexpected regressions
 	// in the ignored set, to be updated in the future
 	ASSERT_EQ(falco::app::ignored_sc_set().size(), 14);
 
 	// we don't expect to ignore any syscall in the default base set
-	ASSERT_EQ(falco::app::ignored_sc_set().intersect(libsinsp::events::sinsp_state_sc_set()).size(), 0);
+	ASSERT_EQ(falco::app::ignored_sc_set().intersect(libsinsp::events::sinsp_state_sc_set()).size(),
+	          0);
 }

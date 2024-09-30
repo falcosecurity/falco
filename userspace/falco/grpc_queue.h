@@ -20,35 +20,23 @@ limitations under the License.
 #include "outputs.pb.h"
 #include "tbb/concurrent_queue.h"
 
-namespace falco
-{
-namespace grpc
-{
+namespace falco {
+namespace grpc {
 typedef tbb::concurrent_queue<outputs::response> response_cq;
 
-class queue
-{
+class queue {
 public:
-	static queue& get()
-	{
+	static queue& get() {
 		static queue instance;
 		return instance;
 	}
 
-	bool try_pop(outputs::response& res)
-	{
-		return m_queue.try_pop(res);
-	}
+	bool try_pop(outputs::response& res) { return m_queue.try_pop(res); }
 
-	void push(outputs::response& res)
-	{
-		m_queue.push(res);
-	}
+	void push(outputs::response& res) { m_queue.push(res); }
 
 private:
-	queue()
-	{
-	}
+	queue() {}
 
 	response_cq m_queue;
 
@@ -57,5 +45,5 @@ public:
 	queue(queue const&) = delete;
 	void operator=(queue const&) = delete;
 };
-} // namespace grpc
-} // namespace falco
+}  // namespace grpc
+}  // namespace falco

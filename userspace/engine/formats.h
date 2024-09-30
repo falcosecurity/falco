@@ -21,24 +21,31 @@ limitations under the License.
 #include <map>
 #include "falco_engine.h"
 
-class falco_formats
-{
+class falco_formats {
 public:
 	falco_formats(std::shared_ptr<const falco_engine> engine,
-		      bool json_include_output_property,
-		      bool json_include_tags_property,
-			  bool json_include_message_property,
-			  bool time_format_iso_8601);
+	              bool json_include_output_property,
+	              bool json_include_tags_property,
+	              bool json_include_message_property,
+	              bool time_format_iso_8601);
 	virtual ~falco_formats();
 
-	std::string format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
-				 const std::string &level, const std::string &format, const std::set<std::string> &tags,
-				 const std::string &hostname, const extra_output_field_t &extra_fields) const;
+	std::string format_event(sinsp_evt *evt,
+	                         const std::string &rule,
+	                         const std::string &source,
+	                         const std::string &level,
+	                         const std::string &format,
+	                         const std::set<std::string> &tags,
+	                         const std::string &hostname,
+	                         const extra_output_field_t &extra_fields) const;
 
-	std::string format_string(sinsp_evt *evt, const std::string &format, const std::string &source) const;
+	std::string format_string(sinsp_evt *evt,
+	                          const std::string &format,
+	                          const std::string &source) const;
 
-	std::map<std::string, std::string> get_field_values(sinsp_evt *evt, const std::string &source,
-					     const std::string &format) const ;
+	std::map<std::string, std::string> get_field_values(sinsp_evt *evt,
+	                                                    const std::string &source,
+	                                                    const std::string &format) const;
 
 protected:
 	std::shared_ptr<const falco_engine> m_falco_engine;

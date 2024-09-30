@@ -21,23 +21,21 @@ limitations under the License.
 #include "filter_ruleset.h"
 
 /*!
-	\brief Represents a given data source used by the engine.
-	The ruleset of a source should be created through the ruleset factory
-	of the same data source.
+    \brief Represents a given data source used by the engine.
+    The ruleset of a source should be created through the ruleset factory
+    of the same data source.
 */
-struct falco_source
-{
+struct falco_source {
 	falco_source() = default;
 	falco_source(falco_source&&) = default;
-	falco_source& operator = (falco_source&&) = default;
+	falco_source& operator=(falco_source&&) = default;
 	falco_source(const falco_source& s):
-		name(s.name),
-		ruleset(s.ruleset),
-		ruleset_factory(s.ruleset_factory),
-		filter_factory(s.filter_factory),
-		formatter_factory(s.formatter_factory) { };
-	falco_source& operator = (const falco_source& s)
-	{
+	        name(s.name),
+	        ruleset(s.ruleset),
+	        ruleset_factory(s.ruleset_factory),
+	        filter_factory(s.filter_factory),
+	        formatter_factory(s.formatter_factory) {};
+	falco_source& operator=(const falco_source& s) {
 		name = s.name;
 		ruleset = s.ruleset;
 		ruleset_factory = s.ruleset_factory;
@@ -56,24 +54,19 @@ struct falco_source
 	// matches an event.
 	mutable std::vector<falco_rule> m_rules;
 
-	inline bool is_valid_lhs_field(const std::string& field) const
-	{
+	inline bool is_valid_lhs_field(const std::string& field) const {
 		// if there's at least one parenthesis we may be parsing a field
 		// wrapped inside one or more transformers. In those cases, the most
 		// rigorous analysis we can do is compiling a simple filter using
 		// the field as left-hand side of a comparison, and see if any error
 		// occurs.
-		if (field.find('(') != std::string::npos)
-		{
-			try
-			{
+		if(field.find('(') != std::string::npos) {
+			try {
 				auto filter = field;
 				filter.append(" exists");
 				sinsp_filter_compiler(filter_factory, filter).compile();
 				return true;
-			}
-			catch (...)
-			{
+			} catch(...) {
 				return false;
 			}
 		}

@@ -24,29 +24,26 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::pidfile(const falco::app::state& state)
-{
-	if (state.options.dry_run)
-	{
+falco::app::run_result falco::app::actions::pidfile(const falco::app::state& state) {
+	if(state.options.dry_run) {
 		falco_logger::log(falco_logger::level::DEBUG, "Skipping pidfile creation in dry-run\n");
 		return run_result::ok();
 	}
 
-	if (!state.options.pidfilename.empty())
-	{
+	if(!state.options.pidfilename.empty()) {
 		int64_t self_pid = getpid();
 
 		std::ofstream stream;
 		stream.open(state.options.pidfilename);
 
-		if (!stream.good())
-		{
-			falco_logger::log(falco_logger::level::ERR, "Could not write pid to pidfile " + state.options.pidfilename + ". Exiting.\n");
+		if(!stream.good()) {
+			falco_logger::log(
+			        falco_logger::level::ERR,
+			        "Could not write pid to pidfile " + state.options.pidfilename + ". Exiting.\n");
 			exit(-1);
 		}
 		stream << self_pid;
 		stream.close();
-
 	}
 
 	return run_result::ok();

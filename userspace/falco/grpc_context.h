@@ -25,16 +25,13 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
-namespace falco
-{
-namespace grpc
-{
+namespace falco {
+namespace grpc {
 
 const std::string meta_session = "session_id";
 const std::string meta_request = "request_id";
 
-class context
-{
+class context {
 public:
 	explicit context(::grpc::ServerContext* ctx);
 	virtual ~context() = default;
@@ -46,32 +43,23 @@ private:
 	std::string m_prefix;
 };
 
-class stream_context : public context
-{
+class stream_context : public context {
 public:
-	explicit stream_context(::grpc::ServerContext* ctx):
-		context(ctx){};
+	explicit stream_context(::grpc::ServerContext* ctx): context(ctx) {};
 	virtual ~stream_context() = default;
 
-	enum : char
-	{
-		STREAMING = 1,
-		SUCCESS,
-		ERROR
-	} m_status = STREAMING;
+	enum : char { STREAMING = 1, SUCCESS, ERROR } m_status = STREAMING;
 
-	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
+	mutable void* m_stream = nullptr;  // todo(fntlnz, leodido) > useful in the future
 	mutable bool m_has_more = false;
 	mutable bool m_is_running = true;
 };
 
-class bidi_context : public stream_context
-{
+class bidi_context : public stream_context {
 public:
-	explicit bidi_context(::grpc::ServerContext* ctx):
-		stream_context(ctx){};
+	explicit bidi_context(::grpc::ServerContext* ctx): stream_context(ctx) {};
 	virtual ~bidi_context() = default;
 };
 
-} // namespace grpc
-} // namespace falco
+}  // namespace grpc
+}  // namespace falco

@@ -25,22 +25,17 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::validate_rules_files(falco::app::state& s)
-{
-	if(s.options.validate_rules_filenames.size() > 0)
-	{
-
+falco::app::run_result falco::app::actions::validate_rules_files(falco::app::state& s) {
+	if(s.options.validate_rules_filenames.size() > 0) {
 		std::vector<std::string> rules_contents;
 		falco::load_result::rules_contents_t rc;
 
 		try {
 			read_files(s.options.validate_rules_filenames.begin(),
-				   s.options.validate_rules_filenames.end(),
-				   rules_contents,
-				   rc);
-		}
-		catch(falco_exception& e)
-		{
+			           s.options.validate_rules_filenames.end(),
+			           rules_contents,
+			           rc);
+		} catch(falco_exception& e) {
 			return run_result::fatal(e.what());
 		}
 
@@ -69,8 +64,7 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		std::string summary;
 
 		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
-		for(const auto& file : s.options.validate_rules_filenames)
-		{
+		for(const auto& file : s.options.validate_rules_filenames) {
 			falco_logger::log(falco_logger::level::INFO, "   " + file + "\n");
 		}
 
@@ -79,36 +73,29 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		std::string err = "";
 		nlohmann::json results = nlohmann::json::array();
 
-		for(auto &filename : s.options.validate_rules_filenames)
-		{
+		for(auto& filename : s.options.validate_rules_filenames) {
 			std::unique_ptr<falco::load_result> res;
 
 			res = s.engine->load_rules(rc.at(filename), filename);
-			if (!check_rules_plugin_requirements(s, err))
-			{
+			if(!check_rules_plugin_requirements(s, err)) {
 				return run_result::fatal(err);
 			}
 
 			successful &= res->successful();
 
-			if(s.config->m_json_output)
-			{
+			if(s.config->m_json_output) {
 				results.push_back(res->as_json(rc));
 			}
-			
-			if(summary != "")
-			{
+
+			if(summary != "") {
 				summary += "\n";
 			}
 
 			// Add to the summary if not successful, or successful
 			// with no warnings.
-			if(!res->successful() || (res->successful() && !res->has_warnings()))
-			{
+			if(!res->successful() || (res->successful() && !res->has_warnings())) {
 				summary += res->as_string(true, rc);
-			}
-			else
-			{
+			} else {
 				// If here, there must be only warnings.
 				// Add a line to the summary noting that the
 				// file was ok with warnings, without actually
@@ -120,39 +107,31 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 
 		// printout of `-L` option
 		nlohmann::json describe_res;
-		if (successful && (s.options.describe_all_rules || !s.options.describe_rule.empty()))
-		{
-			std::string* rptr = !s.options.describe_rule.empty() ? &(s.options.describe_rule) : nullptr;
+		if(successful && (s.options.describe_all_rules || !s.options.describe_rule.empty())) {
+			std::string* rptr =
+			        !s.options.describe_rule.empty() ? &(s.options.describe_rule) : nullptr;
 			const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
 			describe_res = s.engine->describe_rule(rptr, plugins);
 		}
 
-		if(s.config->m_json_output)
-		{
+		if(s.config->m_json_output) {
 			nlohmann::json res;
 			res["falco_load_results"] = results;
-			if (!describe_res.empty() && successful)
-			{
+			if(!describe_res.empty() && successful) {
 				res["falco_describe_results"] = std::move(describe_res);
 			}
 			std::cout << res.dump() << std::endl;
-		}
-		else
-		{
+		} else {
 			std::cout << summary << std::endl;
-			if (!describe_res.empty() && successful)
-			{
+			if(!describe_res.empty() && successful) {
 				std::cout << std::endl;
 				format_described_rules_as_text(describe_res, std::cout);
 			}
 		}
 
-		if(successful)
-		{
+		if(successful) {
 			return run_result::exit();
-		}
-		else
-		{
+		} else {
 			return run_result::fatal(summary);
 		}
 	}

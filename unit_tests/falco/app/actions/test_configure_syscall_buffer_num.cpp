@@ -17,13 +17,11 @@ limitations under the License.
 
 #include "app_action_helpers.h"
 
-TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
-{
+TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs) {
 	auto action = falco::app::actions::configure_syscall_buffer_num;
 
 	ssize_t online_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-	if(online_cpus <= 0)
-	{
+	if(online_cpus <= 0) {
 		FAIL() << "cannot get the number of online CPUs from the system\n";
 	}
 

@@ -22,63 +22,54 @@ limitations under the License.
 #include <unordered_map>
 
 /*!
-	\brief Simple wrapper of std::vector that allows random access
-	through both numeric and string indexes with O(1) complexity
+    \brief Simple wrapper of std::vector that allows random access
+    through both numeric and string indexes with O(1) complexity
 */
-template <typename T>
-class indexed_vector
-{
+template<typename T>
+class indexed_vector {
 public:
 	indexed_vector() = default;
 	virtual ~indexed_vector() = default;
 	indexed_vector(indexed_vector&&) = default;
-	indexed_vector& operator = (indexed_vector&&) = default;
+	indexed_vector& operator=(indexed_vector&&) = default;
 	indexed_vector(const indexed_vector&) = default;
-	indexed_vector& operator = (const indexed_vector&) = default;
+	indexed_vector& operator=(const indexed_vector&) = default;
 
 	/*!
-		\brief Returns the number of elements
+	    \brief Returns the number of elements
 	*/
-	virtual inline size_t size() const
-	{
-		return m_entries.size();
-	}
+	virtual inline size_t size() const { return m_entries.size(); }
 
 	/*!
-		\brief Returns true if the vector is empty
+	    \brief Returns true if the vector is empty
 	*/
-	virtual inline bool empty() const
-	{
-		return m_entries.empty();
-	}
+	virtual inline bool empty() const { return m_entries.empty(); }
 
 	/*!
-		\brief Removes all the elements
+	    \brief Removes all the elements
 	*/
-	virtual inline void clear()
-	{
+	virtual inline void clear() {
 		m_entries.clear();
 		m_index.clear();
 	}
 
 	/*!
-		\brief Inserts a new element in the vector with a given string index
-		and returns its numeric index. String indexes are unique in
-		the vector. If no element is already present with the given string
-		index, then the provided element is added to the vector and its
-		numeric index is assigned as the next free slot in the vector.
-		Otherwise, the existing element gets overwritten with the contents
-		of the provided one and the numeric index of the existing element
-		is returned.
-		\param entry Element to add in the vector
-		\param index String index of the element to be added in the vector
-		\return The numeric index assigned to the element
+	    \brief Inserts a new element in the vector with a given string index
+	    and returns its numeric index. String indexes are unique in
+	    the vector. If no element is already present with the given string
+	    index, then the provided element is added to the vector and its
+	    numeric index is assigned as the next free slot in the vector.
+	    Otherwise, the existing element gets overwritten with the contents
+	    of the provided one and the numeric index of the existing element
+	    is returned.
+	    \param entry Element to add in the vector
+	    \param index String index of the element to be added in the vector
+	    \return The numeric index assigned to the element
 	*/
-	virtual inline size_t insert(const T& entry, const std::string& index)
-	{
+	virtual inline size_t insert(const T& entry, const std::string& index) {
 		size_t id;
 		auto prev = m_index.find(index);
-		if (prev != m_index.end()) {
+		if(prev != m_index.end()) {
 			id = prev->second;
 			m_entries[id] = entry;
 			return id;
@@ -90,50 +81,37 @@ public:
 	}
 
 	/*!
-		\brief Returns a pointer to the element at the given numeric index,
-		or nullptr if no element exists at the given index.
+	    \brief Returns a pointer to the element at the given numeric index,
+	    or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(size_t id) const
-	{
-		if (id < m_entries.size())
-		{
-			return (T* const) &m_entries[id];
+	virtual inline T* at(size_t id) const {
+		if(id < m_entries.size()) {
+			return (T* const)&m_entries[id];
 		}
 		return nullptr;
 	}
 
 	/*!
-		\brief Returns a pointer to the element at the given string index,
-		or nullptr if no element exists at the given index.
+	    \brief Returns a pointer to the element at the given string index,
+	    or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(const std::string& index) const
-	{
+	virtual inline T* at(const std::string& index) const {
 		auto it = m_index.find(index);
-		if (it != m_index.end()) {
+		if(it != m_index.end()) {
 			return at(it->second);
 		}
 		return nullptr;
 	}
 
-	virtual inline typename std::vector<T>::iterator begin()
-	{
+	virtual inline typename std::vector<T>::iterator begin() { return m_entries.begin(); }
+
+	virtual inline typename std::vector<T>::iterator end() { return m_entries.end(); }
+
+	virtual inline typename std::vector<T>::const_iterator begin() const {
 		return m_entries.begin();
 	}
 
-	virtual inline typename std::vector<T>::iterator end()
-	{
-		return m_entries.end();
-	}
-
-	virtual inline typename std::vector<T>::const_iterator begin() const 
-	{
-		return m_entries.begin();
-	}
-
-	virtual inline typename std::vector<T>::const_iterator end() const
-	{
-		return m_entries.end();
-	}
+	virtual inline typename std::vector<T>::const_iterator end() const { return m_entries.end(); }
 
 private:
 	std::vector<T> m_entries;

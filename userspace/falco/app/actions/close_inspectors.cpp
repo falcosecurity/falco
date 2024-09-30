@@ -21,21 +21,17 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::close_inspectors(falco::app::state& s)
-{
+falco::app::run_result falco::app::actions::close_inspectors(falco::app::state& s) {
 	falco_logger::log(falco_logger::level::DEBUG, "closing inspectors");
 
-	if (s.offline_inspector != nullptr)
-	{
+	if(s.offline_inspector != nullptr) {
 		s.offline_inspector->close();
 	}
 
-	for (const auto &src : s.loaded_sources)
-	{
+	for(const auto& src : s.loaded_sources) {
 		auto src_info = s.source_infos.at(src);
 
-		if (src_info->inspector != nullptr)
-		{
+		if(src_info->inspector != nullptr) {
 			src_info->inspector->close();
 		}
 	}

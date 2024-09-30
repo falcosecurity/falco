@@ -21,13 +21,11 @@ limitations under the License.
 #include <string>
 #include <nlohmann/json.hpp>
 
-namespace falco
-{
+namespace falco {
 
 // Represents the result of loading a rules file.
 class load_result {
 public:
-
 	enum error_code {
 		LOAD_ERR_FILE_READ = 0,
 		LOAD_ERR_YAML_PARSE,
@@ -121,4 +119,4 @@ public:
 	virtual const nlohmann::json& as_json(const rules_contents_t& contents) = 0;
 };
 
-} // namespace falco
+}  // namespace falco
