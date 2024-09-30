@@ -250,7 +250,7 @@ public:
 	                 const context& ctx);
 
 	void set_schema_validation_status(const std::vector<std::string>& status);
-	std::string schema_validation();
+	std::string schema_validation() override;
 
 protected:
 	const std::string& as_summary_string();
