@@ -27,7 +27,13 @@ using namespace falco::app::actions;
 
 static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> inspector) {
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	if(s.options.print_base64 || s.config->m_buffer_format_base64) {
+	if(s.options.print_base64) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "The -b/--print-base64 option is deprecated and will be removed. Use -o "
+		                  "buffer_format_base64=true instead.");
+		event_buffer_format = sinsp_evt::PF_BASE64;
+	}
+	if(s.config->m_buffer_format_base64) {
 		event_buffer_format = sinsp_evt::PF_BASE64;
 	}
 
