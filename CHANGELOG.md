@@ -1,5 +1,95 @@
 # Change Log
 
+## v0.39.0
+
+Released on 2024-10-01
+
+### Breaking Changes :warning:
+
+* fix(falco_metrics)!: split tags label into multiple `tag_`-prefixed labels [[#3337](https://github.com/falcosecurity/falco/pull/3337)] - [@ekoops](https://github.com/ekoops)
+* fix(falco_metrics)!: use full name for configs and rules files [[#3337](https://github.com/falcosecurity/falco/pull/3337)] - [@ekoops](https://github.com/ekoops)
+* update(falco_metrics)!: rearrange `n_evts_cpu` and `n_drops_cpu` Prometheus metrics to follow best practices [[#3319](https://github.com/falcosecurity/falco/pull/3319)] - [@incertum](https://github.com/incertum)
+* cleanup(userspace/falco)!: drop deprecated -t,-T,-D options. [[#3311](https://github.com/falcosecurity/falco/pull/3311)] - [@FedeDP](https://github.com/FedeDP)
+
+
+### Major Changes
+
+* feat(stats): add host_netinfo networking information stats family [[#3344](https://github.com/falcosecurity/falco/pull/3344)] - [@ekoops](https://github.com/ekoops)
+* new(falco): add json_include_message_property to have a message field without date and priority [[#3314](https://github.com/falcosecurity/falco/pull/3314)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(userspace/falco,userspace/engine): rule json schema validation [[#3313](https://github.com/falcosecurity/falco/pull/3313)] - [@FedeDP](https://github.com/FedeDP)
+* new(falco): introduce append_output configuration [[#3308](https://github.com/falcosecurity/falco/pull/3308)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(userspace/falco): added --config-schema action to print config schema [[#3312](https://github.com/falcosecurity/falco/pull/3312)] - [@FedeDP](https://github.com/FedeDP)
+* new(falco): enable CLI options with -o key={object} [[#3310](https://github.com/falcosecurity/falco/pull/3310)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(config): add `container_engines` config to falco.yaml [[#3266](https://github.com/falcosecurity/falco/pull/3266)] - [@incertum](https://github.com/incertum)
+* new(metrics): add host_ifinfo metric [[#3253](https://github.com/falcosecurity/falco/pull/3253)] - [@incertum](https://github.com/incertum)
+* new(userspace,unit_tests): validate configs against schema [[#3302](https://github.com/falcosecurity/falco/pull/3302)] - [@FedeDP](https://github.com/FedeDP)
+
+
+### Minor Changes
+
+* update(falco): upgrade libs to 0.18.1 [[#3349](https://github.com/falcosecurity/falco/pull/3349)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(systemd): users can refer to systemd falco services with a consistent unique alias falco.service [[#3332](https://github.com/falcosecurity/falco/pull/3332)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): bump libs to 0.18.0 and driver to 7.3.0+driver. [[#3330](https://github.com/falcosecurity/falco/pull/3330)] - [@FedeDP](https://github.com/FedeDP)
+* chore(userspace/falco): deprecate `cri` related CLI options. [[#3329](https://github.com/falcosecurity/falco/pull/3329)] - [@FedeDP](https://github.com/FedeDP)
+* update(cmake): bumped falcoctl to v0.10.0 and rules to 3.2.0 [[#3327](https://github.com/falcosecurity/falco/pull/3327)] - [@FedeDP](https://github.com/FedeDP)
+* update(falco_metrics): change prometheus rules metric naming [[#3324](https://github.com/falcosecurity/falco/pull/3324)] - [@incertum](https://github.com/incertum)
+
+
+### Bug Fixes
+
+* fix(falco): allow disable_cri_async from both CLI and config [[#3353](https://github.com/falcosecurity/falco/pull/3353)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(engine): sync outputs before printing stats at shutdown [[#3338](https://github.com/falcosecurity/falco/pull/3338)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(falco): allow plugin init_config map in json schema [[#3335](https://github.com/falcosecurity/falco/pull/3335)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(userspace/falco): properly account for plugin with CAP_PARSING when computing interesting sc set [[#3334](https://github.com/falcosecurity/falco/pull/3334)] - [@FedeDP](https://github.com/FedeDP)
+
+
+
+### Non user-facing changes
+
+* feat(cmake): add conditional builds for falcoctl and rules paths [[#3305](https://github.com/falcosecurity/falco/pull/3305)] - [@tembleking](https://github.com/tembleking)
+* cleanup(falco): ignore lint commit [[#3354](https://github.com/falcosecurity/falco/pull/3354)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* chore(falco): apply code formatting [[#3350](https://github.com/falcosecurity/falco/pull/3350)] - [@poiana](https://github.com/poiana)
+* chore: ignore_some_files for clang format [[#3351](https://github.com/falcosecurity/falco/pull/3351)] - [@Andreagit97](https://github.com/Andreagit97)
+* sync: release 0.39.x [[#3340](https://github.com/falcosecurity/falco/pull/3340)] - [@FedeDP](https://github.com/FedeDP)
+* fix(userspace/engine): improve rule json schema to account for `source` and `required_plugin_versions` [[#3328](https://github.com/falcosecurity/falco/pull/3328)] - [@FedeDP](https://github.com/FedeDP)
+* cleanup(falco): use header file for json schema [[#3325](https://github.com/falcosecurity/falco/pull/3325)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(engine): modify append_output format [[#3322](https://github.com/falcosecurity/falco/pull/3322)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* chore: scaffolding for enabling code formatting [[#3321](https://github.com/falcosecurity/falco/pull/3321)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(cmake): bump libs and driver to 0.18.0-rc1. [[#3320](https://github.com/falcosecurity/falco/pull/3320)] - [@FedeDP](https://github.com/FedeDP)
+* fix(ci): restore master and release CI workflow permissions. [[#3317](https://github.com/falcosecurity/falco/pull/3317)] - [@FedeDP](https://github.com/FedeDP)
+* fixed the token-permission and pinned-dependencies issue [[#3299](https://github.com/falcosecurity/falco/pull/3299)] - [@harshitasao](https://github.com/harshitasao)
+* update(cmake): bump falcoctl to v0.10.0-rc1 [[#3316](https://github.com/falcosecurity/falco/pull/3316)] - [@alacuku](https://github.com/alacuku)
+* ci(insecure-api): update semgrep docker image [[#3315](https://github.com/falcosecurity/falco/pull/3315)] - [@francesco-furlan](https://github.com/francesco-furlan)
+* Add demo environment instructions and docker-config files [[#3295](https://github.com/falcosecurity/falco/pull/3295)] - [@bbl232](https://github.com/bbl232)
+* chore(deps): Bump submodules/falcosecurity-rules from `baecf18` to `b6ad373` [[#3301](https://github.com/falcosecurity/falco/pull/3301)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(cmake): bump libs and driver to latest master  [[#3283](https://github.com/falcosecurity/falco/pull/3283)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore(deps): Bump submodules/falcosecurity-rules from `342b20d` to `baecf18` [[#3298](https://github.com/falcosecurity/falco/pull/3298)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* chore(deps): Bump submodules/falcosecurity-rules from `068f0f2` to `342b20d` [[#3288](https://github.com/falcosecurity/falco/pull/3288)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* vote: add sgaist to OWNERS [[#3264](https://github.com/falcosecurity/falco/pull/3264)] - [@sgaist](https://github.com/sgaist)
+* Add Tulip Retail to adopters list [[#3291](https://github.com/falcosecurity/falco/pull/3291)] - [@bbl232](https://github.com/bbl232)
+* chore(deps): Bump submodules/falcosecurity-rules from `28b98b6` to `068f0f2` [[#3282](https://github.com/falcosecurity/falco/pull/3282)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* chore(deps): Bump submodules/falcosecurity-rules from `c0a9bf1` to `28b98b6` [[#3267](https://github.com/falcosecurity/falco/pull/3267)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* Added the OpenSSF Scorecard Badge [[#3250](https://github.com/falcosecurity/falco/pull/3250)] - [@harshitasao](https://github.com/harshitasao)
+* chore(deps): Bump submodules/falcosecurity-rules from `ea57e78` to `c0a9bf1` [[#3247](https://github.com/falcosecurity/falco/pull/3247)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(cmake,userspace): bump libs and driver to latest master. [[#3263](https://github.com/falcosecurity/falco/pull/3263)] - [@FedeDP](https://github.com/FedeDP)
+* If rule compilation fails, return immediately [[#3260](https://github.com/falcosecurity/falco/pull/3260)] - [@mstemm](https://github.com/mstemm)
+* new(userspace/engine): generalize indexable ruleset [[#3251](https://github.com/falcosecurity/falco/pull/3251)] - [@mstemm](https://github.com/mstemm)
+* update(cmake): bump libs to master. [[#3249](https://github.com/falcosecurity/falco/pull/3249)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump submodules/falcosecurity-rules from `df963b6` to `ea57e78` [[#3240](https://github.com/falcosecurity/falco/pull/3240)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* chore(ci): enable dummy tests on the testing framework. [[#3233](https://github.com/falcosecurity/falco/pull/3233)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump submodules/falcosecurity-rules from `679a50a` to `df963b6` [[#3231](https://github.com/falcosecurity/falco/pull/3231)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(cmake): bump libs and driver to master. [[#3225](https://github.com/falcosecurity/falco/pull/3225)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump submodules/falcosecurity-rules from `9e56293` to `679a50a` [[#3222](https://github.com/falcosecurity/falco/pull/3222)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(docs): update CHANGELOG for 0.38.0 (master branch) [[#3224](https://github.com/falcosecurity/falco/pull/3224)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |     35 |
+| Release note    |     22 |
+| Total           |     57 |
+
 ## v0.38.2
 
 Released on 2024-08-19
