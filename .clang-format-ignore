@@ -1,1 +1,3 @@
-# Add here new files to ignore
+# These files contain some JSON schema definitions that are not C++ code
+userspace/falco/config_json_schema.h
+userspace/engine/rule_json_schema.h
