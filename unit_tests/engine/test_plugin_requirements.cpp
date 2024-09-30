@@ -20,22 +20,19 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 static bool check_requirements(std::string& err,
-			       const std::vector<falco_engine::plugin_version_requirement>& plugins,
-			       const std::string& ruleset_content)
-{
+                               const std::vector<falco_engine::plugin_version_requirement>& plugins,
+                               const std::string& ruleset_content) {
 	falco_engine e;
 	falco::load_result::rules_contents_t c = {{"test", ruleset_content}};
 
 	auto res = e.load_rules(c.begin()->second, c.begin()->first);
-	if(!res->successful())
-	{
+	if(!res->successful()) {
 		return false;
 	}
 	return e.check_plugin_requirements(plugins, err);
 }
 
-TEST(PluginRequirements, check_plugin_requirements_success)
-{
+TEST(PluginRequirements, check_plugin_requirements_success) {
 	std::string error;
 
 	/* No requirement */
@@ -47,7 +44,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
   - name: k8saudit
     version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin newer version */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit", "0.2.0"}}, R"(
@@ -55,7 +52,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
   - name: k8saudit
     version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit", "0.1.0"}, {"json", "0.3.0"}}, R"(
@@ -65,7 +62,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
   - name: json
     version: 0.3.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin multiple versions */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit", "0.2.0"}}, R"(
@@ -76,7 +73,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
   - name: k8saudit
     version: 0.2.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin with alternatives */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit-other", "0.5.0"}}, R"(
@@ -87,7 +84,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
       - name: k8saudit-other
         version: 0.4.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins with alternatives */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit-other", "0.5.0"}, {"json2", "0.5.0"}}, R"(
@@ -103,7 +100,7 @@ TEST(PluginRequirements, check_plugin_requirements_success)
       - name: json2
         version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins with alternatives with multiple versions */
 	ASSERT_TRUE(check_requirements(error, {{"k8saudit-other", "0.7.0"}, {"json2", "0.5.0"}}, R"(
@@ -125,11 +122,10 @@ TEST(PluginRequirements, check_plugin_requirements_success)
       - name: k8saudit-other
         version: 0.7.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 }
 
-TEST(PluginRequirements, check_plugin_requirements_reject)
-{
+TEST(PluginRequirements, check_plugin_requirements_reject) {
 	std::string error;
 
 	/* No plugin loaded */
@@ -138,7 +134,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
   - name: k8saudit
     version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin wrong name */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.1.0"}}, R"(
@@ -146,7 +142,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
   - name: k8saudit2
     version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin wrong version */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.1.0"}}, R"(
@@ -154,7 +150,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
   - name: k8saudit
     version: 0.2.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.1.0"}}, R"(
@@ -164,7 +160,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
   - name: json
     version: 0.3.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin multiple versions */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.1.0"}}, R"(
@@ -175,7 +171,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
   - name: k8saudit
     version: 0.2.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin with alternatives */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit2", "0.5.0"}}, R"(
@@ -186,7 +182,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
       - name: k8saudit-other
         version: 0.4.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Single plugin with overlapping alternatives */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.5.0"}}, R"(
@@ -197,7 +193,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
       - name: k8saudit
         version: 0.4.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins with alternatives */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit-other", "0.5.0"}, {"json3", "0.5.0"}}, R"(
@@ -213,7 +209,7 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
       - name: json2
         version: 0.1.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 
 	/* Multiple plugins with alternatives with multiple versions */
 	ASSERT_FALSE(check_requirements(error, {{"k8saudit", "0.7.0"}, {"json2", "0.5.0"}}, R"(
@@ -235,5 +231,5 @@ TEST(PluginRequirements, check_plugin_requirements_reject)
       - name: k8saudit-other
         version: 0.7.0
         )")) << error
-	     << std::endl;
+	         << std::endl;
 }

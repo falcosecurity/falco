@@ -18,8 +18,7 @@ limitations under the License.
 #include "outputs_syslog.h"
 #include <syslog.h>
 
-void falco::outputs::output_syslog::output(const message *msg)
-{
+void falco::outputs::output_syslog::output(const message *msg) {
 	// Syslog output should not have any trailing newline
 	::syslog(msg->priority, "%s", msg->msg.c_str());
 }

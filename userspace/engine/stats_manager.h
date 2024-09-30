@@ -25,60 +25,51 @@ limitations under the License.
 #include "indexed_vector.h"
 
 /*!
-	\brief Manager for the internal statistics of the rule engine.
-	The on_event() is thread-safe and non-blocking, and it can be used
-	concurrently across many callers in parallel.
-	All the other methods are not thread safe.
+    \brief Manager for the internal statistics of the rule engine.
+    The on_event() is thread-safe and non-blocking, and it can be used
+    concurrently across many callers in parallel.
+    All the other methods are not thread safe.
 */
-class stats_manager
-{
+class stats_manager {
 public:
 	stats_manager();
 	virtual ~stats_manager();
 
 	/*!
-		\brief Erases the internal state and statistics data
+	    \brief Erases the internal state and statistics data
 	*/
 	virtual void clear();
 
 	/*!
-		\brief Callback for when a new rule is loaded in the engine.
-		Rules must be passed through this method before submitting them as
-		an argument of on_event().
+	    \brief Callback for when a new rule is loaded in the engine.
+	    Rules must be passed through this method before submitting them as
+	    an argument of on_event().
 	*/
 	virtual void on_rule_loaded(const falco_rule& rule);
 
 	/*!
-		\brief Callback for when a given rule matches an event.
-		This method is thread-safe.
-		\throws falco_exception if rule has not been passed to
-		on_rule_loaded() first
+	    \brief Callback for when a given rule matches an event.
+	    This method is thread-safe.
+	    \throws falco_exception if rule has not been passed to
+	    on_rule_loaded() first
 	*/
 	virtual void on_event(const falco_rule& rule);
 
 	/*!
-		\brief Formats the internal statistics into the out string.
+	    \brief Formats the internal statistics into the out string.
 	*/
-	virtual void format(
-		const indexed_vector<falco_rule>& rules,
-		std::string& out) const;
+	virtual void format(const indexed_vector<falco_rule>& rules, std::string& out) const;
 
 	// Getter functions
-	inline const std::atomic<uint64_t>& get_total() const
-	{
-		return m_total;
-	}
+	inline const std::atomic<uint64_t>& get_total() const { return m_total; }
 
-	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_priority() const
-	{
+	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_priority() const {
 		return m_by_priority;
 	}
 
-	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_rule_id() const
-	{
+	inline const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& get_by_rule_id() const {
 		return m_by_rule_id;
 	}
-
 
 private:
 	std::atomic<uint64_t> m_total;

@@ -25,38 +25,35 @@ limitations under the License.
 #include "falco_load_result.h"
 
 /*!
-	\brief Searches for bad practices in filter conditions and
-	generates warning messages
+    \brief Searches for bad practices in filter conditions and
+    generates warning messages
 */
-class filter_warning_resolver
-{
+class filter_warning_resolver {
 public:
 	/*!
-		\brief Visits a filter AST and substitutes macro references
-		according with all the definitions added through set_macro(),
-		by replacing the reference with a clone of the macro AST.
-		\param filter The filter AST to be visited
-		\param warnings Set of strings to be filled with warning codes. This
-		is not cleared up before the visit
-		\param blocking Filled-out with true if at least one warning is
-		found and at least one warning prevents the filter from being loaded
-		\return true if at least one warning is generated
+	    \brief Visits a filter AST and substitutes macro references
+	    according with all the definitions added through set_macro(),
+	    by replacing the reference with a clone of the macro AST.
+	    \param filter The filter AST to be visited
+	    \param warnings Set of strings to be filled with warning codes. This
+	    is not cleared up before the visit
+	    \param blocking Filled-out with true if at least one warning is
+	    found and at least one warning prevents the filter from being loaded
+	    \return true if at least one warning is generated
 	*/
-	bool run(
-		libsinsp::filter::ast::expr* filter,
-		std::set<falco::load_result::warning_code>& warnings) const;
+	bool run(libsinsp::filter::ast::expr* filter,
+	         std::set<falco::load_result::warning_code>& warnings) const;
 
 private:
-	struct visitor : public libsinsp::filter::ast::base_expr_visitor
-	{
+	struct visitor : public libsinsp::filter::ast::base_expr_visitor {
 		visitor():
-			m_is_equality_check(false),
-			m_last_node_is_unsafe_field(false),
-			m_warnings(nullptr) {}
+		        m_is_equality_check(false),
+		        m_last_node_is_unsafe_field(false),
+		        m_warnings(nullptr) {}
 		visitor(visitor&&) = default;
-		visitor& operator = (visitor&&) = default;
+		visitor& operator=(visitor&&) = default;
 		visitor(const visitor&) = delete;
-		visitor& operator = (const visitor&) = delete;
+		visitor& operator=(const visitor&) = delete;
 
 		bool m_is_equality_check;
 		bool m_last_node_is_unsafe_field;

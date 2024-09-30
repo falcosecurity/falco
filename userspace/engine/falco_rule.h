@@ -24,16 +24,15 @@ limitations under the License.
 #include <libsinsp/filter/ast.h>
 
 /*!
-	\brief Represents a list in the Falco Engine.
-	The rule ID must be unique across all the lists loaded in the engine.
+    \brief Represents a list in the Falco Engine.
+    The rule ID must be unique across all the lists loaded in the engine.
 */
-struct falco_list
-{
-	falco_list(): used(false), id(0) { }
+struct falco_list {
+	falco_list(): used(false), id(0) {}
 	falco_list(falco_list&&) = default;
-	falco_list& operator = (falco_list&&) = default;
+	falco_list& operator=(falco_list&&) = default;
 	falco_list(const falco_list&) = default;
-	falco_list& operator = (const falco_list&) = default;
+	falco_list& operator=(const falco_list&) = default;
 	~falco_list() = default;
 
 	bool used;
@@ -43,16 +42,15 @@ struct falco_list
 };
 
 /*!
-	\brief Represents a macro in the Falco Engine.
-	The rule ID must be unique across all the macros loaded in the engine.
+    \brief Represents a macro in the Falco Engine.
+    The rule ID must be unique across all the macros loaded in the engine.
 */
-struct falco_macro
-{
-	falco_macro(): used(false), id(0) { }
+struct falco_macro {
+	falco_macro(): used(false), id(0) {}
 	falco_macro(falco_macro&&) = default;
-	falco_macro& operator = (falco_macro&&) = default;
+	falco_macro& operator=(falco_macro&&) = default;
 	falco_macro(const falco_macro&) = default;
-	falco_macro& operator = (const falco_macro&) = default;
+	falco_macro& operator=(const falco_macro&) = default;
 	~falco_macro() = default;
 
 	bool used;
@@ -62,16 +60,15 @@ struct falco_macro
 };
 
 /*!
-	\brief Represents a rule in the Falco Engine.
-	The rule ID must be unique across all the rules loaded in the engine.
+    \brief Represents a rule in the Falco Engine.
+    The rule ID must be unique across all the rules loaded in the engine.
 */
-struct falco_rule
-{
+struct falco_rule {
 	falco_rule(): id(0), priority(falco_common::PRIORITY_DEBUG) {}
 	falco_rule(falco_rule&&) = default;
-	falco_rule& operator = (falco_rule&&) = default;
+	falco_rule& operator=(falco_rule&&) = default;
 	falco_rule(const falco_rule&) = default;
-	falco_rule& operator = (const falco_rule&) = default;
+	falco_rule& operator=(const falco_rule&) = default;
 	~falco_rule() = default;
 
 	std::size_t id;

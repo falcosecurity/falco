@@ -19,5 +19,17 @@ limitations under the License.
 #include <falco/app/state.h>
 #include <falco/app/actions/actions.h>
 
-#define EXPECT_ACTION_OK(r)     { auto result = r; EXPECT_TRUE(result.success); EXPECT_TRUE(result.proceed); EXPECT_EQ(result.errstr, ""); }
-#define EXPECT_ACTION_FAIL(r)   { auto result = r; EXPECT_FALSE(result.success); EXPECT_FALSE(result.proceed); EXPECT_NE(result.errstr, ""); }
+#define EXPECT_ACTION_OK(r)           \
+	{                                 \
+		auto result = r;              \
+		EXPECT_TRUE(result.success);  \
+		EXPECT_TRUE(result.proceed);  \
+		EXPECT_EQ(result.errstr, ""); \
+	}
+#define EXPECT_ACTION_FAIL(r)         \
+	{                                 \
+		auto result = r;              \
+		EXPECT_FALSE(result.success); \
+		EXPECT_FALSE(result.proceed); \
+		EXPECT_NE(result.errstr, ""); \
+	}

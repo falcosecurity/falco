@@ -21,56 +21,55 @@ limitations under the License.
 #include "rule_loader.h"
 #include "indexed_vector.h"
 
-namespace rule_loader
-{
+namespace rule_loader {
 
 /*!
-	\brief Collector for the ruleset loader of the falco engine
+    \brief Collector for the ruleset loader of the falco engine
 */
-class collector
-{
+class collector {
 public:
-	collector(): m_cur_index(0) { }
+	collector(): m_cur_index(0) {}
 	virtual ~collector() = default;
 	collector(collector&&) = default;
-	collector& operator = (collector&&) = default;
+	collector& operator=(collector&&) = default;
 	collector(const collector&) = delete;
-	collector& operator = (const collector&) = delete;
+	collector& operator=(const collector&) = delete;
 
 	/*!
-		\brief Erases all the internal state and definitions
+	    \brief Erases all the internal state and definitions
 	*/
 	virtual void clear();
 
 	/*!
-		\brief Returns the set of all defined required plugin versions
+	    \brief Returns the set of all defined required plugin versions
 	*/
-	virtual const std::vector<plugin_version_info::requirement_alternatives>& required_plugin_versions() const;
+	virtual const std::vector<plugin_version_info::requirement_alternatives>&
+	required_plugin_versions() const;
 
 	/*!
-		\brief Returns the required engine versions
+	    \brief Returns the required engine versions
 	*/
 	virtual const engine_version_info& required_engine_version() const;
 
 	/*!
-		\brief Returns the list of defined lists
+	    \brief Returns the list of defined lists
 	*/
 	virtual const indexed_vector<list_info>& lists() const;
 
 	/*!
-		\brief Returns the list of defined macros
+	    \brief Returns the list of defined macros
 	*/
 	virtual const indexed_vector<macro_info>& macros() const;
 
 	/*!
-		\brief Returns the list of defined rules
+	    \brief Returns the list of defined rules
 	*/
 	virtual const indexed_vector<rule_info>& rules() const;
 
 	/*!
-		\brief Defines an info block. If a similar info block is found
-		in the internal state (e.g. another rule with same name), then
-		the previous definition gets overwritten
+	    \brief Defines an info block. If a similar info block is found
+	    in the internal state (e.g. another rule with same name), then
+	    the previous definition gets overwritten
 	*/
 	virtual void define(configuration& cfg, engine_version_info& info);
 	virtual void define(configuration& cfg, plugin_version_info& info);
@@ -79,21 +78,21 @@ public:
 	virtual void define(configuration& cfg, rule_info& info);
 
 	/*!
-		\brief Appends an info block to an existing one. An exception
-		is thrown if no existing definition can be matched with the appended
-		one
+	    \brief Appends an info block to an existing one. An exception
+	    is thrown if no existing definition can be matched with the appended
+	    one
 	*/
 	virtual void append(configuration& cfg, list_info& info);
 	virtual void append(configuration& cfg, macro_info& info);
 	virtual void append(configuration& cfg, rule_update_info& info);
 
 	/*!
-		\brief Updates the 'enabled' flag of an existing definition
+	    \brief Updates the 'enabled' flag of an existing definition
 	*/
 	virtual void enable(configuration& cfg, rule_info& info);
 
 	/*!
-		\brief Selectively replaces some fields of an existing definition
+	    \brief Selectively replaces some fields of an existing definition
 	*/
 	virtual void selective_replace(configuration& cfg, rule_update_info& info);
 
@@ -106,4 +105,4 @@ private:
 	engine_version_info m_required_engine_version;
 };
 
-}; // namespace rule_loader
+};  // namespace rule_loader

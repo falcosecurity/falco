@@ -26,5 +26,5 @@ extern atomic_signal_handler g_terminate_signal;
 extern atomic_signal_handler g_restart_signal;
 extern atomic_signal_handler g_reopen_outputs_signal;
 
-}; // namespace app
-}; // namespace falco
+};  // namespace app
+};  // namespace falco

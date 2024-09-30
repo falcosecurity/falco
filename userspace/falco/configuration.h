@@ -37,21 +37,12 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
-enum class engine_kind_t : uint8_t
-{
-	KMOD,
-	EBPF,
-	MODERN_EBPF,
-	REPLAY,
-	GVISOR,
-	NODRIVER
-};
+enum class engine_kind_t : uint8_t { KMOD, EBPF, MODERN_EBPF, REPLAY, GVISOR, NODRIVER };
 
 // Map that holds { config filename | validation status } for each loaded config file.
 typedef std::map<std::string, std::string> config_loaded_res;
 
-class falco_configuration
-{
+class falco_configuration {
 public:
 	struct plugin_config {
 		std::string m_name;
@@ -96,10 +87,7 @@ public:
 		bool m_prometheus_metrics_enabled = false;
 	};
 
-	enum class rule_selection_operation {
-		enable,
-		disable
-	};
+	enum class rule_selection_operation { enable, disable };
 
 	struct rule_selection_config {
 		rule_selection_operation m_op;
@@ -119,12 +107,17 @@ public:
 	falco_configuration();
 	virtual ~falco_configuration() = default;
 
-	config_loaded_res init_from_file(const std::string& conf_filename, const std::vector<std::string>& cmdline_options);
-	config_loaded_res init_from_content(const std::string& config_content, const std::vector<std::string>& cmdline_options, const std::string& filename="default");
+	config_loaded_res init_from_file(const std::string& conf_filename,
+	                                 const std::vector<std::string>& cmdline_options);
+	config_loaded_res init_from_content(const std::string& config_content,
+	                                    const std::vector<std::string>& cmdline_options,
+	                                    const std::string& filename = "default");
 
 	std::string dump();
 
-	static void read_rules_file_directory(const std::string& path, std::list<std::string>& rules_filenames, std::list<std::string> &rules_folders);
+	static void read_rules_file_directory(const std::string& path,
+	                                      std::list<std::string>& rules_filenames,
+	                                      std::list<std::string>& rules_folders);
 
 	// Config list as passed by the user. Filenames.
 	std::list<std::string> m_loaded_configs_filenames;
@@ -215,7 +208,7 @@ public:
 	nlohmann::json m_config_schema;
 
 private:
-	void merge_config_files(const std::string& config_name, config_loaded_res &res);
+	void merge_config_files(const std::string& config_name, config_loaded_res& res);
 	void load_yaml(const std::string& config_name);
 	void init_logger();
 	void load_engine_config(const std::string& config_name);
@@ -230,239 +223,196 @@ private:
 };
 
 namespace YAML {
-	template<>
-	struct convert<falco_configuration::append_output_config> {
-		static bool decode(const Node& node, falco_configuration::append_output_config & rhs) {
-			if(!node.IsMap())
-			{
-				return false;
+template<>
+struct convert<falco_configuration::append_output_config> {
+	static bool decode(const Node& node, falco_configuration::append_output_config& rhs) {
+		if(!node.IsMap()) {
+			return false;
+		}
+
+		if(node["match"]) {
+			auto& match = node["match"];
+
+			if(match["source"]) {
+				rhs.m_source = match["source"].as<std::string>();
 			}
 
-			if(node["match"])
-			{
-				auto& match = node["match"];
-
-				if(match["source"])
-				{
-					rhs.m_source = match["source"].as<std::string>();
-				}
-
-				if(match["tags"] && match["tags"].IsSequence())
-				{
-					for(auto& tag : match["tags"])
-					{
-						if (!tag.IsScalar())
-						{
-							return false;
-						}
-
-						rhs.m_tags.insert(tag.as<std::string>());
-					}
-				}
-
-				if(match["rule"])
-				{
-					rhs.m_rule = match["rule"].as<std::string>();
-				}
-			}
-
-			if(node["extra_output"])
-			{
-				rhs.m_format = node["extra_output"].as<std::string>();
-			}
-
-			if(node["extra_fields"])
-			{
-				if(!node["extra_fields"].IsSequence())
-				{
-					return false;
-				}
-
-				for(auto& field_definition : node["extra_fields"])
-				{
-					if(field_definition.IsMap() && field_definition.size() == 1)
-					{
-						YAML::const_iterator def = field_definition.begin();
-						std::string key = def->first.as<std::string>();
-
-						// it is an error to redefine an existing key
-						if (rhs.m_formatted_fields.count(key) != 0 || rhs.m_raw_fields.count(key) != 0)
-						{
-							return false;
-						}
-
-						rhs.m_formatted_fields[key] = def->second.as<std::string>();
-					} else if (field_definition.IsScalar())
-					{
-						std::string key = field_definition.as<std::string>();
-
-						// it is an error to redefine an existing key
-						if (rhs.m_formatted_fields.count(key) != 0)
-						{
-							return false;
-						}
-
-						rhs.m_raw_fields.insert(key);
-					} else {
+			if(match["tags"] && match["tags"].IsSequence()) {
+				for(auto& tag : match["tags"]) {
+					if(!tag.IsScalar()) {
 						return false;
 					}
+
+					rhs.m_tags.insert(tag.as<std::string>());
 				}
 			}
 
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<falco_configuration::rule_selection_config> {
-		static Node encode(const falco_configuration::rule_selection_config & rhs) {
-			Node node;
-			Node subnode;
-			if(rhs.m_rule != "")
-			{
-				subnode["rule"] = rhs.m_rule;
+			if(match["rule"]) {
+				rhs.m_rule = match["rule"].as<std::string>();
 			}
-
-			if(rhs.m_tag != "")
-			{
-				subnode["tag"] = rhs.m_tag;
-			}
-			
-			if(rhs.m_op == falco_configuration::rule_selection_operation::enable)
-			{
-				node["enable"] = subnode;
-			}
-			else if(rhs.m_op == falco_configuration::rule_selection_operation::disable)
-			{
-				node["disable"] = subnode;
-			}
-
-			return node;
 		}
 
-		static bool decode(const Node& node, falco_configuration::rule_selection_config & rhs) {
-			if(!node.IsMap())
-			{
+		if(node["extra_output"]) {
+			rhs.m_format = node["extra_output"].as<std::string>();
+		}
+
+		if(node["extra_fields"]) {
+			if(!node["extra_fields"].IsSequence()) {
 				return false;
 			}
 
-			if(node["enable"])
-			{
-				rhs.m_op = falco_configuration::rule_selection_operation::enable;
+			for(auto& field_definition : node["extra_fields"]) {
+				if(field_definition.IsMap() && field_definition.size() == 1) {
+					YAML::const_iterator def = field_definition.begin();
+					std::string key = def->first.as<std::string>();
 
-				const Node& enable = node["enable"];
-				if(!enable.IsMap())
-				{
+					// it is an error to redefine an existing key
+					if(rhs.m_formatted_fields.count(key) != 0 || rhs.m_raw_fields.count(key) != 0) {
+						return false;
+					}
+
+					rhs.m_formatted_fields[key] = def->second.as<std::string>();
+				} else if(field_definition.IsScalar()) {
+					std::string key = field_definition.as<std::string>();
+
+					// it is an error to redefine an existing key
+					if(rhs.m_formatted_fields.count(key) != 0) {
+						return false;
+					}
+
+					rhs.m_raw_fields.insert(key);
+				} else {
 					return false;
 				}
-
-				if(enable["rule"])
-				{
-					rhs.m_rule = enable["rule"].as<std::string>();
-				}
-				if(enable["tag"])
-				{
-					rhs.m_tag = enable["tag"].as<std::string>();
-				}
 			}
-			else if(node["disable"])
-			{
-				rhs.m_op = falco_configuration::rule_selection_operation::disable;
-
-				const Node& disable = node["disable"];
-				if(!disable.IsMap())
-				{
-					return false;
-				}
-
-				if(disable["rule"])
-				{
-					rhs.m_rule = disable["rule"].as<std::string>();
-				}
-				if(disable["tag"])
-				{
-					rhs.m_tag = disable["tag"].as<std::string>();
-				}
-			}
-			else
-			{
-				return false;
-			}
-
-			if (rhs.m_rule == "" && rhs.m_tag == "")
-			{
-				return false;
-			}
-
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<falco_configuration::plugin_config> {
-
-		// Note that this loses the distinction between init configs
-		// defined as YAML maps or as opaque strings.
-		static Node encode(const falco_configuration::plugin_config & rhs) {
-			Node node;
-			node["name"] = rhs.m_name;
-			node["library_path"] = rhs.m_library_path;
-			node["init_config"] = rhs.m_init_config;
-			node["open_params"] = rhs.m_open_params;
-			return node;
 		}
 
-		static bool decode(const Node& node, falco_configuration::plugin_config & rhs) {
-			if(!node.IsMap())
-			{
-				return false;
-			}
+		return true;
+	}
+};
 
-			if(!node["name"])
-			{
-				return false;
-			}
-			rhs.m_name = node["name"].as<std::string>();
-
-			if(!node["library_path"])
-			{
-				return false;
-			}
-			rhs.m_library_path = node["library_path"].as<std::string>();
-			if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/')
-			{
-				// prepend share dir if path is not absolute
-				rhs.m_library_path = std::string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
-			}
-
-			if(node["init_config"] && !node["init_config"].IsNull())
-			{
-				// By convention, if the init config is a YAML map we convert it
-				// in a JSON object string. This is useful for plugins implementing
-				// the `get_init_schema` API symbol, which right now support the
-				// JSON Schema specific. If we ever support other schema/data types,
-				// we may want to bundle the conversion logic in an ad-hoc class.
-				// The benefit of this is being able of parsing/editing the config as
-				// a YAML map instead of having an opaque string.
-				if (node["init_config"].IsMap())
-				{
-					nlohmann::json json;
-					YAML::convert<nlohmann::json>::decode(node["init_config"], json);
-					rhs.m_init_config = json.dump();
-				}
-				else
-				{
-					rhs.m_init_config = node["init_config"].as<std::string>();
-				}
-			}
-
-			if(node["open_params"] && !node["open_params"].IsNull())
-			{
-				std::string open_params = node["open_params"].as<std::string>();
-				rhs.m_open_params = trim(open_params);
-			}
-
-			return true;
+template<>
+struct convert<falco_configuration::rule_selection_config> {
+	static Node encode(const falco_configuration::rule_selection_config& rhs) {
+		Node node;
+		Node subnode;
+		if(rhs.m_rule != "") {
+			subnode["rule"] = rhs.m_rule;
 		}
-	};
-}
+
+		if(rhs.m_tag != "") {
+			subnode["tag"] = rhs.m_tag;
+		}
+
+		if(rhs.m_op == falco_configuration::rule_selection_operation::enable) {
+			node["enable"] = subnode;
+		} else if(rhs.m_op == falco_configuration::rule_selection_operation::disable) {
+			node["disable"] = subnode;
+		}
+
+		return node;
+	}
+
+	static bool decode(const Node& node, falco_configuration::rule_selection_config& rhs) {
+		if(!node.IsMap()) {
+			return false;
+		}
+
+		if(node["enable"]) {
+			rhs.m_op = falco_configuration::rule_selection_operation::enable;
+
+			const Node& enable = node["enable"];
+			if(!enable.IsMap()) {
+				return false;
+			}
+
+			if(enable["rule"]) {
+				rhs.m_rule = enable["rule"].as<std::string>();
+			}
+			if(enable["tag"]) {
+				rhs.m_tag = enable["tag"].as<std::string>();
+			}
+		} else if(node["disable"]) {
+			rhs.m_op = falco_configuration::rule_selection_operation::disable;
+
+			const Node& disable = node["disable"];
+			if(!disable.IsMap()) {
+				return false;
+			}
+
+			if(disable["rule"]) {
+				rhs.m_rule = disable["rule"].as<std::string>();
+			}
+			if(disable["tag"]) {
+				rhs.m_tag = disable["tag"].as<std::string>();
+			}
+		} else {
+			return false;
+		}
+
+		if(rhs.m_rule == "" && rhs.m_tag == "") {
+			return false;
+		}
+
+		return true;
+	}
+};
+
+template<>
+struct convert<falco_configuration::plugin_config> {
+	// Note that this loses the distinction between init configs
+	// defined as YAML maps or as opaque strings.
+	static Node encode(const falco_configuration::plugin_config& rhs) {
+		Node node;
+		node["name"] = rhs.m_name;
+		node["library_path"] = rhs.m_library_path;
+		node["init_config"] = rhs.m_init_config;
+		node["open_params"] = rhs.m_open_params;
+		return node;
+	}
+
+	static bool decode(const Node& node, falco_configuration::plugin_config& rhs) {
+		if(!node.IsMap()) {
+			return false;
+		}
+
+		if(!node["name"]) {
+			return false;
+		}
+		rhs.m_name = node["name"].as<std::string>();
+
+		if(!node["library_path"]) {
+			return false;
+		}
+		rhs.m_library_path = node["library_path"].as<std::string>();
+		if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/') {
+			// prepend share dir if path is not absolute
+			rhs.m_library_path = std::string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
+		}
+
+		if(node["init_config"] && !node["init_config"].IsNull()) {
+			// By convention, if the init config is a YAML map we convert it
+			// in a JSON object string. This is useful for plugins implementing
+			// the `get_init_schema` API symbol, which right now support the
+			// JSON Schema specific. If we ever support other schema/data types,
+			// we may want to bundle the conversion logic in an ad-hoc class.
+			// The benefit of this is being able of parsing/editing the config as
+			// a YAML map instead of having an opaque string.
+			if(node["init_config"].IsMap()) {
+				nlohmann::json json;
+				YAML::convert<nlohmann::json>::decode(node["init_config"], json);
+				rhs.m_init_config = json.dump();
+			} else {
+				rhs.m_init_config = node["init_config"].as<std::string>();
+			}
+		}
+
+		if(node["open_params"] && !node["open_params"].IsNull()) {
+			std::string open_params = node["open_params"].as<std::string>();
+			rhs.m_open_params = trim(open_params);
+		}
+
+		return true;
+	}
+};
+}  // namespace YAML

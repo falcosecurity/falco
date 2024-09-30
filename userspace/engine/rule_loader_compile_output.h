@@ -20,20 +20,17 @@ limitations under the License.
 #include "indexed_vector.h"
 #include "falco_rule.h"
 
-namespace rule_loader
-{
-	struct compile_output
-	{
-		compile_output() = default;
-		virtual ~compile_output() = default;
-		compile_output(compile_output&&) = default;
-		compile_output& operator = (compile_output&&) = default;
-		compile_output(const compile_output&) = default;
-		compile_output& operator = (const compile_output&) = default;
+namespace rule_loader {
+struct compile_output {
+	compile_output() = default;
+	virtual ~compile_output() = default;
+	compile_output(compile_output&&) = default;
+	compile_output& operator=(compile_output&&) = default;
+	compile_output(const compile_output&) = default;
+	compile_output& operator=(const compile_output&) = default;
 
-		indexed_vector<falco_list> lists;
-		indexed_vector<falco_macro> macros;
-		indexed_vector<falco_rule> rules;
-	};
+	indexed_vector<falco_list> lists;
+	indexed_vector<falco_macro> macros;
+	indexed_vector<falco_rule> rules;
 };
-
+};  // namespace rule_loader

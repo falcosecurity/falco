@@ -21,12 +21,11 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_generated_gvisor_config(falco::app::state& s)
-{
-	if(!s.options.gvisor_generate_config_with_socket.empty())
-	{
+falco::app::run_result falco::app::actions::print_generated_gvisor_config(falco::app::state& s) {
+	if(!s.options.gvisor_generate_config_with_socket.empty()) {
 		sinsp i;
-		std::string gvisor_config = i.generate_gvisor_config(s.options.gvisor_generate_config_with_socket);
+		std::string gvisor_config =
+		        i.generate_gvisor_config(s.options.gvisor_generate_config_with_socket);
 		printf("%s\n", gvisor_config.c_str());
 		return run_result::exit();
 	}

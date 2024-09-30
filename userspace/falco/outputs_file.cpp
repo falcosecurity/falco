@@ -19,43 +19,34 @@ limitations under the License.
 #include <iostream>
 #include <fstream>
 
-void falco::outputs::output_file::open_file()
-{
-	if(!m_buffered)
-	{
+void falco::outputs::output_file::open_file() {
+	if(!m_buffered) {
 		m_outfile.rdbuf()->pubsetbuf(0, 0);
 	}
-	if(!m_outfile.is_open())
-	{
+	if(!m_outfile.is_open()) {
 		m_outfile.open(m_oc.options["filename"], std::fstream::app);
-		if (m_outfile.fail())
-		{
+		if(m_outfile.fail()) {
 			throw falco_exception("failed to open output file " + m_oc.options["filename"]);
 		}
 	}
 }
 
-void falco::outputs::output_file::output(const message *msg)
-{
+void falco::outputs::output_file::output(const message *msg) {
 	open_file();
 	m_outfile << msg->msg + "\n";
 
-	if(m_oc.options["keep_alive"] != "true")
-	{
+	if(m_oc.options["keep_alive"] != "true") {
 		cleanup();
 	}
 }
 
-void falco::outputs::output_file::cleanup()
-{
-	if(m_outfile.is_open())
-	{
+void falco::outputs::output_file::cleanup() {
+	if(m_outfile.is_open()) {
 		m_outfile.close();
 	}
 }
 
-void falco::outputs::output_file::reopen()
-{
+void falco::outputs::output_file::reopen() {
 	cleanup();
 	open_file();
 }

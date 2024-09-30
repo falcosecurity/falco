@@ -19,46 +19,41 @@ limitations under the License.
 #include <mutex>
 #include <condition_variable>
 
-namespace falco
-{
-    /**
-     * @brief A simple semaphore implementation. Unfortunately, a standard
-     * semaphore is only available since C++20, which currently we don't target.
-     */
-    class semaphore
-    {
-    public:
-        /**
-         * @brief Creates a semaphore with the given initial counter value
-         */
-        explicit semaphore(int c = 0): count(c) {}
+namespace falco {
+/**
+ * @brief A simple semaphore implementation. Unfortunately, a standard
+ * semaphore is only available since C++20, which currently we don't target.
+ */
+class semaphore {
+public:
+	/**
+	 * @brief Creates a semaphore with the given initial counter value
+	 */
+	explicit semaphore(int c = 0): count(c) {}
 
-        /**
-         * @brief Increments the internal counter and unblocks acquirers
-         */
-        inline void release()
-        {
-            std::unique_lock<std::mutex> lock(mtx);
-            count++;
-            cv.notify_one();
-        }
+	/**
+	 * @brief Increments the internal counter and unblocks acquirers
+	 */
+	inline void release() {
+		std::unique_lock<std::mutex> lock(mtx);
+		count++;
+		cv.notify_one();
+	}
 
-        /**
-         * @brief Decrements the internal counter or blocks until it can
-         */
-        inline void acquire()
-        {
-            std::unique_lock<std::mutex> lock(mtx);
-            while (count == 0)
-            {
-                cv.wait(lock);
-            }
-            count--;
-        }
+	/**
+	 * @brief Decrements the internal counter or blocks until it can
+	 */
+	inline void acquire() {
+		std::unique_lock<std::mutex> lock(mtx);
+		while(count == 0) {
+			cv.wait(lock);
+		}
+		count--;
+	}
 
-    private:
-        std::mutex mtx;
-        std::condition_variable cv;
-        int count;
-    };
+private:
+	std::mutex mtx;
+	std::condition_variable cv;
+	int count;
 };
+};  // namespace falco

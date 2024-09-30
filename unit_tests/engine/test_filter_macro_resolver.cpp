@@ -21,33 +21,37 @@ limitations under the License.
 namespace filter_ast = libsinsp::filter::ast;
 
 static std::vector<filter_macro_resolver::value_info>::const_iterator find_value(
-	const std::vector<filter_macro_resolver::value_info>& values,
-	const std::string& ref)
-{
+        const std::vector<filter_macro_resolver::value_info>& values,
+        const std::string& ref) {
 	return std::find_if(
-		values.begin(),
-		values.end(),
-		[&ref](const filter_macro_resolver::value_info& v)
-		{ return v.first == ref; });
+	        values.begin(),
+	        values.end(),
+	        [&ref](const filter_macro_resolver::value_info& v) { return v.first == ref; });
 }
 
 #define MACRO_NAME "test_macro"
 #define MACRO_A_NAME "test_macro_1"
 #define MACRO_B_NAME "test_macro_2"
 
-TEST(MacroResolver, should_resolve_macros_on_a_filter_AST)
-{
+TEST(MacroResolver, should_resolve_macros_on_a_filter_AST) {
 	filter_ast::pos_info macro_pos(12, 85, 27);
 
-	std::shared_ptr<filter_ast::expr> macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""), "exists");
+	std::shared_ptr<filter_ast::expr> macro =
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""),
+	                                             "exists");
 
 	std::vector<std::unique_ptr<filter_ast::expr>> filter_and;
-	filter_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""), "exists"));
-	filter_and.push_back(filter_ast::not_expr::create(filter_ast::identifier_expr::create(MACRO_NAME, macro_pos)));
+	filter_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""),
+	                                             "exists"));
+	filter_and.push_back(filter_ast::not_expr::create(
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos)));
 	std::shared_ptr<filter_ast::expr> filter = filter_ast::and_expr::create(filter_and);
 
 	std::vector<std::unique_ptr<filter_ast::expr>> expected_and;
-	expected_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""), "exists"));
+	expected_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""),
+	                                             "exists"));
 	expected_and.push_back(filter_ast::not_expr::create(clone(macro.get())));
 	std::shared_ptr<filter_ast::expr> expected = filter_ast::and_expr::create(expected_and);
 
@@ -69,13 +73,15 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST)
 	ASSERT_TRUE(filter->is_equal(expected.get()));
 }
 
-TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_single_node)
-{
+TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_single_node) {
 	filter_ast::pos_info macro_pos(12, 85, 27);
 
-	std::shared_ptr<filter_ast::expr> macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""), "exists");
+	std::shared_ptr<filter_ast::expr> macro =
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""),
+	                                             "exists");
 
-	std::shared_ptr<filter_ast::expr> filter = filter_ast::identifier_expr::create(MACRO_NAME, macro_pos);
+	std::shared_ptr<filter_ast::expr> filter =
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos);
 
 	filter_macro_resolver resolver;
 	resolver.set_macro(MACRO_NAME, macro);
@@ -99,13 +105,16 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_single_node)
 	ASSERT_TRUE(filter->is_equal(macro.get()));
 }
 
-TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_multiple_macros)
-{
+TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_multiple_macros) {
 	filter_ast::pos_info a_macro_pos(11, 75, 43);
 	filter_ast::pos_info b_macro_pos(91, 21, 9);
 
-	std::shared_ptr<filter_ast::expr> a_macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""), "exists");
-	std::shared_ptr<filter_ast::expr> b_macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("another.field", ""), "exists");
+	std::shared_ptr<filter_ast::expr> a_macro =
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""),
+	                                             "exists");
+	std::shared_ptr<filter_ast::expr> b_macro = filter_ast::unary_check_expr::create(
+	        filter_ast::field_expr::create("another.field", ""),
+	        "exists");
 
 	std::vector<std::unique_ptr<filter_ast::expr>> filter_or;
 	filter_or.push_back(filter_ast::identifier_expr::create(MACRO_A_NAME, a_macro_pos));
@@ -143,24 +152,31 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_multiple_macros)
 	ASSERT_TRUE(filter->is_equal(expected_filter.get()));
 }
 
-TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_nested_macros)
-{
+TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_nested_macros) {
 	filter_ast::pos_info a_macro_pos(47, 1, 76);
 	filter_ast::pos_info b_macro_pos(111, 65, 2);
 
 	std::vector<std::unique_ptr<filter_ast::expr>> a_macro_and;
-	a_macro_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""), "exists"));
+	a_macro_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""),
+	                                             "exists"));
 	a_macro_and.push_back(filter_ast::identifier_expr::create(MACRO_B_NAME, b_macro_pos));
 	std::shared_ptr<filter_ast::expr> a_macro = filter_ast::and_expr::create(a_macro_and);
 
-	std::shared_ptr<filter_ast::expr> b_macro =
-		filter_ast::unary_check_expr::create(filter_ast::field_expr::create("another.field", ""), "exists");
+	std::shared_ptr<filter_ast::expr> b_macro = filter_ast::unary_check_expr::create(
+	        filter_ast::field_expr::create("another.field", ""),
+	        "exists");
 
-	std::shared_ptr<filter_ast::expr> filter = filter_ast::identifier_expr::create(MACRO_A_NAME, a_macro_pos);
+	std::shared_ptr<filter_ast::expr> filter =
+	        filter_ast::identifier_expr::create(MACRO_A_NAME, a_macro_pos);
 
 	std::vector<std::unique_ptr<filter_ast::expr>> expected_and;
-	expected_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""), "exists"));
-	expected_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("another.field", ""), "exists"));
+	expected_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""),
+	                                             "exists"));
+	expected_and.push_back(filter_ast::unary_check_expr::create(
+	        filter_ast::field_expr::create("another.field", ""),
+	        "exists"));
 	std::shared_ptr<filter_ast::expr> expected_filter = filter_ast::and_expr::create(expected_and);
 
 	filter_macro_resolver resolver;
@@ -191,13 +207,15 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_nested_macros)
 	ASSERT_TRUE(filter->is_equal(expected_filter.get()));
 }
 
-TEST(MacroResolver, should_find_unknown_macros)
-{
+TEST(MacroResolver, should_find_unknown_macros) {
 	filter_ast::pos_info macro_pos(9, 4, 2);
 
 	std::vector<std::unique_ptr<filter_ast::expr>> filter_and;
-	filter_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""), "exists"));
-	filter_and.push_back(filter_ast::not_expr::create(filter_ast::identifier_expr::create(MACRO_NAME, macro_pos)));
+	filter_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("evt.name", ""),
+	                                             "exists"));
+	filter_and.push_back(filter_ast::not_expr::create(
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos)));
 	std::shared_ptr<filter_ast::expr> filter = filter_ast::and_expr::create(filter_and);
 
 	filter_macro_resolver resolver;
@@ -208,17 +226,19 @@ TEST(MacroResolver, should_find_unknown_macros)
 	ASSERT_TRUE(resolver.get_resolved_macros().empty());
 }
 
-TEST(MacroResolver, should_find_unknown_nested_macros)
-{
+TEST(MacroResolver, should_find_unknown_nested_macros) {
 	filter_ast::pos_info a_macro_pos(32, 84, 9);
 	filter_ast::pos_info b_macro_pos(1, 0, 5);
 
 	std::vector<std::unique_ptr<filter_ast::expr>> a_macro_and;
-	a_macro_and.push_back(filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""), "exists"));
+	a_macro_and.push_back(
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("one.field", ""),
+	                                             "exists"));
 	a_macro_and.push_back(filter_ast::identifier_expr::create(MACRO_B_NAME, b_macro_pos));
 	std::shared_ptr<filter_ast::expr> a_macro = filter_ast::and_expr::create(a_macro_and);
 
-	std::shared_ptr<filter_ast::expr> filter = filter_ast::identifier_expr::create(MACRO_A_NAME, a_macro_pos);
+	std::shared_ptr<filter_ast::expr> filter =
+	        filter_ast::identifier_expr::create(MACRO_A_NAME, a_macro_pos);
 	auto expected_filter = clone(a_macro.get());
 
 	filter_macro_resolver resolver;
@@ -234,14 +254,17 @@ TEST(MacroResolver, should_find_unknown_nested_macros)
 	ASSERT_TRUE(filter->is_equal(expected_filter.get()));
 }
 
-TEST(MacroResolver, should_undefine_macro)
-{
+TEST(MacroResolver, should_undefine_macro) {
 	filter_ast::pos_info macro_pos_1(12, 9, 3);
 	filter_ast::pos_info macro_pos_2(9, 6, 3);
 
-	std::shared_ptr<filter_ast::expr> macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""), "exists");
-	std::shared_ptr<filter_ast::expr> a_filter = filter_ast::identifier_expr::create(MACRO_NAME, macro_pos_1);
-	std::shared_ptr<filter_ast::expr> b_filter = filter_ast::identifier_expr::create(MACRO_NAME, macro_pos_2);
+	std::shared_ptr<filter_ast::expr> macro =
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""),
+	                                             "exists");
+	std::shared_ptr<filter_ast::expr> a_filter =
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos_1);
+	std::shared_ptr<filter_ast::expr> b_filter =
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos_2);
 	filter_macro_resolver resolver;
 
 	resolver.set_macro(MACRO_NAME, macro);
@@ -261,11 +284,13 @@ TEST(MacroResolver, should_undefine_macro)
 }
 
 /* checks that the macro AST is cloned and not shared across resolved filters */
-TEST(MacroResolver, should_clone_macro_AST)
-{
+TEST(MacroResolver, should_clone_macro_AST) {
 	filter_ast::pos_info macro_pos(5, 2, 8888);
-	std::shared_ptr<filter_ast::unary_check_expr> macro = filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""), "exists");
-	std::shared_ptr<filter_ast::expr> filter = filter_ast::identifier_expr::create(MACRO_NAME, macro_pos);
+	std::shared_ptr<filter_ast::unary_check_expr> macro =
+	        filter_ast::unary_check_expr::create(filter_ast::field_expr::create("test.field", ""),
+	                                             "exists");
+	std::shared_ptr<filter_ast::expr> filter =
+	        filter_ast::identifier_expr::create(MACRO_NAME, macro_pos);
 	filter_macro_resolver resolver;
 
 	resolver.set_macro(MACRO_NAME, macro);

@@ -23,17 +23,14 @@ limitations under the License.
 #include "falco_common.h"
 #include <nlohmann/json.hpp>
 
-namespace falco
-{
-namespace outputs
-{
+namespace falco {
+namespace outputs {
 
 //
 // The way to refer to an output (file, syslog, stdout, etc.)
 // An output has a name and set of options.
 //
-struct config
-{
+struct config {
 	std::string name;
 	std::map<std::string, std::string> options;
 };
@@ -43,8 +40,7 @@ struct config
 //  - an event that has matched some rule,
 //  - or a generic message (e.g., a drop alert).
 //
-struct message
-{
+struct message {
 	uint64_t ts;
 	falco_common::priority_type priority;
 	std::string msg;
@@ -59,13 +55,15 @@ struct message
 // a Falco output class.
 //
 
-class abstract_output
-{
+class abstract_output {
 public:
 	virtual ~abstract_output() = default;
 
-	virtual bool init(const config& oc, bool buffered, const std::string& hostname, bool json_output, std::string &err)
-	{
+	virtual bool init(const config& oc,
+	                  bool buffered,
+	                  const std::string& hostname,
+	                  bool json_output,
+	                  std::string& err) {
 		m_oc = oc;
 		m_buffered = buffered;
 		m_hostname = hostname;
@@ -76,13 +74,10 @@ public:
 	}
 
 	// Return the output's name as per its configuration.
-	const std::string get_name() const
-	{
-		return m_oc.name;
-	}
+	const std::string get_name() const { return m_oc.name; }
 
 	// Output a message.
-	virtual void output(const message *msg) = 0;
+	virtual void output(const message* msg) = 0;
 
 	// Possibly close the output and open it again.
 	virtual void reopen() {}
@@ -97,5 +92,5 @@ protected:
 	bool m_json_output;
 };
 
-} // namespace outputs
-} // namespace falco
+}  // namespace outputs
+}  // namespace falco

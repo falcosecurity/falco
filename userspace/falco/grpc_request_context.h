@@ -21,26 +21,17 @@ limitations under the License.
 
 #include "grpc_server.h"
 
-namespace falco
-{
-namespace grpc
-{
+namespace falco {
+namespace grpc {
 
-class request_context_base
-{
+class request_context_base {
 public:
 	request_context_base() = default;
 	// virtual to guarantee that the derived classes are destructed properly
 	virtual ~request_context_base() = default;
 
 	std::unique_ptr<::grpc::ServerContext> m_srv_ctx;
-	enum : char
-	{
-		UNKNOWN = 0,
-		REQUEST,
-		WRITE,
-		FINISH
-	} m_state = UNKNOWN;
+	enum : char { UNKNOWN = 0, REQUEST, WRITE, FINISH } m_state = UNKNOWN;
 
 	virtual void start(server* srv) = 0;
 	virtual void process(server* srv) = 0;
@@ -50,19 +41,21 @@ public:
 // The responsibility of `request_stream_context` template class
 // is to handle streaming responses.
 template<class Service, class Request, class Response>
-class request_stream_context : public request_context_base
-{
+class request_stream_context : public request_context_base {
 public:
-	request_stream_context():
-		m_process_func(nullptr),
-		m_request_func(nullptr){};
+	request_stream_context(): m_process_func(nullptr), m_request_func(nullptr) {};
 	~request_stream_context() = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
+	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*,
+	                                              Request*,
+	                                              ::grpc::ServerAsyncWriter<Response>*,
+	                                              ::grpc::CompletionQueue*,
+	                                              ::grpc::ServerCompletionQueue*,
+	                                              void*);
 
 	void start(server* srv) override;
 	void process(server* srv) override;
@@ -77,19 +70,21 @@ private:
 // The responsibility of `request_context` template class
 // is to handle unary responses.
 template<class Service, class Request, class Response>
-class request_context : public request_context_base
-{
+class request_context : public request_context_base {
 public:
-	request_context():
-		m_process_func(nullptr),
-		m_request_func(nullptr){};
+	request_context(): m_process_func(nullptr), m_request_func(nullptr) {};
 	~request_context() = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncResponseWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
+	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*,
+	                                              Request*,
+	                                              ::grpc::ServerAsyncResponseWriter<Response>*,
+	                                              ::grpc::CompletionQueue*,
+	                                              ::grpc::ServerCompletionQueue*,
+	                                              void*);
 
 	void start(server* srv) override;
 	void process(server* srv) override;
@@ -101,19 +96,21 @@ private:
 };
 
 template<class Service, class Request, class Response>
-class request_bidi_context : public request_context_base
-{
+class request_bidi_context : public request_context_base {
 public:
-	request_bidi_context():
-		m_process_func(nullptr),
-		m_request_func(nullptr){};
+	request_bidi_context(): m_process_func(nullptr), m_request_func(nullptr) {};
 	~request_bidi_context() = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const bidi_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<Response, Request>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
+	void (Service::AsyncService::*m_request_func)(
+	        ::grpc::ServerContext*,
+	        ::grpc::ServerAsyncReaderWriter<Response, Request>*,
+	        ::grpc::CompletionQueue*,
+	        ::grpc::ServerCompletionQueue*,
+	        void*);
 
 	void start(server* srv) override;
 	void process(server* srv) override;
@@ -125,5 +122,5 @@ private:
 	Request m_req;
 };
 
-} // namespace grpc
-} // namespace falco
+}  // namespace grpc
+}  // namespace falco

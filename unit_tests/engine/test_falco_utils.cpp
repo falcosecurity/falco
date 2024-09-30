@@ -18,8 +18,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <engine/falco_utils.h>
 
-TEST(FalcoUtils, is_unix_scheme)
-{
+TEST(FalcoUtils, is_unix_scheme) {
 	/* Wrong prefix */
 	ASSERT_EQ(falco::utils::network::is_unix_scheme("something:///run/falco/falco.sock"), false);
 
@@ -38,15 +37,14 @@ TEST(FalcoUtils, is_unix_scheme)
 	ASSERT_EQ(falco::utils::network::is_unix_scheme(url_char), true);
 }
 
-TEST(FalcoUtils, parse_prometheus_interval)
-{
+TEST(FalcoUtils, parse_prometheus_interval) {
 	/* Test matrix around correct time conversions. */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1ms"), 1UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1s"), 1000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1m"), 60000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h"), 3600000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1d"), 86400000UL);
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1w"), 604800000UL);	
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1w"), 604800000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y"), (unsigned long)31536000000UL);
 
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("300ms"), 300UL);
@@ -57,8 +55,11 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("60m"), 3600000UL);
 
 	/* Test matrix for concatenated time interval examples. */
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h3m2s1ms"), 3600000UL + 3 * 60000UL + 2 * 1000UL + 1UL);
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y1w1d1h1m1s1ms"),(unsigned long) 31536000000UL + 604800000UL + 86400000UL + 3600000UL + 60000UL + 1000UL + 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h3m2s1ms"),
+	          3600000UL + 3 * 60000UL + 2 * 1000UL + 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y1w1d1h1m1s1ms"),
+	          (unsigned long)31536000000UL + 604800000UL + 86400000UL + 3600000UL + 60000UL +
+	                  1000UL + 1UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h5m"), 2 * 3600000UL + 5 * 60000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h 5m"), 2 * 3600000UL + 5 * 60000UL);
 
@@ -73,16 +74,16 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 0UL);
 }
 
-TEST(FalcoUtils, sanitize_rule_name)
-{
-	ASSERT_EQ(falco::utils::sanitize_rule_name("Testing rule   2 (CVE-2244)"), "Testing_rule_2_CVE_2244");
+TEST(FalcoUtils, sanitize_rule_name) {
+	ASSERT_EQ(falco::utils::sanitize_rule_name("Testing rule   2 (CVE-2244)"),
+	          "Testing_rule_2_CVE_2244");
 	ASSERT_EQ(falco::utils::sanitize_rule_name("Testing rule__:2)"), "Testing_rule_:2");
 	ASSERT_EQ(falco::utils::sanitize_rule_name("This@is_a$test rule123"), "This_is_a_test_rule123");
-	ASSERT_EQ(falco::utils::sanitize_rule_name("RULEwith:special#characters"), "RULEwith:special_characters");
+	ASSERT_EQ(falco::utils::sanitize_rule_name("RULEwith:special#characters"),
+	          "RULEwith:special_characters");
 }
 
-TEST(FalcoUtils, matches_wildcard)
-{
+TEST(FalcoUtils, matches_wildcard) {
 	ASSERT_TRUE(falco::utils::matches_wildcard("*", "anything"));
 	ASSERT_TRUE(falco::utils::matches_wildcard("**", "anything"));
 	ASSERT_TRUE(falco::utils::matches_wildcard("*", ""));

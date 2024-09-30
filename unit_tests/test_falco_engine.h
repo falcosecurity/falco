@@ -8,8 +8,7 @@
 #include <gtest/gtest.h>
 #include <unordered_map>
 
-class test_falco_engine : public testing::Test
-{
+class test_falco_engine : public testing::Test {
 protected:
 	test_falco_engine();
 
@@ -21,7 +20,8 @@ protected:
 	bool check_error_message(const std::string& error_msg) const;
 	std::string get_compiled_rule_condition(std::string rule_name = "") const;
 	std::string get_compiled_rule_output(std::string rule_name = "") const;
-	std::unordered_map<std::string, std::string> get_compiled_rule_formatted_fields(std::string rule_name) const;
+	std::unordered_map<std::string, std::string> get_compiled_rule_formatted_fields(
+	        std::string rule_name) const;
 
 	std::string m_sample_ruleset = "sample-ruleset";
 	std::string m_sample_source = falco_common::syscall_source;

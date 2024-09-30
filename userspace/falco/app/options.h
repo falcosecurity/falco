@@ -24,7 +24,9 @@ limitations under the License.
 #include <set>
 #include <list>
 
-namespace cxxopts { class Options; };
+namespace cxxopts {
+class Options;
+};
 
 namespace falco {
 namespace app {
@@ -34,9 +36,9 @@ public:
 	options() = default;
 	~options() = default;
 	options(options&&) = default;
-	options& operator = (options&&) = default;
+	options& operator=(options&&) = default;
 	options(const options&) = default;
-	options& operator = (const options&) = default;
+	options& operator=(const options&) = default;
 
 	// Each of these maps directly to a command line option.
 	bool help = false;
@@ -75,7 +77,7 @@ public:
 	bool print_page_size = false;
 	bool dry_run = false;
 
-	bool parse(int argc, char **argv, std::string &errstr);
+	bool parse(int argc, char** argv, std::string& errstr);
 
 	const std::string& usage();
 
@@ -84,5 +86,5 @@ private:
 	std::string m_usage_str;
 };
 
-}; // namespace application
-}; // namespace falco
+};  // namespace app
+};  // namespace falco

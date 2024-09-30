@@ -20,10 +20,8 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_config_schema(falco::app::state &s)
-{
-	if(s.options.print_config_schema)
-	{
+falco::app::run_result falco::app::actions::print_config_schema(falco::app::state &s) {
+	if(s.options.print_config_schema) {
 		printf("%s", s.config->m_config_schema.dump(2).c_str());
 		return run_result::exit();
 	}
