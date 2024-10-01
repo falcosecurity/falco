@@ -68,22 +68,9 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 		}
 	}
 
-	bool disable_cri_async =
-	        s.config->m_container_engines_disable_cri_async || s.options.disable_cri_async;
-	inspector->set_cri_async(!disable_cri_async);
-
-	if(disable_cri_async) {
+	inspector->set_cri_async(!s.config->m_container_engines_disable_cri_async);
+	if(s.config->m_container_engines_disable_cri_async) {
 		falco_logger::log(falco_logger::level::DEBUG, "Disabling async lookups for 'CRI'");
-	}
-
-	// Container engines configs via CLI args
-	// If required, set the CRI paths
-	for(auto& p : s.options.cri_socket_paths) {
-		if(!p.empty()) {
-			inspector->add_cri_socket_path(p);
-			falco_logger::log(falco_logger::level::DEBUG,
-			                  "Enabled container runtime socket at '" + p + "' via CLI args");
-		}
 	}
 
 	//
