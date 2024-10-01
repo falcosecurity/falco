@@ -19,6 +19,9 @@ limitations under the License.
 #include "../configuration.h"
 #include "config_falco.h"
 
+// disable cxxopts vector delimiter, meaning that
+// -o test1,test2,test3 won't be treated like -o test1 -o test2 -o test3
+#define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
 
 #include <fstream>
