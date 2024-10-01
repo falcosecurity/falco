@@ -87,8 +87,12 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 	}
 
 	//
-	// If required, set the snaplen
+	// If required, set the snaplen.
+	// In case both config and CLI options are specified, CLI takes precedence.
 	//
+	if(s.config->m_falco_libs_snaplen != 0) {
+		inspector->set_snaplen(s.config->m_falco_libs_snaplen);
+	}
 	if(s.options.snaplen != 0) {
 		inspector->set_snaplen(s.options.snaplen);
 	}

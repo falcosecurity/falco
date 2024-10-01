@@ -1259,8 +1259,15 @@ base_syscalls:
 # `metrics.state_counters_enabled` to measure how the internal state handling is performing, 
 # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
 # if you should increase this value for optimal performance.
+#
+# `snaplen`
+#
+# Set how many bytes are collected of each I/O buffer for 'syscall' events.
+# Use this option with caution since it can have a strong performance impact.
+#
 falco_libs:
   thread_table_size: 262144
+  snaplen: 80
 
 # [Incubating] `container_engines`
 #
