@@ -95,6 +95,9 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 	}
 	if(s.options.snaplen != 0) {
 		inspector->set_snaplen(s.options.snaplen);
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "The -S/--snaplen option is deprecated and will be removed. Use -o "
+		                  "falco_libs.snaplen=<len> instead.");
 	}
 
 	if(s.is_driver_drop_failed_exit_enabled()) {
