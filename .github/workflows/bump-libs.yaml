@@ -1,0 +1,61 @@
+---
+name: Bump Libs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 6 * * 1' # on each monday 6:30
+
+# Checks if any concurrent jobs is running for kernels CI and eventually cancel it.
+concurrency:
+  group: bump-libs-ci
+  cancel-in-progress: true
+
+jobs:
+  bump-libs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Download libs master tar.gz
+        run: |
+          wget https://github.com/falcosecurity/libs/archive/refs/heads/master.tar.gz
+
+      - name: Store libs hash and shasum
+        id: store
+        run: |
+          echo "COMMIT=$(gunzip < libs-master.tar.gz | git get-tar-commit-id)" >> "$GITHUB_OUTPUT"
+          echo "SHASUM=$(sha256sum libs-master.tar.gz)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          path: falco
+
+      - name: Bump libs version and hash
+        run: |
+          cd falco
+          sed -i -E '45s/FALCOSECURITY_LIBS_VERSION "(.+)"/FALCOSECURITY_LIBS_VERSION "${{ steps.commit.outputs.COMMIT }}"/' cmake/modules/falcosecurity-libs.cmake
+          sed -i -E '47s/SHA256="(.+)"/SHA256="${{ steps.store.outputs.SHASUM }}"/' cmake/modules/falcosecurity-libs.cmake
+ 
+          sed -i -E '38s/DRIVER_VERSION "(.+)"/DRIVER_VERSION "${{ steps.commit.outputs.COMMIT }}"/' cmake/modules/driver.cmake
+          sed -i -E '40s/SHA256="(.+)"/SHA256="${{ steps.store.outputs.SHASUM }}"/' cmake/modules/driver.cmake
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
+        with:
+          path: falco
+          signoff: true
+          base: master
+          branch: update/libs
+          title: 'update(cmake): update libs and driver to latest master'
+          body: |
+            This PR updates libs and driver to latest commit.
+            /kind release
+            /area build
+            ```release-note
+            NONE
+            ```
+          commit-message: 'update(cmake): update libs and driver to latest master.'
+          token: ${{ secrets.GITHUB_TOKEN }}	  
