@@ -84,6 +84,7 @@ falco_configuration::falco_configuration():
         m_syscall_evt_simulate_drops(false),
         m_syscall_evt_timeout_max_consecutives(1000),
         m_falco_libs_thread_table_size(DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE),
+        m_falco_libs_snaplen(0),
         m_base_syscalls_repair(false),
         m_metrics_enabled(false),
         m_metrics_interval_str("5000"),
@@ -568,6 +569,9 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_falco_libs_thread_table_size =
 	        m_config.get_scalar<std::uint32_t>("falco_libs.thread_table_size",
 	                                           DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE);
+
+	// if falco_libs.snaplen is not set we'll let libs configure it
+	m_falco_libs_snaplen = m_config.get_scalar<std::uint64_t>("falco_libs.snaplen", 0);
 
 	m_base_syscalls_custom_set.clear();
 	m_config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set,

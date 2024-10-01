@@ -403,6 +403,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
             "properties": {
                 "thread_table_size": {
                     "type": "integer"
+                },
+                "snaplen": {
+                    "type": "integer"
                 }
             },
             "minProperties": 1,
