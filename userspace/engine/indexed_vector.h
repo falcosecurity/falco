@@ -34,6 +34,9 @@ public:
 	indexed_vector& operator=(indexed_vector&&) = default;
 	indexed_vector(const indexed_vector&) = default;
 	indexed_vector& operator=(const indexed_vector&) = default;
+	bool operator==(const indexed_vector& rhs) const {
+		return (this->m_entries == rhs.m_entries && this->m_index == rhs.m_index);
+	}
 
 	/*!
 	    \brief Returns the number of elements
