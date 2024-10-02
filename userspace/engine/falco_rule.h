@@ -35,6 +35,11 @@ struct falco_list {
 	falco_list& operator=(const falco_list&) = default;
 	~falco_list() = default;
 
+	bool operator==(const falco_list& rhs) const {
+		return (this->used == rhs.used && this->id == rhs.id && this->name == rhs.name &&
+		        this->items == rhs.items);
+	}
+
 	bool used;
 	std::size_t id;
 	std::string name;
@@ -53,6 +58,14 @@ struct falco_macro {
 	falco_macro& operator=(const falco_macro&) = default;
 	~falco_macro() = default;
 
+	bool operator==(const falco_macro& rhs) const {
+		// Note this only ensures that the shared_ptrs are
+		// pointing to the same underlying memory, not that
+		// they are logically equal.
+		return (this->used == rhs.used && this->id == rhs.id && this->name == rhs.name &&
+		        this->condition.get() == rhs.condition.get());
+	}
+
 	bool used;
 	std::size_t id;
 	std::string name;
@@ -70,6 +83,17 @@ struct falco_rule {
 	falco_rule(const falco_rule&) = default;
 	falco_rule& operator=(const falco_rule&) = default;
 	~falco_rule() = default;
+
+	bool operator==(const falco_rule& rhs) const {
+		// Note this only ensures that the shared_ptrs are
+		// pointing to the same underlying memory, not that
+		// they are logically equal.
+		return (this->id == rhs.id && this->source == rhs.source && this->name == rhs.name &&
+		        this->description == rhs.description && this->output == rhs.output &&
+		        this->tags == rhs.tags && this->exception_fields == rhs.exception_fields &&
+		        this->priority == rhs.priority && this->condition.get() == rhs.condition.get() &&
+		        this->filter.get() == rhs.filter.get());
+	}
 
 	std::size_t id;
 	std::string source;
