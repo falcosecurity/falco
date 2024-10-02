@@ -20,6 +20,8 @@ limitations under the License.
 #include "indexed_vector.h"
 #include "falco_rule.h"
 
+#include <memory>
+
 namespace rule_loader {
 struct compile_output {
 	compile_output() = default;
@@ -28,6 +30,10 @@ struct compile_output {
 	compile_output& operator=(compile_output&&) = default;
 	compile_output(const compile_output&) = default;
 	compile_output& operator=(const compile_output&) = default;
+
+	virtual std::unique_ptr<compile_output> clone() const {
+		return std::make_unique<compile_output>(*this);
+	};
 
 	indexed_vector<falco_list> lists;
 	indexed_vector<falco_macro> macros;
