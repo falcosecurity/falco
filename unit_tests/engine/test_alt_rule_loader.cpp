@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <memory>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -41,7 +42,10 @@ struct test_object_info {
 
 struct test_compile_output : public rule_loader::compile_output {
 	test_compile_output() = default;
-	~test_compile_output() = default;
+	virtual ~test_compile_output() = default;
+	virtual std::unique_ptr<compile_output> clone() const override {
+		return std::make_unique<test_compile_output>(*this);
+	}
 
 	std::set<std::string> defined_test_properties;
 };
@@ -320,3 +324,33 @@ TEST(engine_loader_alt_loader, falco_engine_alternate_loader) {
 	EXPECT_TRUE(defined_properties.find("other-value") != defined_properties.end());
 	EXPECT_TRUE(defined_properties.find("not-exists-value") == defined_properties.end());
 };
+
+TEST(engine_loader_alt_loader, clone_compile_output) {
+	sinsp inspector;
+	sinsp_filter_check_list filterchecks;
+	indexed_vector<falco_source> sources;
+
+	std::shared_ptr<rule_loader::configuration> cfg =
+	        create_configuration(inspector, filterchecks, sources);
+
+	test_reader reader;
+	test_collector collector;
+	test_compiler compiler;
+
+	EXPECT_TRUE(reader.read(*cfg, collector));
+
+	std::unique_ptr<rule_loader::compile_output> compile_output = compiler.new_compile_output();
+
+	compiler.compile(*cfg, collector, *compile_output);
+
+	const test_compile_output& original_ref =
+	        dynamic_cast<const test_compile_output&>(*(compile_output.get()));
+
+	std::unique_ptr<rule_loader::compile_output> copy = compile_output->clone();
+	const test_compile_output& copy_ref = dynamic_cast<const test_compile_output&>(*(copy.get()));
+
+	EXPECT_EQ(copy_ref.lists, original_ref.lists);
+	EXPECT_EQ(copy_ref.macros, original_ref.macros);
+	EXPECT_EQ(copy_ref.rules, original_ref.rules);
+	EXPECT_EQ(copy_ref.defined_test_properties, original_ref.defined_test_properties);
+}
