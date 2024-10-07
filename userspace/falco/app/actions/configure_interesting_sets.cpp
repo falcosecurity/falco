@@ -78,11 +78,27 @@ static void select_event_set(falco::app::state& s,
 
 	/* Load PPM event codes needed by plugins with parsing capability */
 	libsinsp::events::set<ppm_event_code> plugin_ev_codes;
-	for(const auto& p : s.offline_inspector->get_plugin_manager()->plugins()) {
-		if(!(p->caps() & CAP_PARSING)) {
-			continue;
+	if(s.is_capture_mode()) {
+		// In capture mode, we need to use the offline inspector
+		// because plugins are inited under it; see init_inspectors action.
+		for(const auto& p : s.offline_inspector->get_plugin_manager()->plugins()) {
+			if(!(p->caps() & CAP_PARSING)) {
+				continue;
+			}
+			plugin_ev_codes.merge(p->parse_event_codes());
 		}
-		plugin_ev_codes.merge(p->parse_event_codes());
+	} else {
+		// In live mode, we need to use inspectors from the loaded sources,
+		// because plugins are inited under them; see init_inspectors action.
+		for(const auto& src : s.loaded_sources) {
+			auto src_info = s.source_infos.at(src);
+			for(const auto& p : src_info->inspector->get_plugin_manager()->plugins()) {
+				if(!(p->caps() & CAP_PARSING)) {
+					continue;
+				}
+				plugin_ev_codes.merge(p->parse_event_codes());
+			}
+		}
 	}
 	const auto plugin_sc_set = libsinsp::events::event_set_to_sc_set(plugin_ev_codes);
 	const auto plugin_names = libsinsp::events::sc_set_to_event_names(plugin_sc_set);
