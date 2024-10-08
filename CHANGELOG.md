@@ -1,5 +1,24 @@
 # Change Log
 
+## v0.39.1
+
+Released on 2024-10-09
+
+### Bug Fixes
+
+* fix(engine): allow null init_config for plugin info [[#3372](https://github.com/falcosecurity/falco/pull/3372)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(engine): fix parsing issues in -o key={object} when the object definition contains a comma [[#3363](https://github.com/falcosecurity/falco/pull/3363)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(userspace/falco): fix event set selection for plugin with parsing capability [[#3368](https://github.com/falcosecurity/falco/pull/3368)] - [@FedeDP](https://github.com/FedeDP)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      3 |
+| Total           |      3 |
+
+
 ## v0.39.0
 
 Released on 2024-10-01
