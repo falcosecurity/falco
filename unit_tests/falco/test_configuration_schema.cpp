@@ -18,6 +18,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 #include <falco_test_var.h>
+#include <nlohmann/json.hpp>
 
 #define EXPECT_VALIDATION_STATUS(res, status)                                                     \
 	do {                                                                                          \
@@ -102,8 +103,13 @@ plugins:
       sslCertificate: /etc/falco/falco.pem
 )";
 
+	auto plugin_config_json = nlohmann::json::parse(
+	        R"({"maxEventSize": 262144, "sslCertificate": "/etc/falco/falco.pem"})");
+
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	auto parsed_init_config = nlohmann::json::parse(falco_config.m_plugins[0].m_init_config);
+	EXPECT_EQ(parsed_init_config, plugin_config_json);
 
 	config = R"(
 plugins:
@@ -114,6 +120,30 @@ plugins:
 
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	parsed_init_config = nlohmann::json::parse(falco_config.m_plugins[0].m_init_config);
+	EXPECT_EQ(parsed_init_config, plugin_config_json);
+
+	config = R"(
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config: ""
+)";
+
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	EXPECT_EQ(falco_config.m_plugins[0].m_init_config, "");
+
+	config = R"(
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config: null
+)";
+
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	EXPECT_EQ(falco_config.m_plugins[0].m_init_config, "");
 }
 
 TEST(Configuration, schema_yaml_helper_validator) {
