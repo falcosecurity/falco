@@ -85,11 +85,15 @@ public:
 		return m_rulesets[ruleset_id]->event_codes();
 	}
 
-	void enable(const std::string &pattern, match_type match, uint16_t ruleset_id) override {
+	virtual void enable(const std::string &pattern,
+	                    match_type match,
+	                    uint16_t ruleset_id) override {
 		enable_disable(pattern, match, true, ruleset_id);
 	}
 
-	void disable(const std::string &pattern, match_type match, uint16_t ruleset_id) override {
+	virtual void disable(const std::string &pattern,
+	                     match_type match,
+	                     uint16_t ruleset_id) override {
 		enable_disable(pattern, match, false, ruleset_id);
 	}
 
