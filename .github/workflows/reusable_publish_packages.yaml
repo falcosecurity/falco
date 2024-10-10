@@ -88,7 +88,7 @@ jobs:
       - name: Sign rpms
         run: |
           rpmsign --define '_gpg_name Falcosecurity Package Signing' --addsign /tmp/falco-build-rpm/falco-*.rpm
-          rpm --qf %{SIGPGP:pgpsig} -qp /tmp/falco-build-rpm/falco-*.rpm | grep SHA256
+          rpm -qp --qf '%|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{(none)}|}|\n' /tmp/falco-build-rpm/falco-*.rpm
 
       - name: Publish wasm
         run: |
