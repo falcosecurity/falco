@@ -1,0 +1,22 @@
+{{- if .Values.grafana.dashboards.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.grafana.dashboards.configMaps.falco.name }}
+  {{ if .Values.grafana.dashboards.configMaps.falco.namespace }}
+  namespace: {{ .Values.grafana.dashboards.configMaps.falco.namespace }}
+  {{- else -}}
+  namespace: {{ include "falco.namespace" . }}
+  {{- end }}
+  labels:
+    {{- include "falco.labels" .  | nindent 4 }}
+    grafana_dashboard: "1"
+  {{- if .Values.grafana.dashboards.configMaps.falco.folder }}
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/{{ .Values.grafana.dashboards.configMaps.falco.folder}}
+    grafana_dashboard_folder: {{ .Values.grafana.dashboards.configMaps.falco.folder }}
+  {{- end }}
+data:
+  falco-dashboard.json: |-
+    {{- .Files.Get "dashboards/falco-dashboard.json" | nindent 4 }}
+ {{- end -}}
