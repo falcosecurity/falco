@@ -588,6 +588,22 @@ serviceMonitor:
   # for Falco's metrics.
   endpointPort: "metrics"
 
+# -- grafana contains the configuration related to grafana.
+grafana:
+  # -- dashboards contains configuration for grafana dashboards.
+  dashboards:
+    # -- enabled specifies whether the dashboards should be deployed.
+    enabled: false
+    # --configmaps to be deployed that contain a grafana dashboard.
+    configMaps:
+      # -- falco contains the configuration for falco's dashboard.
+      falco:
+        # -- name specifies the name for the configmap.
+        name: falco-grafana-dashboard
+        # -- namespace specifies the namespace for the configmap.
+        namespace: ""
+        # -- folder where the dashboard is stored by grafana.
+        folder: ""
 
 ######################
 # falco.yaml config  #
