@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.11.1
+
+* add details for the scap drops buffer charts with the dir  and drops labels
+
 ## v4.11.0
 
 * new(falco): add grafana dashboard for falco
