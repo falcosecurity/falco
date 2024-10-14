@@ -966,8 +966,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1076,7 +1075,7 @@
           "useBackend": false
         }
       ],
-      "title": "Syscalls by instance over time",
+      "title": "Scap events by instance over time",
       "type": "timeseries"
     },
     {
@@ -1127,8 +1126,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1234,8 +1232,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1360,8 +1357,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1467,8 +1463,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1574,8 +1569,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1681,8 +1675,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1695,8 +1688,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
-        "w": 6,
+        "h": 16,
+        "w": 12,
         "x": 0,
         "y": 86
       },
@@ -1704,14 +1697,14 @@
       "options": {
         "legend": {
           "calcs": [
-            "min",
             "max",
-            "mean",
-            "last"
+            "mean"
           ],
           "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1727,17 +1720,102 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\"}[$__rate_interval]))",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"clone_fork\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{pod}}",
+          "legendFormat": "{{pod}} - clone_fork",
           "range": true,
           "refId": "A",
           "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"connect\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - connect",
+          "range": true,
+          "refId": "B",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"dir_file\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - dir_file",
+          "range": true,
+          "refId": "C",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"execve\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - execve",
+          "range": true,
+          "refId": "D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"open\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - open",
+          "range": true,
+          "refId": "E",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"enter\", drop=\"other_interest\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - other_interest",
+          "range": true,
+          "refId": "F",
+          "useBackend": false
         }
       ],
-      "title": "Scap Drops Buffer",
+      "title": "Scap Drops Buffer Enter",
       "type": "timeseries"
     },
     {
@@ -1788,8 +1866,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1802,19 +1879,208 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 6,
+        "h": 16,
+        "w": 12,
+        "x": 12,
         "y": 86
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.0-77222",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"clone_fork\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - clone_fork",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"connect\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - connect",
+          "range": true,
+          "refId": "B",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"dir_file\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - dir_file",
+          "range": true,
+          "refId": "C",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"execve\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - execve",
+          "range": true,
+          "refId": "D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"open\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - open",
+          "range": true,
+          "refId": "E",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "sum by(pod) (increase(falcosecurity_scap_n_drops_buffer_total{pod=~\"$pod\", dir=\"exit\", drop=\"other_interest\"}[$__rate_interval]))",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{pod}} - other_interest",
+          "range": true,
+          "refId": "F",
+          "useBackend": false
+        }
+      ],
+      "title": "Scap Drops Buffer Exit",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 8,
+        "x": 0,
+        "y": 102
       },
       "id": 21,
       "options": {
         "legend": {
           "calcs": [
-            "min",
             "max",
-            "mean",
-            "last"
+            "mean"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1895,8 +2161,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1909,19 +2174,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 12,
-        "y": 86
+        "h": 12,
+        "w": 8,
+        "x": 8,
+        "y": 102
       },
       "id": 22,
       "options": {
         "legend": {
           "calcs": [
-            "min",
             "max",
-            "mean",
-            "last"
+            "mean"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2002,8 +2265,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2016,19 +2278,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 18,
-        "y": 86
+        "h": 12,
+        "w": 8,
+        "x": 16,
+        "y": 102
       },
       "id": 23,
       "options": {
         "legend": {
           "calcs": [
-            "min",
             "max",
-            "mean",
-            "last"
+            "mean"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2067,7 +2327,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 97
+        "y": 114
       },
       "id": 15,
       "panels": [],
@@ -2099,7 +2359,7 @@
         "h": 9,
         "w": 6,
         "x": 0,
-        "y": 98
+        "y": 115
       },
       "id": 16,
       "options": {
@@ -2172,7 +2432,7 @@
         "h": 9,
         "w": 6,
         "x": 6,
-        "y": 98
+        "y": 115
       },
       "id": 17,
       "options": {
@@ -2246,10 +2506,10 @@
       {
         "current": {
           "text": [
-            "falco"
+            "All"
           ],
           "value": [
-            "falco"
+            "$__all"
           ]
         },
         "datasource": {
@@ -2365,6 +2625,6 @@
   "timezone": "browser",
   "title": "Falco",
   "uid": "ddwe2ug4nfi0wb",
-  "version": 40,
+  "version": 45,
   "weekStart": ""
 }
