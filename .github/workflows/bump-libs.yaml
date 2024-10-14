@@ -25,9 +25,11 @@ jobs:
       - name: Store libs hash and shasum
         id: store
         run: |
-          echo "SHASUM=$(sha256sum master.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
           gunzip -c master.tar.gz > master.tar
-          echo "COMMIT=$(cat master.tar | git get-tar-commit-id)" >> "$GITHUB_OUTPUT"
+          commit=$(cat master.tar | git get-tar-commit-id)
+          echo "COMMIT=$commit" >> "$GITHUB_OUTPUT"
+          wget https://github.com/falcosecurity/libs/archive/$commit.tar.gz
+          echo "SHASUM=$(sha256sum $commit.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
