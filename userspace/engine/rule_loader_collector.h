@@ -97,6 +97,9 @@ public:
 	virtual void selective_replace(configuration& cfg, rule_update_info& info);
 
 private:
+	template<typename ruleInfo>
+	rule_info* find_prev_rule(ruleInfo& info);
+
 	uint32_t m_cur_index;
 	indexed_vector<rule_info> m_rule_infos;
 	indexed_vector<macro_info> m_macro_infos;
