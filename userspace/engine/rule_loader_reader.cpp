@@ -591,6 +591,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		rule_loader::context ctx(item, rule_loader::context::RULE, name, parent);
 
+		std::string source = "";
+		decode_optional_val(item, "source", source, ctx);
+
 		bool has_append_flag = false;
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag) {
@@ -648,6 +651,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				                         "append",
 				                         "condition",
 				                         ctx)) {
+					v.source = source;
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
@@ -682,6 +686,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				                         "replace",
 				                         "condition",
 				                         ctx)) {
+					v.source = source;
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
@@ -765,6 +770,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		} else if(has_append_flag) {
 			rule_loader::rule_update_info v(ctx);
 			v.name = name;
+			v.source = source;
 
 			if(item["condition"].IsDefined()) {
 				v.cond_ctx = rule_loader::context(item["condition"],
