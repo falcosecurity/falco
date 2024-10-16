@@ -53,7 +53,8 @@ static void decode_val_generic(const YAML::Node& item,
                                const char* key,
                                T& out,
                                const rule_loader::context& ctx,
-                               bool optional) {
+                               bool optional,
+                               bool can_be_empty) {
 	const YAML::Node& val = item[key];
 
 	if(!val.IsDefined() && optional) {
@@ -61,10 +62,19 @@ static void decode_val_generic(const YAML::Node& item,
 	}
 
 	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
+	if(val.IsNull() && can_be_empty) {
+		return;
+	}
+
 	THROW(val.IsNull(), std::string("Mapping for key '") + key + "' is empty", ctx);
 
 	rule_loader::context valctx(val, rule_loader::context::VALUE_FOR, key, ctx);
 	THROW(!val.IsScalar(), "Value is not a scalar value", valctx);
+
+	if(val.Scalar().empty() && can_be_empty) {
+		return;
+	}
+
 	THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
 
 	THROW(!YAML::convert<T>::decode(val, out), "Can't decode YAML scalar value", valctx);
@@ -75,9 +85,10 @@ static void decode_val_generic(const YAML::Node& item,
                                const char* key,
                                std::optional<T>& out,
                                const rule_loader::context& ctx,
-                               bool optional) {
+                               bool optional,
+                               bool can_be_empty) {
 	T decoded;
-	decode_val_generic(item, key, decoded, ctx, optional);
+	decode_val_generic(item, key, decoded, ctx, optional, can_be_empty);
 	out = decoded;
 }
 
@@ -87,8 +98,9 @@ void rule_loader::reader::decode_val(const YAML::Node& item,
                                      T& out,
                                      const rule_loader::context& ctx) {
 	bool optional = false;
+	bool can_be_empty = false;
 
-	decode_val_generic(item, key, out, ctx, optional);
+	decode_val_generic(item, key, out, ctx, optional, can_be_empty);
 }
 
 template void rule_loader::reader::decode_val<std::string>(const YAML::Node& item,
@@ -102,8 +114,20 @@ void rule_loader::reader::decode_optional_val(const YAML::Node& item,
                                               T& out,
                                               const rule_loader::context& ctx) {
 	bool optional = true;
+	bool can_be_empty = false;
 
-	decode_val_generic(item, key, out, ctx, optional);
+	decode_val_generic(item, key, out, ctx, optional, can_be_empty);
+}
+
+template<typename T>
+void rule_loader::reader::decode_optional_empty_val(const YAML::Node& item,
+                                                    const char* key,
+                                                    T& out,
+                                                    const rule_loader::context& ctx) {
+	bool optional = true;
+	bool can_be_empty = true;
+
+	decode_val_generic(item, key, out, ctx, optional, can_be_empty);
 }
 
 template void rule_loader::reader::decode_optional_val<std::string>(
@@ -591,6 +615,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		rule_loader::context ctx(item, rule_loader::context::RULE, name, parent);
 
+		std::string source = "";
+		decode_optional_empty_val(item, "source", source, ctx);
+
 		bool has_append_flag = false;
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag) {
@@ -648,6 +675,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				                         "append",
 				                         "condition",
 				                         ctx)) {
+					v.source = source;
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
@@ -682,6 +710,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				                         "replace",
 				                         "condition",
 				                         ctx)) {
+					v.source = source;
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
@@ -765,6 +794,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		} else if(has_append_flag) {
 			rule_loader::rule_update_info v(ctx);
 			v.name = name;
+			v.source = source;
 
 			if(item["condition"].IsDefined()) {
 				v.cond_ctx = rule_loader::context(item["condition"],

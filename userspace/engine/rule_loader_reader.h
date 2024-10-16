@@ -66,6 +66,11 @@ public:
 	                                const char* key,
 	                                T& out,
 	                                const rule_loader::context& ctx);
+	template<typename T>
+	static void decode_optional_empty_val(const YAML::Node& item,
+	                                      const char* key,
+	                                      T& out,
+	                                      const rule_loader::context& ctx);
 
 protected:
 	virtual void read_item(rule_loader::configuration& cfg,
