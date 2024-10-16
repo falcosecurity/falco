@@ -182,10 +182,8 @@ void rule_loader::collector::append(configuration& cfg, macro_info& info) {
 }
 
 void rule_loader::collector::define(configuration& cfg, rule_info& info) {
-	const auto* prev = m_rule_infos.at(info.name);
-	THROW(prev && prev->source != info.source,
-	      "Rule has been re-defined with a different source",
-	      info.ctx);
+	auto prev = find_prev_rule(info);
+	(void)prev;
 
 	const auto* source = cfg.sources.at(info.source);
 	if(!source) {
@@ -205,7 +203,7 @@ void rule_loader::collector::define(configuration& cfg, rule_info& info) {
 }
 
 void rule_loader::collector::append(configuration& cfg, rule_update_info& info) {
-	auto prev = m_rule_infos.at(info.name);
+	auto prev = find_prev_rule(info);
 
 	THROW(!prev, ERROR_NO_PREVIOUS_RULE_APPEND, info.ctx);
 	THROW(!info.has_any_value(),
@@ -275,7 +273,7 @@ void rule_loader::collector::append(configuration& cfg, rule_update_info& info) 
 }
 
 void rule_loader::collector::selective_replace(configuration& cfg, rule_update_info& info) {
-	auto prev = m_rule_infos.at(info.name);
+	auto prev = find_prev_rule(info);
 
 	THROW(!prev, ERROR_NO_PREVIOUS_RULE_REPLACE, info.ctx);
 	THROW(!info.has_any_value(),
@@ -328,6 +326,19 @@ void rule_loader::collector::selective_replace(configuration& cfg, rule_update_i
 	}
 
 	replace_info(prev, info, m_cur_index++);
+}
+
+template<typename ruleInfo>
+rule_loader::rule_info* rule_loader::collector::find_prev_rule(ruleInfo& info) {
+	auto ret = m_rule_infos.at(info.name);
+
+	// Throw an error if both the original rule and current rule
+	// have the same name and explicitly have different sources.
+	THROW(ret && (ret->source != "" && info.source != "" && ret->source != info.source),
+	      "Rule has been re-defined with a different source",
+	      info.ctx);
+
+	return ret;
 }
 
 void rule_loader::collector::enable(configuration& cfg, rule_info& info) {
