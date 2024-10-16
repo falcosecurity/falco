@@ -488,6 +488,7 @@ struct rule_update_info {
 	context cond_ctx;
 	std::string name;
 	std::optional<std::string> cond;
+	std::string source;
 	std::optional<std::string> output;
 	std::optional<std::string> desc;
 	std::optional<std::set<std::string>> tags;
