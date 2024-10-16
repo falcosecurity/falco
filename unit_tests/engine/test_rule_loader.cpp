@@ -1222,3 +1222,108 @@ TEST_F(test_falco_engine, exceptions_fields_transformer_space_quoted) {
 	EXPECT_EQ(get_compiled_rule_condition("test_rule"),
 	          "(evt.type = open and not tolower(proc.name) = test)");
 }
+
+TEST_F(test_falco_engine, redefine_rule_different_source) {
+	auto rules_content = R"END(
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: ka.verb = GET
+  output: some output
+  priority: INFO
+  source: k8s_audit
+
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: and 1 = 2
+  output: Some output
+  priority: INFO
+  source: syscall
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Rule has been re-defined with a different source"));
+}
+
+TEST_F(test_falco_engine, append_across_sources) {
+	auto rules_content = R"END(
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: ka.verb = GET
+  output: some output
+  priority: INFO
+  source: k8s_audit
+
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: and 1 = 2
+  output: Some output
+  priority: INFO
+  source: syscall
+  append: true
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Rule has been re-defined with a different source"));
+}
+
+TEST_F(test_falco_engine, selective_replace_across_sources) {
+	auto rules_content = R"END(
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: ka.verb = GET
+  output: some output
+  priority: INFO
+  source: k8s_audit
+
+- rule: LD_PRELOAD trick
+  condition: 1 = 2
+  override:
+    condition: replace
+  source: syscall
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Rule has been re-defined with a different source"));
+}
+
+TEST_F(test_falco_engine, empty_source_addl_rule) {
+	auto rules_content = R"END(
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: evt.type=execve
+  output: some output
+  priority: INFO
+  source: syscall
+
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: and proc.name=apache
+  output: Some output
+  priority: INFO
+  source:
+  append: true
+)END";
+
+	EXPECT_TRUE(load_rules(rules_content, "rules.yaml"));
+}
+
+TEST_F(test_falco_engine, empty_string_source_addl_rule) {
+	auto rules_content = R"END(
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: evt.type=execve
+  output: some output
+  priority: INFO
+  source: syscall
+
+- rule: LD_PRELOAD trick
+  desc: Some desc
+  condition: and proc.name=apache
+  output: Some output
+  priority: INFO
+  source: ""
+  append: true
+)END";
+
+	EXPECT_TRUE(load_rules(rules_content, "rules.yaml"));
+}
