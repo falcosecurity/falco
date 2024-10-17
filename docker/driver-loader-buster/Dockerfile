@@ -3,7 +3,7 @@ FROM debian:buster
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
 
-LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc --name NAME IMAGE"
+LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc falcosecurity/falco-driver-loader:latest-buster"
 
 ARG TARGETARCH
 
@@ -123,7 +123,12 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 	&& curl -L -o binutils-common_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-common_2.30-22_${TARGETARCH}.deb \
 	&& dpkg -i *binutils*.deb \
 	&& rm -f *binutils*.deb
+	
+# Install latest falcoctl
+RUN curl -L -o falcoct.tar.gz $(curl -s "https://api.github.com/repos/falcosecurity/falcoctl/releases/latest" | jq -r '.assets[] | select(.name|test(".linux_$TARGETARCH.tar.gz")) | .browser_download_url') && tar -xvf falcoctl.tar.gz && mv falcoctl /usr/bin
 
 COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["/usr/bin/falco"]
