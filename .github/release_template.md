@@ -10,12 +10,11 @@
 | deb-aarch64      | [![deb](https://img.shields.io/badge/Falco-FALCOVER-%2300aec7?style=flat-square)](https://download.falco.org/packages/debFALCOBUCKET/stable/falco-FALCOVER-aarch64.deb) |
 | tgz-aarch64      | [![tgz](https://img.shields.io/badge/Falco-FALCOVER-%2300aec7?style=flat-square)](https://download.falco.org/packages/binFALCOBUCKET/aarch64/falco-FALCOVER-aarch64.tar.gz) |
 
-| Images                                                                      |
-| --------------------------------------------------------------------------- |
-| `docker pull docker.io/falcosecurity/falco:FALCOVER`                           |
-| `docker pull public.ecr.aws/falcosecurity/falco:FALCOVER`                      |
-| `docker pull docker.io/falcosecurity/falco-driver-loader:FALCOVER`             |
-| `docker pull docker.io/falcosecurity/falco-driver-loader-legacy:FALCOVER`      |
-| `docker pull docker.io/falcosecurity/falco-no-driver:FALCOVER`                 |
-| `docker pull docker.io/falcosecurity/falco-distroless:FALCOVER`                |
+| Images                                                                    |
+|---------------------------------------------------------------------------|
+| `docker pull docker.io/falcosecurity/falco:FALCOVER`                      |
+| `docker pull public.ecr.aws/falcosecurity/falco:FALCOVER`                 |
+| `docker pull docker.io/falcosecurity/falco-driver-loader:FALCOVER`        |
+| `docker pull docker.io/falcosecurity/falco-driver-loader:FALCOVER-buster` |
+| `docker pull docker.io/falcosecurity/falco:FALCOVER-debian`               |
 
