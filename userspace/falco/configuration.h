@@ -155,6 +155,7 @@ public:
 	bool m_time_format_iso_8601;
 	bool m_buffer_format_base64;
 	uint32_t m_output_timeout;
+	bool m_suggested_formats;
 
 	bool m_grpc_enabled;
 	uint32_t m_grpc_threadiness;

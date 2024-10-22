@@ -18,9 +18,22 @@ limitations under the License.
 #include "actions.h"
 #include <libsinsp/plugin_manager.h>
 #include <falco_common.h>
+#include <algorithm>
 
 using namespace falco::app;
 using namespace falco::app::actions;
+
+static inline std::string format_suggested_field(const filter_check_info* info) {
+	std::ostringstream out;
+
+	// Replace "foo.bar" with "foo_bar"
+	auto name = info->m_name;
+	std::replace(name.begin(), name.end(), '.', '_');
+
+	// foo_bar=%foo.bar
+	out << name << "=%" << info->m_name;
+	return out.str();
+}
 
 void configure_output_format(falco::app::state& s) {
 	for(auto& eo : s.config->m_append_output) {
@@ -42,6 +55,25 @@ void configure_output_format(falco::app::state& s) {
 
 		for(auto const& rf : eo.m_raw_fields) {
 			s.engine->add_extra_output_raw_field(rf, eo.m_source, eo.m_tags, eo.m_rule);
+		}
+	}
+
+	// Add suggested filtercheck formats to each source output
+	if(s.config->m_suggested_formats) {
+		for(auto& src : s.loaded_sources) {
+			auto src_info = s.source_infos.at(src);
+			auto& filterchecks = *src_info->filterchecks;
+			std::vector<const filter_check_info*> fields;
+			filterchecks.get_all_fields(fields);
+			for(const auto& fld : fields) {
+				if(fld->m_flags & EPF_FORMAT_SUGGESTED) {
+					s.engine->add_extra_output_format(format_suggested_field(fld),
+					                                  src,
+					                                  {},
+					                                  "",
+					                                  false);
+				}
+			}
 		}
 	}
 
