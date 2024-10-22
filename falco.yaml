@@ -571,6 +571,12 @@ buffered_outputs: false
 # deploying it in production.
 rule_matching: first
 
+# [Incubating] `suggested_formats`
+#
+# When enabled, Falco will honor requests by extractor plugins
+# that suggest certain fields to be part of outputs.
+suggested_formats: true
+
 # [Stable] `outputs_queue`
 #
 # Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
