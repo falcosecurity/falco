@@ -72,6 +72,7 @@ falco_configuration::falco_configuration():
         m_rule_matching(falco_common::rule_matching::FIRST),
         m_watch_config_files(true),
         m_buffered_outputs(false),
+        m_suggested_formats(true),
         m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE),
         m_time_format_iso_8601(false),
         m_buffer_format_base64(false),
@@ -483,6 +484,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 
 	m_buffered_outputs = m_config.get_scalar<bool>("buffered_outputs", false);
+	m_suggested_formats = m_config.get_scalar<bool>("suggested_formats", true);
 	m_outputs_queue_capacity =
 	        m_config.get_scalar<size_t>("outputs_queue.capacity",
 	                                    DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE);
