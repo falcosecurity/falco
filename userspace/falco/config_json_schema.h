@@ -104,6 +104,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "buffered_outputs": {
                     "type": "boolean"
                 },
+                "suggested_formats": {
+                    "type": "boolean"
+                },
                 "rule_matching": {
                     "type": "string"
                 },
