@@ -100,6 +100,7 @@ public:
 		std::set<std::string> m_tags;
 		std::string m_rule;
 		std::string m_format;
+		bool m_suggested_output = false;
 		std::unordered_map<std::string, std::string> m_formatted_fields;
 		std::set<std::string> m_raw_fields;
 	};
@@ -155,7 +156,6 @@ public:
 	bool m_time_format_iso_8601;
 	bool m_buffer_format_base64;
 	uint32_t m_output_timeout;
-	bool m_suggested_formats;
 
 	bool m_grpc_enabled;
 	uint32_t m_grpc_threadiness;
@@ -289,6 +289,10 @@ struct convert<falco_configuration::append_output_config> {
 					return false;
 				}
 			}
+		}
+
+		if(node["suggested_output"]) {
+			rhs.m_suggested_output = node["suggested_output"].as<bool>();
 		}
 
 		return true;

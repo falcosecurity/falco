@@ -35,6 +35,27 @@ static inline std::string format_suggested_field(const filter_check_info* info) 
 	return out.str();
 }
 
+static void add_suggested_output(const falco::app::state& s,
+                                 const std::string& src,
+                                 const falco_configuration::append_output_config& eo) {
+	auto src_info = s.source_infos.at(src);
+	if(!src_info) {
+		return;
+	}
+	auto& filterchecks = *src_info->filterchecks;
+	std::vector<const filter_check_info*> fields;
+	filterchecks.get_all_fields(fields);
+	for(const auto& fld : fields) {
+		if(fld->m_fields->is_format_suggested()) {
+			s.engine->add_extra_output_format(format_suggested_field(fld),
+			                                  src,
+			                                  eo.m_tags,
+			                                  eo.m_rule,
+			                                  false);
+		}
+	}
+}
+
 void configure_output_format(falco::app::state& s) {
 	for(auto& eo : s.config->m_append_output) {
 		if(eo.m_format != "") {
@@ -43,6 +64,17 @@ void configure_output_format(falco::app::state& s) {
 			                                  eo.m_tags,
 			                                  eo.m_rule,
 			                                  false);
+		}
+
+		// Add suggested filtercheck formats to each source output
+		if(eo.m_suggested_output) {
+			if(eo.m_source.empty()) {
+				for(auto& src : s.loaded_sources) {
+					add_suggested_output(s, src, eo);
+				}
+			} else {
+				add_suggested_output(s, eo.m_source, eo);
+			}
 		}
 
 		for(auto const& ff : eo.m_formatted_fields) {
@@ -55,25 +87,6 @@ void configure_output_format(falco::app::state& s) {
 
 		for(auto const& rf : eo.m_raw_fields) {
 			s.engine->add_extra_output_raw_field(rf, eo.m_source, eo.m_tags, eo.m_rule);
-		}
-	}
-
-	// Add suggested filtercheck formats to each source output
-	if(s.config->m_suggested_formats) {
-		for(auto& src : s.loaded_sources) {
-			auto src_info = s.source_infos.at(src);
-			auto& filterchecks = *src_info->filterchecks;
-			std::vector<const filter_check_info*> fields;
-			filterchecks.get_all_fields(fields);
-			for(const auto& fld : fields) {
-				if(fld->m_flags & EPF_FORMAT_SUGGESTED) {
-					s.engine->add_extra_output_format(format_suggested_field(fld),
-					                                  src,
-					                                  {},
-					                                  "",
-					                                  false);
-				}
-			}
 		}
 	}
 
