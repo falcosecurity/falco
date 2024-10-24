@@ -273,6 +273,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                             }
                         ]
                     }
+                },
+                "suggested_output": {
+                    "type": "boolean"
                 }
             }
         },
