@@ -12,6 +12,17 @@ metadata:
     {{- if and .Values.certs (not .Values.certs.existingSecret) }}
     checksum/certs: {{ include (print $.Template.BasePath "/certs-secret.yaml") . | sha256sum }}
     {{- end }}
+    {{- if .Values.driver.enabled }}
+    {{- if (or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf")) }}
+    {{- if .Values.driver.modernEbpf.leastPrivileged }}
+    container.apparmor.security.beta.kubernetes.io/{{ .Chart.Name }}: unconfined
+    {{- end }}
+    {{- else if eq .Values.driver.kind "ebpf" }}
+    {{- if .Values.driver.ebpf.leastPrivileged }}
+    container.apparmor.security.beta.kubernetes.io/{{ .Chart.Name }}: unconfined
+    {{- end }}
+    {{- end }}
+    {{- end }}
     {{- with .Values.podAnnotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
