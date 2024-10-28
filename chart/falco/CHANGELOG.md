@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.12.0
+
+* Set apparmor to `unconfined` (disabled) when `leastPrivileged: true` and (`kind: modern_ebpf` or `kind: ebpf`)
+
 ## v4.11.2
 
 * only prints env key if there are env values to be passed on `falcoctl.initContainer` and `falcoctl.sidecar`
