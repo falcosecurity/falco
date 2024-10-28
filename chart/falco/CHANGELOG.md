@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.11.2
+
+* only prints env key if there are env values to be passed on `falcoctl.initContainer` and `falcoctl.sidecar`
+
 ## v4.11.1
 
 * add details for the scap drops buffer charts with the dir  and drops labels

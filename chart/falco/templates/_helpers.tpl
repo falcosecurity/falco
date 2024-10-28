@@ -280,8 +280,8 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       {{- with .Values.falcoctl.artifact.install.mounts.volumeMounts }}
         {{- toYaml . | nindent 4 }}
       {{- end }}
-  env:
   {{- if .Values.falcoctl.artifact.install.env }}
+  env:
   {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.install.env "context" $) | nindent 4 }}
   {{- end }}
 {{- end -}}
@@ -314,8 +314,8 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       {{- with .Values.falcoctl.artifact.follow.mounts.volumeMounts }}
         {{- toYaml . | nindent 4 }}
       {{- end }}
-  env:
   {{- if .Values.falcoctl.artifact.follow.env }}
+  env:
   {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.follow.env "context" $) | nindent 4 }}
   {{- end }}
 {{- end -}}
