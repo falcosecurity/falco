@@ -25,9 +25,6 @@ RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& if [ "$FALCO_VERSION" = "latest" ]; then FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco; else FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
-	
-# Falcoctl is not included here.
-RUN rm -rf /usr/bin/falcoctl /etc/falcoctl/
 
 RUN sed -i -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' /etc/falco/falco.yaml
 
