@@ -13,7 +13,7 @@ services:
       - /proc:/host/proc:ro
       - /etc:/host/etc:ro
       - ./config/http_output.yml:/etc/falco/config.d/http_output.yml
-    image: falcosecurity/falco-no-driver:latest
+    image: falcosecurity/falco:latest
 
   sidekick:
     container_name: falco-sidekick
