@@ -19,8 +19,8 @@ if(USE_BUNDLED_YAMLCPP)
 	include(FetchContent)
 	FetchContent_Declare(
 		yamlcpp
-		URL https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz
-		URL_HASH SHA256=fbe74bbdcee21d656715688706da3c8becfd946d92cd44705cc6098bb23b3a16
+		URL https://github.com/jbeder/yaml-cpp/archive/c2bec4c755c67ad86185a2a264996137904fb712.tar.gz
+		URL_HASH SHA256=faea1ffdbad81b958b3b45a63ba667f4db53a3fffb983ca5df4745cf90044797
 	)
 	FetchContent_MakeAvailable(yamlcpp)
 else()
