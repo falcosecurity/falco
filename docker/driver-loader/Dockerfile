@@ -35,9 +35,6 @@ RUN apt-get update \
 	xz-utils \
 	zstd \
 	&& rm -rf /var/lib/apt/lists/*
-	
-# Install latest falcoctl
-RUN curl -L -o falcoct.tar.gz $(curl -s "https://api.github.com/repos/falcosecurity/falcoctl/releases/latest" | jq -r '.assets[] | select(.name|test(".linux_$TARGETARCH.tar.gz")) | .browser_download_url') && tar -xvf falcoctl.tar.gz && mv falcoctl /usr/bin
 
 # Some base images have an empty /lib/modules by default
 # If it's not empty, docker build will fail instead of

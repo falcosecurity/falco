@@ -49,7 +49,7 @@ jobs:
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
-            docker save docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-${{ inputs.arch }}.tar
+            docker save docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-${{ inputs.arch }}.tar
 
       - name: Build falco-debian image
         run: |
