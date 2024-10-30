@@ -3,7 +3,7 @@ FROM debian:buster
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
 
-LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc falcosecurity/falco-driver-loader:latest-buster"
+LABEL usage="docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader:latest-buster [driver] [options]"
 
 ARG TARGETARCH
 
@@ -41,8 +41,8 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN if [ "$TARGETARCH" = "amd64" ]; \
-    then apt-get install -y --no-install-recommends libmpx2; \
-    fi
+	then apt-get install -y --no-install-recommends libmpx2; \
+	fi
 
 # gcc 6 is no longer included in debian stable, but we need it to
 # build kernel modules on the default debian-based ami used by
@@ -51,7 +51,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; \
 # or so.
 
 RUN if [ "$TARGETARCH" = "amd64" ]; then curl -L -o libcilkrts5_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/libcilkrts5_6.3.0-18_${TARGETARCH}.deb; fi; \
-    curl -L -o cpp-6_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/cpp-6_6.3.0-18_${TARGETARCH}.deb \
+	curl -L -o cpp-6_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/cpp-6_6.3.0-18_${TARGETARCH}.deb \
 	&& curl -L -o gcc-6-base_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/gcc-6-base_6.3.0-18_${TARGETARCH}.deb \
 	&& curl -L -o gcc-6_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/gcc-6_6.3.0-18_${TARGETARCH}.deb \
 	&& curl -L -o libasan3_6.3.0-18_${TARGETARCH}.deb https://download.falco.org/dependencies/libasan3_6.3.0-18_${TARGETARCH}.deb \
@@ -60,8 +60,8 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then curl -L -o libcilkrts5_6.3.0-18_${TARGE
 	&& curl -L -o libmpfr4_3.1.3-2_${TARGETARCH}.deb https://download.falco.org/dependencies/libmpfr4_3.1.3-2_${TARGETARCH}.deb \
 	&& curl -L -o libisl15_0.18-1_${TARGETARCH}.deb https://download.falco.org/dependencies/libisl15_0.18-1_${TARGETARCH}.deb \
 	&& dpkg -i cpp-6_6.3.0-18_${TARGETARCH}.deb gcc-6-base_6.3.0-18_${TARGETARCH}.deb gcc-6_6.3.0-18_${TARGETARCH}.deb libasan3_6.3.0-18_${TARGETARCH}.deb; \
-    if [ "$TARGETARCH" = "amd64" ]; then dpkg -i libcilkrts5_6.3.0-18_${TARGETARCH}.deb; fi; \
-    dpkg -i libgcc-6-dev_6.3.0-18_${TARGETARCH}.deb libubsan0_6.3.0-18_${TARGETARCH}.deb libmpfr4_3.1.3-2_${TARGETARCH}.deb libisl15_0.18-1_${TARGETARCH}.deb \
+	if [ "$TARGETARCH" = "amd64" ]; then dpkg -i libcilkrts5_6.3.0-18_${TARGETARCH}.deb; fi; \
+	dpkg -i libgcc-6-dev_6.3.0-18_${TARGETARCH}.deb libubsan0_6.3.0-18_${TARGETARCH}.deb libmpfr4_3.1.3-2_${TARGETARCH}.deb libisl15_0.18-1_${TARGETARCH}.deb \
 	&& rm -f cpp-6_6.3.0-18_${TARGETARCH}.deb gcc-6-base_6.3.0-18_${TARGETARCH}.deb gcc-6_6.3.0-18_${TARGETARCH}.deb libasan3_6.3.0-18_${TARGETARCH}.deb libcilkrts5_6.3.0-18_${TARGETARCH}.deb libgcc-6-dev_6.3.0-18_${TARGETARCH}.deb libubsan0_6.3.0-18_${TARGETARCH}.deb libmpfr4_3.1.3-2_${TARGETARCH}.deb libisl15_0.18-1_${TARGETARCH}.deb
 
 # gcc 5 is no longer included in debian stable, but we need it to
@@ -70,15 +70,15 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then curl -L -o libcilkrts5_6.3.0-18_${TARGE
 # snapshots with the prefix https://snapshot.debian.org/archive/debian/20190122T000000Z.
 
 RUN if [ "$TARGETARCH" = "amd64" ]; then curl -L -o libmpx0_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/libmpx0_5.5.0-12_${TARGETARCH}.deb; fi; \
-    curl -L -o cpp-5_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/cpp-5_5.5.0-12_${TARGETARCH}.deb \
+	curl -L -o cpp-5_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/cpp-5_5.5.0-12_${TARGETARCH}.deb \
 	&& curl -L -o gcc-5-base_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/gcc-5-base_5.5.0-12_${TARGETARCH}.deb \
 	&& curl -L -o gcc-5_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/gcc-5_5.5.0-12_${TARGETARCH}.deb \
 	&& curl -L -o libasan2_5.5.0-12_${TARGETARCH}.deb	https://download.falco.org/dependencies/libasan2_5.5.0-12_${TARGETARCH}.deb \
 	&& curl -L -o libgcc-5-dev_5.5.0-12_${TARGETARCH}.deb https://download.falco.org/dependencies/libgcc-5-dev_5.5.0-12_${TARGETARCH}.deb \
 	&& curl -L -o libisl15_0.18-4_${TARGETARCH}.deb https://download.falco.org/dependencies/libisl15_0.18-4_${TARGETARCH}.deb \
 	&& dpkg -i cpp-5_5.5.0-12_${TARGETARCH}.deb gcc-5-base_5.5.0-12_${TARGETARCH}.deb gcc-5_5.5.0-12_${TARGETARCH}.deb libasan2_5.5.0-12_${TARGETARCH}.deb; \
-    if [ "$TARGETARCH" = "amd64" ]; then dpkg -i libmpx0_5.5.0-12_${TARGETARCH}.deb; fi; \
-    dpkg -i libgcc-5-dev_5.5.0-12_${TARGETARCH}.deb libisl15_0.18-4_${TARGETARCH}.deb \
+	if [ "$TARGETARCH" = "amd64" ]; then dpkg -i libmpx0_5.5.0-12_${TARGETARCH}.deb; fi; \
+	dpkg -i libgcc-5-dev_5.5.0-12_${TARGETARCH}.deb libisl15_0.18-4_${TARGETARCH}.deb \
 	&& rm -f cpp-5_5.5.0-12_${TARGETARCH}.deb gcc-5-base_5.5.0-12_${TARGETARCH}.deb gcc-5_5.5.0-12_${TARGETARCH}.deb libasan2_5.5.0-12_${TARGETARCH}.deb libgcc-5-dev_5.5.0-12_${TARGETARCH}.deb libisl15_0.18-4_${TARGETARCH}.deb libmpx0_5.5.0-12_${TARGETARCH}.deb
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
@@ -113,10 +113,10 @@ RUN rm -df /lib/modules \
 # forcibly install binutils 2.30-22 instead.
 
 RUN if [ "$TARGETARCH" = "amd64" ] ; then \
-    curl -L -o binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
-    else  \
-    curl -L -o  binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
-    fi
+	curl -L -o binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
+	else  \
+	curl -L -o  binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
+	fi
 
 RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils_2.30-22_${TARGETARCH}.deb \
 	&& curl -L -o libbinutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/libbinutils_2.30-22_${TARGETARCH}.deb \
@@ -127,5 +127,3 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["/usr/bin/falco"]
