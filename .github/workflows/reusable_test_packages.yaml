@@ -27,7 +27,7 @@ permissions:
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'oracle-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
     steps:
       - name: Download binary
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
