@@ -3,7 +3,7 @@ FROM debian:12-slim
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco/docker/falco-debian"
 
-LABEL usage="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro falcosecurity/falco:latest-debian"
+LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /proc:/host/proc:ro -v /etc:/host/etc:ro falcosecurity/falco:latest-debian"
 
 ARG FALCO_VERSION
 ARG VERSION_BUCKET=deb
@@ -15,7 +15,7 @@ ENV HOST_ROOT /host
 ENV HOME /root
 
 RUN apt-get -y update && apt-get -y install ca-certificates curl jq libelf1 ca-certificates gnupg2 \
-    && apt clean -y && rm -rf /var/lib/apt/lists/*
+	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
