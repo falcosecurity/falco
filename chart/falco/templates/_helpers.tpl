@@ -361,7 +361,7 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
 {{- if not $hasConfig -}}
 {{- $listenPort := default (index .Values "k8s-metacollector" "service" "ports" "broker-grpc" "port") .Values.collectors.kubernetes.collectorPort -}}
 {{- $listenPort = int $listenPort -}}
-{{- $pluginConfig := dict "name" "k8smeta" "library_path" "libk8smeta.so" "init_config" (dict "collectorHostname" $hostname "collectorPort" $listenPort "nodeName" "${FALCO_K8S_NODE_NAME}") -}}
+{{- $pluginConfig := dict "name" "k8smeta" "library_path" "libk8smeta.so" "init_config" (dict "collectorHostname" $hostname "collectorPort" $listenPort "nodeName" "${FALCO_K8S_NODE_NAME}" "verbosity" .Values.collectors.kubernetes.verbosity "hostProc" .Values.collectors.kubernetes.hostProc) -}}
 {{- $newConfig := append .Values.falco.plugins $pluginConfig -}}
 {{- $_ := set .Values.falco "plugins" ($newConfig | uniq) -}}
 {{- $loadedPlugins := append .Values.falco.load_plugins "k8smeta" -}}

@@ -23,10 +23,11 @@ import (
 	"strings"
 	"testing"
 
+	"slices"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	"slices"
 )
 
 const chartPath = "../../"
@@ -114,6 +115,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -124,7 +126,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
-
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
 				require.Equal(t, "libk8smeta.so", libPath)
@@ -140,6 +147,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -150,6 +158,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.test.svc", releaseName), hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -166,6 +180,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -176,6 +191,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, "collector.default.svc", hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -194,6 +215,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -204,6 +226,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, "collector.test.svc", hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -220,6 +248,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -230,6 +259,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, "test", hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -249,6 +284,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
 				initConfigMap := initConfig.(map[string]interface{})
 				// Check that the collector port is correctly set.
 				port := initConfigMap["collectorPort"]
@@ -259,6 +295,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, "test-with-override", hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -286,6 +328,12 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
 				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "info", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host", hostProc.(string))
 
 				// Check that the library path is set.
 				libPath := plugin["library_path"]
@@ -293,7 +341,40 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			},
 		},
 		{
-			"drive disabled",
+			"set collector logger level and hostProc",
+			map[string]string{
+				"collectors.kubernetes.verbosity": "trace",
+				"collectors.kubernetes.hostProc":  "/host/test",
+			},
+			func(t *testing.T, config any) {
+				plugin := config.(map[string]interface{})
+				// Get init config.
+				initConfig, ok := plugin["init_config"]
+				require.True(t, ok)
+				require.Len(t, initConfig, 5, "checking number of config entries in the init section")
+				initConfigMap := initConfig.(map[string]interface{})
+				// Check that the collector port is correctly set.
+				port := initConfigMap["collectorPort"]
+				require.Equal(t, float64(45000), port.(float64))
+				// Check that the collector nodeName is correctly set.
+				nodeName := initConfigMap["nodeName"]
+				require.Equal(t, "${FALCO_K8S_NODE_NAME}", nodeName.(string))
+				// Check that the collector hostname is correctly set.
+				hostName := initConfigMap["collectorHostname"]
+				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
+				// Check that the loglevel has been set.
+				verbosity := initConfigMap["verbosity"]
+				require.Equal(t, "trace", verbosity.(string))
+				// Check that host proc fs has been set.
+				hostProc := initConfigMap["hostProc"]
+				require.Equal(t, "/host/test", hostProc.(string))
+				// Check that the library path is set.
+				libPath := plugin["library_path"]
+				require.Equal(t, "libk8smeta.so", libPath)
+			},
+		},
+		{
+			"driver disabled",
 			map[string]string{
 				"driver.enabled": "false",
 			},
