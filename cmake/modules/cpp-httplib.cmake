@@ -16,6 +16,8 @@
 option(USE_BUNDLED_CPPHTTPLIB "Enable building of the bundled cpp-httplib" ${USE_BUNDLED_DEPS})
 
 if(USE_BUNDLED_CPPHTTPLIB)
+	set(HTTPLIB_USE_BROTLI_IF_AVAILABLE OFF)
+	set(HTTPLIB_REQUIRE_BROTLI OFF)
 	include(FetchContent)
 	FetchContent_Declare(
 		cpp-httplib
