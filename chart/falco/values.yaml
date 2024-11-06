@@ -402,6 +402,13 @@ collectors:
     # the value of the port named `broker-grpc` in k8s-metacollector.service.ports is used. The default values is 45000.
     # It is used by the k8smeta plugin to connect to the k8s-metacollector.
     collectorPort: ""
+    # verbosity level for the plugin logger: trace, debug, info, warning, error, critical.
+    verbosity: info
+    # The plugin needs to scan the '/proc' of the host on which is running.
+    # In Falco usually we put the host '/proc' folder under '/host/proc' so
+    # the default for this config is '/host'.
+    # The path used here must not have a final '/'.
+    hostProc: /host
 
 
 ###########################
