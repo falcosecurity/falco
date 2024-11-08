@@ -581,7 +581,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v4.13.0 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v4.14.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -602,11 +602,11 @@ The following table lists the main configurable parameters of the falco chart v4
 | collectors.docker.enabled | bool | `true` | Enable Docker support. |
 | collectors.docker.socket | string | `"/var/run/docker.sock"` | The path of the Docker daemon socket. |
 | collectors.enabled | bool | `true` | Enable/disable all the metadata collectors. |
-| collectors.kubernetes | object | `{"collectorHostname":"","collectorPort":"","enabled":false,"hostProc":"/host","pluginRef":"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.0","verbosity":"info"}` | kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973 |
+| collectors.kubernetes | object | `{"collectorHostname":"","collectorPort":"","enabled":false,"hostProc":"/host","pluginRef":"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.1","verbosity":"info"}` | kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973 |
 | collectors.kubernetes.collectorHostname | string | `""` | collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override it, make sure to set here the address of the k8s-metacollector. It is used by the k8smeta plugin to connect to the k8s-metacollector. |
 | collectors.kubernetes.collectorPort | string | `""` | collectorPort designates the port on which the k8s-metacollector gRPC service listens. If not specified the value of the port named `broker-grpc` in k8s-metacollector.service.ports is used. The default values is 45000. It is used by the k8smeta plugin to connect to the k8s-metacollector. |
 | collectors.kubernetes.enabled | bool | `false` | enabled specifies whether the Kubernetes metadata should be collected using the k8smeta plugin and the k8s-metacollector component. It will deploy the k8s-metacollector external component that fetches Kubernetes metadata and pushes them to Falco instances. For more info see: https://github.com/falcosecurity/k8s-metacollector https://github.com/falcosecurity/charts/tree/master/charts/k8s-metacollector When this option is disabled, Falco falls back to the container annotations to grab the metadata. In such a case, only the ID, name, namespace, labels of the pod will be available. |
-| collectors.kubernetes.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.0"` | pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0. |
+| collectors.kubernetes.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.1"` | pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0. |
 | containerSecurityContext | object | `{}` | Set securityContext for the Falco container.For more info see the "falco.securityContext" helper in "pod-template.tpl" |
 | controller.annotations | object | `{}` |  |
 | controller.daemonset.updateStrategy.type | string | `"RollingUpdate"` | Perform rolling updates by default in the DaemonSet agent ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/ |
