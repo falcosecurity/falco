@@ -2,6 +2,9 @@
 
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
+## v4.14.1
+* fix(falco/dashboard): make pod variable independent of triggered rules. CPU and memory are now visible for each 
+  pod, even when no rules have been triggered for that falco instance.
 
 ## v4.14.0
 * Bump k8smeta plugin to 0.2.1, see: https://github.com/falcosecurity/plugins/releases/tag/plugins%2Fk8smeta%2Fv0.2.1
