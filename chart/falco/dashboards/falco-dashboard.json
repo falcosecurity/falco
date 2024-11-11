@@ -2516,14 +2516,14 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(falcosecurity_falco_rules_matches_total,namespace)",
+        "definition": "label_values(falcosecurity_falco_cpu_usage_ratio,namespace)",
         "includeAll": true,
         "multi": true,
         "name": "namespace",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(falcosecurity_falco_rules_matches_total,namespace)",
+          "query": "label_values(falcosecurity_falco_cpu_usage_ratio,namespace)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -2543,7 +2543,35 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\"},source)",
+        "definition": "label_values(falcosecurity_falco_cpu_usage_ratio{namespace=~\"$namespace\"},pod)",
+        "includeAll": true,
+        "multi": true,
+        "name": "pod",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(falcosecurity_falco_cpu_usage_ratio{namespace=~\"$namespace\"},pod)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\", pod=~\"$pod\"},source)",
         "includeAll": true,
         "label": "source",
         "multi": true,
@@ -2551,12 +2579,12 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\"},source)",
+          "query": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\", pod=~\"$pod\"},source)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
         "regex": "",
-        "sort": 1,
+        "sort": 4,
         "type": "query"
       },
       {
@@ -2587,33 +2615,6 @@
         "regex": "",
         "sort": 4,
         "type": "query"
-      },
-      {
-        "current": {
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\", source=~\"$source\"},pod)",
-        "includeAll": true,
-        "multi": true,
-        "name": "pod",
-        "options": [],
-        "query": {
-          "qryType": 1,
-          "query": "label_values(falcosecurity_falco_rules_matches_total{namespace=~\"$namespace\", source=~\"$source\"},pod)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "type": "query"
       }
     ]
   },
@@ -2625,6 +2626,6 @@
   "timezone": "browser",
   "title": "Falco",
   "uid": "ddwe2ug4nfi0wb",
-  "version": 45,
+  "version": 46,
   "weekStart": ""
 }
