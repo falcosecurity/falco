@@ -383,7 +383,7 @@ services:
         protocol: TCP
 
 falco:
-  rules_file:
+  rules_files:
     - /etc/falco/k8s_audit_rules.yaml
     - /etc/falco/rules.d
   plugins:
