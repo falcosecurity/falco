@@ -3,11 +3,17 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.14.2
+
+* fix(falco/readme): use `rules_files` instead of deprecated `rules_file` in README config snippet
+
 ## v4.14.1
+
 * fix(falco/dashboard): make pod variable independent of triggered rules. CPU and memory are now visible for each 
   pod, even when no rules have been triggered for that falco instance.
 
 ## v4.14.0
+
 * Bump k8smeta plugin to 0.2.1, see: https://github.com/falcosecurity/plugins/releases/tag/plugins%2Fk8smeta%2Fv0.2.1
 
 ## v4.13.0
@@ -31,6 +37,7 @@ numbering uses [semantic versioning](http://semver.org).
 * new(falco): add grafana dashboard for falco
 
 ## v4.10.0
+
 * Bump Falco to v0.39.1
 
 ## v4.9.1
@@ -38,6 +45,7 @@ numbering uses [semantic versioning](http://semver.org).
 * feat(falco): add labels and annotations to the metrics service
 
 ## v4.9.0
+
 * Bump Falco to v0.39.0
 * update(falco): add new configuration entries for Falco
   This commit adds new config keys introduces in Falco 0.39.0.
