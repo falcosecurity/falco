@@ -23,6 +23,10 @@ limitations under the License.
 
 #include <libsinsp/sinsp.h>
 
+#ifdef HAS_JEMALLOC
+#include <jemalloc.h>
+#endif
+
 namespace fs = std::filesystem;
 
 /*!
@@ -249,6 +253,38 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 				}
 			}
 		}
+#ifdef HAS_JEMALLOC
+		if(state.config->m_metrics_flags & METRICS_V2_JEMALLOC_STATS) {
+			nlohmann::json j;
+			malloc_stats_print(
+			        [](void* to, const char* from) {
+				        nlohmann::json* j = (nlohmann::json*)to;
+				        *j = nlohmann::json::parse(from);
+			        },
+			        &j,
+			        "Jmdablxeg");
+			const auto& j_stats = j["jemalloc"]["stats"];
+			for(auto it = j_stats.begin(); it != j_stats.end(); ++it) {
+				if(it.value().is_number_unsigned()) {
+					std::uint64_t val = it.value().template get<std::uint64_t>();
+					std::string key = "jemalloc." + it.key();
+					auto metric = libs::metrics::libsinsp_metrics::new_metric(
+					        key.c_str(),
+					        METRICS_V2_JEMALLOC_STATS,
+					        METRIC_VALUE_TYPE_U64,
+					        METRIC_VALUE_UNIT_MEMORY_BYTES,
+					        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+					        val);
+					prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+					prometheus_text +=
+					        prometheus_metrics_converter.convert_metric_to_text_prometheus(
+					                metric,
+					                "falcosecurity",
+					                "falco");
+				}
+			}
+		}
+#endif
 	}
 
 	// Libs metrics categories
