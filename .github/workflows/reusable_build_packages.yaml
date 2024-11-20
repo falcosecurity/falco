@@ -84,6 +84,7 @@ jobs:
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
               -DUSE_ASAN=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'ON') || 'OFF' }} \
+              -DUSE_JEMALLOC=On \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
