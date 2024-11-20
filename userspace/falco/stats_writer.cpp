@@ -32,6 +32,10 @@ limitations under the License.
 #include <libscap/strl.h>
 #include <libscap/scap_vtable.h>
 
+#ifdef HAS_JEMALLOC
+#include <jemalloc.h>
+#endif
+
 namespace fs = std::filesystem;
 
 // note: ticker_t is an uint16_t, which is enough because we don't care about
@@ -433,6 +437,43 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			output_fields[rules_metric_name] = rule_count;
 		}
 	}
+
+#ifdef HAS_JEMALLOC
+	if(m_writer->m_config->m_metrics_flags & METRICS_V2_JEMALLOC_STATS) {
+		nlohmann::json j;
+		malloc_stats_print(
+		        [](void* to, const char* from) {
+			        nlohmann::json* j = (nlohmann::json*)to;
+			        *j = nlohmann::json::parse(from);
+		        },
+		        &j,
+		        "Jmdablxeg");
+		const auto& j_stats = j["jemalloc"]["stats"];
+		for(auto it = j_stats.begin(); it != j_stats.end(); ++it) {
+			if(it.value().is_number_unsigned()) {
+				std::uint64_t val = it.value().template get<std::uint64_t>();
+				if(m_writer->m_config->m_metrics_include_empty_values || val != 0) {
+					std::string key = "falco.jemalloc." + it.key() + "_bytes";
+					auto metric = libs::metrics::libsinsp_metrics::new_metric(
+					        key.c_str(),
+					        METRICS_V2_JEMALLOC_STATS,
+					        METRIC_VALUE_TYPE_U64,
+					        METRIC_VALUE_UNIT_MEMORY_BYTES,
+					        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+					        val);
+					if(m_writer->m_config->m_metrics_convert_memory_to_mb &&
+					   m_writer->m_output_rule_metrics_converter) {
+						m_writer->m_output_rule_metrics_converter
+						        ->convert_metric_to_unit_convention(metric);
+						output_fields[metric.name] = metric.value.d;
+					} else {
+						output_fields[metric.name] = metric.value.u64;
+					}
+				}
+			}
+		}
+	}
+#endif
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if(m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter) {

@@ -1136,6 +1136,7 @@ metrics:
   kernel_event_counters_per_cpu_enabled: false
   libbpf_stats_enabled: true
   plugins_metrics_enabled: true
+  jemalloc_stats_enabled: false
   convert_memory_to_mb: true
   include_empty_values: false
 

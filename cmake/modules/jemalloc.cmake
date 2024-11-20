@@ -15,9 +15,10 @@
 
 option(USE_BUNDLED_JEMALLOC "Use bundled jemalloc allocator" ${USE_BUNDLED_DEPS})
 
-if(JEMALLOC_LIB)
+if(JEMALLOC_INCLUDE)
 	# we already have JEMALLOC
 elseif(NOT USE_BUNDLED_JEMALLOC)
+	find_path(JEMALLOC_INCLUDE jemalloc/jemalloc.h)
 	if(BUILD_SHARED_LIBS)
 		set(JEMALLOC_LIB_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 	else()
@@ -37,6 +38,7 @@ else()
 	endif()
 	set(JEMALLOC_SRC "${PROJECT_BINARY_DIR}/jemalloc-prefix/src")
 	set(JEMALLOC_LIB "${JEMALLOC_SRC}/jemalloc/lib/libjemalloc${JEMALLOC_LIB_SUFFIX}")
+	set(JEMALLOC_INCLUDE "${JEMALLOC_SRC}/jemalloc/include/jemalloc")
 	ExternalProject_Add(
 		jemalloc
 		PREFIX "${PROJECT_BINARY_DIR}/jemalloc-prefix"
@@ -49,7 +51,7 @@ else()
 		UPDATE_COMMAND ""
 		BUILD_BYPRODUCTS ${JEMALLOC_LIB}
 	)
-	message(STATUS "Using bundled jemalloc: lib: ${JEMALLOC_LIB}")
+	message(STATUS "Using bundled jemalloc: include: ${JEMALLOC_INCLUDE}, lib: ${JEMALLOC_LIB}")
 	install(
 		FILES "${JEMALLOC_LIB}"
 		DESTINATION "${CMAKE_INSTALL_LIBDIR}/${LIBS_PACKAGE_NAME}"
@@ -62,3 +64,6 @@ endif()
 if(NOT TARGET jemalloc)
 	add_custom_target(jemalloc)
 endif()
+
+include_directories(${JEMALLOC_INCLUDE})
+add_compile_definitions(HAS_JEMALLOC)
