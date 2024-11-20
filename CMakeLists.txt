@@ -29,6 +29,7 @@ option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 option(USE_ASAN "Build with AddressSanitizer" OFF)
 option(USE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
 option(UBSAN_HALT_ON_ERROR "Halt on error when building with UBSan" ON)
+option(USE_JEMALLOC "Use jemalloc allocator" OFF)
 
 if(WIN32)
 	if(POLICY CMP0091)
@@ -140,6 +141,10 @@ endif()
 set(CMD_MAKE make)
 
 include(ExternalProject)
+
+if(USE_JEMALLOC)
+	include(jemalloc)
+endif()
 
 # libs
 include(falcosecurity-libs)
