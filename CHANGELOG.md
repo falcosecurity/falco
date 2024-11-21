@@ -1,5 +1,27 @@
 # Change Log
 
+## v0.39.2
+
+Released on 2024-11-21
+
+### Minor Changes
+
+* update(cmake): bumped falcoctl to v0.10.1. [[#3408](https://github.com/falcosecurity/falco/pull/3408)] - [@FedeDP](https://github.com/FedeDP)
+* update(cmake): bump yaml-cpp to latest master. [[#3394](https://github.com/falcosecurity/falco/pull/3394)] - [@FedeDP](https://github.com/FedeDP)
+
+### Non user-facing changes
+
+* update(ci): use arm64 CNCF runners for GH actions [[#3386](https://github.com/falcosecurity/falco/pull/3386)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      2 |
+| Total           |      3 |
+
+
 ## v0.39.1
 
 Released on 2024-10-09
