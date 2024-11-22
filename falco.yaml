@@ -480,6 +480,10 @@ plugins:
   - name: json
     library_path: libjson.so
 
+# Uncomment to disable host info support for source plugins
+# that DO NOT generate raw events from the libscap event table,
+# dropping the `hostPath` volume requirement for them.
+# plugins_hostinfo: false
 
 ##########################
 # Falco outputs settings #

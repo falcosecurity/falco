@@ -193,6 +193,7 @@ public:
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
 	std::vector<plugin_config> m_plugins;
+	bool m_plugins_hostinfo;
 
 	// container engines
 	uint64_t m_container_engines_mask;

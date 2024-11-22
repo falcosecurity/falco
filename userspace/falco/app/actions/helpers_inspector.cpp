@@ -61,9 +61,15 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 					falco_logger::log(
 					        falco_logger::level::INFO,
 					        "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
-					inspector->open_plugin(cfg->m_name,
-					                       cfg->m_open_params,
-					                       sinsp_plugin_platform::SINSP_PLATFORM_HOSTINFO);
+					if(s.config->m_plugins_hostinfo) {
+						inspector->open_plugin(cfg->m_name,
+						                       cfg->m_open_params,
+						                       sinsp_plugin_platform::SINSP_PLATFORM_HOSTINFO);
+					} else {
+						inspector->open_plugin(cfg->m_name,
+						                       cfg->m_open_params,
+						                       sinsp_plugin_platform::SINSP_PLATFORM_GENERIC);
+					}
 					return run_result::ok();
 				}
 			}
