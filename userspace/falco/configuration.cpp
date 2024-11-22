@@ -96,6 +96,7 @@ falco_configuration::falco_configuration():
         m_metrics_flags(0),
         m_metrics_convert_memory_to_mb(true),
         m_metrics_include_empty_values(false),
+        m_plugins_hostinfo(true),
         m_container_engines_mask(0),
         m_container_engines_disable_cri_async(false),
         m_container_engines_cri_socket_paths({"/run/containerd/containerd.sock",
@@ -615,6 +616,8 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	        m_config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values =
 	        m_config.get_scalar<bool>("metrics.include_empty_values", false);
+
+	m_plugins_hostinfo = m_config.get_scalar<bool>("plugins_hostinfo", true);
 
 	m_config.get_sequence<std::vector<rule_selection_config>>(m_rules_selection, "rules");
 	m_config.get_sequence<std::vector<append_output_config>>(m_append_output, "append_output");

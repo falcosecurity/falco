@@ -44,6 +44,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "watch_config_files": {
                     "type": "boolean"
                 },
+                "plugins_hostinfo": {
+                    "type": "boolean"
+                },
                 "rules_files": {
                     "type": "array",
                     "items": {
