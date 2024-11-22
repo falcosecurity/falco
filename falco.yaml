@@ -1115,6 +1115,8 @@ syscall_event_drops:
 # there will be no metrics available. In other words, there are no default or 
 # generic plugin metrics at this time. This may be subject to change.
 #
+# `jemalloc_stats_enabled`: Falco can now expose jemalloc related stats.
+#
 # If metrics are enabled, the web server can be configured to activate the
 # corresponding Prometheus endpoint using `webserver.prometheus_metrics_enabled`.
 # Prometheus output can be used in combination with the other output options.
