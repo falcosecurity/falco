@@ -75,6 +75,7 @@ jobs:
         uses: falcosecurity/libs/.github/actions/install-zig@master
 
       - name: Prepare project
+        # Jemalloc and ASAN don't play very well together.
         run: |
           cmake -B build -S . \
               -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
@@ -84,7 +85,7 @@ jobs:
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
               -DUSE_ASAN=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'ON') || 'OFF' }} \
-              -DUSE_JEMALLOC=On \
+              -DUSE_JEMALLOC=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'OFF') || 'ON' }} \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
