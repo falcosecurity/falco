@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.15.1
+
+* fix: change the url for the concurrent queue classes docs
+
 ## v4.15.0
 
 * update(falco): bump falco version to 0.39.2 and falcoctl to 0.10.1

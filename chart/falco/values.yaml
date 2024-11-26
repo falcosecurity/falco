@@ -709,7 +709,7 @@ falco:
   #
   # -- Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
   # allows you to customize the queue capacity. Please refer to the official documentation:
-  # https://oneapi-src.github.io/oneTBB/main/tbb_userguide/Concurrent_Queue_Classes.html.
+  # https://uxlfoundation.github.io/oneTBB/main/tbb_userguide/Concurrent_Queue_Classes.html.
   # On a healthy system with optimized Falco rules, the queue should not fill up.
   # If it does, it is most likely happening due to the entire event flow being too slow,
   # indicating that the server is under heavy load.
