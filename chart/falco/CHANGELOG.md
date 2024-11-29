@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.16.0
+
+* bump falcosidekick dependency to v0.9.* to match with future versions
+
 ## v4.15.1
 
 * fix: change the url for the concurrent queue classes docs
