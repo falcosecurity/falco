@@ -68,8 +68,12 @@ set(FALCO_INCLUDE_DIRECTORIES
 )
 
 set(FALCO_DEPENDENCIES cxxopts)
-
 set(FALCO_LIBRARIES falco_engine sinsp yaml-cpp)
+
+if(USE_JEMALLOC)
+	list(APPEND FALCO_DEPENDENCIES jemalloc)
+	list(APPEND FALCO_LIBRARIES ${JEMALLOC_LIB})
+endif()
 
 if(NOT WIN32)
 	target_sources(falco_application PRIVATE outputs_program.cpp outputs_syslog.cpp)
@@ -95,6 +99,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
 
 	list(
 		APPEND
+		FALCO_INCLUDE_DIRECTORIES
 		FALCO_INCLUDE_DIRECTORIES
 		"${OPENSSL_INCLUDE_DIR}"
 		"${GRPC_INCLUDE}"

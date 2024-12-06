@@ -37,6 +37,9 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
+// Falco only metric
+#define METRICS_V2_JEMALLOC_STATS 1 << 31
+
 enum class engine_kind_t : uint8_t { KMOD, EBPF, MODERN_EBPF, REPLAY, GVISOR, NODRIVER };
 
 // Map that holds { config filename | validation status } for each loaded config file.

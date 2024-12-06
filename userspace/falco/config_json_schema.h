@@ -575,6 +575,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "include_empty_values": {
                     "type": "boolean"
+                },
+                "jemalloc_stats_enabled": {
+                    "type": "boolean"
                 }
             },
             "minProperties": 1,
