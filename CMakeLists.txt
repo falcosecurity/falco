@@ -144,7 +144,7 @@ include(ExternalProject)
 
 if(USE_JEMALLOC)
 	if(USE_ASAN)
-		message(WARNING "Jemalloc and ASAN do not play well together")
+		message(WARNING "Jemalloc and ASAN are known to have issues when combined")
 	endif()
 	include(jemalloc)
 endif()
