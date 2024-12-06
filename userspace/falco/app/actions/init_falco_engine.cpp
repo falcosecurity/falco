@@ -23,7 +23,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-static inline std::string format_suggested_field(const filter_check_info* info) {
+static inline std::string format_suggested_field(const filtercheck_field_info* info) {
 	std::ostringstream out;
 
 	// Replace "foo.bar" with "foo_bar"
@@ -46,12 +46,15 @@ static void add_suggested_output(const falco::app::state& s,
 	std::vector<const filter_check_info*> fields;
 	filterchecks.get_all_fields(fields);
 	for(const auto& fld : fields) {
-		if(fld->m_fields->is_format_suggested()) {
-			s.engine->add_extra_output_format(format_suggested_field(fld),
-			                                  src,
-			                                  eo.m_tags,
-			                                  eo.m_rule,
-			                                  false);
+		for(int i = 0; i < fld->m_nfields; i++) {
+			const auto* fldinfo = &fld->m_fields[i];
+			if(fldinfo->is_format_suggested()) {
+				s.engine->add_extra_output_format(format_suggested_field(fldinfo),
+				                                  src,
+				                                  eo.m_tags,
+				                                  eo.m_rule,
+				                                  false);
+			}
 		}
 	}
 }
