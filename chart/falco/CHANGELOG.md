@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.16.1
+
+* fix(falco/serviceMonitor): set service label selector
+* new(falco/tests): add unit tests for serviceMonitor label selector
+
 ## v4.16.0
 
 * bump falcosidekick dependency to v0.9.* to match with future versions
