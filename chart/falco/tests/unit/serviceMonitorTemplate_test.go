@@ -83,11 +83,77 @@ func (s *serviceMonitorTemplateTest) TestEndpoint() {
 }
 
 func (s *serviceMonitorTemplateTest) TestNamespaceSelector() {
-	options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"}}
+	selectorsLabelJson := `{
+			"app.kubernetes.io/instance": "my-falco",
+			"foo": "bar"
+		}`
+	options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"},
+		SetJsonValues: map[string]string{"serviceMonitor.selector": selectorsLabelJson}}
 	output := helm.RenderTemplate(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
 	var svcMonitor monitoringv1.ServiceMonitor
 	helm.UnmarshalK8SYaml(s.T(), output, &svcMonitor)
 	s.Len(svcMonitor.Spec.NamespaceSelector.MatchNames, 1)
 	s.Equal("default", svcMonitor.Spec.NamespaceSelector.MatchNames[0])
+}
+
+func (s *serviceMonitorTemplateTest) TestServiceMonitorSelector() {
+	testCases := []struct {
+		name     string
+		values   string
+		expected map[string]string
+	}{
+		{
+			"defaultValues",
+			"",
+			map[string]string{
+				"app.kubernetes.io/instance": "falco-test",
+				"app.kubernetes.io/name":     "falco",
+				"type":                       "falco-metrics",
+			},
+		},
+		{
+			"customValues",
+			`{
+			"foo": "bar"
+		}`,
+			map[string]string{
+				"app.kubernetes.io/instance": "falco-test",
+				"app.kubernetes.io/name":     "falco",
+				"foo":                        "bar",
+				"type":                       "falco-metrics",
+			},
+		},
+		{
+			"overwriteDefaultValues",
+			`{
+			"app.kubernetes.io/instance": "falco-overwrite",
+			"foo": "bar"
+		}`,
+			map[string]string{
+				"app.kubernetes.io/instance": "falco-overwrite",
+				"app.kubernetes.io/name":     "falco",
+				"foo":                        "bar",
+				"type":                       "falco-metrics",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+
+		s.Run(testCase.name, func() {
+			subT := s.T()
+			subT.Parallel()
+
+			options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"},
+				SetJsonValues: map[string]string{"serviceMonitor.selector": testCase.values}}
+			output := helm.RenderTemplate(s.T(), options, s.chartPath, s.releaseName, s.templates)
+
+			var svcMonitor monitoringv1.ServiceMonitor
+			helm.UnmarshalK8SYaml(s.T(), output, &svcMonitor)
+
+			s.Equal(testCase.expected, svcMonitor.Spec.Selector.MatchLabels, "should be the same")
+		})
+	}
 }
