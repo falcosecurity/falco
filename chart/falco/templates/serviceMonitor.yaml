@@ -37,6 +37,9 @@ spec:
   selector:
     matchLabels:
       {{- include "falco.selectorLabels" . | nindent 6 }}
+      {{- with .Values.serviceMonitor.selector }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       type: "falco-metrics"
   namespaceSelector:
     matchNames:
