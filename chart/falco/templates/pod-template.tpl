@@ -60,6 +60,7 @@ spec:
   {{- if eq .Values.driver.kind "gvisor" }}
   hostNetwork: true
   hostPID: true
+  dnsPolicy: ClusterFirstWithHostNet
   {{- end }}
   containers:
     - name: {{ .Chart.Name }}
