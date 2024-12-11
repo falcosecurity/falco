@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.16.2
+
+* fix(falco): set dnsPolicy to ClusterFirstWithHostNet when gvisor driver is enabled to prevent DNS lookup failures for cluster-internal services
+
 ## v4.16.1
 
 * fix(falco/serviceMonitor): set service label selector
