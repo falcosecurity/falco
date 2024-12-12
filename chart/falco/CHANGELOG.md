@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.17.0
+
+* update(falco): bump k8saudit version to 0.11
+
 ## v4.16.2
 
 * fix(falco): set dnsPolicy to ClusterFirstWithHostNet when gvisor driver is enabled to prevent DNS lookup failures for cluster-internal services
