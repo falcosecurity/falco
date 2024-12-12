@@ -30,10 +30,10 @@ falcoctl:
     artifact:
       install:
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:3, k8saudit-rules:0.7]
+        refs: [falco-rules:3, k8saudit-rules:0.11, k8saudit:0.11]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:3, k8saudit-rules:0.7]
+        refs: [falco-rules:3, k8saudit-rules:0.11, k8saudit:0.11]
 
 services:
   - name: k8saudit-webhook

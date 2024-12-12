@@ -14,7 +14,6 @@ controller:
     # For more info check the section on Plugins in the README.md file.
     replicas: 1
 
-
 falcoctl:
   artifact:
     install:
@@ -27,10 +26,10 @@ falcoctl:
     artifact:
       install:
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [k8saudit-rules:0.7]
+        refs: [k8saudit-rules:0.11, k8saudit:0.11]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [k8saudit-rules:0.7]
+        refs: [k8saudit-rules:0.11]
 
 services:
   - name: k8saudit-webhook
