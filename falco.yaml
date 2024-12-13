@@ -549,9 +549,14 @@ json_include_tags_property: true
 
 # [Stable] `buffered_outputs`
 #
-# Enabling buffering for the output queue can offer performance optimization,
-# efficient resource usage, and smoother data flow, resulting in a more reliable
-# output mechanism. By default, buffering is disabled (false).
+# Global buffering option for output channels. When disabled, the output channel
+# that supports buffering flushes the output buffer on every alert. This can lead to 
+# increased CPU usage but is useful when piping outputs to another process or script. 
+# Buffering is currently supported by `file_output`, `program_output`, and `std_output`. 
+# Some output channels may implement buffering strategies you cannot control. 
+# Additionally, this setting is separate from the `output_queue` option. The output queue 
+# sits between the rule engine and the output channels, while output buffering occurs 
+# afterward once the specific channel implementation outputs the formatted message.
 buffered_outputs: false
 
 # [Incubating] `rule_matching`
