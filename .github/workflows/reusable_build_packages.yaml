@@ -127,7 +127,11 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
-          apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang
+          apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils clang llvm
+          git clone https://github.com/libbpf/bpftool.git --branch v7.3.0 --single-branch
+          cd bpftool
+          git submodule update --init
+          cd src && make install
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
