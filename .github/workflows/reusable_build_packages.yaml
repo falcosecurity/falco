@@ -140,7 +140,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
                 -DCPACK_GENERATOR=TGZ \
                 -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
-                -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
+                -DUSE_BUNDLED_DEPS=On -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
