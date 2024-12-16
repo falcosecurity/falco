@@ -166,7 +166,7 @@ jobs:
 
   build-wasm-package:
     if: ${{ inputs.arch == 'x86_64' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
