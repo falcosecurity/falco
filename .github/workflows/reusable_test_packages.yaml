@@ -66,3 +66,4 @@ jobs:
           static: ${{ inputs.static && 'true' || 'false' }}
           test-drivers: ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}
           show-all: 'true'
+          report-name-suffix: ${{ inputs.static && '-static' || '' }}${{ inputs.sanitizers && '-sanitizers' || '' }}
