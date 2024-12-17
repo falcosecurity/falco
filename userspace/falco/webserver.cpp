@@ -69,9 +69,8 @@ void falco_webserver::start(const falco::app::state &state,
 		throw falco_exception("invalid webserver configuration");
 	}
 
-	std::atomic<bool> failed;
-	failed.store(false, std::memory_order_release);
-	m_server_thread = std::thread([this, webserver_config, &failed] {
+	m_failed.store(false, std::memory_order_release);
+	m_server_thread = std::thread([this, webserver_config] {
 		try {
 			this->m_server->listen(webserver_config.m_listen_address,
 			                       webserver_config.m_listen_port);
@@ -79,16 +78,16 @@ void falco_webserver::start(const falco::app::state &state,
 			falco_logger::log(falco_logger::level::ERR,
 			                  "falco_webserver: " + std::string(e.what()) + "\n");
 		}
-		failed.store(true, std::memory_order_release);
+		this->m_failed.store(true, std::memory_order_release);
 	});
 
 	// wait for the server to actually start up
 	// note: is_running() is atomic
-	while(!m_server->is_running() && !failed.load(std::memory_order_acquire)) {
+	while(!m_server->is_running() && !m_failed.load(std::memory_order_acquire)) {
 		std::this_thread::yield();
 	}
 	m_running = true;
-	if(failed.load(std::memory_order_acquire)) {
+	if(m_failed.load(std::memory_order_acquire)) {
 		stop();
 		throw falco_exception("an error occurred while starting webserver");
 	}
