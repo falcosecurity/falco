@@ -19,22 +19,14 @@ jobs:
   fetch-version:
     uses: ./.github/workflows/reusable_fetch_version.yaml
 
-  build-dev-packages-sanitizers-x86_64:
-    needs: [fetch-version]
-    uses: ./.github/workflows/reusable_build_packages.yaml
-    with:
-      arch: x86_64
-      version: ${{ needs.fetch-version.outputs.version }}
-      build_type: Debug
-      sanitizers: true
-
   build-dev-packages-x86_64:
     needs: [fetch-version]
     uses: ./.github/workflows/reusable_build_packages.yaml
     with:
       arch: x86_64
       version: ${{ needs.fetch-version.outputs.version }}
-      build_type: Release
+      enable_debug: true
+      enable_sanitizers: true
 
   build-dev-packages-arm64:
     needs: [fetch-version]
@@ -42,11 +34,10 @@ jobs:
     with:
       arch: aarch64
       version: ${{ needs.fetch-version.outputs.version }}
-      build_type: Debug
-      sanitizers: false
+      enable_debug: true
 
   test-dev-packages:
-    needs: [fetch-version, build-dev-packages-sanitizers-x86_64]
+    needs: [fetch-version, build-dev-packages-x86_64]
     uses: ./.github/workflows/reusable_test_packages.yaml
     strategy:
       fail-fast: false
@@ -54,7 +45,7 @@ jobs:
         static: ["static", ""]
     with:
       arch: x86_64
-      sanitizers: true
+      sanitizers: ${{ matrix.static == '' && true || false }}
       static: ${{ matrix.static != '' && true || false }}
       version: ${{ needs.fetch-version.outputs.version }}
 

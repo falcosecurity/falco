@@ -10,13 +10,13 @@ on:
         description: The Falco version to use when building packages
         required: true
         type: string
-      build_type:
-        description: The build type
+      enable_debug:
+        description: Also create a debug build
         required: false
-        type: string
-        default: 'Release'
-      sanitizers:
-        description: enable sanitizer support
+        type: boolean
+        default: false
+      enable_sanitizers:
+        description: Also create a sanitizer build
         required: false
         type: boolean
         default: false
@@ -51,7 +51,7 @@ jobs:
           path: skeleton-build/skel_dir/bpf_probe.skel.h
           retention-days: 1
 
-  build-packages:
+  build-packages-release:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'oracle-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
     needs: [build-modern-bpf-skeleton]
@@ -78,14 +78,13 @@ jobs:
         # Jemalloc and ASAN don't play very well together.
         run: |
           cmake -B build -S . \
-              -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+              -DCMAKE_BUILD_TYPE=Release \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
-              -DUSE_ASAN=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'ON') || 'OFF' }} \
-              -DUSE_JEMALLOC=${{ (inputs.sanitizers == true && inputs.arch == 'x86_64' && 'OFF') || 'ON' }} \
+              -DUSE_JEMALLOC=ON \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
@@ -99,25 +98,123 @@ jobs:
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.tar.gz
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
 
       - name: Upload Falco deb package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.deb
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
 
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.rpm
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.rpm
           path: |
-            ${{ github.workspace }}/build/falco-*.rpm
+            ${{ github.workspace }}/build/falco-*.rpm          
 
-  
+  build-packages-debug:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'oracle-aarch64-4cpu-16gb') || 'ubuntu-22.04' }}
+    if: ${{ inputs.enable_debug == true }}
+    needs: [build-modern-bpf-skeleton]
+    steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
+      - name: Install build deps
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
+
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Download skeleton
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: bpf_probe_${{ inputs.arch }}.skel.h
+          path: /tmp
+
+      - name: Install zig
+        if: inputs.sanitizers == false
+        uses: falcosecurity/libs/.github/actions/install-zig@master
+
+      - name: Prepare project
+        run: |
+          cmake -B build -S . \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DUSE_BUNDLED_DEPS=On \
+              -DFALCO_ETC_DIR=/etc/falco \
+              -DMODERN_BPF_SKEL_DIR=/tmp \
+              -DBUILD_DRIVER=Off \
+              -DBUILD_BPF=Off \
+              -DUSE_JEMALLOC=On \
+              -DFALCO_VERSION=${{ inputs.version }}
+
+      - name: Build project
+        run: |
+          cmake --build build --target falco -j6
+
+      - name: Build packages
+        run: |
+          cmake --build build --target package
+
+      - name: Upload Falco tar.gz package
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}-debug.tar.gz
+          path: |
+            ${{ github.workspace }}/build/falco-*.tar.gz
+
+  build-packages-sanitizers:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'oracle-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
+    if: ${{ inputs.enable_sanitizers == true }}
+    needs: [build-modern-bpf-skeleton]
+    steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
+      - name: Install build deps
+        run: |
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
+
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Download skeleton
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: bpf_probe_${{ inputs.arch }}.skel.h
+          path: /tmp
+
+      - name: Prepare project
+        run: |
+          cmake -B build -S . \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DUSE_BUNDLED_DEPS=On \
+              -DFALCO_ETC_DIR=/etc/falco \
+              -DMODERN_BPF_SKEL_DIR=/tmp \
+              -DBUILD_DRIVER=Off \
+              -DBUILD_BPF=Off \
+              -DUSE_JEMALLOC=Off \
+              -DUSE_ASAN=On \
+              -DFALCO_VERSION=${{ inputs.version }}
+
+      - name: Build project
+        run: |
+          cmake --build build --target falco -j6
+
+      - name: Build packages
+        run: |
+          cmake --build build --target package
+
+      - name: Upload Falco tar.gz package
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}-sanitizers.tar.gz
+          path: |
+            ${{ github.workspace }}/build/falco-*.tar.gz
+
   build-musl-package:
     # x86_64 only for now
     if: ${{ inputs.arch == 'x86_64' }}
@@ -141,7 +238,7 @@ jobs:
       - name: Prepare project
         run: |
           cmake -B build -S . \
-                -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCPACK_GENERATOR=TGZ \
                 -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
                 -DUSE_BUNDLED_DEPS=On -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
@@ -192,7 +289,7 @@ jobs:
             -DBUILD_BPF=Off \
             -DBUILD_DRIVER=Off \
             -DBUILD_FALCO_MODERN_BPF=Off \
-            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DCMAKE_BUILD_TYPE=Release \
             -DUSE_BUNDLED_DEPS=On \
             -DFALCO_ETC_DIR=/etc/falco \
             -DBUILD_FALCO_UNIT_TESTS=On \
@@ -232,28 +329,28 @@ jobs:
       # NOTE: Backslash doesn't work as line continuation on Windows.
       - name: Prepare project
         run: |
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
-          cmake --build build --target package --config ${{ inputs.build_type }}
+          cmake --build build --target package --config Release
 
       - name: Run unit Tests
         run: |
-          build/unit_tests/${{ inputs.build_type }}/falco_unit_tests.exe
+          build/unit_tests/Release/falco_unit_tests.exe
 
       - name: Upload Falco win32 installer
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-installer-${{ inputs.version }}-win32.exe
+          name: falco-installer-Release-win32.exe
           path: build/falco-*.exe
 
       - name: Upload Falco win32 package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
-          name: falco-${{ inputs.version }}-win32.exe
+          name: falco-Release-win32.exe
           path: |
-            ${{ github.workspace }}/build/userspace/falco/${{ inputs.build_type }}/falco.exe
+            ${{ github.workspace }}/build/userspace/falco/Release/falco.exe
 
   build-macos-package:
     if: ${{ inputs.arch == 'x86_64' }}
