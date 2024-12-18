@@ -33,7 +33,7 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
-          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel elfutils-libelf-devel
+          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -59,7 +59,7 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build deps
         run: |
-          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool m4 rpm
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -125,7 +125,7 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build deps
         run: |
-          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool m4 rpm
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -176,7 +176,7 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build deps
         run: |
-          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool libelf-dev m4 rpm
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool m4 rpm
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
