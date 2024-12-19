@@ -51,7 +51,7 @@ echo "* Setting up /usr/src links from host"
 for i in "$HOST_ROOT/usr/src"/*
 do
     [[ -e $i ]] || continue
-		base=$(basename "$i")
+    base=$(basename "$i")
     ln -s "$i" "/usr/src/$base"
 done
 
