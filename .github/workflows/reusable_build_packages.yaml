@@ -75,7 +75,6 @@ jobs:
         uses: falcosecurity/libs/.github/actions/install-zig@master
 
       - name: Prepare project
-        # Jemalloc and ASAN don't play very well together.
         run: |
           cmake -B build -S . \
               -DCMAKE_BUILD_TYPE=Release \
@@ -188,6 +187,7 @@ jobs:
           path: /tmp
 
       - name: Prepare project
+        # Jemalloc and ASAN don't play very well together.
         run: |
           cmake -B build -S . \
               -DCMAKE_BUILD_TYPE=Debug \
@@ -241,7 +241,11 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCPACK_GENERATOR=TGZ \
                 -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
-                -DUSE_BUNDLED_DEPS=On -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco -DFALCO_VERSION=${{ inputs.version }}
+                -DUSE_JEMALLOC=On \
+                -DUSE_BUNDLED_DEPS=On \
+                -DMUSL_OPTIMIZED_BUILD=On \
+                -DFALCO_ETC_DIR=/etc/falco \
+                -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
         run: |
@@ -286,9 +290,6 @@ jobs:
       - name: Prepare project
         run: |
           emcmake cmake -B build -S . \
-            -DBUILD_BPF=Off \
-            -DBUILD_DRIVER=Off \
-            -DBUILD_FALCO_MODERN_BPF=Off \
             -DCMAKE_BUILD_TYPE=Release \
             -DUSE_BUNDLED_DEPS=On \
             -DFALCO_ETC_DIR=/etc/falco \
