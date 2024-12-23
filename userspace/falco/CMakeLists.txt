@@ -194,6 +194,24 @@ if(MUSL_OPTIMIZED_BUILD AND CMAKE_BUILD_TYPE STREQUAL "release")
 	)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "relwithdebinfo" AND NOT WIN32)
+	find_program(OBJCOPY_EXECUTABLE NAMES objcopy)
+	if(OBJCOPY_EXECUTABLE)
+		add_custom_command(
+			TARGET falco
+			POST_BUILD
+			COMMAND ${OBJCOPY_EXECUTABLE} --only-keep-debug $<TARGET_FILE:falco>
+					$<TARGET_FILE:falco>.debug
+			COMMAND ${OBJCOPY_EXECUTABLE} --strip-debug --strip-unneeded $<TARGET_FILE:falco>
+			COMMAND ${OBJCOPY_EXECUTABLE} --add-gnu-debuglink=$<TARGET_FILE:falco>.debug
+					$<TARGET_FILE:falco>
+			COMMENT "Generating separate debug file for falco"
+		)
+	else()
+		message(WARNING "objcopy not found; separate debug files will not be generated.")
+	endif()
+endif()
+
 if(EMSCRIPTEN)
 	install(
 		FILES "$<TARGET_FILE_DIR:falco>/falco.js" "$<TARGET_FILE_DIR:falco>/falco.wasm"
