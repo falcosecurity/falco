@@ -23,7 +23,7 @@ limitations under the License.
 
 #include <re2/re2.h>
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #endif
 #include <cstring>
 #include <fstream>
@@ -144,22 +144,22 @@ std::string calculate_file_sha256sum(const std::string& filename) {
 		return "";
 	}
 
-	SHA256_CTX sha256_context;
-	SHA256_Init(&sha256_context);
+	std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+	EVP_DigestInit_ex(ctx.get(), EVP_sha256(), nullptr);
 
 	constexpr size_t buffer_size = 4096;
 	char buffer[buffer_size];
 	while(file.read(buffer, buffer_size)) {
-		SHA256_Update(&sha256_context, buffer, buffer_size);
+		EVP_DigestUpdate(ctx.get(), buffer, buffer_size);
 	}
-	SHA256_Update(&sha256_context, buffer, file.gcount());
+	EVP_DigestUpdate(ctx.get(), buffer, file.gcount());
 
-	unsigned char digest[SHA256_DIGEST_LENGTH];
-	SHA256_Final(digest, &sha256_context);
+	std::vector<uint8_t> digest(EVP_MD_size(EVP_sha256()));
+	EVP_DigestFinal_ex(ctx.get(), digest.data(), nullptr);
 
-	std::stringstream ss;
-	for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(digest[i]);
+	std::ostringstream ss;
+	for(auto& c : digest) {
+		ss << std::hex << std::setw(2) << std::setfill('0') << (int)c;
 	}
 	return ss.str();
 }
