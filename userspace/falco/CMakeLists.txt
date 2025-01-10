@@ -194,6 +194,7 @@ if(MUSL_OPTIMIZED_BUILD AND CMAKE_BUILD_TYPE STREQUAL "release")
 	)
 endif()
 
+# TODO: Add win32 support. https://github.com/falcosecurity/falco/issues/3445
 if(CMAKE_BUILD_TYPE STREQUAL "relwithdebinfo" AND NOT WIN32)
 	find_program(OBJCOPY_EXECUTABLE NAMES objcopy)
 	if(OBJCOPY_EXECUTABLE)
