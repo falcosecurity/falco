@@ -568,7 +568,7 @@ TEST_F(test_falco_engine, selection_base_syscalls_all) {
 TEST(ConfigureInterestingSets, ignored_set_expected_size) {
 	// unit test fence to make sure we don't have unexpected regressions
 	// in the ignored set, to be updated in the future
-	ASSERT_EQ(falco::app::ignored_sc_set().size(), 14);
+	ASSERT_EQ(falco::app::ignored_sc_set().size(), 12);
 
 	// we don't expect to ignore any syscall in the default base set
 	ASSERT_EQ(falco::app::ignored_sc_set().intersect(libsinsp::events::sinsp_state_sc_set()).size(),
