@@ -26,7 +26,6 @@ RUN apt-get update \
 	gnupg2 \
 	jq \
 	libc6-dev \
-	libelf-dev \
 	libssl-dev \
 	llvm \
 	make \

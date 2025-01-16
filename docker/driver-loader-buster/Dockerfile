@@ -31,7 +31,6 @@ RUN apt-get update \
 	gcc \
 	jq \
 	libc6-dev \
-	libelf-dev \
 	libssl-dev \
 	llvm-7 \
 	netcat \
