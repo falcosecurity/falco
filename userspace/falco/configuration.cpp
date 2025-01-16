@@ -701,7 +701,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 		m_container_engines_mask |= ((1 << CT_CRI) | (1 << CT_CRIO) | (1 << CT_CONTAINERD));
 		m_container_engines_cri_socket_paths.clear();
 		m_config.get_sequence<std::vector<std::string>>(m_container_engines_cri_socket_paths,
-		                                                "container_engines.cri.cri");
+		                                                "container_engines.cri.sockets");
 		m_container_engines_disable_cri_async =
 		        m_config.get_scalar<bool>("container_engines.cri.disable-cri-async", false);
 	}
