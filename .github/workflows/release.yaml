@@ -163,18 +163,18 @@ jobs:
       - name: Download debug symbols for Falco x86_64
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: falco-${{ inputs.version }}-x86_64.debug
+          name: falco-${{ github.event.release.tag_name }}-x86_64.debug
 
       - name: Rename x86_64 debug symbols
-        run: mv falco.debug falco_x86_64.debug
+        run: mv falco.debug falco-x86_64.debug
 
       - name: Download debug symbols for Falco aarch64
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: falco-${{ inputs.version }}-aarch64.debug
+          name: falco-${{ github.event.release.tag_name }}-aarch64.debug
 
       - name: Rename aarch64 debug symbols
-        run: mv falco.debug falco_aarch64.debug
+        run: mv falco.debug falco-aarch64.debug
 
       - name: Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
