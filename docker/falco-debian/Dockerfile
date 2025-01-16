@@ -14,7 +14,7 @@ ENV VERSION_BUCKET=${VERSION_BUCKET}
 ENV HOST_ROOT /host
 ENV HOME /root
 
-RUN apt-get -y update && apt-get -y install ca-certificates curl jq libelf1 ca-certificates gnupg2 \
+RUN apt-get -y update && apt-get -y install ca-certificates curl jq ca-certificates gnupg2 \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /

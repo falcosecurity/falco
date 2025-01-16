@@ -14,7 +14,7 @@ ENV VERSION_BUCKET=${VERSION_BUCKET}
 ENV HOST_ROOT /host
 ENV HOME /root
 
-RUN apk update && apk add curl ca-certificates jq libelf libstdc++
+RUN apk update && apk add curl ca-certificates jq libstdc++
 
 WORKDIR /
 
