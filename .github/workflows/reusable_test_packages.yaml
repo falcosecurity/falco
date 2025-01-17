@@ -43,7 +43,6 @@ jobs:
      
       # We only run driver loader tests on x86_64
       - name: Install kernel headers for falco-driver-loader tests
-        if: ${{ inputs.arch == 'x86_64' }}
         run: |
           sudo apt update -y
           sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
@@ -64,6 +63,6 @@ jobs:
           test-k8saudit: 'true'
           test-dummy: 'true'
           static: ${{ inputs.static && 'true' || 'false' }}
-          test-drivers: ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}
+          test-drivers: 'true'
           show-all: 'true'
           report-name-suffix: ${{ inputs.static && '-static' || '' }}${{ inputs.sanitizers && '-sanitizers' || '' }}
