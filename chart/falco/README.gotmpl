@@ -53,11 +53,12 @@ Note that **a Falco instance can handle multiple event sources in parallel**. yo
 
 Falco needs a **driver** to analyze the system workload and pass security events to userspace. The supported drivers are:
 
-* [Kernel module](https://falco.org/docs/event-sources/drivers/#kernel-module)
-* [eBPF probe](https://falco.org/docs/event-sources/drivers/#ebpf-probe)
-* [Modern eBPF probe](https://falco.org/docs/event-sources/drivers/#modern-ebpf-probe)
+* [Modern eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#modern-ebpf-probe)
+* [Kernel module](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module)
+* [Legacy eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe)
 
-The driver should be installed on the node where Falco is running. The _kernel module_ (default option) and the _eBPF probe_ are installed on the node through an *init container* (i.e. `falco-driver-loader`) that tries download a prebuilt driver or build it on-the-fly as a fallback. The _Modern eBPF probe_ doesn't require an init container because it is shipped directly into the Falco binary. However, the _Modern eBPF probe_ requires [recent BPF features](https://falco.org/docs/event-sources/kernel/#modern-ebpf-probe).
+The driver must be loaded on the node where Falco is running. Falco now prefers the **Modern eBPF probe** by default. When using **falcoctl** with `driver.kind=auto`, it will automatically choose the best driver for your system. Specifically, it first attempts to use the Modern eBPF probe (which is shipped directly within the Falco binary) and will fall back to the _kernel module_ or the _original eBPF probe_ if the necessary BPF features are not available.
+
 
 ##### Pre-built drivers
 
@@ -146,20 +147,24 @@ After the clarification of the different [**event sources**](#falco-event-source
 The chart deploys Falco using a `daemonset` or a `deployment` depending on the **event sources**.
 
 #### Daemonset
-When using the [drivers](#about-the-driver), Falco is deployed as `daemonset`. By using a `daemonset`, k8s assures that a Falco instance will be running in each of our nodes even when we add new nodes to our cluster. So it is the perfect match when we need to monitor all the nodes in our cluster.
+When using the [drivers](#about-the-driver), Falco is typically deployed as a `DaemonSet`. By using a DaemonSet, Kubernetes ensures that a Falco instance is running on each node even as new nodes are added to your cluster. This makes it a perfect fit for monitoring across the entire cluster.
+
+By default, with `driver.kind=auto`, the correct driver will will be automatically selected for each node. This is accomplished through the **driver loader** (implemented by `falcoctl`), which generates a new Falco configuration file and picks the right engine driver (Modern eBPF, kmod, or legacy eBPF) based on the underlying environment. If you prefer to manually force a specific driver, see the other available options below.
 
 **Kernel module**
-To run Falco with the [kernel module](https://falco.org/docs/event-sources/drivers/#kernel-module) you can use the default values of the helm chart:
+
+To run Falco with the [eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module) you just need to set `driver.kind=kmod` as shown in the following snippet:
 
 ```bash
 helm install falco falcosecurity/falco \
     --create-namespace \
     --namespace falco
+    --set driver.kind=kmod
 ```
 
-**eBPF probe**
+**Legacy eBPF probe**
 
-To run Falco with the [eBPF probe](https://falco.org/docs/event-sources/drivers/#ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
+To run Falco with the [eBPF probe](http://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
 
 ```bash
 helm install falco falcosecurity/falco \
@@ -177,9 +182,9 @@ helm install falco falcosecurity/falco \
     -f "path-to-custom-values.yaml-file"
 ```
 
-**modern eBPF probe**
+**Modern eBPF probe**
 
-To run Falco with the [modern eBPF probe](https://falco.org/docs/event-sources/drivers/#modern-ebpf-probe-experimental) you just need to set `driver.kind=modern_bpf` as shown in the following snippet:
+To run Falco with the [modern eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#modern-ebpf-probe) you just need to set `driver.kind=modern_bpf` as shown in the following snippet:
 
 ```bash
 helm install falco falcosecurity/falco \
