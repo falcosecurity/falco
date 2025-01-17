@@ -328,7 +328,7 @@ The new chart introduces some breaking changes. For folks upgrading Falco please
 ## v3.3.0
 * Upgrade Falco to 0.35.1. For more info see the release notes: https://github.com/falcosecurity/falco/releases/tag/0.35.1
 * Upgrade falcoctl to 0.5.1. For more info see the release notes: https://github.com/falcosecurity/falcoctl/releases/tag/v0.5.1
-* Introduce least privileged mode in modern ebpf. For more info see: https://falco.org/docs/event-sources/kernel/#least-privileged-mode-2
+* Introduce least privileged mode in modern ebpf. For more info see: https://falco.org/docs/setup/container/#docker-least-privileged-modern-ebpf
 
 ## v3.2.1
 * Set falco.http_output.url to empty string in values.yaml file
