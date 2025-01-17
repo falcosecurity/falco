@@ -27,7 +27,7 @@ permissions:
 jobs:
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'github-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
     container: fedora:latest
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -53,7 +53,7 @@ jobs:
 
   build-packages-release:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'github-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
     needs: [build-modern-bpf-skeleton]
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -124,7 +124,7 @@ jobs:
 
   build-packages-debug:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'github-aarch64-4cpu-16gb') || 'ubuntu-22.04' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-22.04' }}
     if: ${{ inputs.enable_debug == true }}
     needs: [build-modern-bpf-skeleton]
     steps:
@@ -175,7 +175,7 @@ jobs:
 
   build-packages-sanitizers:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'github-aarch64-4cpu-16gb') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
     if: ${{ inputs.enable_sanitizers == true }}
     needs: [build-modern-bpf-skeleton]
     steps:
