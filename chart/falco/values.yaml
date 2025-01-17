@@ -299,7 +299,7 @@ driver:
     # Capabilities used: {CAP_SYS_RESOURCE, CAP_SYS_ADMIN, CAP_SYS_PTRACE}.
     # On kernel versions >= 5.8 'CAP_PERFMON' and 'CAP_BPF' could replace 'CAP_SYS_ADMIN' but please pay attention to the 'kernel.perf_event_paranoid' value on your system.
     # Usually 'kernel.perf_event_paranoid>2' means that you cannot use 'CAP_PERFMON' and you should fallback to 'CAP_SYS_ADMIN', but the behavior changes across different distros.
-    # Read more on that here: https://falco.org/docs/event-sources/kernel/#least-privileged-mode-1
+    # Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe
     leastPrivileged: false
     # -- bufSizePreset determines the size of the shared space between Falco and its drivers.
     # This shared space serves as a temporary storage for syscall events.
@@ -310,7 +310,7 @@ driver:
     # -- Constrain Falco with capabilities instead of running a privileged container.
     # Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern-bpf`).
     # Capabilities used: {CAP_SYS_RESOURCE, CAP_BPF, CAP_PERFMON, CAP_SYS_PTRACE}.
-    # Read more on that here: https://falco.org/docs/event-sources/kernel/#least-privileged-mode-2
+    # Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe
     leastPrivileged: false
     # -- bufSizePreset determines the size of the shared space between Falco and its drivers.
     # This shared space serves as a temporary storage for syscall events.
@@ -409,7 +409,6 @@ collectors:
     # the default for this config is '/host'.
     # The path used here must not have a final '/'.
     hostProc: /host
-
 
 ###########################
 # Extras and customization #
@@ -522,8 +521,8 @@ falcoctl:
     # -- List of indexes that falcoctl downloads and uses to locate and download artiafcts. For more info see:
     # https://github.com/falcosecurity/falcoctl/blob/main/proposals/20220916-rules-and-plugin-distribution.md#index-file-overview
     indexes:
-    - name: falcosecurity
-      url: https://falcosecurity.github.io/falcoctl/index.yaml
+      - name: falcosecurity
+        url: https://falcosecurity.github.io/falcoctl/index.yaml
     # -- Configuration used by the artifact commands.
     artifact:
       # -- List of artifact types that falcoctl will handle. If the configured refs resolves to an artifact whose type is not contained
@@ -578,7 +577,8 @@ serviceMonitor:
   # scraping metrics from a service. It allows you to define the details of the TLS connection, such as
   # CA certificate, client certificate, and client key. Currently, the k8s-metacollector does not support
   # TLS configuration for the metrics endpoint.
-  tlsConfig: {}
+  tlsConfig:
+    {}
     # insecureSkipVerify: false
     # caFile: /path/to/ca.crt
     # certFile: /path/to/client.crt
@@ -704,7 +704,6 @@ falco:
 
   rule_matching: first
 
-
   # [Incubating] `outputs_queue`
   #
   # -- Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
@@ -725,7 +724,6 @@ falco:
   # kernel-side event drops when the buffer between kernel space and user space is full.
   outputs_queue:
     capacity: 0
-
 
   #################
   # Falco plugins #
@@ -919,7 +917,6 @@ falco:
   # property you will find three new ones: "evt.cpu", "home_directory" which will contain the value of the
   # environment variable $HOME, and "evt.hostname" which will contain the hostname.
   append_output: []
-
 
   ##########################
   # Falco outputs channels #
@@ -1412,7 +1409,6 @@ falco:
     include_empty_values: false
     kernel_event_counters_per_cpu_enabled: false
 
-
   #######################################
   # Falco performance tuning (advanced) #
   #######################################
@@ -1531,7 +1527,6 @@ falco:
   base_syscalls:
     custom_set: []
     repair: false
-
 
   ##############
   # Falco libs #
