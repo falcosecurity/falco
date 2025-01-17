@@ -45,7 +45,7 @@ jobs:
           cmake --build skeleton-build --target ProbeSkeleton -j6
 
       - name: Upload skeleton
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: skeleton-build/skel_dir/bpf_probe.skel.h
@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Download skeleton
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
@@ -95,28 +95,28 @@ jobs:
           cmake --build build --target package
 
       - name: Upload Falco tar.gz package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
 
       - name: Upload Falco deb package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
 
       - name: Upload Falco rpm package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.rpm
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
 
       - name: Upload Falco debug symbols
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}.debug
           path: |
@@ -137,7 +137,7 @@ jobs:
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Download skeleton
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
@@ -167,7 +167,7 @@ jobs:
           cmake --build build --target package
 
       - name: Upload Falco tar.gz package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}-debug.tar.gz
           path: |
@@ -188,7 +188,7 @@ jobs:
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Download skeleton
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
@@ -216,7 +216,7 @@ jobs:
           cmake --build build --target package
 
       - name: Upload Falco tar.gz package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-${{ inputs.arch }}-sanitizers.tar.gz
           path: |
@@ -268,7 +268,7 @@ jobs:
           mv falco-${{ inputs.version }}-x86_64.tar.gz falco-${{ inputs.version }}-static-x86_64.tar.gz
 
       - name: Upload Falco static package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: |
@@ -319,7 +319,7 @@ jobs:
           emmake make -j6 package
 
       - name: Upload Falco WASM package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-wasm.tar.gz
           path: |
@@ -348,13 +348,13 @@ jobs:
           build/unit_tests/Release/falco_unit_tests.exe
 
       - name: Upload Falco win32 installer
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-installer-Release-win32.exe
           path: build/falco-*.exe
 
       - name: Upload Falco win32 package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-Release-win32.exe
           path: |
@@ -383,7 +383,7 @@ jobs:
           sudo build/unit_tests/falco_unit_tests
 
       - name: Upload Falco macos package
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: falco-${{ inputs.version }}-macos
           path: |

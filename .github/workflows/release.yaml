@@ -161,7 +161,7 @@ jobs:
           echo "#### Release Manager @${{ github.event.release.author.login }}" >> release-body.md
 
       - name: Download debug symbols for Falco x86_64
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: falco-${{ github.event.release.tag_name }}-x86_64.debug
 
@@ -169,7 +169,7 @@ jobs:
         run: mv falco.debug falco-x86_64.debug
 
       - name: Download debug symbols for Falco aarch64
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: falco-${{ github.event.release.tag_name }}-aarch64.debug
 
