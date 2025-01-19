@@ -109,6 +109,10 @@ spec:
       {{- end }}
       tty: {{ .Values.tty }}
       {{- if .Values.falco.webserver.enabled }}
+      ports:
+        - containerPort: {{ .Values.falco.webserver.listen_port }}
+          name: web
+          protocol: TCP
       livenessProbe:
         initialDelaySeconds: {{ .Values.healthChecks.livenessProbe.initialDelaySeconds }}
         timeoutSeconds: {{ .Values.healthChecks.livenessProbe.timeoutSeconds }}

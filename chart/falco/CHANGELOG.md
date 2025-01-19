@@ -2,6 +2,9 @@
 
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
+## v4.17.2
+
+* update(falco): add ports definition in falco container spec
 
 ## v4.17.1
 
