@@ -83,6 +83,6 @@ jobs:
       - name: Upload images tarballs
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: falco-images
+          name: falco-images-${{ inputs.arch }}
           path: /tmp/falco-*.tar
           retention-days: 1
