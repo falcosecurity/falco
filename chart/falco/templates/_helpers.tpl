@@ -414,7 +414,7 @@ true
 {{- end -}}
 
 {{/*
-Based on the use input it populates the metrics configuration in the falco config map.
+Based on the user input it populates the metrics configuration in the falco config map.
 */}}
 {{- define "falco.metricsConfiguration" -}}
 {{- if .Values.metrics.enabled -}}
@@ -431,5 +431,26 @@ Based on the use input it populates the metrics configuration in the falco confi
 {{- $_ = set .Values.falco.metrics "libbpf_stats_enabled" .Values.metrics.libbpfStatsEnabled -}}
 {{- $_ = set .Values.falco.metrics "convert_memory_to_mb" .Values.metrics.convertMemoryToMB -}}
 {{- $_ = set .Values.falco.metrics "include_empty_values" .Values.metrics.includeEmptyValues -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Based on the user input it populates the container_engines configuration in the falco config map.
+*/}}
+{{- define "falco.containerEnginesConfiguration" -}}
+{{- if .Values.collectors.enabled -}}
+{{- $criSockets := list -}}
+{{- $criEnabled := false }}
+{{- $_ := set .Values.falco.container_engines "docker" (dict "enabled" .Values.collectors.docker.enabled) -}}
+{{- if or .Values.collectors.crio.enabled .Values.collectors.containerd.enabled }}
+{{- $criEnabled = true }}
+{{- end -}}
+{{- if .Values.collectors.containerd.enabled -}}
+{{- $criSockets = append $criSockets .Values.collectors.containerd.socket -}}
+{{- end }}
+{{- if .Values.collectors.crio.enabled -}}
+{{- $criSockets = append $criSockets .Values.collectors.crio.socket -}}
+{{- end -}}
+{{- $_ = set .Values.falco.container_engines "cri" (dict "enabled" $criEnabled "sockets" $criSockets) -}}
 {{- end -}}
 {{- end -}}

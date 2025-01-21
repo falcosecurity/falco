@@ -1550,3 +1550,45 @@ falco:
   # if you should increase this value for optimal performance.
   falco_libs:
     thread_table_size: 262144
+
+
+  # [Incubating] `container_engines`
+  #
+  # This option allows you to explicitly enable or disable API lookups against container
+  # runtime sockets for each supported container runtime.
+  # Access to these sockets enables Falco to retrieve container and Kubernetes fields,
+  # helping identify workload owners in modern containerized environments.
+  # Refer to the fields docs:
+  #
+  # - [Kubernetes fields](https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s)
+  # - [Container fields](https://falco.org/docs/reference/rules/supported-fields/#container)
+  #
+  # Additionally, Falco can use container events as a data source for alerting (evt.type = container).
+  #
+  # For most container engines, you can solely enable or disable them, and Falco will search the
+  # default (hard-coded) container runtime socket paths, such as `/var/run/docker.sock` for Docker.
+  #
+  # However, for Kubernetes settings, you can customize the CRI socket paths:
+  #
+  # - `container_engines.cri.sockets`: Pass a list of container runtime sockets.
+  # - `container_engines.cri.disable_async`: Since API lookups may not always be quick or
+  # perfect, resulting in empty fields for container metadata, you can use this option option
+  # to disable asynchronous fetching. Note that missing fields may still occasionally occur.
+
+  # Please use the collectors section to configure the container engines.
+
+  container_engines:
+    docker:
+      enabled: false
+    cri:
+      enabled: false
+      sockets: ["/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock"]
+      disable_async: false
+    podman:
+      enabled: false
+    lxc:
+      enabled: false
+    libvirt_lxc:
+      enabled: false
+    bpm:
+      enabled: false
