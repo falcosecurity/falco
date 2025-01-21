@@ -1330,8 +1330,6 @@ falco_libs:
 # - `container_engines.cri.disable_async`: Since API lookups may not always be quick or 
 # perfect, resulting in empty fields for container metadata, you can use this option option 
 # to disable asynchronous fetching. Note that missing fields may still occasionally occur.
-# 
-# The equivalent (stable) CLI args are `--cri` or `--disable-cri-async`.
 
 container_engines:
   docker:
