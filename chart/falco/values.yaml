@@ -1550,34 +1550,3 @@ falco:
   # if you should increase this value for optimal performance.
   falco_libs:
     thread_table_size: 262144
-
-  # [Stable] Guidance for Kubernetes container engine command-line args settings
-  #
-  # Modern cloud environments, particularly Kubernetes, heavily rely on
-  # containerized workload deployments. When capturing events with Falco, it
-  # becomes essential to identify the owner of the workload for which events are
-  # being captured, such as syscall events. Falco integrates with the container
-  # runtime to enrich its events with container information, including fields like
-  # `container.image.repository`, `container.image.tag`, ... , `k8s.ns.name`,
-  # `k8s.pod.name`, `k8s.pod.*` in the Falco output (Falco retrieves Kubernetes
-  # namespace and pod name directly from the container runtime, see
-  # https://falco.org/docs/reference/rules/supported-fields/#field-class-container).
-  #
-  # Furthermore, Falco exposes container events themselves as a data source for
-  # alerting. To achieve this integration with the container runtime, Falco
-  # requires access to the runtime socket. By default, for Kubernetes, Falco
-  # attempts to connect to the following sockets:
-  # "/run/containerd/containerd.sock", "/run/crio/crio.sock",
-  # "/run/k3s/containerd/containerd.sock". If you have a custom path, you can use
-  # the `--cri` option to specify the correct location.
-  #
-  # In some cases, you may encounter empty fields for container metadata. To
-  # address this, you can explore the `--disable-cri-async` option, which disables
-  # asynchronous fetching if the fetch operation is not completing quickly enough.
-  #
-  # To get more information on these command-line arguments, you can run `falco
-  # --help` in your terminal to view their current descriptions.
-  #
-  # !!! The options mentioned here are not available in the falco.yaml
-  # configuration file. Instead, they can can be used as a command-line argument
-  # when running the Falco command.
