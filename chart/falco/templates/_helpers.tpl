@@ -89,7 +89,7 @@ Return the proper Falco image name
     {{- . }}/
 {{- end -}}
 {{- .Values.image.repository }}:
-{{- .Values.image.tag | default .Chart.AppVersion -}}
+{{- .Values.image.tag | default (printf "%s-debian" .Chart.AppVersion) -}}
 {{- end -}}
 
 {{/*
