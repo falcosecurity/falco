@@ -2,6 +2,13 @@
 
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
+
+## v4.18.0
+
+* update the chart for falco 0.40;
+* remove deprecated cli flag `--cri` and use instead the configuration file. More info here: https://github.com/falcosecurity/falco/pull/3329
+* use new falco images, for more info see: https://github.com/falcosecurity/falco/issues/3165
+
 ## v4.17.2
 
 * update(falco): add ports definition in falco container spec
