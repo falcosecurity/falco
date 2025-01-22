@@ -585,7 +585,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v4.17.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v4.18.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -654,6 +654,16 @@ The following table lists the main configurable parameters of the falco chart v4
 | falco.base_syscalls | object | `{"custom_set":[],"repair":false}` | - [Suggestions]  NOTE: setting `base_syscalls.repair: true` automates the following suggestions for you.  These suggestions are subject to change as Falco and its state engine evolve.  For execve* events: Some Falco fields for an execve* syscall are retrieved from the associated `clone`, `clone3`, `fork`, `vfork` syscalls when spawning a new process. The `close` syscall is used to purge file descriptors from Falco's internal thread / process cache table and is necessary for rules relating to file descriptors (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)  Consider enabling the following syscalls in `base_syscalls.custom_set` for process rules: [clone, clone3, fork, vfork, execve, execveat, close]  For networking related events: While you can log `connect` or `accept*` syscalls without the socket syscall, the log will not contain the ip tuples. Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also necessary.  We recommend the following as the minimum set for networking-related rules: [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]  Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process when the running process opens a file or makes a network connection, consider adding the following to the above recommended syscall sets: ... setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir ... |
 | falco.buffered_outputs | bool | `false` | Enabling buffering for the output queue can offer performance optimization, efficient resource usage, and smoother data flow, resulting in a more reliable output mechanism. By default, buffering is disabled (false). |
 | falco.config_files[0] | string | `"/etc/falco/config.d"` |  |
+| falco.container_engines.bpm.enabled | bool | `false` |  |
+| falco.container_engines.cri.disable_async | bool | `false` |  |
+| falco.container_engines.cri.enabled | bool | `false` |  |
+| falco.container_engines.cri.sockets[0] | string | `"/run/containerd/containerd.sock"` |  |
+| falco.container_engines.cri.sockets[1] | string | `"/run/crio/crio.sock"` |  |
+| falco.container_engines.cri.sockets[2] | string | `"/run/k3s/containerd/containerd.sock"` |  |
+| falco.container_engines.docker.enabled | bool | `false` |  |
+| falco.container_engines.libvirt_lxc.enabled | bool | `false` |  |
+| falco.container_engines.lxc.enabled | bool | `false` |  |
+| falco.container_engines.podman.enabled | bool | `false` |  |
 | falco.falco_libs.thread_table_size | int | `262144` |  |
 | falco.file_output | object | `{"enabled":false,"filename":"./events.txt","keep_alive":false}` | When appending Falco alerts to a file, each new alert will be added to a new line. It's important to note that Falco does not perform log rotation for this file. If the `keep_alive` option is set to `true`, the file will be opened once and continuously written to, else the file will be reopened for each output message. Furthermore, the file will be closed and reopened if Falco receives the SIGUSR1 signal. |
 | falco.grpc | object | `{"bind_address":"unix:///run/falco/falco.sock","enabled":false,"threadiness":0}` | gRPC server using a local unix socket |
@@ -750,7 +760,7 @@ The following table lists the main configurable parameters of the falco chart v4
 | healthChecks.readinessProbe.timeoutSeconds | int | `5` | Number of seconds after which the probe times out. |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy. |
 | image.registry | string | `"docker.io"` | The image registry to pull from. |
-| image.repository | string | `"falcosecurity/falco-no-driver"` | The image repository to pull from |
+| image.repository | string | `"falcosecurity/falco"` | The image repository to pull from |
 | image.tag | string | `""` | The image tag to pull. Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | Secrets containing credentials when pulling from private/secure registries. |
 | metrics | object | `{"convertMemoryToMB":true,"enabled":false,"includeEmptyValues":false,"interval":"1h","kernelEventCountersEnabled":true,"kernelEventCountersPerCPUEnabled":false,"libbpfStatsEnabled":true,"outputRule":false,"resourceUtilizationEnabled":true,"rulesCountersEnabled":true,"service":{"annotations":{},"create":true,"labels":{},"ports":{"metrics":{"port":8765,"protocol":"TCP","targetPort":8765}},"type":"ClusterIP"},"stateCountersEnabled":true}` | metrics configures Falco to enable and expose the metrics. |
