@@ -10,7 +10,7 @@ image:
   # -- The image registry to pull from.
   registry: docker.io
   # -- The image repository to pull from
-  repository: falcosecurity/falco-no-driver
+  repository: falcosecurity/falco
   # -- The image tag to pull. Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
