@@ -27,6 +27,8 @@ namespaceOverride: ""
 podAnnotations: {}
 
 serviceAccount:
+  # -- Secrets containing credentials when pulling from private/secure registries.
+  imagePullSecrets: []
   # -- Specifies whether a service account should be created.
   create: true
   # -- Annotations to add to the service account.
