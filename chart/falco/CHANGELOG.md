@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.21.1
+
+* feat(falco): adding imagePullSecrets at the service account level
+
 ## v4.20.1
 
 * correctly mount the volumes based on socket path
