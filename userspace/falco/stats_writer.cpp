@@ -461,6 +461,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					        METRIC_VALUE_UNIT_MEMORY_BYTES,
 					        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 					        val);
+#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 					if(m_writer->m_config->m_metrics_convert_memory_to_mb &&
 					   m_writer->m_output_rule_metrics_converter) {
 						m_writer->m_output_rule_metrics_converter
@@ -469,6 +470,9 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					} else {
 						output_fields[metric.name] = metric.value.u64;
 					}
+#else
+					output_fields[metric.name] = metric.value.u64;
+#endif
 				}
 			}
 		}
