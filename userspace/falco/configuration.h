@@ -199,11 +199,6 @@ public:
 	std::vector<plugin_config> m_plugins;
 	bool m_plugins_hostinfo;
 
-	// container engines
-	uint64_t m_container_engines_mask;
-	uint64_t m_container_engines_disable_cri_async;
-	std::vector<std::string> m_container_engines_cri_socket_paths;
-
 	// Falco engine
 	engine_kind_t m_engine_mode = engine_kind_t::KMOD;
 	kmod_config m_kmod = {};
@@ -218,6 +213,7 @@ public:
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res& res);
 	void load_yaml(const std::string& config_name);
+	void load_container_config();
 	void init_logger();
 	void load_engine_config(const std::string& config_name);
 	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
