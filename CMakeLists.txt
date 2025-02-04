@@ -267,6 +267,12 @@ if(NOT WIN32
    AND NOT MUSL_OPTIMIZED_BUILD
 )
 	include(falcoctl)
+	include(container_plugin)
+	install(
+		FILES "${PROJECT_BINARY_DIR}/container_plugin-prefix/src/libcontainer.so"
+		DESTINATION "${FALCO_ABSOLUTE_SHARE_DIR}/plugins"
+		COMPONENT "${FALCO_COMPONENT_NAME}"
+	)
 endif()
 
 # Packages configuration
