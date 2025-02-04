@@ -53,17 +53,17 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	// called. Before changing the order, ensure that all
 	// dependencies are honored (e.g. don't process events before
 	// loading plugins, opening inspector, etc.).
-	std::list<app_action> run_steps = {
+	std::list<app_action> const run_steps = {
+	        falco::app::actions::print_help,
 	        falco::app::actions::print_config_schema,
 	        falco::app::actions::print_rule_schema,
-	        falco::app::actions::load_config,
-	        falco::app::actions::print_help,
-	        falco::app::actions::print_kernel_version,
-	        falco::app::actions::print_version,
-	        falco::app::actions::print_page_size,
 	        falco::app::actions::print_generated_gvisor_config,
 	        falco::app::actions::print_ignored_events,
 	        falco::app::actions::print_syscall_events,
+	        falco::app::actions::load_config,
+	        falco::app::actions::print_kernel_version,
+	        falco::app::actions::print_version,
+	        falco::app::actions::print_page_size,
 	        falco::app::actions::require_config_file,
 	        falco::app::actions::print_plugin_info,
 	        falco::app::actions::list_plugins,
@@ -87,7 +87,7 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	        falco::app::actions::process_events,
 	};
 
-	std::list<app_action> teardown_steps = {
+	std::list<app_action> const teardown_steps = {
 	        falco::app::actions::unregister_signal_handlers,
 	        falco::app::actions::stop_grpc_server,
 	        falco::app::actions::stop_webserver,
