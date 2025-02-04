@@ -460,12 +460,39 @@ engine:
 # For example, if you want to use the `k8saudit` plugin,
 # ensure it is configured appropriately and then change this to: 
 # load_plugins: [k8saudit, json]
-load_plugins: []
+load_plugins: [container]
 
 # Customize subsettings for each enabled plugin. These settings will only be
 # applied when the corresponding plugin is enabled using the `load_plugins`
 # option.
 plugins:
+  - name: container
+    # For a summary of config option, see https://github.com/FedeDP/container_plugin?tab=readme-ov-file#configuration
+    library_path: libcontainer.so
+    init_config:
+      verbosity: warning
+      label_max_len: 100
+      with_size: false
+# We use default config values for engine key.
+#      engines:
+#        docker:
+#          enabled: true
+#          sockets: [ '/var/run/docker.sock' ]
+#        podman:
+#          enabled: true
+#          sockets: [ '/run/podman/podman.sock', '/run/user/1000/podman/podman.sock' ]
+#        containerd:
+#          enabled: true
+#          sockets: [ '/run/containerd/containerd.sock' ]
+#        cri:
+#          enabled: true
+#          sockets: [ '/run/crio/crio.sock' ]
+#        lxc:
+#          enabled: false
+#        libvirt_lxc:
+#          enabled: false
+#        bpm:
+#          enabled: false
   - name: k8saudit
     library_path: libk8saudit.so
     init_config: ""
@@ -1308,29 +1335,9 @@ falco_libs:
   thread_table_size: 262144
   snaplen: 80
 
-# [Incubating] `container_engines`
+# [Deprecated] `container_engines`
 #
-# This option allows you to explicitly enable or disable API lookups against container 
-# runtime sockets for each supported container runtime. 
-# Access to these sockets enables Falco to retrieve container and Kubernetes fields, 
-# helping identify workload owners in modern containerized environments. 
-# Refer to the fields docs:
-# 
-# - [Kubernetes fields](https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s)
-# - [Container fields](https://falco.org/docs/reference/rules/supported-fields/#container)
-# 
-# Additionally, Falco can use container events as a data source for alerting (evt.type = container).
-# 
-# For most container engines, you can solely enable or disable them, and Falco will search the 
-# default (hard-coded) container runtime socket paths, such as `/var/run/docker.sock` for Docker.
-#
-# However, for Kubernetes settings, you can customize the CRI socket paths:
-# 
-# - `container_engines.cri.sockets`: Pass a list of container runtime sockets.
-# - `container_engines.cri.disable_async`: Since API lookups may not always be quick or 
-# perfect, resulting in empty fields for container metadata, you can use this option option 
-# to disable asynchronous fetching. Note that missing fields may still occasionally occur.
-
+# The following options are deprecated and will be forwarded to the container plugin init_config.
 container_engines:
   docker:
     enabled: true

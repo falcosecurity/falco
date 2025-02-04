@@ -40,51 +40,6 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 	inspector->set_buffer_format(event_buffer_format);
 
 	//
-	// Container engines
-	//
-
-	// Debug log messages
-	if(s.config->m_container_engines_mask & (1 << CT_DOCKER)) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'docker'");
-	}
-
-	if(s.config->m_container_engines_mask & (1 << CT_PODMAN)) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'podman'");
-	}
-
-	if(s.config->m_container_engines_mask &
-	   ((1 << CT_CRI) | (1 << CT_CRIO) | (1 << CT_CONTAINERD))) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'CRI'");
-	}
-
-	if(s.config->m_container_engines_mask & (1 << CT_LXC)) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'lxc'");
-	}
-
-	if(s.config->m_container_engines_mask & (1 << CT_LIBVIRT_LXC)) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'libvirt_lxc'");
-	}
-
-	if(s.config->m_container_engines_mask & (1 << CT_BPM)) {
-		falco_logger::log(falco_logger::level::DEBUG, "Enabled container engine 'bpm'");
-	}
-
-	// Container engines configs via falco.yaml
-	inspector->set_container_engine_mask(s.config->m_container_engines_mask);
-	for(auto& p : s.config->m_container_engines_cri_socket_paths) {
-		if(!p.empty()) {
-			inspector->add_cri_socket_path(p);
-			falco_logger::log(falco_logger::level::DEBUG,
-			                  "Enabled container runtime socket at '" + p + "' via config file");
-		}
-	}
-
-	inspector->set_cri_async(!s.config->m_container_engines_disable_cri_async);
-	if(s.config->m_container_engines_disable_cri_async) {
-		falco_logger::log(falco_logger::level::DEBUG, "Disabling async lookups for 'CRI'");
-	}
-
-	//
 	// If required, set the snaplen.
 	// In case both config and CLI options are specified, CLI takes precedence.
 	//

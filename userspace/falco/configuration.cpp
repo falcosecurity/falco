@@ -96,12 +96,7 @@ falco_configuration::falco_configuration():
         m_metrics_flags(0),
         m_metrics_convert_memory_to_mb(true),
         m_metrics_include_empty_values(false),
-        m_plugins_hostinfo(true),
-        m_container_engines_mask(0),
-        m_container_engines_disable_cri_async(false),
-        m_container_engines_cri_socket_paths({"/run/containerd/containerd.sock",
-                                              "/run/crio/crio.sock",
-                                              "/run/k3s/containerd/containerd.sock"}) {
+        m_plugins_hostinfo(true) {
 	m_config_schema = nlohmann::json::parse(config_schema_string);
 }
 
@@ -699,31 +694,59 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 
 	m_watch_config_files = m_config.get_scalar<bool>("watch_config_files", true);
 
-	if(m_config.get_scalar<bool>("container_engines.docker.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_DOCKER);
+	load_container_config();
+}
+
+void falco_configuration::load_container_config() {
+	// Find container plugin
+	const std::string *init_cfg;
+	for(const auto &p : m_plugins) {
+		if(p.m_name == "container") {
+			// Store the point to be later overridden
+			init_cfg = &p.m_init_config;
+		}
 	}
-	if(m_config.get_scalar<bool>("container_engines.podman.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_PODMAN);
+
+	if(m_config.is_defined("container_engines.docker.enabled")) {
+		const auto docker_enabled =
+		        m_config.get_scalar<bool>("container_engines.docker.enabled", true);
+		// TODO update init_cfg
 	}
-	if(m_config.get_scalar<bool>("container_engines.cri.enabled", true)) {
-		m_container_engines_mask |= ((1 << CT_CRI) | (1 << CT_CRIO) | (1 << CT_CONTAINERD));
-		m_container_engines_cri_socket_paths.clear();
-		m_config.get_sequence<std::vector<std::string>>(m_container_engines_cri_socket_paths,
-		                                                "container_engines.cri.sockets");
-		m_container_engines_disable_cri_async =
-		        m_config.get_scalar<bool>("container_engines.cri.disable-cri-async", false);
+
+	if(m_config.is_defined("container_engines.podman.enabled")) {
+		const auto podman_enabled =
+		        m_config.get_scalar<bool>("container_engines.podman.enabled", true);
+		// TODO update init_cfg
 	}
-	if(m_config.get_scalar<bool>("container_engines.lxc.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_LXC);
+
+	if(m_config.is_defined("container_engines.cri.enabled")) {
+		const auto cri_enabled = m_config.get_scalar<bool>("container_engines.cri.enabled", true);
+		// TODO update init_cfg
+
+		if(cri_enabled) {
+			std::vector<std::string> cri_socket_paths;
+			m_config.get_sequence<std::vector<std::string>>(cri_socket_paths,
+			                                                "container_engines.cri.sockets");
+			auto disable_cri_async =
+			        m_config.get_scalar<bool>("container_engines.cri.disable-cri-async", false);
+			// TODO update initcfg
+		}
 	}
-	if(m_config.get_scalar<bool>("container_engines.libvirt_lxc.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_LIBVIRT_LXC);
+
+	if(m_config.is_defined("container_engines.lxc.enabled")) {
+		const auto lxc_enabled = m_config.get_scalar<bool>("container_engines.lxc.enabled", true);
+		// TODO update init_cfg
 	}
-	if(m_config.get_scalar<bool>("container_engines.rocket.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_RKT);
+
+	if(m_config.is_defined("container_engines.libvirt_lxc.enabled")) {
+		const auto libvirt_lxc_enabled =
+		        m_config.get_scalar<bool>("container_engines.libvirt_lxc.enabled", true);
+		// TODO update init_cfg
 	}
-	if(m_config.get_scalar<bool>("container_engines.bpm.enabled", true)) {
-		m_container_engines_mask |= (1 << CT_BPM);
+
+	if(m_config.is_defined("container_engines.bpm.enabled")) {
+		const auto bpm_enabled = m_config.get_scalar<bool>("container_engines.bpm.enabled", true);
+		// TODO update init_cfg
 	}
 }
 
