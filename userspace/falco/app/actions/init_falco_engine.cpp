@@ -170,14 +170,15 @@ falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state&
 	if(s.is_capture_mode()) {
 		auto manager = s.offline_inspector->get_plugin_manager();
 		for(const auto& p : manager->plugins()) {
-			if(p->caps() & CAP_SOURCING && p->id() != 0) {
-				bool added = false;
-				auto source_idx = manager->source_idx_by_plugin_id(p->id(), added);
-				auto engine_idx = s.source_infos.at(p->event_source())->engine_idx;
-				if(!added || source_idx != engine_idx) {
-					return run_result::fatal("Could not add event source in the engine: " +
-					                         p->event_source());
-				}
+			if((p->caps() & CAP_SOURCING) == 0 || p->id() == 0) {
+				continue;
+			}
+			bool added = false;
+			auto source_idx = manager->source_idx_by_plugin_id(p->id(), added);
+			auto engine_idx = s.source_infos.at(p->event_source())->engine_idx;
+			if(!added || source_idx != engine_idx) {
+				return run_result::fatal("Could not add event source in the engine: " +
+				                         p->event_source());
 			}
 		}
 	}

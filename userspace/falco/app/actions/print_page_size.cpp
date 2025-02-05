@@ -24,25 +24,24 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::print_page_size(const falco::app::state& s) {
-	if(s.options.print_page_size) {
-#ifndef _WIN32
-		long page_size = getpagesize();
-#else
-		SYSTEM_INFO sysInfo;
-
-		GetSystemInfo(&sysInfo);
-
-		long page_size = sysInfo.dwPageSize;
-#endif
-		if(page_size <= 0) {
-			return run_result::fatal(
-			        "\nUnable to get the system page size through 'getpagesize()'\n");
-		} else {
-			falco_logger::log(
-			        falco_logger::level::INFO,
-			        "Your system page size is: " + std::to_string(page_size) + " bytes\n");
-		}
-		return run_result::exit();
+	if(!s.options.print_page_size) {
+		return run_result::ok();
 	}
-	return run_result::ok();
+
+#ifndef _WIN32
+	long page_size = getpagesize();
+#else
+	SYSTEM_INFO sysInfo;
+
+	GetSystemInfo(&sysInfo);
+
+	long page_size = sysInfo.dwPageSize;
+#endif
+	if(page_size <= 0) {
+		return run_result::fatal("\nUnable to get the system page size through 'getpagesize()'\n");
+	}
+
+	falco_logger::log(falco_logger::level::INFO,
+	                  "Your system page size is: " + std::to_string(page_size) + " bytes\n");
+	return run_result::exit();
 }

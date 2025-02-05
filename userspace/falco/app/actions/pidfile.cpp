@@ -30,21 +30,23 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& sta
 		return run_result::ok();
 	}
 
-	if(!state.options.pidfilename.empty()) {
-		int64_t self_pid = getpid();
-
-		std::ofstream stream;
-		stream.open(state.options.pidfilename);
-
-		if(!stream.good()) {
-			falco_logger::log(
-			        falco_logger::level::ERR,
-			        "Could not write pid to pidfile " + state.options.pidfilename + ". Exiting.\n");
-			exit(-1);
-		}
-		stream << self_pid;
-		stream.close();
+	if(state.options.pidfilename.empty()) {
+		return run_result::ok();
 	}
+
+	int64_t self_pid = getpid();
+
+	std::ofstream stream;
+	stream.open(state.options.pidfilename);
+
+	if(!stream.good()) {
+		falco_logger::log(
+		        falco_logger::level::ERR,
+		        "Could not write pid to pidfile " + state.options.pidfilename + ". Exiting.\n");
+		exit(-1);
+	}
+	stream << self_pid;
+	stream.close();
 
 	return run_result::ok();
 }

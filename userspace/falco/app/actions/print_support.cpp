@@ -88,31 +88,30 @@ static int get_sysinfo(nlohmann::json& support) {
 #endif
 
 falco::app::run_result falco::app::actions::print_support(falco::app::state& s) {
-	if(s.options.print_support) {
-		nlohmann::json support;
-
-		if(get_sysinfo(support) != 0) {
-			return run_result::fatal(std::string("Could not get system info: ") + strerror(errno));
-		}
-
-		const falco::versions_info infos(s.offline_inspector);
-		support["version"] = infos.falco_version;
-		support["engine_info"] = infos.as_json();
-		support["cmdline"] = s.cmdline;
-		support["config"] = s.config->dump();
-		support["rules_files"] = nlohmann::json::array();
-		for(const auto& filename : s.config->m_loaded_rules_filenames) {
-			nlohmann::json finfo;
-			finfo["name"] = filename;
-			nlohmann::json variant;
-			variant["content"] = read_file(filename);
-			finfo["variants"].push_back(variant);
-			support["rules_files"].push_back(finfo);
-		}
-		printf("%s\n", support.dump().c_str());
-
-		return run_result::exit();
+	if(!s.options.print_support) {
+		return run_result::ok();
 	}
 
-	return run_result::ok();
+	nlohmann::json support;
+
+	if(get_sysinfo(support) != 0) {
+		return run_result::fatal(std::string("Could not get system info: ") + strerror(errno));
+	}
+
+	const falco::versions_info infos(s.offline_inspector);
+	support["version"] = infos.falco_version;
+	support["engine_info"] = infos.as_json();
+	support["cmdline"] = s.cmdline;
+	support["config"] = s.config->dump();
+	support["rules_files"] = nlohmann::json::array();
+	for(const auto& filename : s.config->m_loaded_rules_filenames) {
+		nlohmann::json finfo;
+		finfo["name"] = filename;
+		nlohmann::json variant;
+		variant["content"] = read_file(filename);
+		finfo["variants"].push_back(variant);
+		support["rules_files"].push_back(finfo);
+	}
+	printf("%s\n", support.dump().c_str());
+	return run_result::exit();
 }

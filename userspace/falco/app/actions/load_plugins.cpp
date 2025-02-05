@@ -51,16 +51,18 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s) {
 		                  "Loading plugin '" + p.m_name + "' from file " + p.m_library_path + "\n");
 		auto plugin = s.offline_inspector->register_plugin(p.m_library_path);
 		s.plugin_configs.insert(p, plugin->name());
-		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0) {
-			state::source_info src_info;
-			src_info.filterchecks = std::make_shared<filter_check_list>();
-			auto sname = plugin->event_source();
-			s.source_infos.insert(src_info, sname);
-			// note: this avoids duplicate values
-			if(std::find(s.loaded_sources.begin(), s.loaded_sources.end(), sname) ==
-			   s.loaded_sources.end()) {
-				s.loaded_sources.push_back(sname);
-			}
+		if((plugin->caps() & CAP_SOURCING) == 0 || plugin->id() == 0) {
+			continue;
+		}
+		// Account the plugin event source
+		state::source_info src_info;
+		src_info.filterchecks = std::make_shared<filter_check_list>();
+		auto src_name = plugin->event_source();
+		s.source_infos.insert(src_info, src_name);
+		// note: this avoids duplicate values
+		if(std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src_name) ==
+		   s.loaded_sources.end()) {
+			s.loaded_sources.push_back(src_name);
 		}
 	}
 
