@@ -24,6 +24,7 @@ limitations under the License.
 #include <future>
 #include <memory>
 #include <vector>
+#include <thread>
 
 TEST(AtomicSignalHandler, lock_free_implementation) {
 	ASSERT_TRUE(falco::atomic_signal_handler().is_lock_free());
