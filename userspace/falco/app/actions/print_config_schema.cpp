@@ -21,9 +21,10 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::print_config_schema(falco::app::state &s) {
-	if(s.options.print_config_schema) {
-		printf("%s", s.config->m_config_schema.dump(2).c_str());
-		return run_result::exit();
+	if(!s.options.print_config_schema) {
+		return run_result::ok();
 	}
-	return run_result::ok();
+
+	printf("%s", s.config->m_config_schema.dump(2).c_str());
+	return run_result::exit();
 }

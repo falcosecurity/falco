@@ -21,9 +21,10 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::print_rule_schema(falco::app::state &s) {
-	if(s.options.print_rule_schema) {
-		printf("%s", s.engine->m_rule_schema.dump(2).c_str());
-		return run_result::exit();
+	if(!s.options.print_rule_schema) {
+		return run_result::ok();
 	}
-	return run_result::ok();
+
+	printf("%s", s.engine->m_rule_schema.dump(2).c_str());
+	return run_result::exit();
 }

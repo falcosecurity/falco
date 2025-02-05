@@ -147,13 +147,14 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	std::string err;
 	std::unordered_set<std::string> used_plugins;
 	const auto& all_plugins = s.offline_inspector->get_plugin_manager()->plugins();
+	const bool is_capture_mode = s.is_capture_mode();
 
 	for(const auto& src : s.loaded_sources) {
 		auto src_info = s.source_infos.at(src);
 
 		// in capture mode, every event source uses the offline inspector.
 		// in live mode, we create a new inspector for each event source
-		if(s.is_capture_mode()) {
+		if(is_capture_mode) {
 			src_info->inspector = s.offline_inspector;
 		} else {
 			src_info->inspector =
@@ -174,15 +175,16 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			                ((p->id() != 0 && src == p->event_source()) ||
 			                 (p->id() == 0 && src == falco_common::syscall_source));
 
-			if(s.is_capture_mode()) {
+			if(is_capture_mode) {
 				// in capture mode, every plugin is already registered
 				// in the offline inspector by the load_plugins action
 				plugin = p;
 			} else {
-				// in live mode, for the inspector assigned to the given
-				// event source, we must register the plugin supporting
-				// that event source and also plugins with field extraction
-				// capability that are compatible with that event source
+				// in live mode, for the inspector assigned to the given event source, we must
+				// register a plugin if one of the following condition applies to it:
+				// - it has event sourcing capability for the given event source
+				// - it has one among field extraction, event parsing and async events capabilities
+				//   and is compatible (with respect to that capability) with the given event source
 				if(is_input ||
 				   (p->caps() & CAP_EXTRACTION &&
 				    sinsp_plugin::is_source_compatible(p->extract_event_sources(), src)) ||
@@ -194,22 +196,23 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				}
 			}
 
-			// init the plugin, if we registered it into an inspector
-			// (in capture mode, this is true for every plugin)
-			if(plugin) {
-				// avoid initializing the same plugin twice in the same
-				// inspector if we're in capture mode
-				if(!s.is_capture_mode() || used_plugins.find(p->name()) == used_plugins.end()) {
-					if(!plugin->init(config->m_init_config, err)) {
-						return run_result::fatal(err);
-					}
-				}
-				if(is_input) {
-					auto gen_check = src_info->inspector->new_generic_filtercheck();
-					src_info->filterchecks->add_filter_check(std::move(gen_check));
-				}
-				used_plugins.insert(plugin->name());
+			if(!plugin) {
+				continue;
 			}
+
+			// init the plugin only if we registered it into an inspector (in capture mode, this is
+			// true for every plugin). Avoid initializing the same plugin twice in the same
+			// inspector if we're in capture mode
+			if(!is_capture_mode || used_plugins.find(p->name()) == used_plugins.end()) {
+				if(!plugin->init(config->m_init_config, err)) {
+					return run_result::fatal(err);
+				}
+			}
+			if(is_input) {
+				auto gen_check = src_info->inspector->new_generic_filtercheck();
+				src_info->filterchecks->add_filter_check(std::move(gen_check));
+			}
+			used_plugins.insert(plugin->name());
 		}
 
 		// populate filtercheck list for this inspector
@@ -221,20 +224,22 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			return run_result::fatal(err);
 		}
 
-		// in live mode, each inspector should have registered at most two event sources:
-		// the "syscall" on, loaded at default at index 0, and optionally another
-		// one defined by a plugin, at index 1
-		if(!s.is_capture_mode()) {
-			const auto& sources = src_info->inspector->event_sources();
-			if(sources.size() == 0 || sources.size() > 2 ||
-			   sources[0] != falco_common::syscall_source) {
-				err.clear();
-				for(const auto& source : sources) {
-					err += (err.empty() ? "" : ", ") + source;
-				}
-				return run_result::fatal("Illegal sources setup in live inspector for source '" +
-				                         src + "': " + err);
+		if(is_capture_mode) {
+			continue;
+		}
+
+		// in live mode, each inspector should have registered at most two event sources: the
+		// "syscall" on, loaded at default at index 0, and optionally another one defined by a
+		// plugin, at index 1
+		const auto& sources = src_info->inspector->event_sources();
+		if(sources.size() == 0 || sources.size() > 2 ||
+		   sources[0] != falco_common::syscall_source) {
+			err.clear();
+			for(const auto& source : sources) {
+				err += (err.empty() ? "" : ", ") + source;
 			}
+			return run_result::fatal("Illegal sources setup in live inspector for source '" + src +
+			                         "': " + err);
 		}
 	}
 

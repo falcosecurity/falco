@@ -27,44 +27,46 @@ using namespace falco::app::actions;
 falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state& s) {
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	// gRPC server
-	if(s.config->m_grpc_enabled) {
-		if(s.options.dry_run) {
-			falco_logger::log(falco_logger::level::DEBUG,
-			                  "Skipping starting gRPC server in dry-run\n");
-			return run_result::ok();
-		}
-
-		falco_logger::log(falco_logger::level::INFO,
-		                  "gRPC server threadiness equals to " +
-		                          std::to_string(s.config->m_grpc_threadiness) + "\n");
-		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per
-		// thread, or implement different queuing mechanisms, round robin, fanout? What we want to
-		// achieve?
-		s.grpc_server.init(s.config->m_grpc_bind_address,
-		                   s.config->m_grpc_threadiness,
-		                   s.config->m_grpc_private_key,
-		                   s.config->m_grpc_cert_chain,
-		                   s.config->m_grpc_root_certs,
-		                   s.config->m_log_level);
-		s.grpc_server_thread = std::thread([&s] { s.grpc_server.run(); });
+	if(!s.config->m_grpc_enabled) {
+		return run_result::ok();
 	}
+
+	if(s.options.dry_run) {
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping starting gRPC server in dry-run\n");
+		return run_result::ok();
+	}
+
+	falco_logger::log(falco_logger::level::INFO,
+	                  "gRPC server threadiness equals to " +
+	                          std::to_string(s.config->m_grpc_threadiness) + "\n");
+	// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per
+	// thread, or implement different queuing mechanisms, round robin, fanout? What we want to
+	// achieve?
+	s.grpc_server.init(s.config->m_grpc_bind_address,
+	                   s.config->m_grpc_threadiness,
+	                   s.config->m_grpc_private_key,
+	                   s.config->m_grpc_cert_chain,
+	                   s.config->m_grpc_root_certs,
+	                   s.config->m_log_level);
+	s.grpc_server_thread = std::thread([&s] { s.grpc_server.run(); });
 #endif
 	return run_result::ok();
 }
 
 falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& s) {
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(s.config->m_grpc_enabled) {
-		if(s.options.dry_run) {
-			falco_logger::log(falco_logger::level::DEBUG,
-			                  "Skipping stopping gRPC server in dry-run\n");
-			return run_result::ok();
-		}
+	if(!s.config->m_grpc_enabled) {
+		return run_result::ok();
+	}
 
-		if(s.grpc_server_thread.joinable()) {
-			s.grpc_server.shutdown();
-			s.grpc_server_thread.join();
-		}
+	if(s.options.dry_run) {
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping stopping gRPC server in dry-run\n");
+		return run_result::ok();
+	}
+
+	if(s.grpc_server_thread.joinable()) {
+		s.grpc_server.shutdown();
+		s.grpc_server_thread.join();
 	}
 #endif
 	return run_result::ok();

@@ -22,22 +22,22 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::print_version(falco::app::state& s) {
-	if(s.options.print_version_info) {
-		const falco::versions_info info(s.offline_inspector);
-		if(s.config->m_json_output) {
-			printf("%s\n", info.as_json().dump().c_str());
-		} else {
-			printf("Falco version: %s\n", info.falco_version.c_str());
-			printf("Libs version:  %s\n", info.libs_version.c_str());
-			printf("Plugin API:    %s\n", info.plugin_api_version.c_str());
-			printf("Engine:        %s\n", info.engine_version.c_str());
-			printf("Driver:\n");
-			printf("  API version:    %s\n", info.driver_api_version.c_str());
-			printf("  Schema version: %s\n", info.driver_schema_version.c_str());
-			printf("  Default driver: %s\n", info.default_driver_version.c_str());
-		}
-		return run_result::exit();
+	if(!s.options.print_version_info) {
+		return run_result::ok();
 	}
 
-	return run_result::ok();
+	const falco::versions_info info(s.offline_inspector);
+	if(s.config->m_json_output) {
+		printf("%s\n", info.as_json().dump().c_str());
+	} else {
+		printf("Falco version: %s\n", info.falco_version.c_str());
+		printf("Libs version:  %s\n", info.libs_version.c_str());
+		printf("Plugin API:    %s\n", info.plugin_api_version.c_str());
+		printf("Engine:        %s\n", info.engine_version.c_str());
+		printf("Driver:\n");
+		printf("  API version:    %s\n", info.driver_api_version.c_str());
+		printf("  Schema version: %s\n", info.driver_schema_version.c_str());
+		printf("  Default driver: %s\n", info.default_driver_version.c_str());
+	}
+	return run_result::exit();
 }

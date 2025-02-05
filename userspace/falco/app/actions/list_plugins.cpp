@@ -24,20 +24,20 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::list_plugins(const falco::app::state& s) {
-	if(s.options.list_plugins) {
-		std::ostringstream os;
-		sinsp inspector;
-		const auto& configs = s.config->m_plugins;
-		for(auto& c : configs) {
-			// load the plugin (no need to initialize it)
-			auto plugin = inspector.register_plugin(c.m_library_path);
-			format_plugin_info(plugin, os);
-			os << std::endl;
-		}
-
-		printf("%lu Plugins Loaded:\n\n%s\n", configs.size(), os.str().c_str());
-		return run_result::exit();
+	if(!s.options.list_plugins) {
+		return run_result::ok();
 	}
 
-	return run_result::ok();
+	std::ostringstream os;
+	sinsp inspector;
+	const auto& configs = s.config->m_plugins;
+	for(auto& c : configs) {
+		// load the plugin (no need to initialize it)
+		auto plugin = inspector.register_plugin(c.m_library_path);
+		format_plugin_info(plugin, os);
+		os << std::endl;
+	}
+
+	printf("%lu Plugins Loaded:\n\n%s\n", configs.size(), os.str().c_str());
+	return run_result::exit();
 }

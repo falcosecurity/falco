@@ -157,30 +157,29 @@ static void print_events(const std::vector<event_entry>& events, bool markdown) 
 }
 
 falco::app::run_result falco::app::actions::print_syscall_events(falco::app::state& s) {
-	if(s.options.list_syscall_events) {
-		const falco::versions_info info(s.offline_inspector);
-		printf("The events below are valid for Falco *Schema Version*: %s\n",
-		       info.driver_schema_version.c_str());
-
-		const libsinsp::events::set<ppm_event_code> available =
-		        libsinsp::events::all_event_set().diff(
-		                sc_set_to_event_set(falco::app::ignored_sc_set()));
-		const struct events_by_category events_bc = get_event_entries_by_category(true, available);
-
-		printf("## Syscall events\n\n");
-		print_events(events_bc.syscalls, s.options.markdown);
-
-		printf("\n\n## Tracepoint events\n\n");
-		print_events(events_bc.tracepoints, s.options.markdown);
-
-		printf("\n\n## Plugin events\n\n");
-		print_events(events_bc.pluginevents, s.options.markdown);
-
-		printf("\n\n## Metaevents\n\n");
-		print_events(events_bc.metaevents, s.options.markdown);
-
-		return run_result::exit();
+	if(!s.options.list_syscall_events) {
+		return run_result::ok();
 	}
 
-	return run_result::ok();
+	const falco::versions_info info(s.offline_inspector);
+	printf("The events below are valid for Falco *Schema Version*: %s\n",
+	       info.driver_schema_version.c_str());
+
+	const libsinsp::events::set<ppm_event_code> available = libsinsp::events::all_event_set().diff(
+	        sc_set_to_event_set(falco::app::ignored_sc_set()));
+	const struct events_by_category events_bc = get_event_entries_by_category(true, available);
+
+	printf("## Syscall events\n\n");
+	print_events(events_bc.syscalls, s.options.markdown);
+
+	printf("\n\n## Tracepoint events\n\n");
+	print_events(events_bc.tracepoints, s.options.markdown);
+
+	printf("\n\n## Plugin events\n\n");
+	print_events(events_bc.pluginevents, s.options.markdown);
+
+	printf("\n\n## Metaevents\n\n");
+	print_events(events_bc.metaevents, s.options.markdown);
+
+	return run_result::exit();
 }
