@@ -19,6 +19,7 @@ limitations under the License.
 
 #include <memory>
 #include <map>
+#include <thread>
 
 #include "falco_common.h"
 #include "falco_engine.h"
