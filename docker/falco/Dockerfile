@@ -28,7 +28,8 @@ RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
     cp -r /falco/* / && \
     rm -rf /falco
 
-RUN sed -i -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' /etc/falco/falco.yaml
+# Change the falco config within the container to enable ISO 8601 output.
+ADD scripts/falco/falco_iso8601_timeformat.yaml /etc/falco/config.d/
 
 # Falcoctl is not included here.
 RUN rm -rf /usr/bin/falcoctl /etc/falcoctl/

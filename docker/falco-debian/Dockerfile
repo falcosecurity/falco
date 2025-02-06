@@ -26,6 +26,7 @@ RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN sed -i -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' /etc/falco/falco.yaml
+# Change the falco config within the container to enable ISO 8601 output.
+ADD scripts/falco/falco_iso8601_timeformat.yaml /etc/falco/config.d/
 
 CMD ["/usr/bin/falco"]
