@@ -268,9 +268,16 @@ if(NOT WIN32
 )
 	include(falcoctl)
 	include(container_plugin)
+	# Install the plugin
 	install(
 		FILES "${PROJECT_BINARY_DIR}/container_plugin-prefix/src/libcontainer.so"
 		DESTINATION "${FALCO_ABSOLUTE_SHARE_DIR}/plugins"
+		COMPONENT "${FALCO_COMPONENT_NAME}"
+	)
+	# Install additional config override file to enable the container plugin
+	install(
+		FILES "${PROJECT_SOURCE_DIR}/config/falco.container_plugin.yaml"
+		DESTINATION "${FALCO_ETC_DIR}/config.d"
 		COMPONENT "${FALCO_COMPONENT_NAME}"
 	)
 endif()

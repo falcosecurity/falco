@@ -1,0 +1,2 @@
+# Enable container plugin for linux non musl installation.
+load_plugins: [container]

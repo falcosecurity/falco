@@ -693,61 +693,6 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 
 	m_watch_config_files = m_config.get_scalar<bool>("watch_config_files", true);
-
-	load_container_config();
-}
-
-void falco_configuration::load_container_config() {
-	// Find container plugin
-	const std::string *init_cfg;
-	for(const auto &p : m_plugins) {
-		if(p.m_name == "container") {
-			// Store the point to be later overridden
-			init_cfg = &p.m_init_config;
-		}
-	}
-
-	if(m_config.is_defined("container_engines.docker.enabled")) {
-		const auto docker_enabled =
-		        m_config.get_scalar<bool>("container_engines.docker.enabled", true);
-		// TODO update init_cfg
-	}
-
-	if(m_config.is_defined("container_engines.podman.enabled")) {
-		const auto podman_enabled =
-		        m_config.get_scalar<bool>("container_engines.podman.enabled", true);
-		// TODO update init_cfg
-	}
-
-	if(m_config.is_defined("container_engines.cri.enabled")) {
-		const auto cri_enabled = m_config.get_scalar<bool>("container_engines.cri.enabled", true);
-		// TODO update init_cfg
-
-		if(cri_enabled) {
-			std::vector<std::string> cri_socket_paths;
-			m_config.get_sequence<std::vector<std::string>>(cri_socket_paths,
-			                                                "container_engines.cri.sockets");
-			auto disable_cri_async =
-			        m_config.get_scalar<bool>("container_engines.cri.disable-cri-async", false);
-			// TODO update initcfg
-		}
-	}
-
-	if(m_config.is_defined("container_engines.lxc.enabled")) {
-		const auto lxc_enabled = m_config.get_scalar<bool>("container_engines.lxc.enabled", true);
-		// TODO update init_cfg
-	}
-
-	if(m_config.is_defined("container_engines.libvirt_lxc.enabled")) {
-		const auto libvirt_lxc_enabled =
-		        m_config.get_scalar<bool>("container_engines.libvirt_lxc.enabled", true);
-		// TODO update init_cfg
-	}
-
-	if(m_config.is_defined("container_engines.bpm.enabled")) {
-		const auto bpm_enabled = m_config.get_scalar<bool>("container_engines.bpm.enabled", true);
-		// TODO update init_cfg
-	}
 }
 
 void falco_configuration::read_rules_file_directory(const std::string &path,
