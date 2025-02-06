@@ -1,0 +1,2 @@
+# Enable iso 8601 time format on docker
+time_format_iso_8601: true

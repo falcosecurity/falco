@@ -43,8 +43,7 @@ jobs:
 
       - name: Build falco image
         run: |
-          cd ${{ github.workspace }}/docker/falco/
-          docker build -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
+          docker build -f docker/falco/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg TARGETARCH=${TARGETARCH} \
@@ -53,8 +52,7 @@ jobs:
 
       - name: Build falco-debian image
         run: |
-          cd ${{ github.workspace }}/docker/falco-debian/
-          docker build -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian \
+          docker build -f docker/falco-debian/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg TARGETARCH=${TARGETARCH} \
@@ -63,8 +61,7 @@ jobs:
 
       - name: Build falco-driver-loader image
         run: |
-          cd ${{ github.workspace }}/docker/driver-loader/
-          docker build -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
+          docker build -f docker/driver-loader/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
@@ -72,8 +69,7 @@ jobs:
 
       - name: Build falco-driver-loader-buster image
         run: |
-          cd ${{ github.workspace }}/docker/driver-loader-buster/
-          docker build -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster \
+          docker build -f docker/driver-loader-buster/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg TARGETARCH=${TARGETARCH} \
