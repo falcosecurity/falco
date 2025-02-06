@@ -460,7 +460,7 @@ engine:
 # For example, if you want to use the `k8saudit` plugin,
 # ensure it is configured appropriately and then change this to: 
 # load_plugins: [k8saudit, json]
-load_plugins: [container]
+load_plugins: []
 
 # Customize subsettings for each enabled plugin. These settings will only be
 # applied when the corresponding plugin is enabled using the `load_plugins`
@@ -1335,22 +1335,3 @@ base_syscalls:
 falco_libs:
   thread_table_size: 262144
   snaplen: 80
-
-# [Deprecated] `container_engines`
-#
-# The following options are deprecated and will be forwarded to the container plugin init_config.
-container_engines:
-  docker:
-    enabled: true
-  cri:
-    enabled: true
-    sockets: ["/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock"]
-    disable_async: false
-  podman:
-    enabled: true
-  lxc:
-    enabled: true
-  libvirt_lxc:
-    enabled: true
-  bpm:
-    enabled: true

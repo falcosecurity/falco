@@ -213,7 +213,6 @@ public:
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res& res);
 	void load_yaml(const std::string& config_name);
-	void load_container_config();
 	void init_logger();
 	void load_engine_config(const std::string& config_name);
 	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
