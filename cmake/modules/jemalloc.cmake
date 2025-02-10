@@ -40,12 +40,18 @@ else()
 	set(JEMALLOC_SRC "${PROJECT_BINARY_DIR}/jemalloc-prefix/src")
 	set(JEMALLOC_LIB "${JEMALLOC_SRC}/jemalloc/lib/libjemalloc${JEMALLOC_LIB_SUFFIX}")
 	set(JEMALLOC_INCLUDE "${JEMALLOC_SRC}/jemalloc/include/jemalloc")
+	if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+		set(JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS --with-lg-page=14)
+	else()
+		set(JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS "")
+	endif()
 	ExternalProject_Add(
 		jemalloc
 		PREFIX "${PROJECT_BINARY_DIR}/jemalloc-prefix"
 		URL "https://github.com/jemalloc/jemalloc/archive/refs/tags/5.3.0.tar.gz"
 		URL_HASH "SHA256=ef6f74fd45e95ee4ef7f9e19ebe5b075ca6b7fbe0140612b2a161abafb7ee179"
 		CONFIGURE_COMMAND ./autogen.sh --enable-prof --disable-libdl
+						  ${JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS}
 		BUILD_IN_SOURCE 1
 		BUILD_COMMAND make build_lib_static
 		INSTALL_COMMAND ""
