@@ -36,9 +36,12 @@ limitations under the License.
 	}
 
 static std::string s_container_info_fmt = "%container.info";
-static std::string s_default_extra_fmt =
-        "container_id=%container.id container_name=%container.name";
-
+// We were previously expanding %container.info to "container_id=%container.id
+// container_name=%container.name". Since the container plugin is now in use, and it exposes
+// container.id and container.name as suggested output fields, we don't need to expand
+// container.info anymore. We kept container.info in the ruleset to avoid a major breaking change.
+// TODO: drop `container.info` magic once we make a major breaking change in the ruleset.
+static std::string s_default_extra_fmt = "";
 using namespace libsinsp::filter;
 
 // todo(jasondellaluce): this breaks string escaping in lists and exceptions
