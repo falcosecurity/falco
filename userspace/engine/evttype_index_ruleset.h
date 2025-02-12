@@ -42,7 +42,6 @@ struct evttype_index_wrapper {
 
 class evttype_index_ruleset : public indexable_ruleset<evttype_index_wrapper> {
 public:
-	explicit evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> factory);
 	virtual ~evttype_index_ruleset();
 
 	// From filter_ruleset
@@ -65,20 +64,11 @@ public:
 	// Print each enabled rule when running Falco with falco logger
 	// log_level=debug; invoked within on_loading_complete()
 	void print_enabled_rules_falco_logger();
-
-private:
-	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 };
 
 class evttype_index_ruleset_factory : public filter_ruleset_factory {
 public:
-	inline explicit evttype_index_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
-	        m_filter_factory(factory) {}
-
 	inline std::shared_ptr<filter_ruleset> new_ruleset() override {
-		return std::make_shared<evttype_index_ruleset>(m_filter_factory);
+		return std::make_shared<evttype_index_ruleset>();
 	}
-
-private:
-	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 };

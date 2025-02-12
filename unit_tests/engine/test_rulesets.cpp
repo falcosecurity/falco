@@ -28,8 +28,8 @@ static std::shared_ptr<sinsp_filter_factory> create_factory(sinsp* inspector,
 	return std::make_shared<sinsp_filter_factory>(inspector, list);
 }
 
-static std::shared_ptr<filter_ruleset> create_ruleset(std::shared_ptr<sinsp_filter_factory> f) {
-	return std::make_shared<evttype_index_ruleset>(f);
+static std::shared_ptr<filter_ruleset> create_ruleset() {
+	return std::make_shared<evttype_index_ruleset>();
 }
 
 static std::shared_ptr<libsinsp::filter::ast::expr> create_ast(
@@ -49,7 +49,7 @@ TEST(Ruleset, enable_disable_rules_using_names) {
 
 	sinsp_filter_check_list filterlist;
 	auto f = create_factory(&inspector, filterlist);
-	auto r = create_ruleset(f);
+	auto r = create_ruleset();
 	auto ast = create_ast(f);
 	auto filter = create_filter(f, ast.get());
 
@@ -141,7 +141,7 @@ TEST(Ruleset, enable_disable_rules_using_tags) {
 
 	sinsp_filter_check_list filterlist;
 	auto f = create_factory(&inspector, filterlist);
-	auto r = create_ruleset(f);
+	auto r = create_ruleset();
 	auto ast = create_ast(f);
 	auto filter = create_filter(f, ast.get());
 

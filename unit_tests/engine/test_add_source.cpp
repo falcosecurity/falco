@@ -29,8 +29,7 @@ static std::string syscall_source_name = "syscall";
 namespace {
 class test_ruleset_factory : public evttype_index_ruleset_factory {
 public:
-	explicit test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
-	        evttype_index_ruleset_factory(factory) {
+	explicit test_ruleset_factory(): evttype_index_ruleset_factory() {
 		ruleset = evttype_index_ruleset_factory::new_ruleset();
 	}
 
@@ -50,7 +49,7 @@ TEST(AddSource, basic) {
 	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
 	auto formatter_factory =
 	        std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
-	auto ruleset_factory = std::make_shared<test_ruleset_factory>(filter_factory);
+	auto ruleset_factory = std::make_shared<test_ruleset_factory>();
 
 	falco_source syscall_source;
 	syscall_source.name = syscall_source_name;

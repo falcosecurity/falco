@@ -438,7 +438,7 @@ std::size_t falco_engine::add_source(
 	size_t idx = add_source(source,
 	                        filter_factory,
 	                        formatter_factory,
-	                        std::make_shared<evttype_index_ruleset_factory>(filter_factory));
+	                        std::make_shared<evttype_index_ruleset_factory>());
 
 	if(source == falco_common::syscall_source) {
 		m_syscall_source_idx = idx;

@@ -21,9 +21,6 @@ limitations under the License.
 
 #include <algorithm>
 
-evttype_index_ruleset::evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> f):
-        m_filter_factory(f) {}
-
 evttype_index_ruleset::~evttype_index_ruleset() {}
 
 void evttype_index_ruleset::add(const falco_rule &rule,

@@ -113,8 +113,6 @@ protected:
 
 class test_ruleset : public evttype_index_ruleset {
 public:
-	explicit test_ruleset(std::shared_ptr<sinsp_filter_factory> factory):
-	        evttype_index_ruleset(factory) {};
 	virtual ~test_ruleset() = default;
 
 	void add_compile_output(const rule_loader::compile_output& compile_output,
@@ -137,16 +135,11 @@ public:
 
 class test_ruleset_factory : public filter_ruleset_factory {
 public:
-	explicit test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
-	        m_filter_factory(factory) {}
-
 	virtual ~test_ruleset_factory() = default;
 
 	inline std::shared_ptr<filter_ruleset> new_ruleset() override {
-		return std::make_shared<test_ruleset>(m_filter_factory);
+		return std::make_shared<test_ruleset>();
 	}
-
-	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 };
 };  // namespace
 
@@ -212,7 +205,7 @@ static std::shared_ptr<rule_loader::configuration> create_configuration(
 	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
 	auto formatter_factory =
 	        std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
-	auto ruleset_factory = std::make_shared<evttype_index_ruleset_factory>(filter_factory);
+	auto ruleset_factory = std::make_shared<evttype_index_ruleset_factory>();
 
 	falco_source syscall_source;
 	syscall_source.name = syscall_source_name;
@@ -296,7 +289,7 @@ TEST(engine_loader_alt_loader, falco_engine_alternate_loader) {
 	auto filter_factory = std::make_shared<sinsp_filter_factory>(&inspector, filterchecks);
 	auto formatter_factory =
 	        std::make_shared<sinsp_evt_formatter_factory>(&inspector, filterchecks);
-	auto ruleset_factory = std::make_shared<test_ruleset_factory>(filter_factory);
+	auto ruleset_factory = std::make_shared<test_ruleset_factory>();
 
 	engine.add_source(syscall_source_name, filter_factory, formatter_factory, ruleset_factory);
 
