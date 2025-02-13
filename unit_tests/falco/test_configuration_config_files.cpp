@@ -466,6 +466,9 @@ TEST(Configuration, configuration_config_files_cmdline) {
 	std::vector<std::string> cmdline_config_options;
 	cmdline_config_options.push_back((yaml_helper::configs_key + "=conf_2.yaml"));
 
+	// Override foo2 value from cli
+	cmdline_config_options.push_back(("foo2=bar22"));
+
 	falco_configuration falco_config;
 	config_loaded_res res;
 	ASSERT_NO_THROW(res = falco_config.init_from_file("main.yaml", cmdline_config_options));
@@ -480,7 +483,7 @@ TEST(Configuration, configuration_config_files_cmdline) {
 	ASSERT_TRUE(falco_config.m_config.is_defined("base_value.name"));
 	ASSERT_EQ(falco_config.m_config.get_scalar<std::string>("base_value.name", ""), "foo");
 	ASSERT_TRUE(falco_config.m_config.is_defined("foo2"));
-	ASSERT_EQ(falco_config.m_config.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_EQ(falco_config.m_config.get_scalar<std::string>("foo2", ""), "bar22");
 	ASSERT_TRUE(falco_config.m_config.is_defined("base_value_2.id"));
 	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value_2.id", 0), 2);
 
