@@ -97,7 +97,7 @@ RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Change the falco config within the container to enable ISO 8601 output.
-ADD config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
+ADD ./config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
 
 # Some base images have an empty /lib/modules by default
 # If it's not empty, docker build will fail instead of
@@ -121,6 +121,6 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 	&& dpkg -i *binutils*.deb \
 	&& rm -f *binutils*.deb
 
-COPY ./docker-entrypoint.sh /
+COPY ./docker/driver-loader-buster/docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
