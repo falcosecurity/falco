@@ -41,6 +41,6 @@ RUN apt-get update \
 RUN rm -df /lib/modules \
 	&& ln -s $HOST_ROOT/lib/modules /lib/modules
 
-COPY ./docker-entrypoint.sh /
+COPY ./docker/driver-loader/docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
