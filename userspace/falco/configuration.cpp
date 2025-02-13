@@ -133,12 +133,20 @@ config_loaded_res falco_configuration::init_from_file(
 		std::cerr << "Cannot read config file (" + conf_filename + "): " + e.what() + "\n";
 		throw e;
 	}
-	init_cmdline_options(cmdline_options);
 
 	// Only report top most schema validation status
 	res[conf_filename] = validation_status[0];
 
+	// Load any `-o config_files=foo.yaml` cmdline additional option
+	load_cmdline_config_files(cmdline_options);
+
+	// Merge all config files (both from main falco.yaml and `-o config_files=foo.yaml`)
 	merge_config_files(conf_filename, res);
+
+	// Load all other `-o` cmdline options to override any config key
+	init_cmdline_options(cmdline_options);
+
+	// Finally load the parsed config to our structure
 	load_yaml(conf_filename);
 
 	return res;
@@ -764,6 +772,16 @@ static bool split(const std::string &str, char delim, std::pair<std::string, std
 	parts.second = str.substr(pos + 1);
 
 	return true;
+}
+
+void falco_configuration::load_cmdline_config_files(
+        const std::vector<std::string> &cmdline_options) {
+	for(const std::string &option : cmdline_options) {
+		// Set all config_files options
+		if(option.rfind(yaml_helper::configs_key, 0) == 0) {
+			set_cmdline_option(option);
+		}
+	}
 }
 
 void falco_configuration::init_cmdline_options(const std::vector<std::string> &cmdline_options) {

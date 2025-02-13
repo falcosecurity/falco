@@ -221,6 +221,8 @@ private:
 	void init_logger();
 	void load_engine_config(const std::string& config_name);
 	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
+	void load_cmdline_config_files(const std::vector<std::string>& cmdline_options);
+
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
 	 * in the underlying yaml config. <key> can contain '.'
