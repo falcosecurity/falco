@@ -52,11 +52,8 @@ jobs:
   test-dev-packages-arm64:
     needs: [fetch-version, build-dev-packages-arm64]
     uses: ./.github/workflows/reusable_test_packages.yaml
-    strategy:
-      fail-fast: false
     with:
       arch: aarch64
-      static: ${{ matrix.static != '' && true || false }}
       version: ${{ needs.fetch-version.outputs.version }}
 
   build-dev-minimal:
