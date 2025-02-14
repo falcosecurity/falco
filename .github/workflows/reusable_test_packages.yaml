@@ -40,8 +40,7 @@ jobs:
           tar -xvf $(ls falco-*.tar.gz)
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
-     
-      # We only run driver loader tests on x86_64
+    
       - name: Install kernel headers for falco-driver-loader tests
         run: |
           sudo apt update -y
@@ -49,6 +48,7 @@ jobs:
 
       # Some builds use sanitizers, we always install support for them so they can run
       - name: Install sanitizer support
+        if: inputs.sanitizers
         run: |
           sudo apt update -y
           sudo apt install -y libasan5 libubsan1
@@ -56,7 +56,7 @@ jobs:
       - name: Run tests
         env:
           LSAN_OPTIONS: "intercept_tls_get_addr=0"
-        uses: falcosecurity/testing@main 
+        uses: falcosecurity/testing@main
         with:
           test-falco: 'true'
           test-falcoctl: 'true'
