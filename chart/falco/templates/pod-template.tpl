@@ -171,15 +171,15 @@ spec:
         {{- with .Values.collectors }}
         {{- if .enabled }}
         {{- if .docker.enabled }}
-        - mountPath: /host/var/run/
+        - mountPath: /host{{ dir .docker.socket }}
           name: docker-socket
         {{- end }}
         {{- if .containerd.enabled }}
-        - mountPath: /host/run/containerd/
+        - mountPath: /host{{ dir .containerd.socket }}
           name: containerd-socket
         {{- end }}
         {{- if .crio.enabled }}
-        - mountPath: /host/run/crio/
+        - mountPath: /host{{ dir .crio.socket }}
           name: crio-socket
         {{- end }}
         {{- end }}
