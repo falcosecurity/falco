@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.20.1
+
+* correctly mount the volumes based on socket path
+* unit tests for container engines socket paths
+
 ## v4.20.0
 
 * bump falcoctl to 0.11.0
