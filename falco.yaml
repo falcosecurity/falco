@@ -1277,6 +1277,7 @@ metrics:
 base_syscalls:
   custom_set: []
   repair: false
+  all: false
 
 ##############
 # Falco libs #

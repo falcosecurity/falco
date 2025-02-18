@@ -45,9 +45,7 @@ public:
 	bool print_config_schema = false;
 	bool print_rule_schema = false;
 	std::string conf_filename;
-	bool all_events = false;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	bool print_base64 = false;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> enable_sources;
 	std::string gvisor_generate_config_with_socket;
@@ -67,7 +65,6 @@ public:
 	std::string pidfilename;
 	// Rules list as passed by the user, via cmdline option '-r'
 	std::list<std::string> rules_filenames;
-	uint64_t snaplen = 0;
 	bool print_support = false;
 	bool unbuffered_outputs = false;
 	std::vector<std::string> validate_rules_filenames;

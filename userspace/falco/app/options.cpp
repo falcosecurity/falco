@@ -73,10 +73,6 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 		}
 	}
 
-	if(m_cmdline_parsed.count("b") > 0) {
-		print_base64 = true;
-	}
-
 	if(m_cmdline_parsed.count("r") > 0) {
 		for(auto &path : m_cmdline_parsed["r"].as<std::vector<std::string>>()) {
 			rules_filenames.push_back(path);
@@ -104,15 +100,13 @@ void options::define(cxxopts::Options& opts)
 #endif
 		("config-schema",            "Print the config json schema and exit.", cxxopts::value(print_config_schema)->default_value("false"))
 		("rule-schema",              "Print the rule json schema and exit.", cxxopts::value(print_rule_schema)->default_value("false"))
-		("A",                        "DEPRECATED: use -o base_syscalls.all=true instead. Monitor all events supported by Falco and defined in rules and configs. Some events are ignored by default when -A is not specified (the -i option lists these events ignored). Using -A can impact performance. This option has no effect when reproducing events from a capture file.", cxxopts::value(all_events)->default_value("false"))
-		("b,print-base64",           "DEPRECATED: use -o buffer_format_base64=true. Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 		("disable-source",           "Turn off a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times, but turning off all event sources simultaneously is not permitted. This option can not be mixed with --enable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(disable_sources), "<event_source>")
 		("dry-run",                  "Run Falco without processing events. It can help check that the configuration and rules do not have any errors.", cxxopts::value(dry_run)->default_value("false"))
 		("enable-source",            "Enable a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times. When using this option, only the event sources specified by it will be enabled. This option can not be mixed with --disable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(enable_sources), "<event_source>")
 #ifdef HAS_GVISOR
 		("gvisor-generate-config",   "Generate a configuration file that can be used for gVisor and exit. See --gvisor-config for more details.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/run/falco/gvisor.sock"), "<socket_path>")
 #endif
-		("i",                        "Print those events that are ignored by default for performance reasons and exit. See -A for more details.", cxxopts::value(print_ignored_events)->default_value("false"))
+		("i",                        "Print those events that are ignored by default for performance reasons and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 		("L",                        "Show the name and description of all rules and exit. If json_output is set to true, it prints details about all rules, macros, and lists in JSON format.", cxxopts::value(describe_all_rules)->default_value("false"))
 		("l",                        "Show the name and description of the rule specified <rule> and exit. If json_output is set to true, it prints details about the rule in JSON format.", cxxopts::value(describe_rule), "<rule>")
 		("list",                     "List all defined fields and exit. If <source> is provided, only list those fields for the source <source>. Current values for <source> are \"syscall\" or any source from a configured plugin with event sourcing capability.", cxxopts::value(list_source_fields)->implicit_value(""), "<source>")
@@ -126,7 +120,6 @@ void options::define(cxxopts::Options& opts)
 		("p,print",                  "Print (or replace) additional information in the rule's output.\nUse -pc or -pcontainer to append container details to syscall events.\nUse -pk or -pkubernetes to add both container and Kubernetes details to syscall events.\nIf using gVisor, choose -pcg or -pkg variants (or -pcontainer-gvisor and -pkubernetes-gvisor, respectively).\nIf a syscall rule's output contains %container.info, it will be replaced with the corresponding details. Otherwise, these details will be directly appended to the rule's output.\nAlternatively, use -p <output_format> for a custom format. In this case, the given <output_format> will be appended to the rule's output without any replacement to all events, including plugin events.", cxxopts::value(print_additional), "<output_format>")
 		("P,pidfile",                "Write PID to specified <pid_file> path. By default, no PID file is created.", cxxopts::value(pidfilename)->default_value(""), "<pid_file>")
 		("r",                        "Rules file or directory to be loaded. This option can be passed multiple times. Falco defaults to the values in the configuration file when this option is not specified.", cxxopts::value<std::vector<std::string>>(), "<rules_file>")
-		("S,snaplen",                "DEPRECATED: use -o falco_libs.snaplen=<len> instead. Collect only the first <len> bytes of each I/O buffer for 'syscall' events. By default, the first 80 bytes are collected by the driver and sent to the user space for processing. Use this option with caution since it can have a strong performance impact.", cxxopts::value(snaplen)->default_value("0"), "<len>")
 		("support",                  "Print support information, including version, rules files used, loaded configuration, etc., and exit. The output is in JSON format.", cxxopts::value(print_support)->default_value("false"))
 		("U,unbuffered",             "Turn off output buffering for configured outputs. This causes every single line emitted by Falco to be flushed, which generates higher CPU usage but is useful when piping those outputs into another process or a script.", cxxopts::value(unbuffered_outputs)->default_value("false"))
 		("V,validate",               "Read the contents of the specified <rules_file> file(s), validate the loaded rules, and exit. This option can be passed multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
