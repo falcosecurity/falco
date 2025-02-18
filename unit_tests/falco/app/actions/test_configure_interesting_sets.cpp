@@ -116,7 +116,6 @@ TEST_F(test_falco_engine, preconditions_postconditions) {
 
 	s1.engine = nullptr;
 	s1.config = std::make_shared<falco_configuration>();
-	s1.options.all_events = false;
 	auto result = falco::app::actions::configure_interesting_sets(s1);
 	ASSERT_FALSE(result.success);
 	ASSERT_NE(result.errstr, "");
@@ -199,9 +198,8 @@ TEST_F(test_falco_engine, selection_not_allevents) {
 	falco::app::state s2;
 	// run app action with fake engine and without the `-A` option
 	s2.engine = m_engine;
-	s2.options.all_events = false;
+	s2.config->m_base_syscalls_all = false;
 
-	ASSERT_EQ(s2.options.all_events, false);
 	auto result = falco::app::actions::configure_interesting_sets(s2);
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
@@ -256,7 +254,8 @@ TEST_F(test_falco_engine, selection_allevents) {
 	falco::app::state s3;
 	// run app action with fake engine and with the `-A` option
 	s3.engine = m_engine;
-	s3.options.all_events = true;
+	s3.config->m_base_syscalls_all = true;
+
 	auto result = falco::app::actions::configure_interesting_sets(s3);
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
@@ -299,8 +298,8 @@ TEST_F(test_falco_engine, selection_allevents) {
 
 TEST_F(test_falco_engine, selection_generic_evts) {
 	falco::app::state s4;
-	// run app action with fake engine and without the `-A` option
-	s4.options.all_events = false;
+	// run app action with fake engine and without the `m_base_syscalls_all` option
+
 	auto filters = s_sample_filters;
 	filters.insert(s_sample_generic_filters.begin(), s_sample_generic_filters.end());
 	load_rules(ruleset_from_filters(filters), "dummy_ruleset.yaml");
@@ -347,8 +346,7 @@ TEST_F(test_falco_engine, selection_custom_base_set) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s5;
-	// run app action with fake engine and without the `-A` option
-	s5.options.all_events = true;
+	s5.config->m_base_syscalls_all = true;
 	s5.engine = m_engine;
 	auto default_base_set = libsinsp::events::sinsp_state_sc_set();
 
@@ -425,8 +423,8 @@ TEST_F(test_falco_engine, selection_custom_base_set) {
 	expected_sc_names.erase("accept4");
 	ASSERT_NAMES_EQ(selected_sc_names, expected_sc_names);
 
-	// non-empty custom base set (positive, without -A)
-	s5.options.all_events = false;
+	// non-empty custom base set (positive, disable all syscalls)
+	s5.config->m_base_syscalls_all = false;
 	s5.config->m_base_syscalls_custom_set = {"read"};
 	result = falco::app::actions::configure_interesting_sets(s5);
 	ASSERT_TRUE(result.success);
@@ -453,8 +451,8 @@ TEST_F(test_falco_engine, selection_custom_base_set_repair) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s6;
-	// run app action with fake engine and without the `-A` option
-	s6.options.all_events = false;
+	// run app action with fake engine and without the `all syscalls` option
+	s6.config->m_base_syscalls_all = false;
 	s6.engine = m_engine;
 
 	// note: here we use file syscalls (e.g. open, openat) and have a custom
@@ -494,8 +492,8 @@ TEST_F(test_falco_engine, selection_empty_custom_base_set_repair) {
 	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
 	falco::app::state s7;
-	// run app action with fake engine and with the `-A` option
-	s7.options.all_events = true;
+	// run app action with fake engine and with the `all syscalls` option
+	s7.config->m_base_syscalls_all = true;
 	s7.engine = m_engine;
 
 	// simulate empty custom set but repair option set.
