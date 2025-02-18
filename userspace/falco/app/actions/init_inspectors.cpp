@@ -27,12 +27,6 @@ using namespace falco::app::actions;
 
 static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> inspector) {
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	if(s.options.print_base64) {
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "The -b/--print-base64 option is deprecated and will be removed. Use -o "
-		                  "buffer_format_base64=true instead.");
-		event_buffer_format = sinsp_evt::PF_BASE64;
-	}
 	if(s.config->m_buffer_format_base64) {
 		event_buffer_format = sinsp_evt::PF_BASE64;
 	}
@@ -86,16 +80,9 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 
 	//
 	// If required, set the snaplen.
-	// In case both config and CLI options are specified, CLI takes precedence.
 	//
 	if(s.config->m_falco_libs_snaplen != 0) {
 		inspector->set_snaplen(s.config->m_falco_libs_snaplen);
-	}
-	if(s.options.snaplen != 0) {
-		inspector->set_snaplen(s.options.snaplen);
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "The -S/--snaplen option is deprecated and will be removed. Use -o "
-		                  "falco_libs.snaplen=<len> instead.");
 	}
 
 	if(s.is_driver_drop_failed_exit_enabled()) {
