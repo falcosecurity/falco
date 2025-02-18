@@ -69,13 +69,17 @@ jobs:
   test-packages:
     needs: [release-settings, build-packages]
     uses: ./.github/workflows/reusable_test_packages.yaml
-    strategy:
-      fail-fast: false
-      matrix:
-        static: ["static", ""]
+    # See https://github.com/falcosecurity/falco/pull/3482
+    # Since musl build does not support dynamically loaded plugins,
+    # many tests would fail (the ones using `container.foo` fields).
+    # Disable tests on static builds for now.
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        static: ["static", ""]
     with:
       arch: x86_64
-      static: ${{ matrix.static != '' && true || false }}
+#      static: ${{ matrix.static != '' && true || false }}
       version: ${{ github.event.release.tag_name }}
 
   test-packages-arm64:
