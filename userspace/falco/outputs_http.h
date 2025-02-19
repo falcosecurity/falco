@@ -18,6 +18,8 @@ limitations under the License.
 #pragma once
 
 #include "outputs.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
 
 namespace falco {
 namespace outputs {
