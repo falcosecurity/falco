@@ -175,7 +175,7 @@ _The units represent the number of releases._
 ### Examples
 
 **Example 1** Let's consider a feature _foo_ in the Output/Alerts Area introduced in Falco 1.0.0 and labeled as *Incubating*. The feature is promoted to *Stable* in Falco 1.1.0 (because the feature did not get any user-facing change).
-Subsequently, maintainers decide that backward-compatible changes must be introduced in _foo_ to improve its functionality. The part of the feature to be changed is labeled as *Deprecated* in Falco 1.2.0, and the deprecation period starts. The non-backward compatible change is then introduced in Falco 1.4.0.
+Subsequently, maintainers decide that backward-incompatible changes must be introduced in _foo_ to improve its functionality. The part of the feature to be changed is labeled as *Deprecated* in Falco 1.2.0, and the deprecation period starts. The non-backward compatible change is then introduced in Falco 1.4.0.
 
 **Example 2** The `--bar` flag in the CLI/Config Area has been introduced since Falco 1.1.0 and is labeled as *Stable*. Before releasing Falco 1.5.0, maintainers realize `--bar` is redundant and should be removed. The flag is labeled as *Deprecated* in Falco 1.5.0, and the deprecation period starts. The flag is removed in Falco 1.6.0.
 
