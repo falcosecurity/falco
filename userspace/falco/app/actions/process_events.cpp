@@ -260,10 +260,18 @@ static falco::app::run_result do_inspect(
 
 		// Reset the timeouts counter, Falco successfully got an event to process
 		timeouts_since_last_success_or_msg = 0;
+
 		if(duration_start == 0) {
 			duration_start = ev->get_ts();
 		} else if(duration_to_tot_ns > 0) {
-			if(ev->get_ts() - duration_start >= duration_to_tot_ns) {
+			// Highest priority async events (whose timestamp is -1 and get set by sinsp to current
+			// ts) are processed **before** other events, event if already enqueued. This means that
+			// we might find ourself in a situation where we have duration_start whose ts is > then
+			// next ev->get_ts(), leading t ev->get_ts() - duration_start being <0 (and, since we
+			// are unsigned here, huge). The diff should never need to be that large anyway, use a
+			// signed.
+			const int64_t diff = ev->get_ts() - duration_start;
+			if(diff >= (int64_t)duration_to_tot_ns) {
 				break;
 			}
 		}
