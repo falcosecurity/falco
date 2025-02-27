@@ -270,7 +270,7 @@ if(NOT WIN32
 	include(container_plugin)
 	# Install the plugin
 	install(
-		FILES "${PROJECT_BINARY_DIR}/container_plugin-prefix/src/libcontainer.so"
+		FILES "${CONTAINER_LIBRARY}"
 		DESTINATION "${FALCO_ABSOLUTE_SHARE_DIR}/plugins"
 		COMPONENT "${FALCO_COMPONENT_NAME}"
 	)
