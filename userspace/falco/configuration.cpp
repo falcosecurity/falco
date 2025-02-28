@@ -213,8 +213,8 @@ void falco_configuration::init_logger() {
 	m_log_level = m_config.get_scalar<std::string>("log_level", "info");
 	falco_logger::set_level(m_log_level);
 	falco_logger::set_sinsp_logging(
-	        m_config.get_scalar<bool>("libs_logger.enabled", false),
-	        m_config.get_scalar<std::string>("libs_logger.severity", "debug"),
+	        m_config.get_scalar<bool>("libs_logger.enabled", true),
+	        m_config.get_scalar<std::string>("libs_logger.severity", "info"),
 	        "[libs]: ");
 	falco_logger::log_stderr = m_config.get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config.get_scalar<bool>("log_syslog", true);
