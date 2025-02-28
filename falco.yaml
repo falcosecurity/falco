@@ -470,7 +470,6 @@ plugins:
     # For a summary of config option, see https://github.com/FedeDP/container_plugin?tab=readme-ov-file#configuration
     library_path: libcontainer.so
     init_config:
-      verbosity: warning
       label_max_len: 100
       with_size: false
 # We use default config values for engine key.
