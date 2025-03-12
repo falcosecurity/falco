@@ -506,8 +506,6 @@ Moreover, Falco supports running a gRPC server with two main binding types:
 - Over a local **Unix socket** with no authentication
 - Over the **network** with mandatory mutual TLS authentication (mTLS)
 
-> **Tip**: Once gRPC is enabled, you can deploy [falco-exporter](https://github.com/falcosecurity/falco-exporter) to export metrics to Prometheus.
-
 ### gRPC over unix socket (default)
 
 The preferred way to use the gRPC is over a Unix socket.
