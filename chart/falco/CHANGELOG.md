@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.21.2
+
+* add falco-talon as falco subchart
+
 ## v4.21.1
 
 * removed falco-expoter (now deprecated) references from the readme 
