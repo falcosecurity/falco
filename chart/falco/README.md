@@ -583,7 +583,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v4.21.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v4.21.3 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -740,6 +740,8 @@ The following table lists the main configurable parameters of the falco chart v4
 | falcosidekick.enabled | bool | `false` | Enable falcosidekick deployment. |
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
 | falcosidekick.listenPort | string | `""` | Listen port. Default value: 2801 |
+| falcotalon | object | `{"enabled":false}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml |
+| falcotalon.enabled | bool | `false` | Enable falcotalon deployment. |
 | fullnameOverride | string | `""` | Same as nameOverride but for the fullname. |
 | grafana | object | `{"dashboards":{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}}` | grafana contains the configuration related to grafana. |
 | grafana.dashboards | object | `{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}` | dashboards contains configuration for grafana dashboards. |

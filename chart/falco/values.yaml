@@ -471,6 +471,11 @@ falcosidekick:
   # -- Listen port. Default value: 2801
   listenPort: ""
 
+# -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml
+falcotalon:
+  # -- Enable falcotalon deployment.
+  enabled: false
+
 ####################
 # falcoctl config  #
 ####################
