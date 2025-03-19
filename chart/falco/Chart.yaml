@@ -1,7 +1,7 @@
 apiVersion: v2
 name: falco
 version: 4.21.2
-appVersion: "0.39.2"
+appVersion: "0.40.0"
 description: Falco
 keywords:
   - monitoring
@@ -19,7 +19,7 @@ maintainers:
     email: cncf-falco-dev@lists.cncf.io
 dependencies:
   - name: falcosidekick
-    version: "0.8.*"
+    version: "0.9.*"
     condition: falcosidekick.enabled
     repository: https://falcosecurity.github.io/charts
   - name: k8s-metacollector
