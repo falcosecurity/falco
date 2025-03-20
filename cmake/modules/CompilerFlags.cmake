@@ -73,7 +73,7 @@ if(NOT MSVC)
 
 	if(BUILD_WARNINGS_AS_ERRORS)
 		set(CMAKE_SUPPRESSED_WARNINGS
-			"-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict"
+			"-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict -Wno-deprecated-declarations"
 		)
 		set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 		set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra ${CMAKE_SUPPRESSED_WARNINGS}")
