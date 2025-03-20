@@ -69,6 +69,7 @@ falco_configuration::falco_configuration():
         m_json_include_output_property(true),
         m_json_include_tags_property(true),
         m_json_include_message_property(false),
+        m_json_include_output_fields_property(true),
         m_rule_matching(falco_common::rule_matching::FIRST),
         m_watch_config_files(true),
         m_buffered_outputs(false),
@@ -338,6 +339,8 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_json_include_tags_property = m_config.get_scalar<bool>("json_include_tags_property", true);
 	m_json_include_message_property =
 	        m_config.get_scalar<bool>("json_include_message_property", false);
+	m_json_include_output_fields_property =
+	        m_config.get_scalar<bool>("json_include_output_fields_property", true);
 
 	m_outputs.clear();
 	falco::outputs::config file_output;

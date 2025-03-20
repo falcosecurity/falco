@@ -27,6 +27,7 @@ public:
 	              bool json_include_output_property,
 	              bool json_include_tags_property,
 	              bool json_include_message_property,
+	              bool json_include_output_fields_property,
 	              bool time_format_iso_8601);
 	virtual ~falco_formats();
 
@@ -52,5 +53,6 @@ protected:
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
 	bool m_json_include_message_property;
+	bool m_json_include_output_fields_property;
 	bool m_time_format_iso_8601;
 };
