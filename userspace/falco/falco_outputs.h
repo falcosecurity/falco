@@ -46,6 +46,7 @@ public:
 	              bool json_include_output_property,
 	              bool json_include_tags_property,
 	              bool json_include_message_property,
+	              bool json_include_output_fields_property,
 	              uint32_t timeout,
 	              bool buffered,
 	              size_t outputs_queue_capacity,

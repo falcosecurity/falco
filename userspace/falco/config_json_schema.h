@@ -98,6 +98,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "json_include_message_property": {
                     "type": "boolean"
                 },
+                "json_include_output_fields_property": {
+                    "type": "boolean"
+                },
                 "json_include_tags_property": {
                     "type": "boolean"
                 },

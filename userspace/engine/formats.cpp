@@ -24,11 +24,13 @@ falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
                              bool json_include_output_property,
                              bool json_include_tags_property,
                              bool json_include_message_property,
+                             bool json_include_output_fields_property,
                              bool time_format_iso_8601):
         m_falco_engine(engine),
         m_json_include_output_property(json_include_output_property),
         m_json_include_tags_property(json_include_tags_property),
         m_json_include_message_property(json_include_message_property),
+        m_json_include_output_fields_property(json_include_output_fields_property),
         m_time_format_iso_8601(time_format_iso_8601) {}
 
 falco_formats::~falco_formats() {}
@@ -79,7 +81,9 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 		std::string json_fields_prefix;
 
 		// Resolve message fields
-		message_formatter->tostring(evt, json_fields_message);
+		if(m_json_include_output_fields_property) {
+			message_formatter->tostring(evt, json_fields_message);
+		}
 		// Resolve prefix (e.g. time) fields
 		prefix_formatter->tostring(evt, json_fields_prefix);
 
@@ -118,36 +122,38 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 			event["message"] = message;
 		}
 
-		event["output_fields"] = nlohmann::json::parse(json_fields_message);
+		if(m_json_include_output_fields_property) {
+			event["output_fields"] = nlohmann::json::parse(json_fields_message);
 
-		auto prefix_fields = nlohmann::json::parse(json_fields_prefix);
-		if(prefix_fields.is_object()) {
-			for(auto const &el : prefix_fields.items()) {
-				event["output_fields"][el.key()] = el.value();
-			}
-		}
-
-		for(auto const &ef : extra_fields) {
-			std::string fformat = ef.second.first;
-			if(fformat.size() == 0) {
-				continue;
+			auto prefix_fields = nlohmann::json::parse(json_fields_prefix);
+			if(prefix_fields.is_object()) {
+				for(auto const &el : prefix_fields.items()) {
+					event["output_fields"][el.key()] = el.value();
+				}
 			}
 
-			if(!(fformat[0] == '*')) {
-				fformat = "*" + fformat;
-			}
+			for(auto const &ef : extra_fields) {
+				std::string fformat = ef.second.first;
+				if(fformat.size() == 0) {
+					continue;
+				}
 
-			if(ef.second.second)  // raw field
-			{
-				std::string json_field_map;
-				auto field_formatter = m_falco_engine->create_formatter(source, fformat);
-				field_formatter->tostring_withformat(evt,
-				                                     json_field_map,
-				                                     sinsp_evt_formatter::OF_JSON);
-				auto json_obj = nlohmann::json::parse(json_field_map);
-				event["output_fields"][ef.first] = json_obj[ef.first];
-			} else {
-				event["output_fields"][ef.first] = format_string(evt, fformat, source);
+				if(!(fformat[0] == '*')) {
+					fformat = "*" + fformat;
+				}
+
+				if(ef.second.second)  // raw field
+				{
+					std::string json_field_map;
+					auto field_formatter = m_falco_engine->create_formatter(source, fformat);
+					field_formatter->tostring_withformat(evt,
+					                                     json_field_map,
+					                                     sinsp_evt_formatter::OF_JSON);
+					auto json_obj = nlohmann::json::parse(json_field_map);
+					event["output_fields"][ef.first] = json_obj[ef.first];
+				} else {
+					event["output_fields"][ef.first] = format_string(evt, fformat, source);
+				}
 			}
 		}
 

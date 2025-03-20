@@ -568,6 +568,13 @@ json_include_output_property: true
 # information.
 json_include_message_property: false
 
+# [Incubating] `json_include_output_fields_property`
+#
+# When using JSON output in Falco, you have the option to include the individual
+# output fields for easier access. To reduce the logging volume, it is recommended
+# to turn it off if it's not necessary for your use case.
+json_include_output_fields_property: true
+
 # [Stable] `json_include_tags_property`
 #
 # When using JSON output in Falco, you have the option to include the "tags"
