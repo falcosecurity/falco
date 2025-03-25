@@ -436,7 +436,7 @@ engine:
 # Falco plugins enable integration with other services in your ecosystem.
 # They allow Falco to extend its functionality and leverage data sources such as
 # Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
-# fast on-host detections beyond syscalls and container events. The plugin
+# fast on-host detections beyond syscalls. The plugin
 # system will continue to evolve with more specialized functionality in future
 # releases.
 #
@@ -448,7 +448,7 @@ engine:
 # Please note that if your intention is to enrich Falco syscall logs with fields
 # such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
 # the `k8saudit` plugin. This information is automatically extracted from
-# the container runtime socket. The `k8saudit` plugin is specifically designed
+# the container runtime socket by the 'container' plugin. The `k8saudit` plugin is specifically designed
 # to integrate with Kubernetes audit logs and is not required for basic enrichment
 # of syscall logs with Kubernetes-related fields.
 #
@@ -1118,8 +1118,7 @@ syscall_event_drops:
 #
 # `state_counters_enabled`: Emit counters related to Falco's state engine, including 
 # added, removed threads or file descriptors (fds), and failed lookup, store, or 
-# retrieve actions in relation to Falco's underlying process cache table (threadtable). 
-# We also log the number of currently cached containers if applicable.
+# retrieve actions in relation to Falco's underlying process cache table (threadtable).
 #
 # `kernel_event_counters_enabled`: Emit kernel side event and drop counters, as
 # an alternative to `syscall_event_drops`, but with some differences. These

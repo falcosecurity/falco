@@ -268,6 +268,21 @@ if(NOT WIN32
 )
 	include(falcoctl)
 	include(container_plugin)
+
+	# Generate a binary_dir/falco.yaml that automatically enables the plugin to be used for local
+	# testing.
+	configure_file(${CMAKE_SOURCE_DIR}/falco.yaml ${CMAKE_BINARY_DIR} COPYONLY)
+	# The custom target configures the plugin and set its path
+	add_custom_target(
+		container
+		COMMAND sed -i 's,^load_plugins: .*,load_plugins: [container],g'
+				${CMAKE_BINARY_DIR}/falco.yaml
+		COMMAND sed -i 's,libcontainer.so,${CONTAINER_LIBRARY},g' ${CMAKE_BINARY_DIR}/falco.yaml
+		DEPENDS container_plugin
+	)
+	# Let `make falco` also download container plugin
+	add_dependencies(falco container)
+
 	# Install the plugin
 	install(
 		FILES "${CONTAINER_LIBRARY}"
