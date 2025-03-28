@@ -24,4 +24,3 @@ StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
-Alias=falco.service
