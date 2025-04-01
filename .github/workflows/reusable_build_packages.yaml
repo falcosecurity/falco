@@ -59,7 +59,12 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build deps
         run: |
-          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool m4 rpm
+          sudo apt update && sudo apt install -y --no-install-recommends ca-certificates cmake curl wget build-essential git pkg-config autoconf automake libtool m4 rpm alien
+
+      - name: Install systemd rpm macros
+        run: |
+          wget https://rpmfind.net/linux/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/s/systemd-rpm-macros-257.4-3.fc43.noarch.rpm
+          sudo alien -d -i systemd-rpm-macros-257.4-3.fc43.noarch.rpm
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
