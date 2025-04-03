@@ -450,6 +450,11 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 		keep_alive = m_config.get_scalar<bool>("http_output.keep_alive", false);
 		http_output.options["keep_alive"] = keep_alive ? std::string("true") : std::string("false");
 
+		uint8_t max_consecutive_timeouts;
+		max_consecutive_timeouts =
+		        m_config.get_scalar<uint8_t>("http_output.max_consecutive_timeouts", 5);
+		http_output.options["max_consecutive_timeouts"] = std::to_string(max_consecutive_timeouts);
+
 		m_outputs.push_back(http_output);
 	}
 

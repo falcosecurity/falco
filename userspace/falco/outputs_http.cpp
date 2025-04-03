@@ -36,6 +36,8 @@ bool falco::outputs::output_http::init(const config &oc,
 
 	m_curl = nullptr;
 	m_http_headers = nullptr;
+	m_max_consecutive_timeouts =
+	        static_cast<uint8_t>(std::stoi(m_oc.options["max_consecutive_timeouts"]));
 	CURLcode res = CURLE_FAILED_INIT;
 
 	m_curl = curl_easy_init();
@@ -103,7 +105,16 @@ bool falco::outputs::output_http::init(const config &oc,
 
 void falco::outputs::output_http::output(const message *msg) {
 	CURLcode res = curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
-	CHECK_RES(curl_easy_perform(m_curl));
+	uint32_t curl_easy_platform_calls = 0;
+
+	if(res == CURLE_OK) {
+		do {
+			res = curl_easy_perform(m_curl);
+			curl_easy_platform_calls++;
+		} while(res == CURLE_OPERATION_TIMEDOUT &&
+		        curl_easy_platform_calls <= m_max_consecutive_timeouts);
+	}
+
 	if(res != CURLE_OK) {
 		falco_logger::log(
 		        falco_logger::level::ERR,
