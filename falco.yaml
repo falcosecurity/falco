@@ -753,6 +753,8 @@ http_output:
   echo: false
   compress_uploads: false
   keep_alive: false
+  # Maximum consecutive timeouts of libcurl to ignore
+  max_consecutive_timeouts: 5
 
 # [Stable] `program_output`
 #
