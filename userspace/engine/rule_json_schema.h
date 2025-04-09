@@ -119,8 +119,7 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 "values": {}
             },
             "required": [
-                "name",
-                "values"
+                "name"
             ],
             "title": "Exception"
         },
