@@ -68,7 +68,7 @@ set(FALCO_INCLUDE_DIRECTORIES
 )
 
 set(FALCO_DEPENDENCIES cxxopts)
-set(FALCO_LIBRARIES falco_engine sinsp yaml-cpp)
+set(FALCO_LIBRARIES falco_engine)
 
 if(USE_JEMALLOC)
 	list(APPEND FALCO_DEPENDENCIES jemalloc)
@@ -127,7 +127,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
 		"${GRPC_LIBRARIES}"
 		"${PROTOBUF_LIB}"
 		"${CARES_LIB}"
-		"${OPENSSL_LIBRARIES}"
 	)
 endif()
 
