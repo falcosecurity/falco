@@ -518,7 +518,7 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "keep_alive": {
                     "type": "boolean"
                 },
-                "max_consecutive_timeouts:" {
+                "max_consecutive_timeouts": {
                     "type": "integer"
                 }
             },
