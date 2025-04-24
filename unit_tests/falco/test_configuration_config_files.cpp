@@ -245,6 +245,190 @@ TEST(Configuration, configuration_config_files_override) {
 	std::filesystem::remove("conf_3.yaml");
 }
 
+TEST(Configuration, configuration_config_files_sequence) {
+	/* Test that included config files are able to override configs from main file */
+	const std::string main_conf_yaml = yaml_helper::configs_key +
+	                                   ":\n"
+	                                   "  - conf_2.yaml\n"  // default merge-strategy: append
+	                                   "  - conf_3.yaml\n"
+	                                   "foo: [ bar ]\n"
+	                                   "base_value:\n"
+	                                   "    id: 1\n"
+	                                   "    name: foo\n";
+	const std::string conf_yaml_2 =
+	        "foo: [ bar2 ]\n"  // append to foo sequence
+	        "base_value_2:\n"
+	        "    id: 2\n";
+	const std::string conf_yaml_3 =
+	        "base_value:\n"  // override base_value
+	        "    id: 3\n";
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	outfile.open("conf_3.yaml");
+	outfile << conf_yaml_3;
+	outfile.close();
+
+	std::vector<std::string> cmdline_config_options;
+	falco_configuration falco_config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = falco_config.init_from_file("main.yaml", cmdline_config_options));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(res.size(), 3);
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("foo"));
+	std::vector<std::string> foos;
+	auto expected_foos = std::vector<std::string>{"bar", "bar2"};
+	ASSERT_NO_THROW(falco_config.m_config.get_sequence<std::vector<std::string>>(foos, "foo"));
+	ASSERT_EQ(foos.size(), 2);  // 2 elements in `foo` sequence because we appended to it
+	for(size_t i = 0; i < foos.size(); ++i) {
+		EXPECT_EQ(foos[i], expected_foos[i])
+		        << "Vectors foo's and expected_foo's differ at index " << i;
+	}
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value.id", 0), 3);  // overridden!
+	ASSERT_FALSE(falco_config.m_config.is_defined(
+	        "base_value.name"));  // no more present since entire `base_value` block was overridden
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_FALSE(falco_config.m_config.is_defined("base_value_3.id"));  // not defined
+
+	std::filesystem::remove("main.yaml");
+	std::filesystem::remove("conf_2.yaml");
+	std::filesystem::remove("conf_3.yaml");
+}
+
+TEST(Configuration, configuration_config_files_sequence_override) {
+	/* Test that included config files are able to override configs from main file */
+	const std::string main_conf_yaml = yaml_helper::configs_key +
+	                                   ":\n"
+	                                   "  - '@conf_2.yaml'\n"  // merge-strategy: override
+	                                   "  - conf_3.yaml\n"
+	                                   "foo: [ bar ]\n"
+	                                   "base_value:\n"
+	                                   "    id: 1\n"
+	                                   "    name: foo\n";
+	const std::string conf_yaml_2 =
+	        "foo: [ bar2 ]\n"  // override foo sequence
+	        "base_value_2:\n"
+	        "    id: 2\n";
+	const std::string conf_yaml_3 =
+	        "base_value:\n"  // override base_value
+	        "    id: 3\n";
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	outfile.open("conf_3.yaml");
+	outfile << conf_yaml_3;
+	outfile.close();
+
+	std::vector<std::string> cmdline_config_options;
+	falco_configuration falco_config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = falco_config.init_from_file("main.yaml", cmdline_config_options));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(res.size(), 3);
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("foo"));
+	std::vector<std::string> foos;
+	auto expected_foos = std::vector<std::string>{"bar2"};
+	ASSERT_NO_THROW(falco_config.m_config.get_sequence<std::vector<std::string>>(foos, "foo"));
+	ASSERT_EQ(foos.size(), 1);  // one element in `foo` sequence because we overrode it
+	for(size_t i = 0; i < foos.size(); ++i) {
+		EXPECT_EQ(foos[i], expected_foos[i])
+		        << "Vectors foo's and expected_foo's differ at index " << i;
+	}
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value.id", 0), 3);  // overridden!
+	ASSERT_FALSE(falco_config.m_config.is_defined(
+	        "base_value.name"));  // no more present since entire `base_value` block was overridden
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_FALSE(falco_config.m_config.is_defined("base_value_3.id"));  // not defined
+
+	std::filesystem::remove("main.yaml");
+	std::filesystem::remove("conf_2.yaml");
+	std::filesystem::remove("conf_3.yaml");
+}
+
+TEST(Configuration, configuration_config_files_sequence_addonly) {
+	/* Test that included config files are able to override configs from main file */
+	const std::string main_conf_yaml = yaml_helper::configs_key +
+	                                   ":\n"
+	                                   "  - +conf_2.yaml\n"  // merge-strategy: add-only
+	                                   "  - conf_3.yaml\n"
+	                                   "foo: [ bar ]\n"
+	                                   "base_value:\n"
+	                                   "    id: 1\n"
+	                                   "    name: foo\n";
+	const std::string conf_yaml_2 =
+	        "foo: [ bar2 ]\n"  // ignored: add-only strategy
+	        "base_value_2:\n"
+	        "    id: 2\n";
+	const std::string conf_yaml_3 =
+	        "base_value:\n"  // override base_value
+	        "    id: 3\n";
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	outfile.open("conf_3.yaml");
+	outfile << conf_yaml_3;
+	outfile.close();
+
+	std::vector<std::string> cmdline_config_options;
+	falco_configuration falco_config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = falco_config.init_from_file("main.yaml", cmdline_config_options));
+
+	// main + conf_2 + conf_3
+	ASSERT_EQ(res.size(), 3);
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("foo"));
+	std::vector<std::string> foos;
+	auto expected_foos =
+	        std::vector<std::string>{"bar"};  // bar2 is ignored because of merge-strategy: add-only
+	ASSERT_NO_THROW(falco_config.m_config.get_sequence<std::vector<std::string>>(foos, "foo"));
+	ASSERT_EQ(foos.size(), 1);  // one element in `foo` sequence because we overrode it
+	for(size_t i = 0; i < foos.size(); ++i) {
+		EXPECT_EQ(foos[i], expected_foos[i])
+		        << "Vectors foo's and expected_foo's differ at index " << i;
+	}
+
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value.id", 0), 3);  // overridden!
+	ASSERT_FALSE(falco_config.m_config.is_defined(
+	        "base_value.name"));  // no more present since entire `base_value` block was overridden
+	ASSERT_TRUE(falco_config.m_config.is_defined("base_value_2.id"));
+	ASSERT_EQ(falco_config.m_config.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_FALSE(falco_config.m_config.is_defined("base_value_3.id"));  // not defined
+
+	std::filesystem::remove("main.yaml");
+	std::filesystem::remove("conf_2.yaml");
+	std::filesystem::remove("conf_3.yaml");
+}
+
 TEST(Configuration, configuration_config_files_unexistent) {
 	/* Test that including an unexistent file just skips it */
 	const std::string main_conf_yaml = yaml_helper::configs_key +

@@ -85,6 +85,27 @@ public:
 	inline static const std::string validation_failed = "failed";
 	inline static const std::string validation_none = "none";
 
+	enum include_files_strategy {
+		STRATEGY_APPEND,  // append to existing sequence keys, override scalar keys and add new ones
+		STRATEGY_OVERRIDE,  // override existing keys (sequences too) and add new ones
+		STRATEGY_ADDONLY    // only add new keys and ignore existing ones
+	};
+
+	static inline enum include_files_strategy get_include_file_strategy(
+	        std::string& include_file_name) {
+		if(include_file_name.length() > 0) {
+			if(include_file_name[0] == '+') {
+				include_file_name.erase(0, 1);
+				return STRATEGY_ADDONLY;
+			}
+			if(include_file_name[0] == '@') {
+				include_file_name.erase(0, 1);
+				return STRATEGY_OVERRIDE;
+			}
+		}
+		return STRATEGY_APPEND;
+	}
+
 	/**
 	 * Load all the YAML document represented by the input string.
 	 * Since this is used by rule loader, does not process env vars.
@@ -137,6 +158,7 @@ public:
 	}
 
 	void include_config_file(const std::string& include_file_path,
+	                         enum include_files_strategy strategy = STRATEGY_APPEND,
 	                         const nlohmann::json& schema = {},
 	                         std::vector<std::string>* schema_warnings = nullptr) {
 		auto loaded_nodes = load_from_file_int(include_file_path, schema, schema_warnings);
@@ -152,10 +174,24 @@ public:
 				                         "' directive in included config file " +
 				                         include_file_path + ".");
 			}
-			// We allow to override keys.
-			// We don't need to use `get_node()` here,
-			// since key is a top-level one.
-			m_root[key] = n.second;
+			switch(strategy) {
+			case STRATEGY_APPEND:
+				if(n.second.IsSequence()) {
+					for(const auto& item : n.second) {
+						m_root[key].push_back(item);
+					}
+					break;
+				}
+				// fallthrough
+			case STRATEGY_OVERRIDE:
+				m_root[key] = n.second;
+				break;
+			case STRATEGY_ADDONLY:
+				if(!m_root[key].IsDefined()) {
+					m_root[key] = n.second;
+				}
+				break;
+			}
 		}
 	}
 

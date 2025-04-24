@@ -143,6 +143,21 @@
 # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
 #
 # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
+#
+# 3 merge-strategies are available: `append`, `override` and `add-only`.
+# The default merge-strategy is `append`:
+#   * existing sequence keys will be appended
+#   * existing scalar keys will be overridden
+#   * non-existing keys will be added
+# To enable the `override` merge-strategy, `@` must be prepended to the entry, eg: "@/$HOME/override.yaml".
+#   * existing keys will be overridden
+#   * non-existing keys will be added
+#   Please note that since `@` is a reserved character by yaml spec, you need to quote the whole string.
+# To enable the `add-only` merge-strategy, `+` must be prepended to the entry, eg: "+/$HOME/append.yaml".
+#   * existing keys will be ignored
+#   * non-existing keys will be added
+#
+# When a merge-strategy is enabled for a folder entry, all of the included config files will use that merge-strategy.
 config_files:
   - /etc/falco/config.d
 
