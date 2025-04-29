@@ -85,25 +85,31 @@ public:
 	inline static const std::string validation_failed = "failed";
 	inline static const std::string validation_none = "none";
 
-	enum include_files_strategy {
+	enum config_files_strategy {
 		STRATEGY_APPEND,  // append to existing sequence keys, override scalar keys and add new ones
 		STRATEGY_OVERRIDE,  // override existing keys (sequences too) and add new ones
 		STRATEGY_ADDONLY    // only add new keys and ignore existing ones
 	};
 
-	static inline enum include_files_strategy get_include_file_strategy(
-	        std::string& include_file_name) {
-		if(include_file_name.length() > 0) {
-			if(include_file_name[0] == '+') {
-				include_file_name.erase(0, 1);
-				return STRATEGY_ADDONLY;
-			}
-			if(include_file_name[0] == '@') {
-				include_file_name.erase(0, 1);
-				return STRATEGY_OVERRIDE;
-			}
+	static enum config_files_strategy strategy_from_string(const std::string& strategy) {
+		if(strategy == "override") {
+			return yaml_helper::STRATEGY_OVERRIDE;
 		}
-		return STRATEGY_APPEND;
+		if(strategy == "add-only") {
+			return yaml_helper::STRATEGY_ADDONLY;
+		}
+		return yaml_helper::STRATEGY_APPEND;
+	}
+
+	static std::string strategy_to_string(const enum config_files_strategy strategy) {
+		switch(strategy) {
+		case yaml_helper::STRATEGY_OVERRIDE:
+			return "override";
+		case yaml_helper::STRATEGY_ADDONLY:
+			return "add-only";
+		default:
+			return "append";
+		}
 	}
 
 	/**
@@ -158,7 +164,7 @@ public:
 	}
 
 	void include_config_file(const std::string& include_file_path,
-	                         enum include_files_strategy strategy = STRATEGY_APPEND,
+	                         enum config_files_strategy strategy = STRATEGY_APPEND,
 	                         const nlohmann::json& schema = {},
 	                         std::vector<std::string>* schema_warnings = nullptr) {
 		auto loaded_nodes = load_from_file_int(include_file_path, schema, schema_warnings);
