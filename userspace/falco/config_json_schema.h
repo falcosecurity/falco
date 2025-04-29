@@ -38,7 +38,30 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "config_files": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "path": {
+                                        "type": "string"
+                                    },
+                                    "strategy": {
+                                        "type": "string",
+                                        "enum": [
+                                            "append",
+                                            "override",
+                                            "add-only"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "path"
+                                ]
+                            }
+                        ]
                     }
                 },
                 "watch_config_files": {

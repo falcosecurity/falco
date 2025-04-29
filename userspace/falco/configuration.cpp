@@ -162,13 +162,12 @@ void falco_configuration::merge_config_files(const std::string &config_name,
 	m_loaded_configs_filenames.push_back(config_name);
 	const auto ppath = std::filesystem::path(config_name);
 	// Parse files to be included
-	std::vector<std::string> include_files;
-	m_config.get_sequence<std::vector<std::string>>(include_files, yaml_helper::configs_key);
-	for(auto include_file : include_files) {
-		// This can modify include_file by dropping the '+/@' prefixes.
-		const auto merge_strategy = yaml_helper::get_include_file_strategy(include_file);
-
-		auto include_file_path = std::filesystem::path(include_file);
+	std::list<falco_configuration::config_files_config> include_files;
+	m_config.get_sequence<std::list<falco_configuration::config_files_config>>(
+	        include_files,
+	        yaml_helper::configs_key);
+	for(const auto &include_file : include_files) {
+		auto include_file_path = std::filesystem::path(include_file.m_path);
 		if(include_file_path == ppath) {
 			throw std::logic_error("Config error: '" + yaml_helper::configs_key +
 			                       "' directive tried to recursively include main config file: " +
@@ -179,15 +178,15 @@ void falco_configuration::merge_config_files(const std::string &config_name,
 			continue;
 		}
 		if(std::filesystem::is_regular_file(include_file_path)) {
-			m_loaded_configs_filenames.push_back(include_file);
-			m_config.include_config_file(include_file,
-			                             merge_strategy,
+			m_loaded_configs_filenames.push_back(include_file.m_path);
+			m_config.include_config_file(include_file.m_path,
+			                             include_file.m_strategy,
 			                             m_config_schema,
 			                             &validation_status);
 			// Only report top most schema validation status
-			res[include_file] = validation_status[0];
+			res[include_file.m_path] = validation_status[0];
 		} else if(std::filesystem::is_directory(include_file_path)) {
-			m_loaded_configs_folders.push_back(include_file);
+			m_loaded_configs_folders.push_back(include_file.m_path);
 			std::vector<std::string> v;
 			const auto it_options = std::filesystem::directory_options::follow_directory_symlink |
 			                        std::filesystem::directory_options::skip_permission_denied;
@@ -200,7 +199,7 @@ void falco_configuration::merge_config_files(const std::string &config_name,
 			std::sort(v.begin(), v.end());
 			for(const auto &f : v) {
 				m_config.include_config_file(f,
-				                             merge_strategy,
+				                             include_file.m_strategy,
 				                             m_config_schema,
 				                             &validation_status);
 				// Only report top most schema validation status

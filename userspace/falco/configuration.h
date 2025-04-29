@@ -54,6 +54,11 @@ public:
 		std::string m_open_params;
 	};
 
+	struct config_files_config {
+		std::string m_path;
+		yaml_helper::config_files_strategy m_strategy;
+	};
+
 	struct kmod_config {
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
@@ -425,4 +430,39 @@ struct convert<falco_configuration::plugin_config> {
 		return true;
 	}
 };
+
+template<>
+struct convert<falco_configuration::config_files_config> {
+	static Node encode(const falco_configuration::config_files_config& rhs) {
+		Node node;
+		node["path"] = rhs.m_path;
+		node["strategy"] = yaml_helper::strategy_to_string(rhs.m_strategy);
+		return node;
+	}
+
+	static bool decode(const Node& node, falco_configuration::config_files_config& rhs) {
+		if(!node.IsMap()) {
+			// Single string mode defaults to append strategy
+			rhs.m_path = node.as<std::string>();
+			rhs.m_strategy = yaml_helper::STRATEGY_APPEND;
+			return true;
+		}
+
+		// Path is required
+		if(!node["path"]) {
+			return false;
+		}
+		rhs.m_path = node["path"].as<std::string>();
+
+		// Strategy is not required
+		if(!node["strategy"]) {
+			rhs.m_strategy = yaml_helper::STRATEGY_APPEND;
+		} else {
+			std::string strategy = node["strategy"].as<std::string>();
+			rhs.m_strategy = yaml_helper::strategy_from_string(strategy);
+		}
+		return true;
+	}
+};
+
 }  // namespace YAML
