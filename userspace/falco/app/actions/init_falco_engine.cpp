@@ -94,40 +94,25 @@ void configure_output_format(falco::app::state& s) {
 	}
 
 	// See https://falco.org/docs/rules/style-guide/
-	const std::string container_info =
-	        "container_image=%container.image.repository "
-	        "container_image_tag=%container.image.tag";
-	const std::string k8s_info = "k8s_ns=%k8s.ns.name k8s_pod_name=%k8s.pod.name";
 	const std::string gvisor_info = "vpid=%proc.vpid vtid=%thread.vtid";
 
-	if(s.options.print_additional == "c" || s.options.print_additional == "container") {
-		s.engine->add_extra_output_format(container_info,
-		                                  falco_common::syscall_source,
-		                                  {},
-		                                  "",
-		                                  true);
-	} else if(s.options.print_additional == "cg" ||
-	          s.options.print_additional == "container-gvisor") {
-		s.engine->add_extra_output_format(gvisor_info + " " + container_info,
-		                                  falco_common::syscall_source,
-		                                  {},
-		                                  "",
-		                                  true);
-	} else if(s.options.print_additional == "k" || s.options.print_additional == "kubernetes") {
-		s.engine->add_extra_output_format(container_info + " " + k8s_info,
-		                                  falco_common::syscall_source,
-		                                  {},
-		                                  "",
-		                                  true);
-	} else if(s.options.print_additional == "kg" ||
-	          s.options.print_additional == "kubernetes-gvisor") {
-		s.engine->add_extra_output_format(gvisor_info + " " + container_info + " " + k8s_info,
-		                                  falco_common::syscall_source,
-		                                  {},
-		                                  "",
-		                                  true);
-	} else if(!s.options.print_additional.empty()) {
-		s.engine->add_extra_output_format(s.options.print_additional, "", {}, "", false);
+	if(!s.options.print_additional.empty()) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "The -p/--print option is deprecated and will be removed. Use -o "
+		                  "append_output=... instead.\n");
+
+		if(s.options.print_additional == "c" || s.options.print_additional == "container" ||
+		   s.options.print_additional == "k" || s.options.print_additional == "kubernetes") {
+			// Don't do anything, we don't need these anymore
+			// since container plugin takes care of suggesting the output format fields itself.
+		} else if(s.options.print_additional == "cg" ||
+		          s.options.print_additional == "container-gvisor" ||
+		          s.options.print_additional == "kg" ||
+		          s.options.print_additional == "kubernetes-gvisor") {
+			s.engine->add_extra_output_format(gvisor_info, falco_common::syscall_source, {}, "", true);
+		} else {
+			s.engine->add_extra_output_format(s.options.print_additional, "", {}, "", false);
+		}
 	}
 }
 
