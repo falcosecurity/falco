@@ -436,6 +436,12 @@ void rule_loader::compiler::compile_rule_infos(configuration& cfg,
 
 			if(extra.m_replace_container_info) {
 				if(rule.output.find(s_container_info_fmt) != std::string::npos) {
+					cfg.res->add_warning(falco::load_result::load_result::LOAD_DEPRECATED_ITEM,
+					                     "%container.info is deprecated and no more useful, and "
+					                     "will be dropped by Falco 1.0.0. "
+					                     "The container plugin will automatically add required "
+					                     "fields to the output message.",
+					                     r.ctx);
 					rule.output = replace(rule.output, s_container_info_fmt, extra.m_format);
 				} else {
 					rule.output = rule.output + " " + extra.m_format;
@@ -446,6 +452,12 @@ void rule_loader::compiler::compile_rule_infos(configuration& cfg,
 		}
 
 		if(rule.output.find(s_container_info_fmt) != std::string::npos) {
+			cfg.res->add_warning(falco::load_result::load_result::LOAD_DEPRECATED_ITEM,
+			                     "%container.info is deprecated and no more useful, and will be "
+			                     "dropped by Falco 1.0.0. "
+			                     "The container plugin will automatically add required fields to "
+			                     "the output message.",
+			                     r.ctx);
 			rule.output = replace(rule.output, s_container_info_fmt, s_default_extra_fmt);
 		}
 
