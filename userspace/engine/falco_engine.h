@@ -199,8 +199,7 @@ public:
 	void add_extra_output_format(const std::string &format,
 	                             const std::string &source,
 	                             const std::set<std::string> &tags,
-	                             const std::string &rule,
-	                             bool replace_container_info);
+	                             const std::string &rule);
 
 	// You can optionally add fields that will only show up in the object
 	// output (e.g. json, gRPC) alongside other output_fields

@@ -272,7 +272,6 @@ struct extra_output_format_conf {
 	std::string m_source;
 	std::set<std::string> m_tags;
 	std::string m_rule;
-	bool m_replace_container_info;
 };
 
 struct extra_output_field_conf {
