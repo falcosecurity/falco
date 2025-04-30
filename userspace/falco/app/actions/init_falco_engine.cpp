@@ -52,8 +52,7 @@ static void add_suggested_output(const falco::app::state& s,
 				s.engine->add_extra_output_format(format_suggested_field(fldinfo),
 				                                  src,
 				                                  eo.m_tags,
-				                                  eo.m_rule,
-				                                  false);
+				                                  eo.m_rule);
 			}
 		}
 	}
@@ -62,11 +61,7 @@ static void add_suggested_output(const falco::app::state& s,
 void configure_output_format(falco::app::state& s) {
 	for(auto& eo : s.config->m_append_output) {
 		if(eo.m_format != "") {
-			s.engine->add_extra_output_format(eo.m_format,
-			                                  eo.m_source,
-			                                  eo.m_tags,
-			                                  eo.m_rule,
-			                                  false);
+			s.engine->add_extra_output_format(eo.m_format, eo.m_source, eo.m_tags, eo.m_rule);
 		}
 
 		// Add suggested filtercheck formats to each source output
@@ -109,9 +104,9 @@ void configure_output_format(falco::app::state& s) {
 		          s.options.print_additional == "container-gvisor" ||
 		          s.options.print_additional == "kg" ||
 		          s.options.print_additional == "kubernetes-gvisor") {
-			s.engine->add_extra_output_format(gvisor_info, falco_common::syscall_source, {}, "", true);
+			s.engine->add_extra_output_format(gvisor_info, falco_common::syscall_source, {}, "");
 		} else {
-			s.engine->add_extra_output_format(s.options.print_additional, "", {}, "", false);
+			s.engine->add_extra_output_format(s.options.print_additional, "", {}, "");
 		}
 	}
 }

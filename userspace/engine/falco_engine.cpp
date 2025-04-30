@@ -986,9 +986,8 @@ void falco_engine::set_sampling_multiplier(double sampling_multiplier) {
 void falco_engine::add_extra_output_format(const std::string &format,
                                            const std::string &source,
                                            const std::set<std::string> &tags,
-                                           const std::string &rule,
-                                           bool replace_container_info) {
-	m_extra_output_format.push_back({format, source, tags, rule, replace_container_info});
+                                           const std::string &rule) {
+	m_extra_output_format.push_back({format, source, tags, rule});
 }
 
 void falco_engine::add_extra_output_formatted_field(const std::string &key,
