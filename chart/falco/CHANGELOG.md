@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.0.6
+
+* Allow specifying folder annotation for grafana dashboards
+
 ## v7.0.3
 
 * Replace initialDelaySeconds in liveness/readiness probes by startupProbe for quicker startup
