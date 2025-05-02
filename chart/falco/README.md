@@ -585,7 +585,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v7.0.5 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v7.0.6 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -782,11 +782,13 @@ The following table lists the main configurable parameters of the falco chart v7
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
 | falcosidekick.listenPort | string | `""` | Listen port. Default value: 2801 |
 | fullnameOverride | string | `""` | Same as nameOverride but for the fullname. |
-| grafana | object | `{"dashboards":{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}}` | grafana contains the configuration related to grafana. |
-| grafana.dashboards | object | `{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}` | dashboards contains configuration for grafana dashboards. |
-| grafana.dashboards.configMaps | object | `{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}}` | configmaps to be deployed that contain a grafana dashboard. |
-| grafana.dashboards.configMaps.falco | object | `{"folder":"","name":"falco-grafana-dashboard","namespace":""}` | falco contains the configuration for falco's dashboard. |
-| grafana.dashboards.configMaps.falco.folder | string | `""` | folder where the dashboard is stored by grafana. |
+| grafana | object | `{"dashboards":{"configMaps":{"falco":{"folder":{"annotation":"grafana_dashboard_folder","name":""},"name":"falco-grafana-dashboard","namespace":""}},"enabled":false}}` | grafana contains the configuration related to grafana. |
+| grafana.dashboards | object | `{"configMaps":{"falco":{"folder":{"annotation":"grafana_dashboard_folder","name":""},"name":"falco-grafana-dashboard","namespace":""}},"enabled":false}` | dashboards contains configuration for grafana dashboards. |
+| grafana.dashboards.configMaps | object | `{"falco":{"folder":{"annotation":"grafana_dashboard_folder","name":""},"name":"falco-grafana-dashboard","namespace":""}}` | configmaps to be deployed that contain a grafana dashboard. |
+| grafana.dashboards.configMaps.falco | object | `{"folder":{"annotation":"grafana_dashboard_folder","name":""},"name":"falco-grafana-dashboard","namespace":""}` | falco contains the configuration for falco's dashboard. |
+| grafana.dashboards.configMaps.falco.folder | object | `{"annotation":"grafana_dashboard_folder","name":""}` | folder where the dashboard is stored by grafana. |
+| grafana.dashboards.configMaps.falco.folder.annotation | string | `"grafana_dashboard_folder"` | annotation used by grafana |
+| grafana.dashboards.configMaps.falco.folder.name | string | `""` | folder name |
 | grafana.dashboards.configMaps.falco.name | string | `"falco-grafana-dashboard"` | name specifies the name for the configmap. |
 | grafana.dashboards.configMaps.falco.namespace | string | `""` | namespace specifies the namespace for the configmap. |
 | grafana.dashboards.enabled | bool | `false` | enabled specifies whether the dashboards should be deployed. |

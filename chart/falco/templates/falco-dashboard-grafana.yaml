@@ -13,8 +13,8 @@ metadata:
     grafana_dashboard: "1"
   {{- if .Values.grafana.dashboards.configMaps.falco.folder }}
   annotations:
-    k8s-sidecar-target-directory: /tmp/dashboards/{{ .Values.grafana.dashboards.configMaps.falco.folder}}
-    grafana_dashboard_folder: {{ .Values.grafana.dashboards.configMaps.falco.folder }}
+    k8s-sidecar-target-directory: /tmp/dashboards/{{ .Values.grafana.dashboards.configMaps.falco.folder.name }}
+    {{ .Values.grafana.dashboards.configMaps.falco.folder.annotation }}: {{ .Values.grafana.dashboards.configMaps.falco.folder.name }}
   {{- end }}
 data:
   falco-dashboard.json: |-
