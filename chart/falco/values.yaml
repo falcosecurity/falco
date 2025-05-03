@@ -687,11 +687,9 @@ grafana:
         # -- namespace specifies the namespace for the configmap.
         namespace: ""
         # -- folder where the dashboard is stored by grafana.
-        folder:
-          # -- folder name
-          name: ""
-          # -- annotation used by grafana
-          annotation: grafana_dashboard_folder
+        folder: ""
+        # -- annotation used by grafana
+        folderAnnotation: grafana_dashboard_folder
 
 ######################
 # falco.yaml config  #
