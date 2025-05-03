@@ -4,6 +4,39 @@
 
 Released on 2025-01-28
 
+## v0.41.0
+
+Released on 2025-05-03
+
+### Breaking Changes :warning:
+
+## v0.41.0
+
+_Released on 2025-05-03_
+
+### Breaking Changes :warning:
+
+* **Dropped container metadata management from within libs**; this is now provided by a plugin. The plugin will be shipped with Falco for now to avoid breaking changes.  
+  PR: [#3482](https://github.com/falcosecurity/falco/pull/3482)  
+  Plugin donation PR: [plugins#636](https://github.com/falcosecurity/plugins/pull/636)
+
+* **Metrics renamed** to use the `falco_plugins_` prefix instead of `falco_scap_`.  
+  Affected metrics:
+  - `falco_scap_n_containers` → `falco_plugins_n_containers`
+  - `falco_scap_n_missing_container_images` → `falco_plugins_n_missing_container_images`  
+  Reference: [falco_metrics.cpp#L309](https://github.com/falcosecurity/falco/blob/master/userspace/falco/falco_metrics.cpp#L309)
+
+* **CLI flags deprecated and removed**:
+  - `-pc` and `-pk` replaced by new plugin-suggested output fields:
+    - `container_image=%container.image.repository` becomes `container_image_repository=...`
+    - `k8s_ns=%k8s.ns.name` becomes `k8s_ns_name=...`
+  - `-S / --snaplen`, `-A`, `-b` are removed.  
+    Cleanup PR: [#3496](https://github.com/falcosecurity/falco/pull/3496)
+
+* **musl build** no longer supports container metadata since it cannot runtime-load plugins.  
+  Future builds may statically link the plugin to restore this support.
+
+
 ### Breaking Changes :warning:
 
 * cleanup(userspac/falco)!: drop deprecated options. [[#3361](https://github.com/falcosecurity/falco/pull/3361)] - [@FedeDP](https://github.com/FedeDP)
