@@ -190,8 +190,8 @@ watch_config_files: true
 # Falco rules can be specified using files or directories, which are loaded at
 # startup.
 #
-# If the entry is a file, it will be read directly. If the entry is a directory,
-# all files within that directory will be read in alphabetical order.
+# If the entry is a yaml file, it will be read directly. If the entry is a directory,
+# all yaml files within that directory will be read in alphabetical order.
 #
 # The falco_rules.yaml file ships with the Falco package and is overridden with
 # every new software version. falco_rules.local.yaml is only created if it
@@ -219,6 +219,10 @@ watch_config_files: true
 # "first match wins" principle. However, enabling the `all` matching option may result
 # in a performance penalty. We recommend carefully testing this alternative setting  
 # before deploying it in production. Read more under the `rule_matching` configuration.
+#
+# Since Falco 0.41 only files with .yml and .yaml extensions are considered, 
+# including directory contents. This means that you may specify directories that
+# contain yaml files for rules and other files which will be ignored.
 rules_files:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
