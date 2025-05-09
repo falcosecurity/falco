@@ -891,17 +891,6 @@ std::shared_ptr<filter_ruleset> falco_engine::ruleset_for_source(std::size_t sou
 	return source->ruleset;
 }
 
-void falco_engine::read_file(const std::string &filename, std::string &contents) {
-	std::ifstream is;
-
-	is.open(filename);
-	if(!is.is_open()) {
-		throw falco_exception("Could not open " + filename + " for reading");
-	}
-
-	contents.assign(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
-}
-
 static bool check_plugin_requirement_alternatives(
         const std::vector<falco_engine::plugin_version_requirement> &plugins,
         const rule_loader::plugin_version_info::requirement_alternatives &alternatives,
