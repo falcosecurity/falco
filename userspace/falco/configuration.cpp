@@ -734,13 +734,21 @@ void falco_configuration::read_rules_file_directory(const std::string &path,
 		std::sort(dir_filenames.begin(), dir_filenames.end());
 
 		for(std::string &ent : dir_filenames) {
-			rules_filenames.push_back(ent);
+			// only consider yaml files
+			if(falco::utils::matches_wildcard("*.yaml", ent) ||
+			   falco::utils::matches_wildcard("*.yml", ent)) {
+				rules_filenames.push_back(ent);
+			}
 		}
 	} else {
 		// Assume it's a file and just add to
 		// rules_filenames. If it can't be opened/etc that
 		// will be reported later..
-		rules_filenames.push_back(path);
+		// also, only consider yaml files
+		if(falco::utils::matches_wildcard("*.yaml", path) ||
+		   falco::utils::matches_wildcard("*.yml", path)) {
+			rules_filenames.push_back(path);
+		}
 	}
 }
 
