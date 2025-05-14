@@ -18,9 +18,9 @@ include(ExternalProject)
 
 if(NOT DEFINED FALCOSECURITY_RULES_FALCO_PATH)
 	# falco_rules.yaml
-	set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-4.0.0-rc1")
+	set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-4.0.0")
 	set(FALCOSECURITY_RULES_FALCO_CHECKSUM
-		"SHA256=b2fce6eddc32525beb02e67a2ba1cad9fe9167d235824e4c908f36faf0f703b1"
+		"SHA256=132320ddbfa1e2580981ed1bdd3ee3d0128a1e2306b2bee8978d1f0a930d6127"
 	)
 	set(FALCOSECURITY_RULES_FALCO_PATH
 		"${PROJECT_BINARY_DIR}/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/falco_rules.yaml"
