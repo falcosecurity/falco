@@ -277,7 +277,8 @@ if(NOT WIN32
 		container
 		COMMAND sed -i 's,^load_plugins: .*,load_plugins: [container],g'
 				${CMAKE_BINARY_DIR}/falco.yaml
-		COMMAND sed -i 's,libcontainer.so,${CONTAINER_LIBRARY},g' ${CMAKE_BINARY_DIR}/falco.yaml
+		COMMAND sed -i 's,library_path: libcontainer.so,library_path: ${CONTAINER_LIBRARY},g'
+				${CMAKE_BINARY_DIR}/falco.yaml
 		DEPENDS container_plugin
 	)
 	# Let `make falco` also download container plugin
