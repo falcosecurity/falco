@@ -687,7 +687,7 @@ outputs_queue:
 #             affect the regular Falco message in any way. These can be specified as a
 #             custom name with a custom format or as any supported field
 #             (see: https://falco.org/docs/reference/rules/supported-fields/)
-#   `suggested_output`: enable the use of extractor plugins suggested fields for the matching source output.
+#   `suggested_output`: automatically append fields that are suggested to rules output
 #
 # Example:
 # 
@@ -711,6 +711,17 @@ outputs_queue:
 append_output:
   - suggested_output: true
 
+# [Sandbox] `static_fields`
+#
+# Add statically defined fields to the Falco engine.
+# Then, they can be used as normal rule conditions, by prepending `static.` prefix,
+# eg: evt.type=open and static.foo=bar
+# Also, if `append_output.suggested_output` is true,
+# they'll be automatically appended to each rule output,
+# in the form "static_foo=bar"
+# static_fields:
+#  foo: bar
+#  foo2: ${env}
 
 ##########################
 # Falco outputs channels #

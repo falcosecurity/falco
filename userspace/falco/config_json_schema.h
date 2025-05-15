@@ -35,6 +35,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                         "$ref": "#/definitions/AppendOutput"
                     }
                 },
+                "static_fields": {
+                    "type": "object"
+                },
                 "config_files": {
                     "type": "array",
                     "items": {
