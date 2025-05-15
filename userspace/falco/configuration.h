@@ -147,6 +147,8 @@ public:
 	std::vector<rule_selection_config> m_rules_selection;
 	// Append output configuration passed by the user
 	std::vector<append_output_config> m_append_output;
+	// Static fields configuration passed by the user
+	std::map<std::string, std::string> m_static_fields;
 
 	bool m_json_output;
 	bool m_json_include_output_property;
