@@ -66,6 +66,10 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 		}
 	}
 
+	s.config->m_falco_restart_ts = (int64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
+	                                       std::chrono::system_clock::now().time_since_epoch())
+	                                       .count();
+
 	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;
 
 	return apply_deprecated_options(s);
