@@ -354,6 +354,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] =
 	        now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
+	output_fields["falco.restart_ts"] = m_writer->m_config->m_falco_restart_ts;
 	output_fields["falco.version"] = FALCO_VERSION;
 	if(agent_info) {
 		output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
