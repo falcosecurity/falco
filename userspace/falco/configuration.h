@@ -161,7 +161,7 @@ public:
 
 	bool m_watch_config_files;
 	bool m_buffered_outputs;
-	int64_t m_falco_restart_ts;
+	int64_t m_falco_reload_ts;
 	size_t m_outputs_queue_capacity;
 	bool m_time_format_iso_8601;
 	bool m_buffer_format_base64;

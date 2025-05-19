@@ -143,12 +143,12 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		std::vector<metrics_v2> additional_wrapper_metrics;
 
 		additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
-		        "restart_ts",
+		        "reload_ts",
 		        METRICS_V2_MISC,
 		        METRIC_VALUE_TYPE_S64,
 		        METRIC_VALUE_UNIT_TIME_TIMESTAMP_NS,
 		        METRIC_VALUE_METRIC_TYPE_NON_MONOTONIC_CURRENT,
-		        state.config->m_falco_restart_ts));
+		        state.config->m_falco_reload_ts));
 
 		if(agent_info) {
 			additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
