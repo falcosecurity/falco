@@ -72,9 +72,22 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 	libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
 	std::string prometheus_text;
 
-	for(auto inspector : inspectors) {
-		// Falco wrapper metrics
+	for(size_t i = 0; i < inspectors.size(); ++i) {  // Start inspector loop
+		auto& inspector = inspectors[i];
+
+		// Falco wrapper metrics, repeated for each inspector, accounting for plugins w/ event
+		// sources
 		//
+
+		/* Examples ...
+		    # HELP falcosecurity_scap_engine_name_info https://falco.org/docs/metrics/
+		    # TYPE falcosecurity_scap_engine_name_info gauge
+		    falcosecurity_scap_engine_name_info{engine_name="source_plugin"} 1
+		    # HELP falcosecurity_scap_engine_name_info https://falco.org/docs/metrics/
+		    # TYPE falcosecurity_scap_engine_name_info gauge
+		    falcosecurity_scap_engine_name_info{engine_name="bpf"} 1
+		*/
+
 		for(size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++) {
 			if(inspector->check_current_engine(all_driver_engines[i])) {
 				prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
@@ -84,6 +97,31 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 				        {{"engine_name", all_driver_engines[i]}});
 				break;
 			}
+		}
+
+		if(i != 0) {
+			continue;
+		}
+
+		// Falco wrapper metrics; Performed only once, the first inspector is typically the syscalls
+		// event source
+		//
+
+		// Each inspector includes all event sources
+		/* Examples ...
+		    # HELP falcosecurity_falco_evt_source_info https://falco.org/docs/metrics/
+		    # TYPE falcosecurity_falco_evt_source_info gauge
+		    falcosecurity_falco_evt_source_info{evt_source="syscall"} 1
+		    # HELP falcosecurity_falco_evt_source_info https://falco.org/docs/metrics/
+		    # TYPE falcosecurity_falco_evt_source_info gauge
+		    falcosecurity_falco_evt_source_info{evt_source="dummy_c"} 1
+		*/
+		for(const std::string& source : inspector->event_sources()) {
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
+			        "evt_source",
+			        "falcosecurity",
+			        "falco",
+			        {{"evt_source", source}});
 		}
 
 		const scap_agent_info* agent_info = inspector->get_agent_info();
@@ -132,14 +170,6 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		}
 
 #endif
-
-		for(const std::string& source : inspector->event_sources()) {
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
-			        "evt_source",
-			        "falcosecurity",
-			        "falco",
-			        {{"evt_source", source}});
-		}
 		std::vector<metrics_v2> additional_wrapper_metrics;
 
 		additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
@@ -207,31 +237,32 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		// Falco metrics categories
 		//
 		// rules_counters_enabled
+		// jemalloc_stats_enabled
 		if(state.config->m_metrics_flags & METRICS_V2_RULE_COUNTERS) {
 			const stats_manager& rule_stats_manager = state.engine->get_rule_stats_manager();
 			const indexed_vector<falco_rule>& rules = state.engine->get_rules();
 			const std::vector<std::unique_ptr<std::atomic<uint64_t>>>& rules_by_id =
 			        rule_stats_manager.get_by_rule_id();
-			// Distinguish between rules counters using labels, following Prometheus best practices:
-			// https://prometheus.io/docs/practices/naming/#labels
+			// Distinguish between rules counters using labels, following Prometheus best
+			// practices: https://prometheus.io/docs/practices/naming/#labels
 			for(size_t i = 0; i < rules_by_id.size(); i++) {
 				auto rule = rules.at(i);
 				auto count = rules_by_id[i]->load();
 				if(count > 0) {
 					/* Examples ...
 					    # HELP falcosecurity_falco_rules_matches_total
-					   https://falco.org/docs/metrics/ # TYPE
-					   falcosecurity_falco_rules_matches_total counter
+					    https://falco.org/docs/metrics/ # TYPE
+					    falcosecurity_falco_rules_matches_total counter
 					    falcosecurity_falco_rules_matches_total{priority="4",rule_name="Read
-					   sensitive file
-					   untrusted",source="syscall",tag_T1555="true",tag_container="true",tag_filesystem="true",tag_host="true",tag_maturity_stable="true",tag_mitre_credential_access="true"}
-					   10 # HELP falcosecurity_falco_rules_matches_total
-					   https://falco.org/docs/metrics/ # TYPE
-					   falcosecurity_falco_rules_matches_total counter
+					    sensitive file
+					    untrusted",source="syscall",tag_T1555="true",tag_container="true",tag_filesystem="true",tag_host="true",tag_maturity_stable="true",tag_mitre_credential_access="true"}
+					    10 # HELP falcosecurity_falco_rules_matches_total
+					    https://falco.org/docs/metrics/ # TYPE
+					    falcosecurity_falco_rules_matches_total counter
 					    falcosecurity_falco_rules_matches_total{priority="5",rule_name="Unexpected
-					   UDP
-					   Traffic",source="syscall",tag_TA0011="true",tag_container="true",tag_host="true",tag_maturity_incubating="true",tag_mitre_exfiltration="true",tag_network="true"}
-					   1
+					    UDP
+					    Traffic",source="syscall",tag_TA0011="true",tag_container="true",tag_host="true",tag_maturity_incubating="true",tag_mitre_exfiltration="true",tag_network="true"}
+					    1
 					*/
 					auto metric = libs::metrics::libsinsp_metrics::new_metric(
 					        "rules_matches",
@@ -292,17 +323,41 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 			}
 		}
 #endif
-	}
+	}  // End inspector loop
 
 	// Libs metrics categories
 	//
 	// resource_utilization_enabled
 	// state_counters_enabled
 	// kernel_event_counters_enabled
+	// kernel_event_counters_per_cpu_enabled
 	// libbpf_stats_enabled
-	for(auto metrics_collector : metrics_collectors) {
+
+	for(size_t i = 0; i < metrics_collectors.size();
+	    ++i) {  // Start inspector libs metrics collector loop
+		auto& metrics_collector = metrics_collectors[i];
+
 		metrics_collector.snapshot();
 		auto metrics_snapshot = metrics_collector.get_metrics();
+
+		if(i != 0) {
+			// Performed repeatedly for each inspectors' libs metrics collector
+
+			for(auto& metric : metrics_snapshot) {
+				if(metric.flags & METRICS_V2_PLUGINS) {
+					prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
+					prometheus_text +=
+					        prometheus_metrics_converter.convert_metric_to_text_prometheus(
+					                metric,
+					                "falcosecurity",
+					                "plugins");
+				}
+			}
+			continue;
+		}
+
+		// Performed only once, the first inspector is typically the syscalls event source
+		//
 
 		for(auto& metric : metrics_snapshot) {
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
@@ -335,11 +390,13 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 					        metric.value.u64);
 					const std::map<std::string, std::string>& const_labels = {{"cpu", cpu_number}};
 					/* Examples ...
-					    # HELP falcosecurity_scap_n_evts_cpu_total https://falco.org/docs/metrics/
-					    # TYPE falcosecurity_scap_n_evts_cpu_total counter
+					    # HELP falcosecurity_scap_n_evts_cpu_total
+					   https://falco.org/docs/metrics/ # TYPE
+					   falcosecurity_scap_n_evts_cpu_total counter
 					    falcosecurity_scap_n_evts_cpu_total{cpu="7"} 237
-					    # HELP falcosecurity_scap_n_drops_cpu_total https://falco.org/docs/metrics/
-					    # TYPE falcosecurity_scap_n_drops_cpu_total counter
+					    # HELP falcosecurity_scap_n_drops_cpu_total
+					   https://falco.org/docs/metrics/ # TYPE
+					   falcosecurity_scap_n_drops_cpu_total counter
 					    falcosecurity_scap_n_drops_cpu_total{cpu="7"} 0
 					*/
 					prometheus_text +=
@@ -350,8 +407,8 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 					                const_labels);
 				}
 			} else if(strcmp(metric.name, "n_drops_buffer_total") == 0) {
-				// Skip the libs aggregate metric since we distinguish between buffer drops using
-				// labels similar to the rules_matches
+				// Skip the libs aggregate metric since we distinguish between buffer drops
+				// using labels similar to the rules_matches
 				continue;
 			} else if(strncmp(metric.name, "n_drops_buffer", 14) == 0)  // prefix match
 			{
@@ -393,6 +450,7 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 				        prometheus_subsystem);
 			}
 		}
-	}
+	}  // End inspector libs metrics collector loop
+
 	return prometheus_text;
 }
