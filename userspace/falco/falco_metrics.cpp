@@ -88,7 +88,6 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 
 		const scap_agent_info* agent_info = inspector->get_agent_info();
 		const scap_machine_info* machine_info = inspector->get_machine_info();
-		libs::metrics::libs_metrics_collector libs_metrics_collector(inspector.get(), 0);
 		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
 		        "version",
 		        "falcosecurity",
