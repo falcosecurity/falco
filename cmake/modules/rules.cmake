@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2024 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -18,9 +18,9 @@ include(ExternalProject)
 
 if(NOT DEFINED FALCOSECURITY_RULES_FALCO_PATH)
 	# falco_rules.yaml
-	set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-3.2.0")
+	set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-4.0.0-rc1")
 	set(FALCOSECURITY_RULES_FALCO_CHECKSUM
-		"SHA256=b3990bf0209cfbf6a903b361e458a1f5851a9a5aeee808ad26a5ddbe1377157d"
+		"SHA256=b2fce6eddc32525beb02e67a2ba1cad9fe9167d235824e4c908f36faf0f703b1"
 	)
 	set(FALCOSECURITY_RULES_FALCO_PATH
 		"${PROJECT_BINARY_DIR}/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/falco_rules.yaml"
