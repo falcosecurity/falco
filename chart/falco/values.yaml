@@ -908,6 +908,7 @@ falco:
   #             affect the regular Falco message in any way. These can be specified as a
   #             custom name with a custom format or as any supported field
   #             (see: https://falco.org/docs/reference/rules/supported-fields/)
+  #   `suggested_output`: enable the use of extractor plugins suggested fields for the matching source output.
   #
   # Example:
   #
@@ -923,7 +924,13 @@ falco:
   # at the end telling the CPU number. In addition, if `json_output` is true, in the "output_fields"
   # property you will find three new ones: "evt.cpu", "home_directory" which will contain the value of the
   # environment variable $HOME, and "evt.hostname" which will contain the hostname.
-  append_output: []
+
+  # By default, we enable suggested_output for any source.
+  # This means that any extractor plugin that indicates some of its fields
+  # as suggested output formats, will see these fields in the output
+  # in the form "foo_bar=$foo.bar"
+  append_output:
+    - suggested_output: true
 
   ##########################
   # Falco outputs channels #
