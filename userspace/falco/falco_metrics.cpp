@@ -61,7 +61,9 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 	std::vector<std::shared_ptr<sinsp>> inspectors;
 	std::vector<libs::metrics::libs_metrics_collector> metrics_collectors;
 
-	for(const auto& source : state.enabled_sources) {
+	// Note: Must rely on loaded_sources, which ensures that the syscall source (if applicable) is
+	// ordered first.
+	for(const auto& source : state.loaded_sources) {
 		auto source_info = state.source_infos.at(source);
 		auto source_inspector = source_info->inspector;
 		inspectors.emplace_back(source_inspector);
@@ -75,9 +77,8 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 	for(size_t i = 0; i < inspectors.size(); ++i) {  // Start inspector loop
 		auto& inspector = inspectors[i];
 
-		// Falco wrapper metrics, repeated for each inspector, accounting for plugins w/ event
-		// sources
-		//
+		// Falco wrapper metrics Part A: Repeated for each inspector, accounting for plugins w/
+		// event sources
 
 		/* Examples ...
 		    # HELP falcosecurity_scap_engine_name_info https://falco.org/docs/metrics/
@@ -99,15 +100,15 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 			}
 		}
 
+		// Note: For this to hold true, we must rely on loaded_sources above, which ensures that the
+		// syscall source (if applicable) is ordered first.
 		if(i != 0) {
 			continue;
 		}
 
-		// Falco wrapper metrics; Performed only once, the first inspector is typically the syscalls
-		// event source
-		//
+		// Falco wrapper metrics Part B: Performed only once. Each inspector contains a list of all
+		// event sources.
 
-		// Each inspector includes all event sources
 		/* Examples ...
 		    # HELP falcosecurity_falco_evt_source_info https://falco.org/docs/metrics/
 		    # TYPE falcosecurity_falco_evt_source_info gauge
@@ -133,6 +134,7 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		        {{"version", FALCO_VERSION}});
 
 		// Not all scap engines report agent and machine infos.
+		// Therefore, if the syscalls inspector is available, use it to retrieve these metrics
 		if(agent_info) {
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
 			        "kernel_release",
@@ -149,6 +151,7 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		}
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+		// Note that the rule counter metrics are retrieved from the state, not from any inspector
 		// Distinguish between config and rules files using labels, following Prometheus best
 		// practices: https://prometheus.io/docs/practices/naming/#labels
 		for(const auto& item : state.config.get()->m_loaded_rules_filenames_sha256sum) {
