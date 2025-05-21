@@ -235,6 +235,12 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for capture mode, the source name can change at every event
+			// TODO: This may currently cause issues for multiple event sources. We are deferring
+			// the fix to Falco 0.42.0.
+			// For multiple event sources, it generates `n` metrics logs per source at a time, as
+			// expected, with the engine_name correctly reflected. However, the order may interfere,
+			// as the correct inspector for the syscalls event source seems to never get passed,
+			// resulting in most metrics being missing.
 			stats_collector.collect(inspector,
 			                        inspector->event_sources()[source_engine_idx],
 			                        num_evts);
