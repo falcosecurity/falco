@@ -82,8 +82,9 @@ public:
 		                                          double stats_snapshot_time_delta_sec);
 
 		std::shared_ptr<stats_writer> m_writer;
-		bool m_first_run = true;
-		stats_writer::ticker_t m_last_tick = 0;
+		// Init m_last_tick w/ invalid value to enable metrics logging immediately after
+		// startup/reload
+		stats_writer::ticker_t m_last_tick = -1;
 		uint64_t m_last_now = 0;
 		uint64_t m_last_n_evts = 0;
 		uint64_t m_last_n_drops = 0;
@@ -145,7 +146,6 @@ private:
 	inline void push(const stats_writer::msg& m);
 
 	bool m_initialized = false;
-	bool m_first_run = true;
 	uint64_t m_total_samples = 0;
 	std::thread m_worker;
 	std::ofstream m_file_output;
