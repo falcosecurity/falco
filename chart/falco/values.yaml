@@ -1159,8 +1159,8 @@ falco:
   # "alert", "critical", "error", "warning", "notice", "info", "debug". It is not
   # recommended for production use.
   libs_logger:
-    enabled: false
-    severity: debug
+    enabled: true
+    severity: info
 
   #################################################################################
   # Falco logging / alerting / metrics related to software functioning (advanced) #
