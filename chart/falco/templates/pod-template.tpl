@@ -73,11 +73,6 @@ spec:
       args:
         - /usr/bin/falco
         {{- include "falco.configSyscallSource" . | indent 8 }}
-        {{- with .Values.collectors }}
-        {{- if .enabled }}
-        - -pk
-        {{- end }}
-        {{- end }}
     {{- with .Values.extra.args }}
       {{- toYaml . | nindent 8 }}
     {{- end }}
