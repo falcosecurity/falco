@@ -804,8 +804,30 @@ falco:
   # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
   #
   # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
+  #
+  # 3 merge-strategies are available:
+  # `append` (default):
+  #   * existing sequence keys will be appended
+  #   * existing scalar keys will be overridden
+  #   * non-existing keys will be added
+  # `override`:
+  #   * existing keys will be overridden
+  #   * non-existing keys will be added
+  # `add-only`:
+  #   * existing keys will be ignored
+  #   * non-existing keys will be added
+  #
+  # Each item on the list can be either a yaml map or a simple string.
+  # The simple string will be interpreted as the config file path, and the `append` merge-strategy will be enforced.
+  # When the item is a yaml map instead, it will be of the form: `   path: foo\n   strategy: X`.
+  # When `strategy` is omitted, once again `append` is used.
+  #
+  # When a merge-strategy is enabled for a folder entry, all the included config files will use that merge-strategy.
   config_files:
-    - /etc/falco/config.d
+  - /etc/falco/config.d
+  # Example of config file specified as yaml map with strategy made explicit.
+  #- path: $HOME/falco_local_configs/
+  #  strategy: add-only
 
   # [Stable] `watch_config_files`
   #
