@@ -394,7 +394,7 @@ collectors:
     enabled: false
     # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
     # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.1"
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0"
     # -- collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match
     # k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override
     # it, make sure to set here the address of the k8s-metacollector.
@@ -410,6 +410,7 @@ collectors:
     # In Falco usually we put the host '/proc' folder under '/host/proc' so
     # the default for this config is '/host'.
     # The path used here must not have a final '/'.
+    # Deprecated since falco 0.41.0 and k8smeta 0.3.0.
     hostProc: /host
 
 ###########################
