@@ -128,15 +128,6 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 			}
 		}
 
-		// Note: For this to hold true, we must rely on loaded_sources above, which ensures that the
-		// syscall source (if applicable) is ordered first.
-		if(i != 0) {
-			continue;
-		}
-
-		// Falco wrapper metrics Part B: Performed only once. Each inspector contains a list of all
-		// event sources.
-
 		/* Examples ...
 		    # HELP falcosecurity_falco_evt_source_info https://falco.org/docs/metrics/
 		    # TYPE falcosecurity_falco_evt_source_info gauge
@@ -145,13 +136,23 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		    # TYPE falcosecurity_falco_evt_source_info gauge
 		    falcosecurity_falco_evt_source_info{evt_source="dummy_c"} 1
 		*/
-		for(const std::string& source : inspector->event_sources()) {
-			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
-			        "evt_source",
-			        "falcosecurity",
-			        "falco",
-			        {{"evt_source", source}});
+
+		// It seems that the current sources are appended. For instance, the dummy_c plugin event
+		// source contains syscalls again as well
+		const std::string& last_source = inspector->event_sources().back();
+		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
+		        "evt_source",
+		        "falcosecurity",
+		        "falco",
+		        {{"evt_source", last_source}});
+
+		// Note: For this to hold true, we must rely on loaded_sources above, which ensures that the
+		// syscall source (if applicable) is ordered first.
+		if(i != 0) {
+			continue;
 		}
+
+		// Falco wrapper metrics Part B: Agnostic, performed only once.
 
 		const scap_agent_info* agent_info = inspector->get_agent_info();
 		const scap_machine_info* machine_info = inspector->get_machine_info();
@@ -162,7 +163,8 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 		        {{"version", FALCO_VERSION}});
 
 		// Not all scap engines report agent and machine infos.
-		// Therefore, if the syscalls inspector is available, use it to retrieve these metrics
+		// However, recent lib refactors enable a linux lite platform, allowing non-syscall
+		// inspectors to retrieve these metrics if the syscall inspector is unavailable.
 		if(agent_info) {
 			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
 			        "kernel_release",
@@ -387,8 +389,8 @@ std::string falco_metrics::to_text(const falco::app::state& state) {
 			continue;
 		}
 
-		// Performed only once, the first inspector is typically the syscalls event source
-		//
+		// Performed only once, the first inspector must be the syscalls event source, as ensured by
+		// the ordering above, if applicable, to maximize metrics retrieval.
 
 		for(auto& metric : metrics_snapshot) {
 			prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
