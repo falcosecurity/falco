@@ -233,7 +233,6 @@ void stats_writer::worker() noexcept {
 	bool use_file = !m_config->m_metrics_output_file.empty();
 	auto tick = stats_writer::get_ticker();
 	auto last_tick = tick;
-	auto first_tick = tick;
 
 	while(true) {
 // blocks until a message becomes availables
@@ -244,37 +243,34 @@ void stats_writer::worker() noexcept {
 			return;
 		}
 
-		// this helps waiting for the first tick
 		tick = stats_writer::get_ticker();
-		if(m_first_run || first_tick != tick) {
-			if(last_tick != tick) {
-				m_total_samples++;
-			}
-			last_tick = tick;
 
-			try {
-				if(use_outputs) {
-					std::string rule = "Falco internal: metrics snapshot";
-					std::string msg = "Falco metrics snapshot";
-					m_outputs->handle_msg(m.ts,
-					                      falco_common::PRIORITY_INFORMATIONAL,
-					                      msg,
-					                      rule,
-					                      m.output_fields);
-				}
-
-				if(use_file) {
-					nlohmann::json jmsg;
-					jmsg["sample"] = m_total_samples;
-					jmsg["output_fields"] = m.output_fields;
-					m_file_output << jmsg.dump() << std::endl;
-				}
-			} catch(const std::exception& e) {
-				falco_logger::log(falco_logger::level::ERR,
-				                  "stats_writer (worker): " + std::string(e.what()) + "\n");
-			}
+		if(last_tick != tick) {
+			m_total_samples++;
 		}
-		m_first_run = false;
+		last_tick = tick;
+
+		try {
+			if(use_outputs) {
+				std::string rule = "Falco internal: metrics snapshot";
+				std::string msg = "Falco metrics snapshot";
+				m_outputs->handle_msg(m.ts,
+				                      falco_common::PRIORITY_INFORMATIONAL,
+				                      msg,
+				                      rule,
+				                      m.output_fields);
+			}
+
+			if(use_file) {
+				nlohmann::json jmsg;
+				jmsg["sample"] = m_total_samples;
+				jmsg["output_fields"] = m.output_fields;
+				m_file_output << jmsg.dump() << std::endl;
+			}
+		} catch(const std::exception& e) {
+			falco_logger::log(falco_logger::level::ERR,
+			                  "stats_writer (worker): " + std::string(e.what()) + "\n");
+		}
 	}
 }
 
@@ -640,7 +636,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 #endif
 		/* Collect stats / metrics once per ticker period. */
 		auto tick = stats_writer::get_ticker();
-		if(m_first_run || tick != m_last_tick) {
+		if(tick != m_last_tick) {
 			m_last_tick = tick;
 			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
 			                   std::chrono::system_clock::now().time_since_epoch())
@@ -661,10 +657,8 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 			                                  num_evts,
 			                                  now,
 			                                  stats_snapshot_time_delta_sec);
-			if(!m_first_run) {
-				get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec);
-			}
-			m_first_run = false;
+
+			get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec);
 
 			/* Send message in the queue */
 			stats_writer::msg msg;
