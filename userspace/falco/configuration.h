@@ -161,7 +161,6 @@ public:
 
 	bool m_watch_config_files;
 	bool m_buffered_outputs;
-	int64_t m_falco_reload_ts;
 	size_t m_outputs_queue_capacity;
 	bool m_time_format_iso_8601;
 	bool m_buffer_format_base64;
@@ -215,7 +214,15 @@ public:
 	gvisor_config m_gvisor = {};
 
 	yaml_helper m_config;
+
+	//
+	// Runtime-Generated values (not user-configurable)
+	//
+
+	// JSON schema generated from a hardcoded string
 	nlohmann::json m_config_schema;
+	// Timestamp of most recent configuration reload
+	int64_t m_falco_reload_ts;
 
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res& res);
