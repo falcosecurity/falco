@@ -31,8 +31,36 @@ namespace fs = std::filesystem;
 
 /*!
     \class falco_metrics
-    \brief This class is used to convert the metrics provided by the application
-    and falco libs into a string to be return by the metrics endpoint.
+    \brief Converts metrics provided by the application and Falco libraries into a formatted string
+           for the metrics endpoint.
+
+    ## Metrics Overview
+    This section explains why looping over inspectors is necessary.
+    Falco utilizes multiple inspectors when loading plugins with an event source.
+    Most metrics should only be retrieved once, ideally by the syscalls inspector if applicable.
+    To maximize metrics retrieval and prevent duplicate data, the syscalls inspector is always
+    positioned at index 0 in the loop when it exists.
+
+    Wrapper fields: See https://falco.org/docs/concepts/metrics/
+    - `engine_name` and `event_source` are pushed for each inspector.
+    - All other wrapper fields are agnostic and should be retrieved once.
+
+    ## Metrics Collection Behavior
+    - `rules_counters_enabled` -> Agnostic; resides in falco; retrieved from the state, not an
+      inspector; only performed once.
+    - `resource_utilization_enabled` -> Agnostic; resides in libs; inspector is irrelevant;
+      only performed once.
+    - `state_counters_enabled` -> Semi-agnostic; resides in libs; must be retrieved by the syscalls
+      inspector if applicable.
+    - `kernel_event_counters_enabled` -> Resides in libs; must be retrieved by the syscalls
+   inspector; not available for other inspectors.
+    - `kernel_event_counters_per_cpu_enabled` -> Resides in libs; must be retrieved by the syscalls
+      inspector; not available for other inspectors.
+    - `libbpf_stats_enabled` -> Resides in libs; must be retrieved by the syscalls inspector;
+      not available for other inspectors.
+    - `plugins_metrics_enabled` -> Must be retrieved for each inspector.
+    - `jemalloc_stats_enabled` -> Agnostic; resides in falco; inspector is irrelevant;
+      only performed once.
 */
 
 /*!
