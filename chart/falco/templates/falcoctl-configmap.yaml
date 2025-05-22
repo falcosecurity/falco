@@ -9,5 +9,6 @@ metadata:
 data:
   falcoctl.yaml: |-
     {{- include "k8smeta.configuration" . -}}
+    {{- include "falco.containerPlugin" . -}}
     {{- toYaml .Values.falcoctl.config | nindent 4 }}
 {{- end }}
