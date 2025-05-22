@@ -233,7 +233,6 @@ void stats_writer::worker() noexcept {
 	bool use_file = !m_config->m_metrics_output_file.empty();
 	auto tick = stats_writer::get_ticker();
 	auto last_tick = tick;
-	auto first_tick = tick;
 
 	while(true) {
 // blocks until a message becomes availables
@@ -244,35 +243,33 @@ void stats_writer::worker() noexcept {
 			return;
 		}
 
-		// this helps waiting for the first tick
 		tick = stats_writer::get_ticker();
-		if(first_tick != tick) {
-			if(last_tick != tick) {
-				m_total_samples++;
-			}
-			last_tick = tick;
 
-			try {
-				if(use_outputs) {
-					std::string rule = "Falco internal: metrics snapshot";
-					std::string msg = "Falco metrics snapshot";
-					m_outputs->handle_msg(m.ts,
-					                      falco_common::PRIORITY_INFORMATIONAL,
-					                      msg,
-					                      rule,
-					                      m.output_fields);
-				}
+		if(last_tick != tick) {
+			m_total_samples++;
+		}
+		last_tick = tick;
 
-				if(use_file) {
-					nlohmann::json jmsg;
-					jmsg["sample"] = m_total_samples;
-					jmsg["output_fields"] = m.output_fields;
-					m_file_output << jmsg.dump() << std::endl;
-				}
-			} catch(const std::exception& e) {
-				falco_logger::log(falco_logger::level::ERR,
-				                  "stats_writer (worker): " + std::string(e.what()) + "\n");
+		try {
+			if(use_outputs) {
+				std::string rule = "Falco internal: metrics snapshot";
+				std::string msg = "Falco metrics snapshot";
+				m_outputs->handle_msg(m.ts,
+				                      falco_common::PRIORITY_INFORMATIONAL,
+				                      msg,
+				                      rule,
+				                      m.output_fields);
 			}
+
+			if(use_file) {
+				nlohmann::json jmsg;
+				jmsg["sample"] = m_total_samples;
+				jmsg["output_fields"] = m.output_fields;
+				m_file_output << jmsg.dump() << std::endl;
+			}
+		} catch(const std::exception& e) {
+			falco_logger::log(falco_logger::level::ERR,
+			                  "stats_writer (worker): " + std::string(e.what()) + "\n");
 		}
 	}
 }
@@ -353,6 +350,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] =
 	        now; /* Some ETLs may prefer a consistent timestamp within output_fields. */
+	output_fields["falco.reload_ts"] = m_writer->m_config->m_falco_reload_ts;
 	output_fields["falco.version"] = FALCO_VERSION;
 	if(agent_info) {
 		output_fields["falco.start_ts"] = agent_info->start_ts_epoch;
@@ -659,6 +657,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 			                                  num_evts,
 			                                  now,
 			                                  stats_snapshot_time_delta_sec);
+
 			get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec);
 
 			/* Send message in the queue */

@@ -214,7 +214,15 @@ public:
 	gvisor_config m_gvisor = {};
 
 	yaml_helper m_config;
+
+	//
+	// Runtime-Generated values (not user-configurable)
+	//
+
+	// JSON schema generated from a hardcoded string
 	nlohmann::json m_config_schema;
+	// Timestamp of most recent configuration reload
+	int64_t m_falco_reload_ts;
 
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res& res);
