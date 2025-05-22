@@ -84,7 +84,7 @@ public:
 		std::shared_ptr<stats_writer> m_writer;
 		// Init m_last_tick w/ invalid value to enable metrics logging immediately after
 		// startup/reload
-		stats_writer::ticker_t m_last_tick = -1;
+		stats_writer::ticker_t m_last_tick = std::numeric_limits<ticker_t>::max();
 		uint64_t m_last_now = 0;
 		uint64_t m_last_n_evts = 0;
 		uint64_t m_last_n_drops = 0;
