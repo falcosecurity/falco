@@ -1,6 +1,7 @@
-package unit
+package falcoTemplates
 
 import (
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -12,7 +13,7 @@ import (
 func TestServiceAccount(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -45,7 +46,7 @@ func TestServiceAccount(t *testing.T) {
 			t.Parallel()
 
 			options := &helm.Options{SetValues: testCase.values}
-			output, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, []string{"templates/serviceaccount.yaml"})
+			output, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/serviceaccount.yaml"})
 			if err != nil {
 				require.True(t, strings.Contains(err.Error(), "Error: could not find template templates/serviceaccount.yaml in chart"))
 			}

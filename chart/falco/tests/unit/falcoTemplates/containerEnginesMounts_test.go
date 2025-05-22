@@ -1,6 +1,7 @@
-package unit
+package falcoTemplates
 
 import (
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func TestContainerEngineSocketMounts(t *testing.T) {
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -124,7 +125,7 @@ func TestContainerEngineSocketMounts(t *testing.T) {
 			t.Parallel()
 
 			options := &helm.Options{SetValues: testCase.values}
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/daemonset.yaml"})
+			output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/daemonset.yaml"})
 
 			var ds appsv1.DaemonSet
 			helm.UnmarshalK8SYaml(t, output, &ds)

@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package falcoTemplates
 
 import (
 	"fmt"
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"testing"
 
@@ -37,7 +38,7 @@ type serviceTemplateTest struct {
 func TestServiceTemplate(t *testing.T) {
 	t.Parallel()
 
-	chartFullPath, err := filepath.Abs(chartPath)
+	chartFullPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	suite.Run(t, &serviceTemplateTest{
@@ -61,7 +62,7 @@ func (s *serviceTemplateTest) TestDefaultLabelsValues() {
 	output, err := helm.RenderTemplateE(s.T(), options, s.chartPath, s.releaseName, s.templates)
 	s.NoError(err, "should render template")
 
-	cInfo, err := chartInfo(s.T(), s.chartPath)
+	cInfo, err := unit.ChartInfo(s.T(), s.chartPath)
 	s.NoError(err)
 	// Get app version.
 	appVersion, found := cInfo["appVersion"]
@@ -96,16 +97,14 @@ func (s *serviceTemplateTest) TestDefaultLabelsValues() {
 	}
 }
 
-
 func (s *serviceTemplateTest) TestCustomLabelsValues() {
 	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true",
 		"metrics.service.labels.customLabel": "customLabelValues"}}
 	output, err := helm.RenderTemplateE(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
-
 	s.NoError(err, "should render template")
 
-	cInfo, err := chartInfo(s.T(), s.chartPath)
+	cInfo, err := unit.ChartInfo(s.T(), s.chartPath)
 	s.NoError(err)
 	// Get app version.
 	appVersion, found := cInfo["appVersion"]
@@ -139,7 +138,7 @@ func (s *serviceTemplateTest) TestCustomLabelsValues() {
 		expectedVal := labels[key]
 		s.Equal(expectedVal, value)
 	}
- 
+
 }
 
 func (s *serviceTemplateTest) TestDefaultAnnotationsValues() {
@@ -149,7 +148,7 @@ func (s *serviceTemplateTest) TestDefaultAnnotationsValues() {
 	s.NoError(err)
 
 	var svc corev1.Service
- 	helm.UnmarshalK8SYaml(s.T(), output, &svc)
+	helm.UnmarshalK8SYaml(s.T(), output, &svc)
 	s.Nil(svc.Annotations, "should be nil")
 }
 

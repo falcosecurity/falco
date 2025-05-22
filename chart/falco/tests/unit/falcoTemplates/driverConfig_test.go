@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package falcoTemplates
 
 import (
 	"fmt"
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -29,7 +30,7 @@ import (
 func TestDriverConfigInFalcoConfig(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -241,7 +242,7 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 			t.Parallel()
 
 			options := &helm.Options{SetValues: testCase.values}
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/configmap.yaml"})
+			output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 
 			var cm corev1.ConfigMap
 			helm.UnmarshalK8SYaml(t, output, &cm)
@@ -257,14 +258,14 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 func TestDriverConfigWithUnsupportedDriver(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	values := map[string]string{
 		"driver.kind": "notExisting",
 	}
 	options := &helm.Options{SetValues: values}
-	_, err = helm.RenderTemplateE(t, options, helmChartPath, releaseName, []string{"templates/configmap.yaml"})
+	_, err = helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 	require.Error(t, err)
 	require.True(t, strings.Contains(err.Error(),
 		"unsupported driver kind: \"notExisting\". Supported drivers [kmod ebpf modern_ebpf gvisor auto], alias [module modern-bpf]"))

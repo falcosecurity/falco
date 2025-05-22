@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package falcoTemplates
 
 import (
 	"fmt"
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"io"
 	"os"
 	"path/filepath"
@@ -40,7 +41,7 @@ type grafanaDashboardsTemplateTest struct {
 func TestGrafanaDashboardsTemplate(t *testing.T) {
 	t.Parallel()
 
-	chartFullPath, err := filepath.Abs(chartPath)
+	chartFullPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	suite.Run(t, &grafanaDashboardsTemplateTest{
@@ -131,7 +132,7 @@ func (g *grafanaDashboardsTemplateTest) TestConfig() {
 			// Check that contains the right label.
 			g.Contains(cfgMap.Labels, "grafana_dashboard")
 			// Check that the dashboard is contained in the config map.
-			file, err := os.Open("../../dashboards/falco-dashboard.json")
+			file, err := os.Open("../../../dashboards/falco-dashboard.json")
 			g.NoError(err)
 			content, err := io.ReadAll(file)
 			g.NoError(err)

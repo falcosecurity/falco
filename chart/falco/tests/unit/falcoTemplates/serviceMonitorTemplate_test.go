@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package falcoTemplates
 
 import (
 	"encoding/json"
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -38,7 +39,7 @@ type serviceMonitorTemplateTest struct {
 func TestServiceMonitorTemplate(t *testing.T) {
 	t.Parallel()
 
-	chartFullPath, err := filepath.Abs(chartPath)
+	chartFullPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	suite.Run(t, &serviceMonitorTemplateTest{

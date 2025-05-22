@@ -13,9 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package falcoTemplates
 
 import (
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"testing"
 
@@ -52,7 +53,7 @@ type webServerConfig struct {
 func TestMetricsConfigInFalcoConfig(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -167,7 +168,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 			t.Parallel()
 
 			options := &helm.Options{SetValues: testCase.values}
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/configmap.yaml"})
+			output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 
 			var cm corev1.ConfigMap
 			helm.UnmarshalK8SYaml(t, output, &cm)
