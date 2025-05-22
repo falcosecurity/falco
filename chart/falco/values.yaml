@@ -380,6 +380,40 @@ collectors:
     # -- The path of the CRI-O socket.
     socket: /run/crio/crio.sock
 
+  containerEngine:
+    # -- Enable Container Engine support.
+    enabled: false
+    # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.2.0". Or just name + tag: containerengine:0.2.0.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.2.3"
+    # -- labelMaxLen is the maximum length of the labels that can be used in the container engine plugin.
+    # container labels larger than this value won't be collected.
+    labelMaxLen: 100
+    # -- withSize specifies whether to enable container size inspection, which is inherently slow.
+    withSize: false
+    # -- hooks specify the hooks that will be used to collect metadata from the container engine.
+    # The available hooks are: create, start.
+    hooks: ["create"]
+    engines:
+      docker:
+        enabled: true
+        sockets: [ '/var/run/docker.sock' ]
+      podman:
+        enabled: true
+        sockets: [ '/run/podman/podman.sock' ]
+      containerd:
+        enabled: true
+        sockets: [ '/run/containerd/containerd.sock' ]
+      cri:
+        enabled: true
+        sockets: [ '/run/crio/crio.sock' ]
+      lxc:
+        enabled: true
+      libvirt_lxc:
+        enabled: true
+      bpm:
+        enabled: true
+
   # -- kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy
   # kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed
   # to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973

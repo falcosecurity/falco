@@ -19,4 +19,5 @@ const (
 	releaseName                  = "rendered-resources"
 	patternK8sMetacollectorFiles = `# Source: falco/charts/k8s-metacollector/templates/([^\n]+)`
 	k8sMetaPluginName            = "k8smeta"
+	containerPluginName          = "container"
 )

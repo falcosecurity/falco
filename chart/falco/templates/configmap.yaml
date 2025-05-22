@@ -11,5 +11,5 @@ data:
     {{- include "k8smeta.configuration" . -}}
     {{- include "falco.engineConfiguration" . -}}
     {{- include "falco.metricsConfiguration" . -}}
-    {{- include "falco.containerEnginesConfiguration" . -}}
+    {{- include "falco.containerPlugin" . -}}
     {{- toYaml .Values.falco | nindent 4 }}

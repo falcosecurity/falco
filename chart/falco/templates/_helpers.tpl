@@ -435,22 +435,43 @@ Based on the user input it populates the metrics configuration in the falco conf
 {{- end -}}
 
 {{/*
-Based on the user input it populates the container_engines configuration in the falco config map.
+This helper is used to add the container plugin to the falco configuration.
 */}}
-{{- define "falco.containerEnginesConfiguration" -}}
-{{- if .Values.collectors.enabled -}}
-{{- $criSockets := list -}}
-{{- $criEnabled := false }}
-{{- $_ := set .Values.falco.container_engines "docker" (dict "enabled" .Values.collectors.docker.enabled) -}}
-{{- if or .Values.collectors.crio.enabled .Values.collectors.containerd.enabled }}
-{{- $criEnabled = true }}
-{{- end -}}
-{{- if .Values.collectors.containerd.enabled -}}
-{{- $criSockets = append $criSockets .Values.collectors.containerd.socket -}}
-{{- end }}
-{{- if .Values.collectors.crio.enabled -}}
-{{- $criSockets = append $criSockets .Values.collectors.crio.socket -}}
-{{- end -}}
-{{- $_ = set .Values.falco.container_engines "cri" (dict "enabled" $criEnabled "sockets" $criSockets) -}}
-{{- end -}}
-{{- end -}}
+{{ define "falco.containerPlugin" -}}
+{{ if and .Values.driver.enabled .Values.collectors.enabled -}}
+{{ if and (or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled) .Values.collectors.containerEngine.enabled -}}
+{{ fail "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated." }}
+{{ else if or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled .Values.collectors.containerEngine.enabled -}}
+{{ if or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled -}}
+{{ $_ := set .Values.collectors.containerEngine.engines.docker "enabled" .Values.collectors.docker.enabled -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.docker "sockets" (list .Values.collectors.docker.socket) -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.containerd "enabled" .Values.collectors.containerd.enabled -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.containerd "sockets" (list .Values.collectors.containerd.socket) -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.cri "enabled" .Values.collectors.crio.enabled -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.cri "sockets" (list .Values.collectors.crio.socket) -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.podman "enabled" false -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.lxc "enabled" false -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.libvirt_lxc "enabled" false -}}
+{{ $_ = set .Values.collectors.containerEngine.engines.bpm "enabled" false -}}
+{{ end -}}
+{{ $hasConfig := false -}}
+{{ range .Values.falco.plugins -}}
+{{ if eq (get . "name") "container" -}}
+{{ $hasConfig = true -}}
+{{ end -}}
+{{ end -}}
+{{ if not $hasConfig -}}
+{{ $pluginConfig := dict -}}
+{{ with .Values.collectors.containerEngine -}}
+{{ $pluginConfig = dict "name" "container" "library_path" "libcontainer.so" "init_config" (dict "label_max_len" .labelMaxLen "with_size" .withSize "hooks" .hooks "engines" .engines) -}}
+{{ end -}}
+{{ $newConfig := append .Values.falco.plugins $pluginConfig -}}
+{{ $_ := set .Values.falco "plugins" ($newConfig | uniq) -}}
+{{ $loadedPlugins := append .Values.falco.load_plugins "container" -}}
+{{ $_ = set .Values.falco "load_plugins" ($loadedPlugins | uniq) -}}
+{{ end -}}
+{{ $_ := set .Values.falcoctl.config.artifact.install "refs" ((append .Values.falcoctl.config.artifact.install.refs .Values.collectors.containerEngine.pluginRef) | uniq) -}}
+{{ $_ = set .Values.falcoctl.config.artifact "allowedTypes" ((append .Values.falcoctl.config.artifact.allowedTypes "plugin") | uniq) -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
