@@ -22,7 +22,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func chartInfo(t *testing.T, chartPath string) (map[string]interface{}, error) {
+// ChartInfo returns chart's information.
+func ChartInfo(t *testing.T, chartPath string) (map[string]interface{}, error) {
 	// Get chart info.
 	output, err := helm.RunHelmCommandAndGetOutputE(t, &helm.Options{}, "show", "chart", chartPath)
 	if err != nil {

@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package unit
+package k8smetaPlugin
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,22 +31,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-const chartPath = "../../"
-
 // Using the default values we want to test that all the expected resources for the k8s-metacollector are rendered.
 func TestRenderedResourcesWithDefaultValues(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	options := &helm.Options{}
 	// Template the chart using the default values.yaml file.
-	output, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, nil)
+	output, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, nil)
 	require.NoError(t, err)
 
 	// Extract all rendered files from the output.
-	re := regexp.MustCompile(patternK8sMetacollectorFiles)
+	re := regexp.MustCompile(unit.PatternK8sMetacollectorFiles)
 	matches := re.FindAllStringSubmatch(output, -1)
 	require.Len(t, matches, 0)
 
@@ -54,7 +53,7 @@ func TestRenderedResourcesWithDefaultValues(t *testing.T) {
 func TestRenderedResourcesWhenNotEnabled(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	// Template files that we expect to be rendered.
@@ -73,11 +72,11 @@ func TestRenderedResourcesWhenNotEnabled(t *testing.T) {
 	}}
 
 	// Template the chart using the default values.yaml file.
-	output, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, nil)
+	output, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, nil)
 	require.NoError(t, err)
 
 	// Extract all rendered files from the output.
-	re := regexp.MustCompile(patternK8sMetacollectorFiles)
+	re := regexp.MustCompile(unit.PatternK8sMetacollectorFiles)
 	matches := re.FindAllStringSubmatch(output, -1)
 
 	var renderedTemplates []string
@@ -99,7 +98,7 @@ func TestRenderedResourcesWhenNotEnabled(t *testing.T) {
 func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 	t.Parallel()
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -125,7 +124,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				require.Equal(t, "${FALCO_K8S_NODE_NAME}", nodeName.(string))
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
-				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
+				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", unit.ReleaseName), hostName.(string))
 				// Check that the loglevel has been set.
 				verbosity := initConfigMap["verbosity"]
 				require.Equal(t, "info", verbosity.(string))
@@ -157,7 +156,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				require.Equal(t, "${FALCO_K8S_NODE_NAME}", nodeName.(string))
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
-				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.test.svc", releaseName), hostName.(string))
+				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.test.svc", unit.ReleaseName), hostName.(string))
 				// Check that the loglevel has been set.
 				verbosity := initConfigMap["verbosity"]
 				require.Equal(t, "info", verbosity.(string))
@@ -327,7 +326,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				require.Equal(t, "${FALCO_K8S_NODE_NAME}", nodeName.(string))
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
-				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
+				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", unit.ReleaseName), hostName.(string))
 				// Check that the loglevel has been set.
 				verbosity := initConfigMap["verbosity"]
 				require.Equal(t, "info", verbosity.(string))
@@ -361,7 +360,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 				require.Equal(t, "${FALCO_K8S_NODE_NAME}", nodeName.(string))
 				// Check that the collector hostname is correctly set.
 				hostName := initConfigMap["collectorHostname"]
-				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", releaseName), hostName.(string))
+				require.Equal(t, fmt.Sprintf("%s-k8s-metacollector.default.svc", unit.ReleaseName), hostName.(string))
 				// Check that the loglevel has been set.
 				verbosity := initConfigMap["verbosity"]
 				require.Equal(t, "trace", verbosity.(string))
@@ -398,7 +397,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			}
 
 			options := &helm.Options{SetValues: testCase.values}
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/configmap.yaml"})
+			output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 
 			var cm corev1.ConfigMap
 			helm.UnmarshalK8SYaml(t, output, &cm)
@@ -410,7 +409,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			found := false
 			// Find the k8smeta plugin configuration.
 			for _, plugin := range pluginsArray {
-				if name, ok := plugin.(map[string]interface{})["name"]; ok && name == k8sMetaPluginName {
+				if name, ok := plugin.(map[string]interface{})["name"]; ok && name == unit.K8sMetaPluginName {
 					testCase.expected(t, plugin)
 					found = true
 				}
@@ -418,11 +417,11 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			if found {
 				// Check that the plugin has been added to the ones that need to be loaded.
 				loadplugins := config["load_plugins"]
-				require.True(t, slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
+				require.True(t, slices.Contains(loadplugins.([]interface{}), unit.K8sMetaPluginName))
 			} else {
 				testCase.expected(t, nil)
 				loadplugins := config["load_plugins"]
-				require.True(t, !slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
+				require.True(t, !slices.Contains(loadplugins.([]interface{}), unit.K8sMetaPluginName))
 			}
 		})
 	}
@@ -456,21 +455,68 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
         },
         "library_path": "libk8smeta.so",
         "name": "k8smeta"
+    },
+    {
+        "init_config": {
+            "engines": {
+                "bpm": {
+                    "enabled": false
+                },
+                "containerd": {
+                    "enabled": true,
+                    "sockets": [
+                        "/run/containerd/containerd.sock"
+                    ]
+                },
+                "cri": {
+                    "enabled": true,
+                    "sockets": [
+                        "/run/crio/crio.sock"
+                    ]
+                },
+                "docker": {
+                    "enabled": true,
+                    "sockets": [
+                        "/var/run/docker.sock"
+                    ]
+                },
+                "libvirt_lxc": {
+                    "enabled": false
+                },
+                "lxc": {
+                    "enabled": false
+                },
+                "podman": {
+                    "enabled": false,
+                    "sockets": [
+                        "/run/podman/podman.sock"
+                    ]
+                }
+            },
+            "hooks": [
+                "create"
+            ],
+            "label_max_len": 100,
+            "with_size": false
+        },
+        "library_path": "libcontainer.so",
+        "name": "container"
     }
 ]`
 
 	loadPluginsJSON := `[
     "k8smeta",
-	"k8saudit"
+	"k8saudit",
+	"container"
 ]`
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	options := &helm.Options{SetJsonValues: map[string]string{
 		"falco.plugins":      pluginsJSON,
 		"falco.load_plugins": loadPluginsJSON,
 	}, SetValues: map[string]string{"collectors.kubernetes.enabled": "true"}}
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/configmap.yaml"})
+	output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 
 	var cm corev1.ConfigMap
 	helm.UnmarshalK8SYaml(t, output, &cm)
@@ -486,7 +532,7 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
 	// Find the k8smeta plugin configuration.
 	numConfigK8smeta := 0
 	for _, plugin := range pluginsArray {
-		if name, ok := plugin.(map[string]interface{})["name"]; ok && name == k8sMetaPluginName {
+		if name, ok := plugin.(map[string]interface{})["name"]; ok && name == unit.K8sMetaPluginName {
 			numConfigK8smeta++
 		}
 	}
@@ -495,8 +541,8 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
 
 	// Check that the plugin has been added to the ones that need to be loaded.
 	loadplugins := config["load_plugins"]
-	require.Len(t, loadplugins.([]interface{}), 2)
-	require.True(t, slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
+	require.Len(t, loadplugins.([]interface{}), 3)
+	require.True(t, slices.Contains(loadplugins.([]interface{}), unit.K8sMetaPluginName))
 }
 
 // Test that the helper does not overwrite user's configuration.
@@ -541,9 +587,10 @@ func TestFalcoctlRefs(t *testing.T) {
 		require.True(t, slices.Contains(allowedTypes.([]interface{}), "rulesfile"))
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
-		require.Len(t, refs, 2)
+		require.Len(t, refs, 3)
 		require.True(t, slices.Contains(refs, "falco-rules:3"))
-		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.2.1"))
+		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0"))
+		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.2.3"))
 	}
 
 	testCases := []struct {
@@ -579,7 +626,7 @@ func TestFalcoctlRefs(t *testing.T) {
 		},
 	}
 
-	helmChartPath, err := filepath.Abs(chartPath)
+	helmChartPath, err := filepath.Abs(unit.ChartPath)
 	require.NoError(t, err)
 
 	for _, testCase := range testCases {
@@ -589,7 +636,7 @@ func TestFalcoctlRefs(t *testing.T) {
 			t.Parallel()
 
 			options := &helm.Options{SetJsonValues: testCase.valuesJSON, SetValues: map[string]string{"collectors.kubernetes.enabled": "true"}}
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/falcoctl-configmap.yaml"})
+			output := helm.RenderTemplate(t, options, helmChartPath, unit.ReleaseName, []string{"templates/falcoctl-configmap.yaml"})
 
 			var cm corev1.ConfigMap
 			helm.UnmarshalK8SYaml(t, output, &cm)

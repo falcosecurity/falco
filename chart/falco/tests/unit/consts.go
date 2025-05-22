@@ -16,8 +16,14 @@
 package unit
 
 const (
-	releaseName                  = "rendered-resources"
-	patternK8sMetacollectorFiles = `# Source: falco/charts/k8s-metacollector/templates/([^\n]+)`
-	k8sMetaPluginName            = "k8smeta"
-	containerPluginName          = "container"
+	// ReleaseName is the name of the release we expect in the rendered resources.
+	ReleaseName = "rendered-resources"
+	// PatternK8sMetacollectorFiles is the regex pattern we expect to find in the rendered resources.
+	PatternK8sMetacollectorFiles = `# Source: falco/charts/k8s-metacollector/templates/([^\n]+)`
+	// K8sMetaPluginName is the name of the k8smeta plugin we expect in the falco configuration.
+	K8sMetaPluginName = "k8smeta"
+	// ContainerPluginName name of the container plugin we expect in the falco configuration.
+	ContainerPluginName = "container"
+	// ChartPath is the path to the chart.
+	ChartPath = "../../.."
 )
