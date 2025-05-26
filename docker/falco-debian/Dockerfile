@@ -1,7 +1,11 @@
 FROM debian:12-slim
 
-LABEL maintainer="cncf-falco-dev@lists.cncf.io"
-LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco/docker/falco-debian"
+LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
+      org.opencontainers.image.url='https://falco.org' \
+      org.opencontainers.image.source='https://github.com/falcosecurity/falco' \
+      org.opencontainers.image.vendor='Falco Organization' \
+      org.opencontainers.image.licenses='Apache-2.0' \
+      maintainer="cncf-falco-dev@lists.cncf.io"
 
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /proc:/host/proc:ro -v /etc:/host/etc:ro falcosecurity/falco:latest-debian"
 
