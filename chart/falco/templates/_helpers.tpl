@@ -475,3 +475,69 @@ This helper is used to add the container plugin to the falco configuration.
 {{ end -}}
 {{ end -}}
 {{ end -}}
+
+{{/*
+This helper is used to add container plugin volumes to the falco pod.
+*/}}
+{{- define "falco.containerPluginVolumes" -}}
+{{- if and .Values.driver.enabled .Values.collectors.enabled -}}
+{{- if and (or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled) .Values.collectors.containerEngine.enabled -}}
+{{ fail "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated." }}
+{{- end -}}
+{{ $volumes := list -}}
+{{- if .Values.collectors.docker.enabled -}}
+{{ $volumes = append $volumes (dict "name" "docker-socket" "hostPath" (dict "path" .Values.collectors.docker.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.crio.enabled -}}
+{{ $volumes = append $volumes (dict "name" "crio-socket" "hostPath" (dict "path" .Values.collectors.crio.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.containerd.enabled -}}
+{{ $volumes = append $volumes (dict "name" "containerd-socket" "hostPath" (dict "path" .Values.collectors.containerd.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.containerEngine.enabled -}}
+{{- range $key, $val := .Values.collectors.containerEngine.engines -}}
+{{- if and $val.enabled -}}
+{{- range $index, $socket := $val.sockets -}}
+{{ $volumes = append $volumes (dict "name" (printf "%s-socket-%d" $key $index) "hostPath" (dict "path" $socket)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if gt (len $volumes) 0 -}}
+{{ toYaml $volumes -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+This helper is used to add container plugin volumeMounts to the falco pod.
+*/}}
+{{- define "falco.containerPluginVolumeMounts" -}}
+{{- if and .Values.driver.enabled .Values.collectors.enabled -}}
+{{- if and (or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled) .Values.collectors.containerEngine.enabled -}}
+{{ fail "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated." }}
+{{- end -}}
+{{ $volumeMounts := list -}}
+{{- if .Values.collectors.docker.enabled -}}
+{{ $volumeMounts = append $volumeMounts (dict "name" "docker-socket" "mountPath" (print "/host" .Values.collectors.docker.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.crio.enabled -}}
+{{ $volumeMounts = append $volumeMounts (dict "name" "crio-socket" "mountPath" (print "/host" .Values.collectors.crio.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.containerd.enabled -}}
+{{ $volumeMounts = append $volumeMounts (dict "name" "containerd-socket" "mountPath" (print "/host" .Values.collectors.containerd.socket)) -}}
+{{- end -}}
+{{- if .Values.collectors.containerEngine.enabled -}}
+{{- range $key, $val := .Values.collectors.containerEngine.engines -}}
+{{- if and $val.enabled -}}
+{{- range $index, $socket := $val.sockets -}}
+{{ $volumeMounts = append $volumeMounts (dict "name" (printf "%s-socket-%d" $key $index)  "mountPath" (print "/host" $socket)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if gt (len $volumeMounts) 0 -}}
+{{ toYaml $volumeMounts }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
