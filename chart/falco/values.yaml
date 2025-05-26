@@ -576,7 +576,7 @@ falcoctl:
         # -- Resolve the dependencies for artifacts.
         resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:3]
+        refs: [falco-rules:4]
         # -- Directory where the rulesfiles are saved. The path is relative to the container, which in this case is an emptyDir
         # mounted also by the Falco pod.
         rulesfilesDir: /rulesfiles
@@ -584,7 +584,7 @@ falcoctl:
         pluginsDir: /plugins
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:3]
+        refs: [falco-rules:4]
         # -- How often the tool checks for new versions of the followed artifacts.
         every: 6h
         # -- HTTP endpoint that serves the api versions of the Falco instance. It is used to check if the new versions are compatible

@@ -696,7 +696,7 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 2)
-		require.True(t, slices.Contains(refs, "falco-rules:3"))
+		require.True(t, slices.Contains(refs, "falco-rules:4"))
 		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.2.3"))
 	}
 
@@ -712,7 +712,7 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 1)
-		require.True(t, slices.Contains(refs, "falco-rules:3"))
+		require.True(t, slices.Contains(refs, "falco-rules:4"))
 		require.False(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.2.3"))
 	}
 

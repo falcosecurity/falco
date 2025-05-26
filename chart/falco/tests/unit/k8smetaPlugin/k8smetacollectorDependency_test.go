@@ -588,7 +588,7 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 3)
-		require.True(t, slices.Contains(refs, "falco-rules:3"))
+		require.True(t, slices.Contains(refs, "falco-rules:4"))
 		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0"))
 		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.2.3"))
 	}
