@@ -222,7 +222,7 @@ public:
 	// JSON schema generated from a hardcoded string
 	nlohmann::json m_config_schema;
 	// Timestamp of most recent configuration reload
-	int64_t m_falco_reload_ts;
+	int64_t m_falco_reload_ts{0};
 
 private:
 	void merge_config_files(const std::string& config_name, config_loaded_res& res);
