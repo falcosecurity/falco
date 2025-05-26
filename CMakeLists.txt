@@ -267,6 +267,12 @@ if(NOT WIN32
    AND NOT MUSL_OPTIMIZED_BUILD
 )
 	include(falcoctl)
+	set(CONTAINER_VERSION "0.2.4")
+	if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+		set(CONTAINER_HASH "2b6cf7c014fa29dffbc063582343402b863581218e704ca8021bc971c3e029fc")
+	else() # arm64
+		set(CONTAINER_HASH "ad96c2baa299fa51b6be07a93b21dd03fe6e2a9bea44cc13ea50a346e5d22774")
+	endif()
 	include(container_plugin)
 
 	# Generate a binary_dir/falco.yaml that automatically enables the plugin to be used for local
