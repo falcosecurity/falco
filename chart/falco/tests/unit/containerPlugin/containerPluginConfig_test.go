@@ -1,14 +1,17 @@
 package containerPlugin
 
 import (
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
-	corev1 "k8s.io/api/core/v1"
 	"path/filepath"
 	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"gopkg.in/yaml.v3"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/gruntwork-io/terratest/modules/helm"
 )
 
 func TestContainerPluginConfiguration(t *testing.T) {
