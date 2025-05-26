@@ -362,24 +362,31 @@ collectors:
   # -- Enable/disable all the metadata collectors.
   enabled: true
 
+  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   docker:
     # -- Enable Docker support.
     enabled: true
     # -- The path of the Docker daemon socket.
     socket: /var/run/docker.sock
 
+  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   containerd:
     # -- Enable ContainerD support.
     enabled: true
     # -- The path of the ContainerD socket.
     socket: /run/containerd/containerd.sock
 
+  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   crio:
     # -- Enable CRI-O support.
     enabled: true
     # -- The path of the CRI-O socket.
     socket: /run/crio/crio.sock
 
+  # -- This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors.
+  # It is designed to collect metadata from various container engines and provide a unified interface through the container plugin.
+  # When enabled, it will deploy the container plugin and use it to collect metadata from the container engines.
+  # Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood.
   containerEngine:
     # -- Enable Container Engine support.
     enabled: false
@@ -397,16 +404,16 @@ collectors:
     engines:
       docker:
         enabled: true
-        sockets: [ '/var/run/docker.sock' ]
+        sockets: ['/var/run/docker.sock']
       podman:
         enabled: true
-        sockets: [ '/run/podman/podman.sock' ]
+        sockets: ['/run/podman/podman.sock']
       containerd:
         enabled: true
-        sockets: [ '/run/containerd/containerd.sock' ]
+        sockets: ['/run/containerd/containerd.sock']
       cri:
         enabled: true
-        sockets: [ '/run/crio/crio.sock' ]
+        sockets: ['/run/crio/crio.sock']
       lxc:
         enabled: true
       libvirt_lxc:
@@ -861,7 +868,7 @@ falco:
   config_files:
   - /etc/falco/config.d
   # Example of config file specified as yaml map with strategy made explicit.
-  #- path: $HOME/falco_local_configs/
+  # - path: $HOME/falco_local_configs/
   #  strategy: add-only
 
   # [Stable] `watch_config_files`

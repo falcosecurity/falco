@@ -3,6 +3,14 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.22.0
+* Bump Falco to 0.41.0;
+* Bump falco rules to 4.0.0;
+* Deprecate old container engines in favor of the new container plugin;
+* Add support for the new container plugin;
+* Update k8smeta plugin to 0.3.0;
+* Update falco configuration;
+
 ## v4.21.2
 
 * add falco-talon as falco subchart
