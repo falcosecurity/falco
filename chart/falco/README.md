@@ -657,6 +657,8 @@ The following table lists the main configurable parameters of the falco chart v5
 | extra.args | list | `[]` | Extra command-line arguments. |
 | extra.env | list | `[]` | Extra environment variables that will be pass onto Falco containers. |
 | extra.initContainers | list | `[]` | Additional initContainers for Falco pods. |
+| falco-talon | object | `{"enabled":false}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml |
+| falco-talon.enabled | bool | `false` | Enable falcotalon deployment. |
 | falco.append_output[0].suggested_output | bool | `true` |  |
 | falco.base_syscalls | object | `{"custom_set":[],"repair":false}` | - [Suggestions]  NOTE: setting `base_syscalls.repair: true` automates the following suggestions for you.  These suggestions are subject to change as Falco and its state engine evolve.  For execve* events: Some Falco fields for an execve* syscall are retrieved from the associated `clone`, `clone3`, `fork`, `vfork` syscalls when spawning a new process. The `close` syscall is used to purge file descriptors from Falco's internal thread / process cache table and is necessary for rules relating to file descriptors (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)  Consider enabling the following syscalls in `base_syscalls.custom_set` for process rules: [clone, clone3, fork, vfork, execve, execveat, close]  For networking related events: While you can log `connect` or `accept*` syscalls without the socket syscall, the log will not contain the ip tuples. Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also necessary.  We recommend the following as the minimum set for networking-related rules: [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]  Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process when the running process opens a file or makes a network connection, consider adding the following to the above recommended syscall sets: ... setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir ... |
 | falco.buffered_outputs | bool | `false` | Enabling buffering for the output queue can offer performance optimization, efficient resource usage, and smoother data flow, resulting in a more reliable output mechanism. By default, buffering is disabled (false). |
@@ -750,8 +752,6 @@ The following table lists the main configurable parameters of the falco chart v5
 | falcosidekick.enabled | bool | `false` | Enable falcosidekick deployment. |
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
 | falcosidekick.listenPort | string | `""` | Listen port. Default value: 2801 |
-| falcotalon | object | `{"enabled":false}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml |
-| falcotalon.enabled | bool | `false` | Enable falcotalon deployment. |
 | fullnameOverride | string | `""` | Same as nameOverride but for the fullname. |
 | grafana | object | `{"dashboards":{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}}` | grafana contains the configuration related to grafana. |
 | grafana.dashboards | object | `{"configMaps":{"falco":{"folder":"","name":"falco-grafana-dashboard","namespace":""}},"enabled":false}` | dashboards contains configuration for grafana dashboards. |
