@@ -514,7 +514,7 @@ falcosidekick:
   listenPort: ""
 
 # -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml
-falcotalon:
+falco-talon:
   # -- Enable falcotalon deployment.
   enabled: false
 

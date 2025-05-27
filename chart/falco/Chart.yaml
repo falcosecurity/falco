@@ -27,6 +27,6 @@ dependencies:
     repository: https://falcosecurity.github.io/charts
     condition: collectors.kubernetes.enabled
   - name: falco-talon
-    version: 0.2.*
+    version: 0.3.*
     repository: https://falcosecurity.github.io/charts
-    condition: falcotalon.enabled
+    condition: falco-talon.enabled
