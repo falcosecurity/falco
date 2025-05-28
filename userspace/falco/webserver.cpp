@@ -60,7 +60,8 @@ void falco_webserver::start(const falco::app::state &state,
 
 	if(state.config->m_metrics_enabled && webserver_config.m_prometheus_metrics_enabled) {
 		m_server->Get("/metrics", [&state](const httplib::Request &, httplib::Response &res) {
-			res.set_content(falco_metrics::to_text(state), falco_metrics::content_type);
+			res.set_content(falco_metrics::to_text_prometheus(state),
+			                falco_metrics::content_type_prometheus);
 		});
 	}
 	// run server in a separate thread
