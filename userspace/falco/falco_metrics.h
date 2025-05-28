@@ -26,15 +26,15 @@ struct state;
 
 class falco_metrics {
 public:
-	static const std::string content_type;
-	static std::string to_text(const falco::app::state& state);
+	static const std::string content_type_prometheus;
+	static std::string to_text_prometheus(const falco::app::state& state);
 
 private:
-	static std::string falco_to_text(
+	static std::string falco_to_text_prometheus(
 	        const falco::app::state& state,
 	        libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
 	        std::vector<metrics_v2>& additional_wrapper_metrics);
-	static std::string sources_to_text(
+	static std::string sources_to_text_prometheus(
 	        const falco::app::state& state,
 	        libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
 	        std::vector<metrics_v2>& additional_wrapper_metrics);

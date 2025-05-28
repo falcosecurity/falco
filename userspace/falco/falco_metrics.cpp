@@ -70,9 +70,9 @@ namespace fs = std::filesystem;
 
     https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format
 */
-const std::string falco_metrics::content_type = "text/plain; version=0.0.4";
+const std::string falco_metrics::content_type_prometheus = "text/plain; version=0.0.4";
 
-std::string falco_metrics::falco_to_text(
+std::string falco_metrics::falco_to_text_prometheus(
         const falco::app::state& state,
         libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
         std::vector<metrics_v2>& additional_wrapper_metrics) {
@@ -169,7 +169,7 @@ std::string falco_metrics::falco_to_text(
 				        METRIC_VALUE_TYPE_U64,
 				        METRIC_VALUE_UNIT_COUNT,
 				        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-				        rules_by_id[i]->load());
+				        count);
 				prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
 				std::map<std::string, std::string> const_labels = {
 				        {"rule_name", rule->name},
@@ -224,7 +224,7 @@ std::string falco_metrics::falco_to_text(
 	return prometheus_text;
 }
 
-std::string falco_metrics::sources_to_text(
+std::string falco_metrics::sources_to_text_prometheus(
         const falco::app::state& state,
         libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
         std::vector<metrics_v2>& additional_wrapper_metrics) {
@@ -234,6 +234,9 @@ std::string falco_metrics::sources_to_text(
 	                                           SOURCE_PLUGIN_ENGINE,
 	                                           NODRIVER_ENGINE,
 	                                           GVISOR_ENGINE};
+	static re2::RE2 drops_buffer_pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_(enter|exit)$");
+	static re2::RE2 cpu_pattern("(\\d+)");
+
 	std::string prometheus_text;
 	bool agent_info_written = false;
 	bool machine_info_written = false;
@@ -315,10 +318,9 @@ std::string falco_metrics::sources_to_text(
 				   strncmp(metric.name, "n_drops_cpu", 11) == 0)  // prefix match
 				{
 					std::string name_str(metric.name);
-					re2::RE2 pattern("(\\d+)");
 					std::string cpu_number;
-					if(re2::RE2::PartialMatch(name_str, pattern, &cpu_number)) {
-						re2::RE2::GlobalReplace(&name_str, pattern, "");
+					if(re2::RE2::PartialMatch(name_str, cpu_pattern, &cpu_number)) {
+						re2::RE2::GlobalReplace(&name_str, cpu_pattern, "");
 						// possible double __ will be sanitized within libs
 						auto metric_new = libs::metrics::libsinsp_metrics::new_metric(
 						        name_str.c_str(),
@@ -352,11 +354,10 @@ std::string falco_metrics::sources_to_text(
 					continue;
 				} else if(strncmp(metric.name, "n_drops_buffer", 14) == 0)  // prefix match
 				{
-					re2::RE2 pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_(enter|exit)$");
 					std::string drop;
 					std::string dir;
 					std::string name_str(metric.name);
-					if(re2::RE2::FullMatch(name_str, pattern, &drop, &dir)) {
+					if(re2::RE2::FullMatch(name_str, drops_buffer_pattern, &drop, &dir)) {
 						auto metric_new = libs::metrics::libsinsp_metrics::new_metric(
 						        "n_drops_buffer",
 						        METRICS_V2_KERNEL_COUNTERS,
@@ -470,18 +471,20 @@ std::string falco_metrics::sources_to_text(
 
     The current implementation returns a Prometheus exposition formatted string.
 */
-std::string falco_metrics::to_text(const falco::app::state& state) {
+std::string falco_metrics::to_text_prometheus(const falco::app::state& state) {
 	libs::metrics::prometheus_metrics_converter prometheus_metrics_converter;
 	std::string prometheus_text;
 
 	std::vector<metrics_v2> additional_wrapper_metrics;
 
 	// Falco global metrics, once
-	prometheus_text +=
-	        falco_to_text(state, prometheus_metrics_converter, additional_wrapper_metrics);
+	prometheus_text += falco_to_text_prometheus(state,
+	                                            prometheus_metrics_converter,
+	                                            additional_wrapper_metrics);
 	// Metrics for each source
-	prometheus_text +=
-	        sources_to_text(state, prometheus_metrics_converter, additional_wrapper_metrics);
+	prometheus_text += sources_to_text_prometheus(state,
+	                                              prometheus_metrics_converter,
+	                                              additional_wrapper_metrics);
 
 	for(auto metric : additional_wrapper_metrics) {
 		prometheus_metrics_converter.convert_metric_to_unit_convention(metric);
