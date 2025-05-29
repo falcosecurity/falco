@@ -79,7 +79,8 @@ public:
 		   fields.
 		*/
 		void get_metrics_output_fields_additional(nlohmann::json& output_fields,
-		                                          double stats_snapshot_time_delta_sec);
+		                                          double stats_snapshot_time_delta_sec,
+		                                          const std::string& src);
 
 		std::shared_ptr<stats_writer> m_writer;
 		// Init m_last_tick w/ invalid value to enable metrics logging immediately after
@@ -153,7 +154,9 @@ private:
 	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;
 #endif
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-	std::unique_ptr<libs::metrics::libs_metrics_collector> m_libs_metrics_collector;
+	// Per source map of libs metrics collectors
+	std::unordered_map<std::string, std::unique_ptr<libs::metrics::libs_metrics_collector>>
+	        m_libs_metrics_collectors;
 	std::unique_ptr<libs::metrics::output_rule_metrics_converter> m_output_rule_metrics_converter;
 #endif
 	std::shared_ptr<falco_outputs> m_outputs;
