@@ -414,7 +414,8 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 void stats_writer::collector::get_metrics_output_fields_additional(
         nlohmann::json& output_fields,
-        double stats_snapshot_time_delta_sec) {
+        double stats_snapshot_time_delta_sec,
+        const std::string& src) {
 	// Falco metrics categories
 	//
 	// rules_counters_enabled
@@ -478,7 +479,8 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 #endif
 
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-	if(m_writer->m_libs_metrics_collector && m_writer->m_output_rule_metrics_converter) {
+	if(m_writer->m_libs_metrics_collectors.find(src) != m_writer->m_libs_metrics_collectors.end() &&
+	   m_writer->m_output_rule_metrics_converter) {
 		// Libs metrics categories
 		//
 		// resource_utilization_enabled
@@ -487,8 +489,9 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		// libbpf_stats_enabled
 
 		// Refresh / New snapshot
-		m_writer->m_libs_metrics_collector->snapshot();
-		auto metrics_snapshot = m_writer->m_libs_metrics_collector->get_metrics();
+		auto& libs_metrics_collector = m_writer->m_libs_metrics_collectors[src];
+		libs_metrics_collector->snapshot();
+		auto metrics_snapshot = libs_metrics_collector->get_metrics();
 		// Cache n_evts and n_drops to derive n_drops_perc.
 		uint64_t n_evts = 0;
 		uint64_t n_drops = 0;
@@ -611,7 +614,8 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
                                       uint64_t num_evts) {
 	if(m_writer->has_output()) {
 #if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-		if(!m_writer->m_libs_metrics_collector) {
+		if(m_writer->m_libs_metrics_collectors.find(src) ==
+		   m_writer->m_libs_metrics_collectors.end()) {
 			uint32_t flags = m_writer->m_config->m_metrics_flags;
 			// Note: ENGINE_FLAG_BPF_STATS_ENABLED check has been moved to libs, that is, when
 			// libbpf stats is not enabled in the kernel settings we won't collect them even if the
@@ -625,7 +629,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 				flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_KERNEL_COUNTERS_PER_CPU |
 				           METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS);
 			}
-			m_writer->m_libs_metrics_collector =
+			m_writer->m_libs_metrics_collectors[src] =
 			        std::make_unique<libs::metrics::libs_metrics_collector>(inspector.get(), flags);
 		}
 
@@ -658,7 +662,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 			                                  now,
 			                                  stats_snapshot_time_delta_sec);
 
-			get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec);
+			get_metrics_output_fields_additional(output_fields, stats_snapshot_time_delta_sec, src);
 
 			/* Send message in the queue */
 			stats_writer::msg msg;
