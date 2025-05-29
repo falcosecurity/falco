@@ -404,16 +404,16 @@ collectors:
     engines:
       docker:
         enabled: true
-        sockets: ['/var/run/docker.sock']
+        sockets: ["/var/run/docker.sock"]
       podman:
         enabled: true
-        sockets: ['/run/podman/podman.sock']
+        sockets: ["/run/podman/podman.sock"]
       containerd:
         enabled: true
-        sockets: ['/run/containerd/containerd.sock']
+        sockets: ["/run/containerd/containerd.sock"]
       cri:
         enabled: true
-        sockets: ['/run/crio/crio.sock']
+        sockets: ["/run/crio/crio.sock"]
       lxc:
         enabled: true
       libvirt_lxc:
@@ -866,7 +866,7 @@ falco:
   #
   # When a merge-strategy is enabled for a folder entry, all the included config files will use that merge-strategy.
   config_files:
-  - /etc/falco/config.d
+    - /etc/falco/config.d
   # Example of config file specified as yaml map with strategy made explicit.
   # - path: $HOME/falco_local_configs/
   #  strategy: add-only
@@ -938,6 +938,13 @@ falco:
   # only contain "Opened process bash" whereas the "output" field will contain more
   # information.
   json_include_message_property: false
+
+  # [Incubating] `json_include_output_fields_property`
+  #
+  # When using JSON output in Falco, you have the option to include the individual
+  # output fields for easier access. To reduce the logging volume, it is recommended
+  # to turn it off if it's not necessary for your use case.
+  json_include_output_fields_property: true
 
   # [Stable] `buffered_outputs`
   #
@@ -1631,7 +1638,6 @@ falco:
   falco_libs:
     thread_table_size: 262144
 
-
   # [Incubating] `container_engines`
   #
   # This option allows you to explicitly enable or disable API lookups against container
@@ -1662,7 +1668,12 @@ falco:
       enabled: false
     cri:
       enabled: false
-      sockets: ["/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock"]
+      sockets:
+        [
+          "/run/containerd/containerd.sock",
+          "/run/crio/crio.sock",
+          "/run/k3s/containerd/containerd.sock",
+        ]
       disable_async: false
     podman:
       enabled: false
