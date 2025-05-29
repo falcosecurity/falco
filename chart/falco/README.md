@@ -688,6 +688,7 @@ The following table lists the main configurable parameters of the falco chart v4
 | falco.http_output.keep_alive | bool | `false` | keep_alive whether to keep alive the connection. |
 | falco.http_output.mtls | bool | `false` | Tell Falco to use mTLS |
 | falco.json_include_message_property | bool | `false` |  |
+| falco.json_include_output_fields_property | bool | `true` |  |
 | falco.json_include_output_property | bool | `true` | When using JSON output in Falco, you have the option to include the "output" property itself in the generated JSON output. The "output" property provides additional information about the purpose of the rule. To reduce the logging volume, it is recommended to turn it off if it's not necessary for your use case. |
 | falco.json_include_tags_property | bool | `true` | When using JSON output in Falco, you have the option to include the "tags" field of the rules in the generated JSON output. The "tags" field provides additional metadata associated with the rule. To reduce the logging volume, if the tags associated with the rule are not needed for your use case or can be added at a later stage, it is recommended to turn it off. |
 | falco.json_output | bool | `false` | When enabled, Falco will output alert messages and rules file loading/validation results in JSON format, making it easier for downstream programs to process and consume the data. By default, this option is disabled. |
