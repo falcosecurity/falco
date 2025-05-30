@@ -58,12 +58,6 @@ void falco_webserver::start(const falco::app::state &state,
 		              res.set_content(versions_json_str, "application/json");
 	              });
 
-	if(state.config->m_metrics_enabled && webserver_config.m_prometheus_metrics_enabled) {
-		m_server->Get("/metrics", [&state](const httplib::Request &, httplib::Response &res) {
-			res.set_content(falco_metrics::to_text_prometheus(state),
-			                falco_metrics::content_type_prometheus);
-		});
-	}
 	// run server in a separate thread
 	if(!m_server->is_valid()) {
 		m_server = nullptr;
@@ -104,5 +98,15 @@ void falco_webserver::stop() {
 		}
 		m_server = nullptr;
 		m_running = false;
+	}
+}
+
+void falco_webserver::enable_prometheus_metrics(const falco::app::state &state) {
+	if(state.config->m_metrics_enabled &&
+	   state.config->m_webserver_config.m_prometheus_metrics_enabled) {
+		m_server->Get("/metrics", [&state](const httplib::Request &, httplib::Response &res) {
+			res.set_content(falco_metrics::to_text_prometheus(state),
+			                falco_metrics::content_type_prometheus);
+		});
 	}
 }
