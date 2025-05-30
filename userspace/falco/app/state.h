@@ -116,6 +116,9 @@ struct state {
 
 	falco_webserver webserver;
 #endif
+	// Set by start_webserver to start prometheus metrics
+	// once all inspectors are opened.
+	std::function<void()> on_inspectors_opened = nullptr;
 
 	inline bool is_capture_mode() const { return config->m_engine_mode == engine_kind_t::REPLAY; }
 
