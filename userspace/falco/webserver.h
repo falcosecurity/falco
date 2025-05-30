@@ -40,6 +40,7 @@ public:
 	virtual void start(const falco::app::state& state,
 	                   const falco_configuration::webserver_config& webserver_config);
 	virtual void stop();
+	virtual void enable_prometheus_metrics(const falco::app::state& state);
 
 private:
 	bool m_running = false;

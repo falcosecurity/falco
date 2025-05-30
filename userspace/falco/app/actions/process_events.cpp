@@ -491,6 +491,9 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				}
 
 				if(s.enabled_sources.size() == 1) {
+					// Since the inspector is now opened, we can enable prometheus metrics
+					s.webserver.enable_prometheus_metrics(s);
+
 					// optimization: with only one source we don't spawn additional threads
 					process_inspector_events(s,
 					                         src_info->inspector,
@@ -519,6 +522,10 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				ctx.sync->finish();
 				break;
 			}
+		}
+		if(s.enabled_sources.size() > 1) {
+			// Since all inspectors are now opened, we can enable prometheus metrics
+			s.webserver.enable_prometheus_metrics(s);
 		}
 
 		// wait for event processing to terminate for all sources
