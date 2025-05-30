@@ -3,8 +3,9 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
-## v4.22.1
+## v5.0.0
 * Bump falcoctl to 0.11.2
+* Use default falco image flavor (wolfi) by default
 
 ## v4.22.0
 * Bump Falco to 0.41.0;

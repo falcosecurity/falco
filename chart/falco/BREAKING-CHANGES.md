@@ -1,4 +1,6 @@
 # Helm chart Breaking Changes
+ - [5.0.0](#500)
+   - [Default Falco Image](#default-falco-image)
  - [4.0.0](#400)
    - [Drivers](#drivers)
    - [K8s Collector](#k8s-collector)
@@ -8,6 +10,13 @@
     - [Rulesfiles](#rulesfiles)
     - [Falco Images](#drop-support-for-falcosecurityfalco-image)
     - [Driver Loader Init Container](#driver-loader-simplified-logic)
+
+## 5.0.0
+### Default Falco Image
+**Starting with version 5.0.0, the Helm chart now uses the default Falco container image, which is a distroless image without any additional tools installed.**
+Previously, the chart used the `debian` image with the several tools included to avoid breaking changes during upgrades. The new image is more secure and lightweight, but it does not include these tools.
+
+If you rely on some tool—for example, when using the `program_output` feature—you can manually override the `image.tag` value to use a different image flavor. For instance, setting `image.tag` to `0.41.0-debian` will restore access to the tools available in the Debian-based image.
 
 ## 4.0.0
 ### Drivers
