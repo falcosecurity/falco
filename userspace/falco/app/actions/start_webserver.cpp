@@ -44,6 +44,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 	                          std::to_string(webserver_config.m_listen_port) + ssl_option + "\n");
 
 	state.webserver.start(state, webserver_config);
+	state.on_inspectors_opened = [&state]() { state.webserver.enable_prometheus_metrics(state); };
 #endif
 	return run_result::ok();
 }
