@@ -214,7 +214,6 @@ spec:
   {{- end }}
   volumes:
     {{- include "falco.containerPluginVolumes" . | nindent 4 -}}
-    {{- if .Values.falcoctl.artifact.install.enabled }}
     {{- if eq (include "driverLoader.enabled" .) "true" }}
     - name: specialized-falco-configs
       emptyDir: {}
@@ -254,7 +253,6 @@ spec:
       hostPath:
         path: /sys/kernel/debug
     {{- end }}
-
     - name: proc-fs
       hostPath:
         path: /proc
@@ -312,7 +310,6 @@ spec:
     {{- with .Values.mounts.volumes }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-    {{- end -}}
     {{- end -}}
 
 {{- define "falco.driverLoader.initContainer" -}}
