@@ -41,6 +41,7 @@ WARNING(drivers):
 
 {{- if and (not (empty .Values.falco.load_plugins)) (or .Values.falcoctl.artifact.follow.enabled .Values.falcoctl.artifact.install.enabled) }}
 
-WARNING:
-{{ printf "It seems you are loading the following plugins %v, please make sure to install them by adding the correct reference to falcoctl.config.artifact.install.refs: %v" .Values.falco.load_plugins .Values.falcoctl.config.artifact.install.refs -}}
+NOTICE:
+{{ printf "It seems you are loading the following plugins %v, please make sure to install them by specifying the correct reference to falcoctl.config.artifact.install.refs: %v" .Values.falco.load_plugins .Values.falcoctl.config.artifact.install.refs -}}
+{{ printf "Ignore this notice if the value of falcoctl.config.artifact.install.refs is correct already." -}}
 {{- end }}
