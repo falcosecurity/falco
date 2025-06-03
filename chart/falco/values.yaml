@@ -513,10 +513,13 @@ falcosidekick:
   # -- Listen port. Default value: 2801
   listenPort: ""
 
-# -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml
-falco-talon:
-  # -- Enable falcotalon deployment.
+# -- Enable the response actions using Falco Talon.
+response_actions:
   enabled: false
+
+# -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml
+# -- It must be used in conjunction with the response_actions.enabled option.
+falco-talon: {}
 
 ####################
 # falcoctl config  #
