@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -526,10 +526,6 @@ plugins:
     #   webhookMaxBatchSize: 12582912
     #   sslCertificate: /etc/falco/falco.pem
     open_params: "http://:9765/k8s-audit"
-  - name: cloudtrail
-    library_path: libcloudtrail.so
-    # see docs for init_config and open_params:
-    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
   - name: json
     library_path: libjson.so
 
