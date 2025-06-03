@@ -657,8 +657,7 @@ The following table lists the main configurable parameters of the falco chart v5
 | extra.args | list | `[]` | Extra command-line arguments. |
 | extra.env | list | `[]` | Extra environment variables that will be pass onto Falco containers. |
 | extra.initContainers | list | `[]` | Additional initContainers for Falco pods. |
-| falco-talon | object | `{"enabled":false}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml |
-| falco-talon.enabled | bool | `false` | Enable falcotalon deployment. |
+| falco-talon | object | `{}` | It must be used in conjunction with the response_actions.enabled option. |
 | falco.append_output[0].suggested_output | bool | `true` |  |
 | falco.base_syscalls | object | `{"custom_set":[],"repair":false}` | - [Suggestions]  NOTE: setting `base_syscalls.repair: true` automates the following suggestions for you.  These suggestions are subject to change as Falco and its state engine evolve.  For execve* events: Some Falco fields for an execve* syscall are retrieved from the associated `clone`, `clone3`, `fork`, `vfork` syscalls when spawning a new process. The `close` syscall is used to purge file descriptors from Falco's internal thread / process cache table and is necessary for rules relating to file descriptors (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)  Consider enabling the following syscalls in `base_syscalls.custom_set` for process rules: [clone, clone3, fork, vfork, execve, execveat, close]  For networking related events: While you can log `connect` or `accept*` syscalls without the socket syscall, the log will not contain the ip tuples. Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also necessary.  We recommend the following as the minimum set for networking-related rules: [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]  Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process when the running process opens a file or makes a network connection, consider adding the following to the above recommended syscall sets: ... setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir ... |
 | falco.buffered_outputs | bool | `false` | Enabling buffering for the output queue can offer performance optimization, efficient resource usage, and smoother data flow, resulting in a more reliable output mechanism. By default, buffering is disabled (false). |
@@ -805,6 +804,7 @@ The following table lists the main configurable parameters of the falco chart v5
 | rbac.create | bool | `true` |  |
 | resources.limits | object | `{"cpu":"1000m","memory":"1024Mi"}` | Maximum amount of resources that Falco container could get. If you are enabling more than one source in falco, than consider to increase the cpu limits. |
 | resources.requests | object | `{"cpu":"100m","memory":"512Mi"}` | Although resources needed are subjective on the actual workload we provide a sane defaults ones. If you have more questions or concerns, please refer to #falco slack channel for more info about it. |
+| response_actions | object | `{"enabled":false}` | Enable the response actions using Falco Talon. |
 | scc.create | bool | `true` | Create OpenShift's Security Context Constraint. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created. |
