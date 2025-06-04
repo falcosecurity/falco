@@ -514,7 +514,7 @@ falcosidekick:
   listenPort: ""
 
 # -- Enable the response actions using Falco Talon.
-response_actions:
+responseActions:
   enabled: false
 
 # -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falco-talon/values.yaml
