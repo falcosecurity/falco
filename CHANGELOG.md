@@ -1,5 +1,22 @@
 # Change Log
 
+## v0.41.1
+
+Released on 2025-06-05
+
+### Bug Fixes
+
+* fix(userspace/falco): when collecting metrics for stats_writer, create a `libs_metrics_collector` for each source [[#3585](https://github.com/falcosecurity/falco/pull/3585)] - [@FedeDP](https://github.com/FedeDP)
+* fix(userspace/falco): only enable prometheus metrics once all inspectors have been opened [[#3588](https://github.com/falcosecurity/falco/pull/3588)] - [@FedeDP](https://github.com/FedeDP)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      2 |
+| Total           |      2 |
+
 ## v0.41.0
 
 Released on 2025-05-29
