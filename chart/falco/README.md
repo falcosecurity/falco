@@ -804,7 +804,7 @@ The following table lists the main configurable parameters of the falco chart v5
 | rbac.create | bool | `true` |  |
 | resources.limits | object | `{"cpu":"1000m","memory":"1024Mi"}` | Maximum amount of resources that Falco container could get. If you are enabling more than one source in falco, than consider to increase the cpu limits. |
 | resources.requests | object | `{"cpu":"100m","memory":"512Mi"}` | Although resources needed are subjective on the actual workload we provide a sane defaults ones. If you have more questions or concerns, please refer to #falco slack channel for more info about it. |
-| response_actions | object | `{"enabled":false}` | Enable the response actions using Falco Talon. |
+| responseActions | object | `{"enabled":false}` | Enable the response actions using Falco Talon. |
 | scc.create | bool | `true` | Create OpenShift's Security Context Constraint. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created. |
