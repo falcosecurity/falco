@@ -181,6 +181,10 @@ else()
 			sh
 			-c
 			"sed -i '20s/^/#include <cstdint>/' ${GRPC_SRC}/third_party/abseil-cpp/absl/strings/internal/str_format/extension.h"
+			&&
+			sh
+			-c
+			"sed -i 's|off64_t|off_t|g' ${GRPC_SRC}/third_party/abseil-cpp/absl/base/internal/direct_mmap.h"
 		)
 
 		# Zig workaround: Add a PATCH_COMMAND to grpc cmake to fixup emitted -march by abseil-cpp
