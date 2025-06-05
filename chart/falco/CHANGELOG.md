@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v5.0.2
+
+* Bump container plugin to 0.2.5
+* Bump Falco to 0.41.1
+
 ## v5.0.1
 
 * Correct installation issue when both artifact installation and follow are enabled
