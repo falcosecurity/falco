@@ -583,7 +583,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v5.0.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v5.0.3 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -597,11 +597,11 @@ The following table lists the main configurable parameters of the falco chart v5
 | certs.existingSecret | string | `""` | Existing secret containing the following key, crt and ca as well as the bundle pem. |
 | certs.server.crt | string | `""` | Certificate used by gRPC and webserver. |
 | certs.server.key | string | `""` | Key used by gRPC and webserver. |
-| collectors.containerEngine | object | `{"enabled":false,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/crio/crio.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.2.5","withSize":false}` | This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors. It is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
+| collectors.containerEngine | object | `{"enabled":false,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/crio/crio.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.2.6","withSize":false}` | This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors. It is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
 | collectors.containerEngine.enabled | bool | `false` | Enable Container Engine support. |
 | collectors.containerEngine.hooks | list | `["create"]` | hooks specify the hooks that will be used to collect metadata from the container engine. The available hooks are: create, start. |
 | collectors.containerEngine.labelMaxLen | int | `100` | labelMaxLen is the maximum length of the labels that can be used in the container engine plugin. container labels larger than this value won't be collected. |
-| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.2.5"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.2.0". Or just name + tag: containerengine:0.2.0. |
+| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.2.6"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.2.0". Or just name + tag: containerengine:0.2.0. |
 | collectors.containerEngine.withSize | bool | `false` | withSize specifies whether to enable container size inspection, which is inherently slow. |
 | collectors.containerd | object | `{"enabled":true,"socket":"/run/containerd/containerd.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
 | collectors.containerd.enabled | bool | `true` | Enable ContainerD support. |
