@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2024 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -25,9 +25,9 @@ elseif(NOT USE_BUNDLED_JEMALLOC)
 	else()
 		set(JEMALLOC_LIB_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
 	endif()
-	find_library(JEMALLOC_LIB NAMES libjemalloc${JEMALLOC_LIB_SUFFIX})
-	if(JEMALLOC_LIB)
-		message(STATUS "Found JEMALLOC: include: ${JEMALLOC_INCLUDE}, lib: ${JEMALLOC_LIB}")
+	find_library(MALLOC_LIB NAMES libjemalloc${JEMALLOC_LIB_SUFFIX})
+	if(MALLOC_LIB)
+		message(STATUS "Found system jemalloc: include: ${JEMALLOC_INCLUDE}, lib: ${MALLOC_LIB}")
 	else()
 		message(FATAL_ERROR "Couldn't find system jemalloc")
 	endif()
@@ -38,15 +38,15 @@ else()
 		set(JEMALLOC_LIB_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
 	endif()
 	set(JEMALLOC_SRC "${PROJECT_BINARY_DIR}/jemalloc-prefix/src")
-	set(JEMALLOC_LIB "${JEMALLOC_SRC}/jemalloc/lib/libjemalloc${JEMALLOC_LIB_SUFFIX}")
-	set(JEMALLOC_INCLUDE "${JEMALLOC_SRC}/jemalloc/include/jemalloc")
+	set(MALLOC_LIB "${JEMALLOC_SRC}/malloc/lib/libjemalloc${JEMALLOC_LIB_SUFFIX}")
+	set(JEMALLOC_INCLUDE "${JEMALLOC_SRC}/malloc/include/jemalloc")
 	if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
 		set(JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS --with-lg-page=14)
 	else()
 		set(JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS "")
 	endif()
 	ExternalProject_Add(
-		jemalloc
+		malloc
 		PREFIX "${PROJECT_BINARY_DIR}/jemalloc-prefix"
 		URL "https://github.com/jemalloc/jemalloc/archive/refs/tags/5.3.0.tar.gz"
 		URL_HASH "SHA256=ef6f74fd45e95ee4ef7f9e19ebe5b075ca6b7fbe0140612b2a161abafb7ee179"
@@ -56,11 +56,10 @@ else()
 		BUILD_COMMAND make build_lib_static
 		INSTALL_COMMAND ""
 		UPDATE_COMMAND ""
-		BUILD_BYPRODUCTS ${JEMALLOC_LIB}
+		BUILD_BYPRODUCTS ${MALLOC_LIB}
 	)
-	message(STATUS "Using bundled jemalloc: include: ${JEMALLOC_INCLUDE}, lib: ${JEMALLOC_LIB}")
 	install(
-		FILES "${JEMALLOC_LIB}"
+		FILES "${MALLOC_LIB}"
 		DESTINATION "${CMAKE_INSTALL_LIBDIR}/${LIBS_PACKAGE_NAME}"
 		COMPONENT "libs-deps"
 	)
@@ -68,8 +67,8 @@ endif()
 
 # We add a custom target, in this way we can always depend on `jemalloc` without distinguishing
 # between "bundled" and "not-bundled" case
-if(NOT TARGET jemalloc)
-	add_custom_target(jemalloc)
+if(NOT TARGET malloc)
+	add_custom_target(malloc)
 endif()
 
 include_directories(${JEMALLOC_INCLUDE})
