@@ -11,6 +11,14 @@
     - [Falco Images](#drop-support-for-falcosecurityfalco-image)
     - [Driver Loader Init Container](#driver-loader-simplified-logic)
 
+## 6.0.0
+
+### Falco Talon configuration changes
+
+The following backward-incompatible changes have been made to `values.yaml`:
+- `falcotalon` configuration has been renamed to `falco-talon`
+- `falcotalon.enabled` has been renamed to `responseActions.enabled`
+
 ## 5.0.0
 ### Default Falco Image
 **Starting with version 5.0.0, the Helm chart now uses the default Falco container image, which is a distroless image without any additional tools installed.**
