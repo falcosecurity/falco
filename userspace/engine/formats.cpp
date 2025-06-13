@@ -25,12 +25,14 @@ falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
                              bool json_include_tags_property,
                              bool json_include_message_property,
                              bool json_include_output_fields_property,
+                             const std::string &json_container,
                              bool time_format_iso_8601):
         m_falco_engine(engine),
         m_json_include_output_property(json_include_output_property),
         m_json_include_tags_property(json_include_tags_property),
         m_json_include_message_property(json_include_message_property),
         m_json_include_output_fields_property(json_include_output_fields_property),
+        m_json_container(json_container),
         m_time_format_iso_8601(time_format_iso_8601) {}
 
 falco_formats::~falco_formats() {}
@@ -157,7 +159,7 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 			}
 		}
 
-		return event.dump();
+		return format_json_container(event, evttime);
 	}
 
 	// should never get here until we only have OF_NORMAL and OF_JSON
@@ -196,4 +198,33 @@ std::map<std::string, std::string> falco_formats::get_field_values(
 	}
 
 	return ret;
+}
+
+/// @brief Helper function for encoding a json event into a parent container, described by
+/// configuration.
+/// @param json the json object to encode
+/// @param evttime the event time
+/// @return returns a std::string encoded json object according to the configured json_container
+std::string falco_formats::format_json_container(nlohmann::json &json, time_t evttime) const {
+	if(m_json_container == std::string("splunk_hec")) {
+		nlohmann::json omsg;
+		omsg["time"] = evttime;
+		omsg["host"] = json["hostname"];
+		omsg["source"] = "falco";
+		omsg["event"] = json;
+		return omsg.dump();
+	} else if(m_json_container == std::string("slack_webhook")) {
+		nlohmann::json omsg;
+		omsg["text"] = json.dump();
+		return omsg.dump();
+	} else if(m_json_container == std::string("generic_event_encoded")) {
+		nlohmann::json omsg;
+		omsg["event"] = json.dump();
+		omsg["host"] = json["hostname"];
+		omsg["time"] = evttime;
+		const std::map<std::string, std::string> &const_labels = {{"evt_type", "falco"}};
+		omsg["fields"] = const_labels;
+		return omsg.dump();
+	}
+	return json.dump();
 }
