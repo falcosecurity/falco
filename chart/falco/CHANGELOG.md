@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.0.0
+
+* Rename Falco Talon configuration keys naming
+
 ## v5.0.3
 
 * Bump container plugin to 0.2.6
