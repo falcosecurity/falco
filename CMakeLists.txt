@@ -29,7 +29,18 @@ option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 option(USE_ASAN "Build with AddressSanitizer" OFF)
 option(USE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
 option(UBSAN_HALT_ON_ERROR "Halt on error when building with UBSan" ON)
-option(USE_JEMALLOC "Use jemalloc allocator" OFF)
+
+# Mem allocators - linux only for now
+if(NOT WIN32
+   AND NOT APPLE
+   AND NOT MINIMAL_BUILD
+   AND NOT EMSCRIPTEN
+)
+	# If one enables multiple allocators, cmake will fail since all of the allocators cmake modules
+	# create a `malloc` target.
+	option(USE_JEMALLOC "Use jemalloc allocator, linux only" OFF)
+	option(USE_MIMALLOC "Use mimalloc (microsoft) allocator, linux only" OFF)
+endif()
 
 if(WIN32)
 	if(POLICY CMP0091)
@@ -142,18 +153,28 @@ set(CMD_MAKE make)
 
 include(ExternalProject)
 
-if(USE_JEMALLOC)
-	if(USE_ASAN)
-		message(WARNING "Jemalloc and ASAN are known to have issues when combined")
-	endif()
-	include(jemalloc)
-endif()
-
 # libs
 include(falcosecurity-libs)
 
 # compute FALCO_VERSION (depends on libs)
 include(falco-version)
+
+# Mem allocators - linux only for now
+if(NOT WIN32
+   AND NOT APPLE
+   AND NOT MINIMAL_BUILD
+   AND NOT EMSCRIPTEN
+)
+
+	if(USE_JEMALLOC)
+		include(jemalloc)
+	endif()
+	if(USE_MIMALLOC)
+		include(mimalloc)
+	endif()
+
+	message(STATUS "Will use mem allocator library: ${MALLOC_LIB}")
+endif()
 
 # nlohmann-json
 include(njson)
