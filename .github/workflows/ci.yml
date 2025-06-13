@@ -27,6 +27,7 @@ jobs:
       version: ${{ needs.fetch-version.outputs.version }}
       enable_debug: true
       enable_sanitizers: true
+      use_mimalloc: true
 
   build-dev-packages-arm64:
     needs: [fetch-version]
@@ -35,6 +36,7 @@ jobs:
       arch: aarch64
       version: ${{ needs.fetch-version.outputs.version }}
       enable_debug: true
+      use_mimalloc: true
 
   test-dev-packages:
     needs: [fetch-version, build-dev-packages-x86_64]
