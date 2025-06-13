@@ -18,6 +18,7 @@ jobs:
     with:
       arch: x86_64
       version: ${{ needs.fetch-version.outputs.version }}
+      use_mimalloc: true
     secrets: inherit
   
   build-dev-packages-arm64:
@@ -26,6 +27,7 @@ jobs:
     with:
       arch: aarch64
       version: ${{ needs.fetch-version.outputs.version }}
+      use_mimalloc: true
     secrets: inherit
 
   test-dev-packages:
