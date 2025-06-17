@@ -70,6 +70,7 @@ falco_configuration::falco_configuration():
         m_json_include_tags_property(true),
         m_json_include_message_property(false),
         m_json_include_output_fields_property(true),
+        m_json_container(""),
         m_rule_matching(falco_common::rule_matching::FIRST),
         m_watch_config_files(true),
         m_buffered_outputs(false),
@@ -347,6 +348,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	        m_config.get_scalar<bool>("json_include_message_property", false);
 	m_json_include_output_fields_property =
 	        m_config.get_scalar<bool>("json_include_output_fields_property", true);
+	m_json_container = m_config.get_scalar<std::string>("json_container", "");
 
 	m_outputs.clear();
 	falco::outputs::config file_output;
@@ -461,6 +463,9 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 		        m_config.get_scalar<uint8_t>("http_output.max_consecutive_timeouts", 5);
 		http_output.options["max_consecutive_timeouts"] = std::to_string(max_consecutive_timeouts);
 
+		std::string authorization;
+		authorization = m_config.get_scalar<std::string>("http_output.authorization", "");
+		http_output.options["authorization"] = authorization;
 		m_outputs.push_back(http_output);
 	}
 
