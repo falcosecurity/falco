@@ -66,7 +66,7 @@ Changes and new features are organized into [milestones](https://github.com/falc
 
 The release process is mostly automated, requiring only a few manual steps to initiate and complete.
 
-Moreover, we assign owners for each release (typically pairing a new person with an experienced one). Assignees and due dates for releases are proposed during the [weekly community call](https://github.com/falcosecurity/community).
+Moreover, we assign owners for each release (typically pairing a new person with an experienced one). Assignees and due dates for releases are proposed during the [community call](https://github.com/falcosecurity/community).
 
 At a high level each Falco release needs to follow a pre-determined sequencing of releases and build order:
 
@@ -170,10 +170,10 @@ For each release we archive the meeting notes in git for historical purposes.
 
 Announce the new release to the world!
 
+- IFF the ongoing release introduces a **new minor version**, [archive a snapshot of the Falco website](https://github.com/falcosecurity/falco-website/blob/master/release.md#documentation-versioning)
 - Publish a blog on [Falco website](https://github.com/falcosecurity/falco-website) ([example](https://github.com/falcosecurity/falco-website/blob/master/content/en/blog/falco-0-28-1.md))
 - Send an announcement to cncf-falco-dev@lists.cncf.io (plain text, please)
 - Let folks in the slack #falco channel know about a new release came out
-- IFF the on going release introduces a **new minor version**, [archive a snapshot of the Falco website](https://github.com/falcosecurity/falco-website/blob/master/release.md#documentation-versioning)
 
 
 ## Falco Components Versioning
@@ -185,9 +185,7 @@ This section provides more details around the versioning of the components that 
 - Falco version is a git tag (`x.y.z`), see [Procedures](#procedures) section. Note that the Falco version is a sem-ver-like schema, but not fully compatible with sem-ver.
 - [FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/userspace/engine/falco_engine_version.h) is not sem-ver and must be bumped either when a backward incompatible change has been introduced to the rules files syntax and loading logic, and/or when `FALCO_ENGINE_CHECKSUM` has changed. The checksum is computed by considering the available rules fields (see currently supported [Falco fields](https://falco.org/docs/reference/rules/supported-fields/)), the event types (see currently supported [Falco events](https://falco.org/docs/reference/rules/supported-events/)), and the supported driver schema version. A checksum indicates that something was not available in previous engine versions. See the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md#versioning-a-ruleset) to understand how this affects the versioning of Falco rules. Breaking changes introduced in the Falco engine are not necessarily tied to the drivers or libs versions. The version number must be incremented every time and only when a single change or an atomic group of changes - which meet the criteria described above - is included in the `master` branch. Thus, a version bump can occur multiple times during the development and testing phases of a given release cycle. A given version bump must not group multiple changes that occurred sporadically during the release cycle.
 - During development and release preparation, libs and driver reference commits are often bumped in Falco's cmake setup ([falcosecurity-libs cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/falcosecurity-libs.cmake#L30) and [driver cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/driver.cmake#L29)) in order to merge new Falco features. In practice, they are mostly bumped at the same time referencing the same `libs` commit. However, for the official Falco build `FALCOSECURITY_LIBS_VERSION` flag that references the stable libs version is used (read below).
-- Similarly, Falco plugins versions are bumped in Falco's cmake setup ([plugins cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/plugins.cmake)) and those versions are the ones used for the Falco release.
 - At release time Plugin, Libs and Driver versions are compatible with Falco.
-- If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with (read more below under Libs).
 
 
 ```
