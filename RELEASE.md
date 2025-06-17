@@ -84,11 +84,15 @@ Before proceeding with the release, make sure to complete the following preparat
 
 ### 1. Release notes
 - Find the previous release date (`YYYY-MM-DD`) by looking at the [Falco releases](https://github.com/falcosecurity/falco/releases)
+- Double-check, by using the following filters, if there is any closed issue/merge PR with no milestone assigned:
+  - `is:issue state:closed no:milestone closed:>YYYY-MM-DD`
+    [filter](https://github.com/falcosecurity/falco/issues?q=is%3Aissue%20state%3Aclosed%20no%3Amilestone%20closed%3A%3EYYYY-MM-DD)
+  - `is:pr state:closed no:milestone closed:>YYYY-MM-DD`
+    [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD)
+- Assign any issue/PR identified in the previous point to the milestone corresponding to the currently undergoing release
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
-- Check issues without a milestone (using `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD) ) and add them to the milestone currently undergoing release
-- Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD), if any, update those missing
 
 ### 2. Milestones
 
@@ -102,7 +106,7 @@ Its naming will be `release/M.m.x`; for example: `release/0.34.x`.
 The same branch will then be used for any eventual cherry pick for patch releases.  
 
 For patch releases, instead, the `release/M.m.x` branch should already be in place; no more steps are needed.  
-Double check that any PR that should be part of the tag has been cherry-picked from master!
+Double-check that any PR that should be part of the tag has been cherry-picked from master!
 
 ### 4. Release PR
 
