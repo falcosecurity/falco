@@ -116,7 +116,7 @@ The release PR is meant to be made against the respective `release/M.m.x` branch
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` updates itself automatically
 - Generate the change log using [rn2md](https://github.com/leodido/rn2md):
-    - Execute `rn2md -o falcosecurity -m <version> -r falco`
+    - Execute `rn2md -r falcosecurity/falco -m M.m.p -b release/M.m.x`
     - In case `rn2md` emits error try to generate an GitHub OAuth access token and provide it with the `-t` flag
 - Add the latest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
@@ -129,7 +129,7 @@ The release PR is meant to be made against the respective `release/M.m.x` branch
 Core maintainers and/or the release manager can decide to publish pre-releases at any time before the final release
 is live for development and testing purposes.
 
-The prerelease tag must be formatted as `M.m.p-r`where `r` is the prerelease version information (e.g. `0.35.0-rc1`.)
+The prerelease tag must be formatted as `M.m.p-r` where `r` is the prerelease version information (e.g. `0.35.0-rc1`.)
 
 To do so:
 
