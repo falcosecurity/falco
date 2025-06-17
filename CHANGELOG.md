@@ -1,5 +1,29 @@
 # Change Log
 
+## v0.41.2
+
+Released on 2025-06-17
+
+
+
+### Minor Changes
+
+* update(build): update container plugin to 0.3.0 [[#3619](https://github.com/falcosecurity/falco/pull/3619)] - [@ekoops](https://github.com/ekoops)
+
+
+
+### Non user-facing changes
+
+* update(build): update container plugin to 0.2.6 [[#3611](https://github.com/falcosecurity/falco/pull/3611)] - [@leogr](https://github.com/leogr)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      1 |
+| Total           |      2 |
+
 ## v0.41.1
 
 Released on 2025-06-05
