@@ -56,6 +56,7 @@ jobs:
     with:
       arch: x86_64
       version: ${{ github.event.release.tag_name }}
+      use_jemalloc: true
     secrets: inherit
 
   build-packages-arm64:
@@ -64,6 +65,7 @@ jobs:
     with:
       arch: aarch64
       version: ${{ github.event.release.tag_name }}
+      use_jemalloc: true
     secrets: inherit
 
   test-packages:
