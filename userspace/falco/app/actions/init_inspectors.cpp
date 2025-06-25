@@ -56,6 +56,12 @@ static bool populate_filterchecks(const std::shared_ptr<sinsp>& inspector,
                                   std::unordered_set<std::string>& used_plugins,
                                   std::map<std::string, std::string> static_fields,
                                   std::string& err) {
+	// Add static filterchecks loaded from config
+	if(!static_fields.empty()) {
+		filterchecks.add_filter_check(std::make_unique<sinsp_filter_check_static>(static_fields));
+	}
+
+	// Add plugin-defined filterchecks, checking that they do not overlap any internal filtercheck
 	std::vector<const filter_check_info*> infos;
 	for(const auto& plugin : inspector->get_plugin_manager()->plugins()) {
 		if(!(plugin->caps() & CAP_EXTRACTION)) {
@@ -85,9 +91,6 @@ static bool populate_filterchecks(const std::shared_ptr<sinsp>& inspector,
 		used_plugins.insert(plugin->name());
 	}
 
-	if(!static_fields.empty()) {
-		filterchecks.add_filter_check(std::make_unique<sinsp_filter_check_static>(static_fields));
-	}
 	return true;
 }
 
