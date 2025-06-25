@@ -663,6 +663,8 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 		}
 	}
 
+	m_static_fields = m_config.get_scalar<std::map<std::string, std::string>>("static_fields", {});
+
 	std::vector<std::string> load_plugins;
 
 	bool load_plugins_node_defined = m_config.is_defined("load_plugins");

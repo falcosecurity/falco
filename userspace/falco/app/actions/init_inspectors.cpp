@@ -21,6 +21,7 @@ limitations under the License.
 #include <unordered_set>
 
 #include <libsinsp/plugin_manager.h>
+#include <libsinsp/sinsp_filtercheck_static.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -53,7 +54,14 @@ static bool populate_filterchecks(const std::shared_ptr<sinsp>& inspector,
                                   const std::string& source,
                                   filter_check_list& filterchecks,
                                   std::unordered_set<std::string>& used_plugins,
+                                  std::map<std::string, std::string> static_fields,
                                   std::string& err) {
+	// Add static filterchecks loaded from config
+	if(!static_fields.empty()) {
+		filterchecks.add_filter_check(std::make_unique<sinsp_filter_check_static>(static_fields));
+	}
+
+	// Add plugin-defined filterchecks, checking that they do not overlap any internal filtercheck
 	std::vector<const filter_check_info*> infos;
 	for(const auto& plugin : inspector->get_plugin_manager()->plugins()) {
 		if(!(plugin->caps() & CAP_EXTRACTION)) {
@@ -82,6 +90,7 @@ static bool populate_filterchecks(const std::shared_ptr<sinsp>& inspector,
 		filterchecks.add_filter_check(sinsp_plugin::new_filtercheck(plugin));
 		used_plugins.insert(plugin->name());
 	}
+
 	return true;
 }
 
@@ -162,6 +171,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		                          src,
 		                          *src_info->filterchecks,
 		                          used_plugins,
+		                          s.config->m_static_fields,
 		                          err)) {
 			return run_result::fatal(err);
 		}
