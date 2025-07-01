@@ -1,5 +1,26 @@
 # Change Log
 
+## v0.41.3
+
+Released on 2025-07-01
+
+
+
+### Minor Changes
+
+* update: bump container plugin to v0.3.1 [[#3629](https://github.com/falcosecurity/falco/pull/3629)] - [@FedeDP](https://github.com/FedeDP)
+
+
+
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      1 |
+| Total           |      1 |
+
 ## v0.41.2
 
 Released on 2025-06-17
