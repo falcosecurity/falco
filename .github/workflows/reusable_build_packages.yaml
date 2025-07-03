@@ -20,6 +20,16 @@ on:
         required: false
         type: boolean
         default: false
+      use_jemalloc:
+        description: Use jemalloc memory allocator
+        required: false
+        type: boolean
+        default: false
+      use_mimalloc:
+        description: Use mimalloc memory allocator
+        required: false
+        type: boolean
+        default: false
 
 permissions:  
   contents: read
@@ -88,7 +98,8 @@ jobs:
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
-              -DUSE_JEMALLOC=ON \
+              -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
+              -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
@@ -160,7 +171,8 @@ jobs:
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
-              -DUSE_JEMALLOC=On \
+              -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
+              -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
               -DFALCO_VERSION=${{ inputs.version }}
 
       - name: Build project
@@ -209,6 +221,7 @@ jobs:
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
               -DUSE_JEMALLOC=Off \
+              -DUSE_MIMALLOC=Off \
               -DUSE_ASAN=On \
               -DFALCO_VERSION=${{ inputs.version }}
 
@@ -253,7 +266,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCPACK_GENERATOR=TGZ \
                 -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
-                -DUSE_JEMALLOC=On \
+                -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
+                -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
                 -DUSE_BUNDLED_DEPS=On \
                 -DMUSL_OPTIMIZED_BUILD=On \
                 -DFALCO_ETC_DIR=/etc/falco \
