@@ -16,6 +16,12 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.metrics.service.type }}
+  {{- if .Values.metrics.service.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.metrics.service.ipFamilyPolicy }}
+  {{- end }}
+  {{- if .Values.metrics.service.ipFamilies }}
+  ipFamilies: {{ toYaml .Values.metrics.service.ipFamilies | nindent 4 }}
+  {{- end }}
   ports:
     - port: {{ .Values.metrics.service.ports.metrics.port }}
       targetPort: {{ .Values.metrics.service.ports.metrics.targetPort }}
