@@ -266,6 +266,10 @@ metrics:
         targetPort: 8765
         # -- protocol specifies the network protocol that the Service should use for the associated port.
         protocol: "TCP"
+        # -- ipFamilyPolicy sets the IP family policy for the metrics Service to be able to configure dual-stack; see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services).
+        ipFamilyPolicy: ""
+        # -- ipFamilies a list of IP families for the metrics Service that should be supported, in the order in which they should be applied to ClusterIP. Can be "IPv4" and/or "IPv6".
+        ipFamilies: []
 
 # File access configuration (scenario requirement)
 mounts:
