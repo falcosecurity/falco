@@ -38,7 +38,9 @@ limitations under the License.
 
 falco::app::restart_handler::~restart_handler() {
 	stop();
-	close(m_inotify_fd);
+	if(m_inotify_fd != -1) {
+		close(m_inotify_fd);
+	}
 	m_inotify_fd = -1;
 }
 
@@ -48,6 +50,12 @@ void falco::app::restart_handler::trigger() {
 
 bool falco::app::restart_handler::start(std::string& err) {
 #ifdef __linux__
+	if(m_watched_files.empty() && m_watched_dirs.empty()) {
+		falco_logger::log(falco_logger::level::DEBUG,
+		                  "Refusing to start restart handler due to nothing to watch\n");
+		return true;
+	}
+
 	m_inotify_fd = inotify_init();
 	if(m_inotify_fd < 0) {
 		err = "could not initialize inotify handler";
