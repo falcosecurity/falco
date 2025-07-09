@@ -61,7 +61,7 @@ public:
 private:
 	void watcher_loop() noexcept;
 
-	int m_inotify_fd;
+	int m_inotify_fd = -1;
 	std::thread m_watcher;
 	std::atomic<bool> m_stop;
 	std::atomic<bool> m_forced;
