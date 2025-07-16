@@ -160,13 +160,13 @@ static bool resolve_list(std::string& cnd, const falco_list& list) {
 	static std::string delims = blanks + "(),=";
 	std::string tmp;
 	std::string new_cnd;
-	size_t start, end;
+	size_t start;
 	bool used = false;
 	start = cnd.find(list.name);
 	while(start != std::string::npos) {
 		// the characters surrounding the name must
 		// be delims of beginning/end of string
-		end = start + list.name.length();
+		size_t end = start + list.name.length();
 		if((start == 0 || delims.find(cnd[start - 1]) != std::string::npos) &&
 		   (end >= cnd.length() || delims.find(cnd[end]) != std::string::npos)) {
 			// shift pointers to consume all whitespaces
