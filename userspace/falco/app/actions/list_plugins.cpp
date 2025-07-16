@@ -38,6 +38,6 @@ falco::app::run_result falco::app::actions::list_plugins(const falco::app::state
 		os << std::endl;
 	}
 
-	printf("%lu Plugins Loaded:\n\n%s\n", configs.size(), os.str().c_str());
+	printf("%zu Plugins Loaded:\n\n%s\n", configs.size(), os.str().c_str());
 	return run_result::exit();
 }
