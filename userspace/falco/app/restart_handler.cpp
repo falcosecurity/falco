@@ -108,7 +108,6 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 	}
 
 	fd_set set;
-	bool forced = false;
 	bool should_check = false;
 	bool should_restart = false;
 	struct timeval timeout;
@@ -132,7 +131,7 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 		}
 
 		// check if there's been a forced restart request
-		forced = m_forced.load(std::memory_order_acquire);
+		bool forced = m_forced.load(std::memory_order_acquire);
 		m_forced.store(false, std::memory_order_release);
 
 		// no new watch event is received during the timeout
