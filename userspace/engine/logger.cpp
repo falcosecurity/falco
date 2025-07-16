@@ -128,15 +128,10 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg) {
 			}
 		} else {
 			const struct tm* ltm = std::localtime(&result);
-			char* atime = (ltm ? std::asctime(ltm) : NULL);
-			std::string tstr;
-			if(atime) {
-				tstr = atime;
-				tstr = tstr.substr(0, 24);  // remove trailing newline
-			} else {
-				tstr = "N/A";
-			}
-			fprintf(stderr, "%s: %s", tstr.c_str(), copy.c_str());
+			static char format[] = "WWW MMM DD HH:mm:ss YYYY";
+			char tstr[sizeof(format)];
+			std::strftime(tstr, sizeof(tstr), format, ltm);
+			fprintf(stderr, "%s: %s", tstr, copy.c_str());
 		}
 	}
 }
