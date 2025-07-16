@@ -57,8 +57,6 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 		message_format = "*" + message_format;
 	}
 
-	std::shared_ptr<sinsp_evt_formatter> formatter;
-
 	auto prefix_formatter = m_falco_engine->create_formatter(source, prefix_format);
 	auto message_formatter = m_falco_engine->create_formatter(source, message_format);
 
