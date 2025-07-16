@@ -46,7 +46,7 @@ template<class filter_wrapper>
 class indexable_ruleset : public filter_ruleset {
 public:
 	indexable_ruleset() = default;
-	virtual ~indexable_ruleset() = default;
+	virtual ~indexable_ruleset() override = default;
 
 	// Required to implement filter_ruleset
 	void clear() override {

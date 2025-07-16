@@ -228,7 +228,7 @@ public:
 class result : public falco::load_result {
 public:
 	explicit result(const std::string& name);
-	virtual ~result() = default;
+	virtual ~result() override = default;
 	result(result&&) = default;
 	result& operator=(result&&) = default;
 	result(const result&) = default;
