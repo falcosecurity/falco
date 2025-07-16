@@ -20,7 +20,7 @@ limitations under the License.
 
 #define CHECK_RES(fn) res = res == CURLE_OK ? fn : res
 
-static size_t noop_write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+static size_t noop_write_callback(void */*contents*/, size_t size, size_t nmemb, void */*userp*/) {
 	// We don't want to echo anything. Just return size of bytes ignored
 	return size * nmemb;
 }
