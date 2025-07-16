@@ -21,6 +21,13 @@ ENV HOME /root
 
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
+# Use 20250630T203427Z debian apt snapshot as it still contains support for buster.
+RUN cat <<EOF > /etc/apt/sources.list
+deb http://snapshot.debian.org/archive/debian/20250630T203427Z buster main
+deb http://snapshot.debian.org/archive/debian-security/20250630T203427Z buster/updates main
+deb http://snapshot.debian.org/archive/debian/20250630T203427Z buster-updates main
+EOF
+
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 	bash-completion \
