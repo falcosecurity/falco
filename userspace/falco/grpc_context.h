@@ -46,7 +46,7 @@ private:
 class stream_context : public context {
 public:
 	explicit stream_context(::grpc::ServerContext* ctx): context(ctx) {};
-	virtual ~stream_context() = default;
+	virtual ~stream_context() override = default;
 
 	enum : char { STREAMING = 1, SUCCESS, ERROR } m_status = STREAMING;
 
@@ -58,7 +58,7 @@ public:
 class bidi_context : public stream_context {
 public:
 	explicit bidi_context(::grpc::ServerContext* ctx): stream_context(ctx) {};
-	virtual ~bidi_context() = default;
+	virtual ~bidi_context() override = default;
 };
 
 }  // namespace grpc
