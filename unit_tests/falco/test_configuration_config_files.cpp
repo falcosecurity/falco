@@ -92,7 +92,6 @@ TEST(Configuration, configuration_config_files_ok) {
 	outfile.close();
 
 	std::vector<std::string> cmdline_config_options;
-	std::vector<std::string> loaded_conf_files;
 	falco_configuration falco_config;
 	config_loaded_res res;
 	ASSERT_NO_THROW(res = falco_config.init_from_file("main.yaml", cmdline_config_options));
