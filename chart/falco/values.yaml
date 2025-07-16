@@ -466,6 +466,9 @@ extra:
   # -- Additional initContainers for Falco pods.
   initContainers: []
 
+# -- Override hostname in falco pod
+podHostname:
+
 # -- certificates used by webserver and grpc server.
 # paste certificate content or use helm with --set-file
 # or use existing secret containing key, crt, ca as well as pem bundle

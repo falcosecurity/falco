@@ -583,7 +583,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v6.0.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v6.1.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -798,6 +798,7 @@ The following table lists the main configurable parameters of the falco chart v6
 | namespaceOverride | string | `""` | Override the deployment namespace |
 | nodeSelector | object | `{}` | Selectors used to deploy Falco on a given node/nodes. |
 | podAnnotations | object | `{}` | Add additional pod annotations |
+| podHostname | string | `nil` | Override hostname in falco pod |
 | podLabels | object | `{}` | Add additional pod labels |
 | podPriorityClassName | string | `nil` | Set pod priorityClassName |
 | podSecurityContext | object | `{}` | Set securityContext for the pods These security settings are overriden by the ones specified for the specific containers when there is overlap. |
