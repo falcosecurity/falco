@@ -271,7 +271,7 @@ static std::shared_ptr<ast::expr> parse_condition(std::string condition,
 	}
 }
 
-void rule_loader::compiler::compile_list_infos(configuration& cfg,
+void rule_loader::compiler::compile_list_infos(const configuration& cfg,
                                                const collector& col,
                                                indexed_vector<falco_list>& out) const {
 	std::list<std::string> used_names;
@@ -300,7 +300,7 @@ void rule_loader::compiler::compile_list_infos(configuration& cfg,
 }
 
 // note: there is a visibility ordering between macros
-void rule_loader::compiler::compile_macros_infos(configuration& cfg,
+void rule_loader::compiler::compile_macros_infos(const configuration& cfg,
                                                  const collector& col,
                                                  indexed_vector<falco_list>& lists,
                                                  indexed_vector<falco_macro>& out) const {
@@ -332,7 +332,7 @@ static bool err_is_unknown_type_or_field(const std::string& err) {
 	       err.find("unknown event type") != std::string::npos;
 }
 
-bool rule_loader::compiler::compile_condition(configuration& cfg,
+bool rule_loader::compiler::compile_condition(const configuration& cfg,
                                               filter_macro_resolver& macro_resolver,
                                               indexed_vector<falco_list>& lists,
                                               const indexed_vector<rule_loader::macro_info>& macros,
@@ -389,7 +389,7 @@ bool rule_loader::compiler::compile_condition(configuration& cfg,
 	return true;
 }
 
-void rule_loader::compiler::compile_rule_infos(configuration& cfg,
+void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
                                                const collector& col,
                                                indexed_vector<falco_list>& lists,
                                                indexed_vector<falco_macro>& macros,
