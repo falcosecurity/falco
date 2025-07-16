@@ -56,7 +56,7 @@ bool evttype_index_ruleset::run_wrappers(sinsp_evt *evt,
                                          filter_wrapper_list &wrappers,
                                          uint16_t ruleset_id,
                                          falco_rule &match) {
-	for(auto &wrap : wrappers) {
+	for(const auto &wrap : wrappers) {
 		if(wrap->m_filter->run(evt)) {
 			match = wrap->m_rule;
 			return true;
@@ -72,7 +72,7 @@ bool evttype_index_ruleset::run_wrappers(sinsp_evt *evt,
                                          std::vector<falco_rule> &matches) {
 	bool match_found = false;
 
-	for(auto &wrap : wrappers) {
+	for(const auto &wrap : wrappers) {
 		if(wrap->m_filter->run(evt)) {
 			matches.push_back(wrap->m_rule);
 			match_found = true;
