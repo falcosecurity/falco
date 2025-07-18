@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ limitations under the License.
 #define METRICS_V2_JEMALLOC_STATS 1 << 31
 
 enum class engine_kind_t : uint8_t { KMOD, EBPF, MODERN_EBPF, REPLAY, GVISOR, NODRIVER };
+
+enum class capture_mode_t : uint8_t { RULES, ALL_RULES };
 
 // Map that holds { config filename | validation status } for each loaded config file.
 typedef std::map<std::string, std::string> config_loaded_res;
@@ -206,6 +208,13 @@ public:
 	bool m_metrics_include_empty_values;
 	std::vector<plugin_config> m_plugins;
 	bool m_plugins_hostinfo;
+
+	// capture configs
+	bool m_capture_enabled;
+	std::string m_capture_path_prefix;
+	capture_mode_t m_capture_mode = capture_mode_t::RULES;
+	u_int64_t m_capture_default_duration_ns;
+	
 
 	// Falco engine
 	engine_kind_t m_engine_mode = engine_kind_t::KMOD;
