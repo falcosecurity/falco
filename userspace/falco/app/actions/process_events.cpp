@@ -144,7 +144,7 @@ static falco::app::run_result do_inspect(
 		              s.config->m_syscall_evt_simulate_drops);
 	}
 
-	// init dumper for caputures
+	// init dumper for captures
 	sinsp_dumper *dumper = new sinsp_dumper();
 	uint64_t dump_started_ts = 0;
 	uint64_t dump_deadline_ts = 0;
