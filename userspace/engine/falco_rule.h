@@ -91,7 +91,9 @@ struct falco_rule {
 		return (this->id == rhs.id && this->source == rhs.source && this->name == rhs.name &&
 		        this->description == rhs.description && this->output == rhs.output &&
 		        this->tags == rhs.tags && this->exception_fields == rhs.exception_fields &&
-		        this->priority == rhs.priority && this->condition.get() == rhs.condition.get() &&
+		        this->priority == rhs.priority && this->capture == rhs.capture &&
+		        this->capture_duration == rhs.capture_duration &&
+		        this->condition.get() == rhs.condition.get() &&
 		        this->filter.get() == rhs.filter.get());
 	}
 
