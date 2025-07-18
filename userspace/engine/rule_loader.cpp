@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -532,6 +532,8 @@ rule_loader::rule_info::rule_info(context& ctx):
         visibility(0),
         unknown_source(false),
         priority(falco_common::PRIORITY_DEBUG),
+		capture(false),
+		capture_duration(0),
         enabled(true),
         warn_evttypes(true),
         skip_if_unknown_filter(false) {}
