@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ limitations under the License.
 #include "../state.h"
 #include "../run_result.h"
 
+#include <string>
 #include <nlohmann/json.hpp>
 
 namespace falco {
@@ -33,6 +34,44 @@ void activate_interesting_kernel_tracepoints(falco::app::state& s,
 void check_for_ignored_events(falco::app::state& s);
 void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os);
 void format_described_rules_as_text(const nlohmann::json& v, std::ostream& os);
+
+inline std::string generate_scap_file_path(const std::string& prefix,
+										   uint64_t timestamp,
+										   uint64_t evt_num) {
+	// File path in format: <prefix>_<timestamp>_<evt_num>.scap
+	// Example: "/tmp/falco_00000001234567890_00000000000000042.scap"
+
+	// Add underscore separator between prefix and timestamp
+	std::string path = prefix + "_";
+
+	// Zero-pad timestamp to 20 digits for proper lexicographic sorting
+    // Build digits from right to left in a buffer, then append to path
+    char digits[21]; // 20 digits + null terminator
+	digits[20] = '\0';
+    uint64_t t = timestamp;
+    for (int i = 19; i >= 0; --i) { 
+        digits[i] = '0' + (t % 10); 
+        t /= 10; 
+    }
+    path += digits;
+    
+    // Add underscore separator between timestamp and evt_num
+    path += "_";
+    
+    // Zero-pad evt_num to 20 digits for proper lexicographic sorting
+    // Build digits from right to left in a buffer, then append to path
+    t = evt_num;
+    for (int i = 19; i >= 0; --i) { 
+        digits[i] = '0' + (t % 10); 
+        t /= 10; 
+    }
+    path += digits;
+    
+    // Add file extension
+    path += ".scap";
+    
+    return path;
+}
 
 falco::app::run_result open_offline_inspector(falco::app::state& s);
 falco::app::run_result open_live_inspector(falco::app::state& s,
