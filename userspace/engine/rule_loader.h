@@ -482,8 +482,8 @@ struct rule_update_info {
 	bool has_any_value() {
 		return cond.has_value() || output.has_value() || desc.has_value() || tags.has_value() ||
 		       exceptions.has_value() || priority.has_value() || enabled.has_value() ||
-			   capture.has_value() || capture_duration.has_value() ||
-		       warn_evttypes.has_value() || skip_if_unknown_filter.has_value();
+		       capture.has_value() || capture_duration.has_value() || warn_evttypes.has_value() ||
+		       skip_if_unknown_filter.has_value();
 	}
 
 	context ctx;
