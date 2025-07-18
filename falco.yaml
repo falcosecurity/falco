@@ -83,7 +83,6 @@
 #
 # For more info, please take a look at the proposal: https://github.com/falcosecurity/falco/blob/master/proposals/20231220-features-adoption-and-deprecation.md.
 
-
 ################################
 # Falco command-line arguments #
 ################################
@@ -95,10 +94,9 @@
 # three config options (`json_output`, `log_level`, and
 # `engine.kind`) are passed as command-line
 # arguments with their corresponding values: falco -o "json_output=true"
-# -o "log_level=debug" -o "engine.kind=kmod" 
+# -o "log_level=debug" -o "engine.kind=kmod"
 # Please note that command-line arguments take precedence over the options
 # specified in this config file.
-
 
 ###############################
 # Falco environment variables #
@@ -108,7 +106,7 @@
 #
 # - HOST_ROOT: Specifies the prefix to the underlying host `/proc` filesystem
 #   when deploying Falco over a container with read-only host mounts instead of
-#   directly on the host. Defaults to "/host". 
+#   directly on the host. Defaults to "/host".
 #
 # - FALCO_HOSTNAME: Customize the hostname output field logged by Falco by
 #   setting the "FALCO_HOSTNAME" environment variable.
@@ -119,16 +117,15 @@
 #
 # - SKIP_DRIVER_LOADER is used by the Falco fat image to skip the driver loading part.
 #
-# - FALCO_FRONTEND is useful when set to noninteractive to skip the dialog choice during 
+# - FALCO_FRONTEND is useful when set to noninteractive to skip the dialog choice during
 # the installation of Falco deb/rpm packages. This setting is somewhat similar to DEBIAN_FRONTEND.
 #
-# - FALCO_DRIVER_CHOICE is useful when set to kmod, ebpf, or modern_ebpf (matching the names 
-# used in engine.kind in the Falco config) during the installation of Falco deb/rpm packages. 
+# - FALCO_DRIVER_CHOICE is useful when set to kmod, ebpf, or modern_ebpf (matching the names
+# used in engine.kind in the Falco config) during the installation of Falco deb/rpm packages.
 # It skips the dialog choice but retains the driver configuration.
 #
-# - FALCOCTL_ENABLED is useful when set to 'no' during the installation of Falco deb/rpm packages, 
+# - FALCOCTL_ENABLED is useful when set to 'no' during the installation of Falco deb/rpm packages,
 # disabling the automatic artifacts followed by falcoctl.
-
 
 ###############################
 # Falco config files settings #
@@ -167,7 +164,6 @@ config_files:
   # Example of config file specified as yaml map with strategy made explicit.
   #- path: $HOME/falco_local_configs/
   #  strategy: add-only
-
 
 # [Stable] `watch_config_files`
 #
@@ -213,14 +209,14 @@ watch_config_files: true
 # By arranging the order of files and rules thoughtfully, you can ensure that
 # desired customizations and rule behaviors are prioritized and applied as
 # intended.
-# 
-# With Falco 0.36 and beyond, it's now possible to apply multiple rules that match 
-# the same event type, eliminating concerns about rule prioritization based on the 
+#
+# With Falco 0.36 and beyond, it's now possible to apply multiple rules that match
+# the same event type, eliminating concerns about rule prioritization based on the
 # "first match wins" principle. However, enabling the `all` matching option may result
-# in a performance penalty. We recommend carefully testing this alternative setting  
+# in a performance penalty. We recommend carefully testing this alternative setting
 # before deploying it in production. Read more under the `rule_matching` configuration.
 #
-# Since Falco 0.41 only files with .yml and .yaml extensions are considered, 
+# Since Falco 0.41 only files with .yml and .yaml extensions are considered,
 # including directory contents. This means that you may specify directories that
 # contain yaml files for rules and other files which will be ignored.
 rules_files:
@@ -325,7 +321,7 @@ rules_files:
 # However, in most cases, these constraints do not pose a limitation, and all
 # indexes from 1 to 10 can be used. You can check your system's page size using
 # the Falco `--page-size` command-line option.
-# 
+#
 # --- [Suggestions]
 #
 # The buffer size was previously fixed at 8 MB (index 4). You now have the
@@ -416,13 +412,13 @@ rules_files:
 # compared to the other two drivers (bpf and kernel module). However, you have
 # the flexibility to experiment and find the optimal configuration for your
 # system.
-# 
+#
 # When considering a fixed buf_size_preset and a fixed buffer dimension:
 # - Increasing this configs value results in lower number of buffers and you can
 #   speed up your system and reduce memory usage
 # - However, using too few buffers may increase contention in the kernel,
 #   leading to a slowdown.
-# 
+#
 # If you have low event throughputs and minimal drops, reducing the number of
 # buffers (higher `cpus_for_each_buffer`) can lower the memory footprint.
 #
@@ -451,6 +447,75 @@ engine:
     # in conjunction with 'gvisor.config'. The 'gvisor.root' to be passed
     # is the one usually passed to 'runsc --root' flag.
     root: ""
+
+##################
+# Falco captures #
+##################
+
+# [Sandbox] `capture`
+#
+# --- [Description]
+#
+# Falco captures allow you to record events and their associated data for
+# later analysis. This feature is particularly useful for debugging and
+# forensics purposes.
+#
+# Captures operate in two modes:
+#
+# 1. `rules`: Captures events only when specific rules are triggered.
+#    Enable capturing for individual rules by adding `capture: true` to the rule.
+#
+# 2. `all_rules`: Captures events when any enabled rule is triggered.
+#
+# When a capture starts, Falco records events from the moment the triggering rule
+# fires until the deadline is reached. The deadline is determined by the rule's
+# `capture_duration` if specified, otherwise the `default_duration` is used.
+# If additional rules trigger during an active capture, the deadline is extended
+# accordingly. Once the deadline expires, the capture stops and data is written
+# to a file. Subsequent captures create new files with unique names.
+#
+# Captured data is stored in files with a `.scap` extension, which can be
+# analyzed later using:
+#   falco -o engine.kind=replay -o replay.capture_file=/path/to/file.scap
+#
+# --- [Usage]
+#
+# Enable captures by setting `capture.enabled` to `true`.
+#
+# Configure `capture.path_prefix` to specify where capture files are stored.
+# Falco generates unique filenames based on timestamp and event number for
+# proper ordering. For example, with `path_prefix: /tmp/falco`, files are
+# named like `/tmp/falco_00000001234567890_00000000000000042.scap`.
+#
+# Use `capture.mode` to choose between `rules` and `all_rules` modes.
+#
+# Set `capture.default_duration` to define the default capture duration
+# in milliseconds.
+#
+# --- [Suggestion]
+#
+# When using `mode: rules`, configure individual rules to enable capture by
+# adding `capture: true` and optionally `capture_duration` to specific rules.
+# For example:
+#
+# - rule: Suspicious File Access
+#   desc: Detect suspicious file access patterns
+#   condition: >
+#     open_read and fd.name startswith "/etc/"
+#   output: >
+#     Suspicious file access (user=%user.name command=%proc.cmdline file=%fd.name)
+#   priority: WARNING
+#   capture: true
+#   capture_duration: 10000  # Capture for 10 seconds when this rule triggers
+#
+# This configuration will capture events for 10 seconds whenever the
+# "Suspicious File Access" rule is triggered, overriding the default duration.
+
+capture:
+  enabled: false
+  path_prefix: /tmp/falco
+  mode: rules # or "all_rules"
+  default_duration: 5000 # in milliseconds
 
 #################
 # Falco plugins #
@@ -483,9 +548,9 @@ engine:
 #
 # Disabled by default, indicated by an empty `load_plugins` list. Each plugin meant
 # to be enabled needs to be listed as explicit list item.
-# 
+#
 # For example, if you want to use the `k8saudit` plugin,
-# ensure it is configured appropriately and then change this to: 
+# ensure it is configured appropriately and then change this to:
 # load_plugins: [k8saudit, json]
 load_plugins: []
 
@@ -591,12 +656,12 @@ json_include_tags_property: true
 # [Stable] `buffered_outputs`
 #
 # Global buffering option for output channels. When disabled, the output channel
-# that supports buffering flushes the output buffer on every alert. This can lead to 
-# increased CPU usage but is useful when piping outputs to another process or script. 
-# Buffering is currently supported by `file_output`, `program_output`, and `std_output`. 
-# Some output channels may implement buffering strategies you cannot control. 
-# Additionally, this setting is separate from the `output_queue` option. The output queue 
-# sits between the rule engine and the output channels, while output buffering occurs 
+# that supports buffering flushes the output buffer on every alert. This can lead to
+# increased CPU usage but is useful when piping outputs to another process or script.
+# Buffering is currently supported by `file_output`, `program_output`, and `std_output`.
+# Some output channels may implement buffering strategies you cannot control.
+# Additionally, this setting is separate from the `output_queue` option. The output queue
+# sits between the rule engine and the output channels, while output buffering occurs
 # afterward once the specific channel implementation outputs the formatted message.
 buffered_outputs: false
 
@@ -605,15 +670,15 @@ buffered_outputs: false
 # The `rule_matching` configuration key's values are:
 #  - `first`: Falco stops checking conditions of rules against upcoming event
 #    at the first matching rule
-#  - `all`: Falco will continue checking conditions of rules even if a matching 
+#  - `all`: Falco will continue checking conditions of rules even if a matching
 #    one was already found
 #
 # Rules conditions are evaluated in the order they are defined in the rules files.
-# For this reason, when using `first` as value, only the first defined rule will 
+# For this reason, when using `first` as value, only the first defined rule will
 # trigger, possibly shadowing other rules.
 # In case `all` is used as value, rules still trigger in the order they were
 # defined.
-# 
+#
 # Effectively, with this setting, it is now possible to apply multiple rules that match
 # the same event type. This eliminates concerns about rule prioritization based on the
 # "first match wins" principle. However, enabling the `all` matching option may result in
@@ -629,15 +694,15 @@ rule_matching: first
 # On a healthy system with optimized Falco rules, the queue should not fill up.
 # If it does, it is most likely happening due to the entire event flow being too slow,
 # indicating that the server is under heavy load.
-# 
-# `capacity`: the maximum number of items allowed in the queue is determined by this value. 
-# Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded. 
-# In other words, when this configuration is set to 0, the number of allowed items is 
+#
+# `capacity`: the maximum number of items allowed in the queue is determined by this value.
+# Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded.
+# In other words, when this configuration is set to 0, the number of allowed items is
 # effectively set to the largest possible long value, disabling this setting.
-# 
-# In the case of an unbounded queue, if the available memory on the system is consumed, 
-# the Falco process would be OOM killed. When using this option and setting the capacity, 
-# the current event would be dropped, and the event loop would continue. This behavior mirrors 
+#
+# In the case of an unbounded queue, if the available memory on the system is consumed,
+# the Falco process would be OOM killed. When using this option and setting the capacity,
+# the current event would be dropped, and the event loop would continue. This behavior mirrors
 # kernel-side event drops when the buffer between kernel space and user space is full.
 outputs_queue:
   capacity: 0
@@ -660,7 +725,7 @@ outputs_queue:
 #   `tags`: append output only to rules that have all of the specified tags
 # If none of the above are specified (or `match` is omitted)
 # output is appended to all events.
-# If more than one match condition is specified output will be appended to events 
+# If more than one match condition is specified output will be appended to events
 # that match all conditions.
 # And several options to add output:
 #   `extra_output`: add output to the Falco message
@@ -671,7 +736,7 @@ outputs_queue:
 #   `suggested_output`: automatically append fields that are suggested to rules output
 #
 # Example:
-# 
+#
 # append_output:
 #   - match:
 #       source: syscall
@@ -805,7 +870,6 @@ program_output:
 grpc_output:
   enabled: false
 
-
 ##########################
 # Falco exposed services #
 ##########################
@@ -817,7 +881,7 @@ grpc_output:
 #    ensures secure communication
 # 2. Local Unix socket binding with no authentication. By default, the
 #    gRPCserver in Falco is turned off with no enabled services (see
-#    `grpc_output`setting). 
+#    `grpc_output`setting).
 #
 # To configure the gRPC server in Falco, you can make the following changes to
 # the options:
@@ -895,7 +959,6 @@ webserver:
   ssl_enabled: false
   ssl_certificate: /etc/falco/falco.pem
 
-
 ##############################################################################
 # Falco logging / alerting / metrics related to software functioning (basic) #
 ##############################################################################
@@ -934,7 +997,6 @@ log_level: info
 libs_logger:
   enabled: true
   severity: info
-
 
 #################################################################################
 # Falco logging / alerting / metrics related to software functioning (advanced) #
@@ -1090,7 +1152,7 @@ syscall_event_drops:
 #
 # Time durations are specified as a number, followed immediately by one of the
 # following units:
-# 
+#
 # ms - millisecond
 # s - second
 # m - minute
@@ -1104,7 +1166,7 @@ syscall_event_drops:
 # A minimum interval of 100ms is enforced for metric collection. However, for
 # production environments, we recommend selecting one of the following intervals
 # for optimal monitoring:
-# 
+#
 # 15m
 # 30m
 # 1h
@@ -1128,20 +1190,20 @@ syscall_event_drops:
 # number of CPUs to determine overall usage. Memory metrics are provided in raw
 # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
 # and can be uniformly converted to megabytes (MB) using the
-# `convert_memory_to_mb` functionality. In environments such as Kubernetes when 
-# deployed as daemonset, it is crucial to track Falco's container memory usage. 
-# To customize the path of the memory metric file, you can create an environment 
-# variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By 
-# default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to 
-# monitor container memory usage, which aligns with Kubernetes' 
-# `container_memory_working_set_bytes` metric. Finally, we emit the overall host 
-# CPU and memory usages, along with the total number of processes and open file 
-# descriptors (fds) on the host, obtained from the proc file system unrelated to 
-# Falco's monitoring. These metrics help assess Falco's usage in relation to the 
+# `convert_memory_to_mb` functionality. In environments such as Kubernetes when
+# deployed as daemonset, it is crucial to track Falco's container memory usage.
+# To customize the path of the memory metric file, you can create an environment
+# variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
+# default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
+# monitor container memory usage, which aligns with Kubernetes'
+# `container_memory_working_set_bytes` metric. Finally, we emit the overall host
+# CPU and memory usages, along with the total number of processes and open file
+# descriptors (fds) on the host, obtained from the proc file system unrelated to
+# Falco's monitoring. These metrics help assess Falco's usage in relation to the
 # server's workload intensity.
 #
-# `state_counters_enabled`: Emit counters related to Falco's state engine, including 
-# added, removed threads or file descriptors (fds), and failed lookup, store, or 
+# `state_counters_enabled`: Emit counters related to Falco's state engine, including
+# added, removed threads or file descriptors (fds), and failed lookup, store, or
 # retrieve actions in relation to Falco's underlying process cache table (threadtable).
 #
 # `kernel_event_counters_enabled`: Emit kernel side event and drop counters, as
@@ -1168,9 +1230,9 @@ syscall_event_drops:
 # beneficial for exploring the data schema and ensuring that fields with empty
 # values are included in the output.
 #
-# `plugins_metrics_enabled`: Falco can now expose your custom plugins' 
-# metrics. Please note that if the respective plugin has no metrics implemented, 
-# there will be no metrics available. In other words, there are no default or 
+# `plugins_metrics_enabled`: Falco can now expose your custom plugins'
+# metrics. Please note that if the respective plugin has no metrics implemented,
+# there will be no metrics available. In other words, there are no default or
 # generic plugin metrics at this time. This may be subject to change.
 #
 # `jemalloc_stats_enabled`: Falco can now expose jemalloc related stats.
@@ -1183,7 +1245,7 @@ syscall_event_drops:
 metrics:
   enabled: false
   interval: 1h
-  # Typically, in production, you only use `output_rule` or `output_file`, but not both. 
+  # Typically, in production, you only use `output_rule` or `output_file`, but not both.
   # However, if you have a very unique use case, you can use both together.
   # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
   output_rule: true
@@ -1336,16 +1398,16 @@ base_syscalls:
 #
 # `thread_table_size`
 #
-# Set the maximum number of entries (the absolute maximum value can only be MAX UINT32) 
-# for Falco's internal threadtable (process cache). Please note that Falco operates at a 
-# granular level, focusing on individual threads. Falco rules reference the thread leader 
-# as the process. The size of the threadtable should typically be much higher than the 
-# number of currently alive processes. The default value should work well on modern 
+# Set the maximum number of entries (the absolute maximum value can only be MAX UINT32)
+# for Falco's internal threadtable (process cache). Please note that Falco operates at a
+# granular level, focusing on individual threads. Falco rules reference the thread leader
+# as the process. The size of the threadtable should typically be much higher than the
+# number of currently alive processes. The default value should work well on modern
 # infrastructures and be sufficient to absorb bursts.
 #
-# Reducing its size can help in better memory management, but as a consequence, your 
-# process tree may be more frequently disrupted due to missing threads. You can explore 
-# `metrics.state_counters_enabled` to measure how the internal state handling is performing, 
+# Reducing its size can help in better memory management, but as a consequence, your
+# process tree may be more frequently disrupted due to missing threads. You can explore
+# `metrics.state_counters_enabled` to measure how the internal state handling is performing,
 # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
 # if you should increase this value for optimal performance.
 #
