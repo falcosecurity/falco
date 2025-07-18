@@ -94,6 +94,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "engine": {
                     "$ref": "#/definitions/Engine"
                 },
+                "capture": {
+                    "$ref": "#/definitions/Capture"
+                },
                 "load_plugins": {
                     "type": "array",
                     "items": {
