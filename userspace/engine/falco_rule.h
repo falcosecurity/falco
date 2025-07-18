@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -91,7 +91,9 @@ struct falco_rule {
 		return (this->id == rhs.id && this->source == rhs.source && this->name == rhs.name &&
 		        this->description == rhs.description && this->output == rhs.output &&
 		        this->tags == rhs.tags && this->exception_fields == rhs.exception_fields &&
-		        this->priority == rhs.priority && this->condition.get() == rhs.condition.get() &&
+		        this->priority == rhs.priority && this->capture == rhs.capture &&
+		        this->capture_duration == rhs.capture_duration &&
+		        this->condition.get() == rhs.condition.get() &&
 		        this->filter.get() == rhs.filter.get());
 	}
 
@@ -104,6 +106,8 @@ struct falco_rule {
 	std::set<std::string> tags;
 	std::set<std::string> exception_fields;
 	falco_common::priority_type priority;
+	bool capture;
+	uint32_t capture_duration;
 	std::shared_ptr<libsinsp::filter::ast::expr> condition;
 	std::shared_ptr<sinsp_filter> filter;
 };
