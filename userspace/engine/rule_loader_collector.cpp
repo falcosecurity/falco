@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -311,6 +311,14 @@ void rule_loader::collector::selective_replace(configuration& cfg, rule_update_i
 
 	if(info.priority.has_value()) {
 		prev->priority = *info.priority;
+	}
+
+	if(info.capture.has_value()) {
+		prev->capture = *info.capture;
+	}
+
+	if(info.capture_duration.has_value()) {
+		prev->capture_duration = *info.capture_duration;
 	}
 
 	if(info.enabled.has_value()) {
