@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -634,6 +634,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		                                          "output",
 		                                          "desc",
 		                                          "priority",
+												  "capture",
+												  "capture_duration",
 		                                          "tags",
 		                                          "exceptions",
 		                                          "enabled",
@@ -759,6 +761,22 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				if(check_update_expected(expected_keys,
 				                         override_replace,
 				                         "replace",
+				                         "capture",
+				                         ctx)) {
+					decode_val(item, "capture", v.capture, ctx);
+				}
+
+				if(check_update_expected(expected_keys,
+				                         override_replace,
+				                         "replace",
+				                         "capture_duration",
+				                         ctx)) {
+					decode_val(item, "capture_duration", v.capture_duration, ctx);
+				}
+
+				if(check_update_expected(expected_keys,
+				                         override_replace,
+				                         "replace",
 				                         "enabled",
 				                         ctx)) {
 					decode_val(item, "enabled", v.enabled, ctx);
@@ -818,6 +836,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 			rule_loader::rule_info v(ctx);
 			v.name = name;
 			v.enabled = true;
+			v.capture = false;
+			v.capture_duration = 0;
 			v.warn_evttypes = true;
 			v.skip_if_unknown_filter = false;
 
@@ -863,6 +883,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				      prictx);
 				decode_optional_val(item, "source", v.source, ctx);
 				decode_optional_val(item, "enabled", v.enabled, ctx);
+				decode_optional_val(item, "capture", v.capture, ctx);
+				decode_optional_val(item, "capture_duration", v.capture_duration, ctx);
 				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);

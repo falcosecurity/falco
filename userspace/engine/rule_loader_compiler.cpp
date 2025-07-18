@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -523,6 +523,8 @@ void rule_loader::compiler::compile_rule_infos(configuration& cfg,
 		rule.source = r.source;
 		rule.description = r.desc;
 		rule.priority = r.priority;
+		rule.capture = r.capture;
+		rule.capture_duration = r.capture_duration;
 		rule.tags = r.tags;
 		auto rule_id = out.insert(rule, rule.name);
 		out.at(rule_id)->id = rule_id;
