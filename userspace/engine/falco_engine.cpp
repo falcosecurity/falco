@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -413,6 +413,8 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 		rule_result.source = rule.source;
 		rule_result.format = rule.output;
 		rule_result.priority_num = rule.priority;
+		rule_result.capture = rule.capture;
+		rule_result.capture_duration_ns = uint64_t(rule.capture_duration) * 1000000LL;
 		rule_result.tags = rule.tags;
 		rule_result.exception_fields = rule.exception_fields;
 		rule_result.extra_output_fields = rule.extra_output_fields;
@@ -568,6 +570,8 @@ void falco_engine::get_json_details(
 	rule_info["description"] = r.description;
 	rule_info["enabled"] = info.enabled;
 	rule_info["source"] = r.source;
+	rule_info["capture"] = r.capture;
+	rule_info["capture_duration"] = r.capture_duration;
 	rule_info["tags"] = sequence_to_json_array(info.tags);
 	out["info"] = std::move(rule_info);
 
