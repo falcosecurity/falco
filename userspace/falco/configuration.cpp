@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -97,6 +97,10 @@ falco_configuration::falco_configuration():
         m_metrics_flags(0),
         m_metrics_convert_memory_to_mb(true),
         m_metrics_include_empty_values(false),
+		m_capture_enabled(false),
+		m_capture_path_prefix("/tmp/falco"),
+		m_capture_mode(capture_mode_t::RULES),
+		m_capture_default_duration_ns(5000 * 1000000LL),
         m_plugins_hostinfo(true) {
 	m_config_schema = nlohmann::json::parse(config_schema_string);
 }
@@ -636,6 +640,26 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	        m_config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values =
 	        m_config.get_scalar<bool>("metrics.include_empty_values", false);
+
+
+	m_capture_enabled = m_config.get_scalar<bool>("capture.enabled", false);
+	m_capture_path_prefix = m_config.get_scalar<std::string>("capture.path_prefix", "/tmp/falco");
+	// Set capture mode if not already set.
+	const std::unordered_map<std::string, capture_mode_t> capture_mode_lut = {
+	        {"rules", capture_mode_t::RULES},
+			{"all_rules", capture_mode_t::ALL_RULES},
+	};
+
+	auto capture_mode_str = m_config.get_scalar<std::string>("capture.mode", "rules");
+	if(capture_mode_lut.find(capture_mode_str) != capture_mode_lut.end()) {
+		m_capture_mode = capture_mode_lut.at(capture_mode_str);
+	} else {
+		throw std::logic_error("Error reading config file (" + config_name + "): capture.mode '" +
+		                       capture_mode_str + "' is not a valid mode.");
+	}
+
+	// Convert to nanoseconds
+	m_capture_default_duration_ns = m_config.get_scalar<uint32_t>("capture.default_duration", 5000) * 1000000LL;
 
 	m_plugins_hostinfo = m_config.get_scalar<bool>("plugins_hostinfo", true);
 
