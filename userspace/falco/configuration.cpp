@@ -97,11 +97,11 @@ falco_configuration::falco_configuration():
         m_metrics_flags(0),
         m_metrics_convert_memory_to_mb(true),
         m_metrics_include_empty_values(false),
+        m_plugins_hostinfo(true),
         m_capture_enabled(false),
         m_capture_path_prefix("/tmp/falco"),
         m_capture_mode(capture_mode_t::RULES),
-        m_capture_default_duration_ns(5000 * 1000000LL),
-        m_plugins_hostinfo(true) {
+        m_capture_default_duration_ns(5000 * 1000000LL) {
 	m_config_schema = nlohmann::json::parse(config_schema_string);
 }
 
