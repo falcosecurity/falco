@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2025 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ limitations under the License.
 #include "../../event_drops.h"
 
 #include <libsinsp/plugin_manager.h>
+#include <libsinsp/dumper.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -143,6 +144,11 @@ static falco::app::run_result do_inspect(
 		              s.config->m_syscall_evt_simulate_drops);
 	}
 
+	// init dumper for caputures
+	sinsp_dumper *dumper = new sinsp_dumper();
+	uint64_t dump_started_ts = 0;
+	uint64_t dump_deadline_ts = 0;
+
 	//
 	// Start capture
 	//
@@ -168,11 +174,21 @@ static falco::app::run_result do_inspect(
 		if(falco::app::g_terminate_signal.triggered()) {
 			falco::app::g_terminate_signal.handle([&]() {
 				falco_logger::log(falco_logger::level::INFO, "SIGINT received, exiting...\n");
+				if (dump_started_ts != 0) {
+					dump_started_ts = 0;
+					dump_deadline_ts = 0;
+					dumper->close();
+				}
 			});
 			break;
 		} else if(falco::app::g_restart_signal.triggered()) {
-			falco::app::g_restart_signal.handle([&s]() {
+			falco::app::g_restart_signal.handle([&]() {
 				falco_logger::log(falco_logger::level::INFO, "SIGHUP received, restarting...\n");
+				if (dump_started_ts != 0) {
+					dump_started_ts = 0;
+					dump_deadline_ts = 0;
+					dumper->close();
+				}
 				s.restart.store(true);
 			});
 			break;
@@ -287,14 +303,51 @@ static falco::app::run_result do_inspect(
 		// the outputs.
 		auto res = s.engine->process_event(source_engine_idx, ev, s.config->m_rule_matching);
 		if(res != nullptr) {
+			auto capture = s.config->m_capture_enabled && capture_mode_t::ALL_RULES == s.config->m_capture_mode;
 			for(auto& rule_res : *res) {
+				// Process output
 				s.outputs->handle_event(rule_res.evt,
 				                        rule_res.rule,
 				                        rule_res.source,
 				                        rule_res.priority_num,
 				                        rule_res.format,
 				                        rule_res.tags,
-				                        rule_res.extra_output_fields);
+										rule_res.extra_output_fields);
+				// Compute capture params, if enabled
+				if(s.config->m_capture_enabled) {
+					if(capture_mode_t::RULES == s.config->m_capture_mode && rule_res.capture) {
+						capture = true;
+					}
+					// Extend deadline if defined by the rule
+					if((rule_res.capture_duration_ns + ev->get_ts()) > dump_deadline_ts) {
+						dump_deadline_ts = ev->get_ts() + rule_res.capture_duration_ns;
+					}
+				}
+			}
+
+			// When a rule matches or we are in all_rules mode, we start a dump (if not in progress yet)
+			if(capture && dump_started_ts == 0) {
+				dumper->open(inspector.get(), 
+					generate_scap_file_path(s.config->m_capture_path_prefix, ev->get_ts(), ev->get_num()),
+					true); // Enable compression
+				dump_started_ts = ev->get_ts();
+				// If no rule has set a deadline, use the default one
+				if (dump_deadline_ts == 0) {
+					dump_deadline_ts = dump_started_ts + s.config->m_capture_default_duration_ns;
+				}
+			}
+		}
+
+
+		// Save events when a dump is in progress.
+		// If the deadline is reached, close the dump.
+		if (dump_started_ts != 0) {
+			dumper->dump(ev);
+			if (ev->get_ts() > dump_deadline_ts) {
+				dumper->flush();
+				dumper->close();
+				dump_started_ts = 0;
+				dump_deadline_ts = 0;
 			}
 		}
 
@@ -432,6 +485,25 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 
 	if(!res.success) {
 		return res;
+	}
+
+	// Print capture mode info, if enabled
+	if(s.config->m_capture_enabled) {
+		std::string capture_mode;
+		switch(s.config->m_capture_mode) {
+			case capture_mode_t::RULES:
+				capture_mode = "'rules'";
+				break;
+			case capture_mode_t::ALL_RULES:
+				capture_mode = "'all_rules'";
+				break;
+			default:
+				ASSERT(false);
+		}
+		falco_logger::log(
+		        falco_logger::level::INFO,
+		        "Capture is enabled in mode " + capture_mode +
+		                ". Capturing events to " + s.config->m_capture_path_prefix + "\n");
 	}
 
 	// Start processing events
