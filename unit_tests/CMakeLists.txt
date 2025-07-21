@@ -45,6 +45,7 @@ add_executable(
 	engine/test_plugin_requirements.cpp
 	engine/test_rule_loader.cpp
 	engine/test_rulesets.cpp
+	falco/test_capture.cpp
 	falco/test_configuration.cpp
 	falco/test_configuration_rule_selection.cpp
 	falco/test_configuration_config_files.cpp
