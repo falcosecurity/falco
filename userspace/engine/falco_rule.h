@@ -77,7 +77,11 @@ struct falco_macro {
     The rule ID must be unique across all the rules loaded in the engine.
 */
 struct falco_rule {
-	falco_rule(): id(0), priority(falco_common::PRIORITY_DEBUG) {}
+	falco_rule():
+	        id(0),
+	        priority(falco_common::PRIORITY_DEBUG),
+	        capture(false),
+	        capture_duration(0) {}
 	falco_rule(falco_rule&&) = default;
 	falco_rule& operator=(falco_rule&&) = default;
 	falco_rule(const falco_rule&) = default;
