@@ -52,8 +52,8 @@ else()
 	ExternalProject_Add(
 		malloc
 		PREFIX "${PROJECT_BINARY_DIR}/mimalloc-prefix"
-		URL "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.1.4.tar.gz"
-		URL_HASH "SHA256=84992bca18d6f74829b884c369de2707085b8248aaf3a1368e21f3993020171f"
+		URL "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.1.5.tar.gz"
+		URL_HASH "SHA256=1c6949032069d5ebea438ec5cedd602d06f40a92ddf0f0d9dcff0993e5f6635c"
 		CMAKE_ARGS -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
 				   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 				   -DMI_BUILD_SHARED=${BUILD_SHARED_LIBS}
