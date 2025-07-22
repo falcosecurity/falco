@@ -20,11 +20,14 @@ if(USE_BUNDLED_CPPHTTPLIB)
 	set(HTTPLIB_REQUIRE_BROTLI OFF)
 	set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF)
 	set(HTTPLIB_REQUIRE_ZLIB OFF)
+	set(HTTPLIB_USE_ZSTD_IF_AVAILABLE OFF)
+	set(HTTPLIB_REQUIRE_ZSTD OFF)
+	set(HTTPLIB_USE_NON_BLOCKING_GETADDRINFO OFF)
 	include(FetchContent)
 	FetchContent_Declare(
 		cpp-httplib
-		URL https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.15.3.tar.gz
-		URL_HASH SHA256=2121bbf38871bb2aafb5f7f2b9b94705366170909f434428352187cb0216124e
+		URL https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.23.1.tar.gz
+		URL_HASH SHA256=410a1347ed6bcbcc4a19af8ed8ad3873fe9fa97731d52db845c4c78f3f9c31e6
 	)
 	FetchContent_MakeAvailable(cpp-httplib)
 else()
