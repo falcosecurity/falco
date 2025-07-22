@@ -47,20 +47,30 @@ else()
 		set(MIMALLOC_LIB_BASENAME "libmimalloc")
 	endif()
 	set(MALLOC_LIB "${MIMALLOC_SRC}/malloc-build/${MIMALLOC_LIB_BASENAME}${MIMALLOC_LIB_SUFFIX}")
-	set(MIMALLOC_INCLUDE ${MIMALLOC_SRC}/include/)
+	set(MIMALLOC_INCLUDE ${MIMALLOC_SRC}/malloc/include/)
 
+	# To avoid recent clang versions complaining with "error: expansion of date or time macro is not
+	# reproducible" while building mimalloc, we force-set both variables.
+	string(TIMESTAMP DATE "%Y%m%d")
+	string(TIMESTAMP TIME "%H:%M")
+	set(MIMALLOC_EXTRA_CPPDEFS __DATE__="${DATE}",__TIME__="${TIME}")
+
+	# We disable arch specific optimization because of issues with building with zig. Optimizations
+	# would be only effective on arm64. See MI_NO_OPT_ARCH=On.
 	ExternalProject_Add(
 		malloc
 		PREFIX "${PROJECT_BINARY_DIR}/mimalloc-prefix"
 		URL "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.1.5.tar.gz"
 		URL_HASH "SHA256=1c6949032069d5ebea438ec5cedd602d06f40a92ddf0f0d9dcff0993e5f6635c"
+		LIST_SEPARATOR "," # to pass MIMALLOC_EXTRA_CPPDEFS as list
 		CMAKE_ARGS -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
 				   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 				   -DMI_BUILD_SHARED=${BUILD_SHARED_LIBS}
 				   -DMI_BUILD_STATIC=${BUILD_STATIC}
 				   -DMI_BUILD_TESTS=Off
 				   -DMI_BUILD_OBJECT=Off
-				   -DMI_OPT_ARCH=On
+				   -DMI_NO_OPT_ARCH=On
+				   -DMI_EXTRA_CPPDEFS=${MIMALLOC_EXTRA_CPPDEFS}
 		INSTALL_COMMAND ""
 		UPDATE_COMMAND ""
 		BUILD_BYPRODUCTS ${MALLOC_LIB}
