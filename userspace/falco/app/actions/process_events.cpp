@@ -23,6 +23,7 @@ limitations under the License.
 #include <fcntl.h>
 #include <atomic>
 #include <unordered_map>
+#include <memory>
 
 #include "falco_utils.h"
 
@@ -145,7 +146,7 @@ static falco::app::run_result do_inspect(
 	}
 
 	// init dumper for captures
-	sinsp_dumper* dumper = new sinsp_dumper();
+	auto dumper = std::make_unique<sinsp_dumper>();
 	uint64_t dump_started_ts = 0;
 	uint64_t dump_deadline_ts = 0;
 
