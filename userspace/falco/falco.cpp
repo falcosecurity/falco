@@ -15,10 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifdef HAS_MIMALLOC
-#include <mimalloc-new-delete.h>
-#endif
-
 #include <stdio.h>
 #include <string>
 
