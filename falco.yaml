@@ -28,24 +28,29 @@
 # Falco config files settings
 #     config_files [Stable]
 #     watch_config_files [Stable]
-# Falco rules files
-#     rules_files [Stable]
 # Falco rules
+#     rules_files [Stable]
 #     rules [Incubating]
 # Falco engine
 #     engine [Stable]
+# Falco captures
+#     capture [Sandbox]
 # Falco plugins
 #     load_plugins [Stable]
 #     plugins [Stable]
 # Falco outputs settings
 #     time_format_iso_8601 [Stable]
+#     buffer_format_base64 [Stable]
 #     priority [Stable]
 #     json_output [Stable]
 #     json_include_output_property [Stable]
+#     json_include_message_property [Stable]
+#     json_include_output_fields_property [Stable]
 #     json_include_tags_property [Stable]
 #     buffered_outputs [Stable]
 #     rule_matching [Incubating]
 #     outputs_queue [Stable]
+#     append_output [Stable]
 # Falco outputs channels
 #     stdout_output [Stable]
 #     syslog_output [Stable]
@@ -175,9 +180,9 @@ config_files:
 # engine, please refer to the `base_syscalls` section.
 watch_config_files: true
 
-#####################
-# Falco rules files #
-#####################
+###############
+# Falco rules #
+###############
 
 # [Stable] `rules_files`
 
