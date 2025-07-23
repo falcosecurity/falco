@@ -3,6 +3,15 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.2.0
+
+* Switch to `collectors.containerEngine` configuration by default
+* Update `collectors.containerEngine.engines` default values
+* Fix containerd socket path configuration
+* Address "container.name shows container.id" issue
+* Address "Missing k8s.pod name, container.name, other metadata with k3s" issue
+* Bump container plugin to 0.3.2
+
 ## v6.1.0
 
 * feat(falco): Add possibility to custom falco pods hostname
