@@ -494,31 +494,12 @@ load_plugins: []
 # option.
 plugins:
   - name: container
-    # For a summary of config option, see https://github.com/FedeDP/container_plugin?tab=readme-ov-file#configuration
+    # For a summary of config option, see https://github.com/falcosecurity/plugins/tree/main/plugins/container#configuration
     library_path: libcontainer.so
     init_config:
       label_max_len: 100
       with_size: false
-# We use default config values for engine key.
-#      engines:
-#        docker:
-#          enabled: true
-#          sockets: [ '/var/run/docker.sock' ]
-#        podman:
-#          enabled: true
-#          sockets: [ '/run/podman/podman.sock', '/run/user/1000/podman/podman.sock' ]
-#        containerd:
-#          enabled: true
-#          sockets: [ '/run/containerd/containerd.sock' ]
-#        cri:
-#          enabled: true
-#          sockets: [ '/run/crio/crio.sock' ]
-#        lxc:
-#          enabled: false
-#        libvirt_lxc:
-#          enabled: false
-#        bpm:
-#          enabled: false
+      # We use default config values for "engines" key.
   - name: k8saudit
     library_path: libk8saudit.so
     init_config: ""
