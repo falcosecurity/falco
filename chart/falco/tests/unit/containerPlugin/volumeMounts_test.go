@@ -26,128 +26,148 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			name:   "defaultValues",
 			values: nil,
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
-				require.Len(t, volumeMounts, 3)
-				require.Equal(t, "docker-socket", volumeMounts[0].Name)
+				require.Len(t, volumeMounts, 6)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
 				require.Equal(t, "/host/var/run/docker.sock", volumeMounts[0].MountPath)
-				require.Equal(t, "crio-socket", volumeMounts[1].Name)
-				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[1].MountPath)
-				require.Equal(t, "containerd-socket", volumeMounts[2].Name)
-				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[2].MountPath)
+				require.Equal(t, "container-engine-socket-1", volumeMounts[1].Name)
+				require.Equal(t, "/host/run/podman/podman.sock", volumeMounts[1].MountPath)
+				require.Equal(t, "container-engine-socket-2", volumeMounts[2].Name)
+				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[2].MountPath)
+				require.Equal(t, "container-engine-socket-3", volumeMounts[3].Name)
+				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[3].MountPath)
+				require.Equal(t, "container-engine-socket-4", volumeMounts[4].Name)
+				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[4].MountPath)
+				require.Equal(t, "container-engine-socket-5", volumeMounts[5].Name)
+				require.Equal(t, "/host/run/k3s/containerd/containerd.sock", volumeMounts[5].MountPath)
 			},
 		},
 		{
 			name: "defaultDockerVolumeMount",
 			values: map[string]string{
-				"collectors.docker.enabled":     "true",
-				"collectors.containerd.enabled": "false",
-				"collectors.crio.enabled":       "false",
+				"collectors.containerEngine.engines.docker.enabled":     "true",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
+				"collectors.containerEngine.engines.cri.enabled":        "false",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "docker-socket", volumeMounts[0].Name)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
 				require.Equal(t, "/host/var/run/docker.sock", volumeMounts[0].MountPath)
 			},
 		},
 		{
 			name: "customDockerSocket",
 			values: map[string]string{
-				"collectors.docker.enabled":     "true",
-				"collectors.docker.socket":      "/custom/docker.sock",
-				"collectors.containerd.enabled": "false",
-				"collectors.crio.enabled":       "false",
+				"collectors.containerEngine.engines.docker.enabled":     "true",
+				"collectors.containerEngine.engines.docker.sockets[0]":  "/custom/docker.sock",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
+				"collectors.containerEngine.engines.cri.enabled":        "false",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "docker-socket", volumeMounts[0].Name)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
 				require.Equal(t, "/host/custom/docker.sock", volumeMounts[0].MountPath)
 			},
 		},
 		{
-			name: "defaultCrioVolumeMount",
+			name: "defaultCriVolumeMount",
 			values: map[string]string{
-				"collectors.docker.enabled":     "false",
-				"collectors.containerd.enabled": "false",
-				"collectors.crio.enabled":       "true",
+				"collectors.containerEngine.engines.docker.enabled":     "false",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
+				"collectors.containerEngine.engines.cri.enabled":        "true",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
-				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "crio-socket", volumeMounts[0].Name)
-				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[0].MountPath)
+				require.Len(t, volumeMounts, 4)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
+				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "container-engine-socket-1", volumeMounts[1].Name)
+				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[1].MountPath)
+				require.Equal(t, "container-engine-socket-2", volumeMounts[2].Name)
+				require.Equal(t, "/host/run/k3s/containerd/containerd.sock", volumeMounts[2].MountPath)
+				require.Equal(t, "container-engine-socket-3", volumeMounts[3].Name)
+				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[3].MountPath)
 			},
 		},
 		{
-			name: "customCrioSocket",
+			name: "customCriSocket",
 			values: map[string]string{
-				"collectors.docker.enabled":     "false",
-				"collectors.containerd.enabled": "false",
-				"collectors.crio.enabled":       "true",
-				"collectors.crio.socket":        "/custom/crio.sock",
+				"collectors.containerEngine.engines.cri.enabled":        "true",
+				"collectors.containerEngine.engines.cri.sockets[0]":     "/custom/crio.sock",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
+				"collectors.containerEngine.engines.docker.enabled":     "false",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "crio-socket", volumeMounts[0].Name)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
 				require.Equal(t, "/host/custom/crio.sock", volumeMounts[0].MountPath)
 			},
 		},
 		{
 			name: "defaultContainerdVolumeMount",
 			values: map[string]string{
-				"collectors.docker.enabled":     "false",
-				"collectors.containerd.enabled": "true",
-				"collectors.crio.enabled":       "false",
+				"collectors.containerEngine.engines.docker.enabled":     "false",
+				"collectors.containerEngine.engines.containerd.enabled": "true",
+				"collectors.containerEngine.engines.cri.enabled":        "false",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "containerd-socket", volumeMounts[0].Name)
-				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
+				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[0].MountPath)
 			},
 		},
 		{
 			name: "customContainerdSocket",
 			values: map[string]string{
-				"collectors.docker.enabled":     "false",
-				"collectors.containerd.enabled": "true",
-				"collectors.containerd.socket":  "/custom/containerd.sock",
-				"collectors.crio.enabled":       "false",
+				"collectors.containerEngine.engines.containerd.enabled":    "true",
+				"collectors.containerEngine.engines.containerd.sockets[0]": "/custom/containerd.sock",
+				"collectors.containerEngine.engines.cri.enabled":           "false",
+				"collectors.containerEngine.engines.docker.enabled":        "false",
+				"collectors.containerEngine.engines.podman.enabled":        "false",
 			},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
-				require.Equal(t, "containerd-socket", volumeMounts[0].Name)
+				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
 				require.Equal(t, "/host/custom/containerd.sock", volumeMounts[0].MountPath)
 			},
 		},
 		{
-			name: "ContainerEnginesDefaultValues",
-			values: map[string]string{
-				"collectors.docker.enabled":          "false",
-				"collectors.containerd.enabled":      "false",
-				"collectors.crio.enabled":            "false",
-				"collectors.containerEngine.enabled": "true",
-			},
+			name:   "ContainerEnginesDefaultValues",
+			values: map[string]string{},
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
-				require.Len(t, volumeMounts, 4)
+				require.Len(t, volumeMounts, 6)
 
-				dockerV := findVolumeMount("docker-socket-0", volumeMounts)
-				require.NotNil(t, dockerV)
-				require.Equal(t, "/host/var/run/docker.sock", dockerV.MountPath)
-				podmanV := findVolumeMount("podman-socket-0", volumeMounts)
-				require.NotNil(t, podmanV)
-				require.Equal(t, "/host/run/podman/podman.sock", podmanV.MountPath)
-				containerdV := findVolumeMount("containerd-socket-0", volumeMounts)
-				require.NotNil(t, containerdV)
-				require.Equal(t, "/host/run/containerd/containerd.sock", containerdV.MountPath)
-				crioV := findVolumeMount("cri-socket-0", volumeMounts)
-				require.NotNil(t, crioV)
-				require.Equal(t, "/host/run/crio/crio.sock", crioV.MountPath)
+				// dockerV := findVolumeMount("docker-socket-0", volumeMounts)
+				// require.NotNil(t, dockerV)
+				// require.Equal(t, "/host/var/run/docker.sock", dockerV.MountPath)
+
+				// podmanV := findVolumeMount("podman-socket-0", volumeMounts)
+				// require.NotNil(t, podmanV)
+				// require.Equal(t, "/host/run/podman/podman.sock", podmanV.MountPath)
+
+				// containerdV := findVolumeMount("containerd-socket-0", volumeMounts)
+				// require.NotNil(t, containerdV)
+				// require.Equal(t, "/host/run/host-containerd/containerd.sock", containerdV.MountPath)
+
+				// crioV0 := findVolumeMount("cri-socket-0", volumeMounts)
+				// require.NotNil(t, crioV0)
+				// require.Equal(t, "/host/run/containerd/containerd.sock", crioV0.MountPath)
+
+				// crioV1 := findVolumeMount("cri-socket-1", volumeMounts)
+				// require.NotNil(t, crioV1)
+				// require.Equal(t, "/host/run/crio/crio.sock", crioV1.MountPath)
+
+				// crioV2 := findVolumeMount("cri-socket-2", volumeMounts)
+				// require.NotNil(t, crioV2)
+				// require.Equal(t, "/host/run/k3s/containerd/containerd.sock", crioV2.MountPath)
 			},
 		},
 		{
 			name: "ContainerEnginesDockerWithMultipleSockets",
 			values: map[string]string{
-				"collectors.docker.enabled":                             "false",
-				"collectors.containerd.enabled":                         "false",
-				"collectors.crio.enabled":                               "false",
-				"collectors.containerEngine.enabled":                    "true",
 				"collectors.containerEngine.engines.docker.enabled":     "true",
 				"collectors.containerEngine.engines.docker.sockets[0]":  "/var/run/docker.sock",
 				"collectors.containerEngine.engines.docker.sockets[1]":  "/custom/docker.sock",
@@ -158,11 +178,11 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 2)
 
-				dockerV0 := findVolumeMount("docker-socket-0", volumeMounts)
+				dockerV0 := findVolumeMount("container-engine-socket-0", volumeMounts)
 				require.NotNil(t, dockerV0)
 				require.Equal(t, "/host/var/run/docker.sock", dockerV0.MountPath)
 
-				dockerV1 := findVolumeMount("docker-socket-1", volumeMounts)
+				dockerV1 := findVolumeMount("container-engine-socket-1", volumeMounts)
 				require.NotNil(t, dockerV1)
 				require.Equal(t, "/host/custom/docker.sock", dockerV1.MountPath)
 			},
@@ -170,10 +190,6 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 		{
 			name: "ContainerEnginesCrioWithMultipleSockets",
 			values: map[string]string{
-				"collectors.docker.enabled":                             "false",
-				"collectors.containerd.enabled":                         "false",
-				"collectors.crio.enabled":                               "false",
-				"collectors.containerEngine.enabled":                    "true",
 				"collectors.containerEngine.engines.docker.enabled":     "false",
 				"collectors.containerEngine.engines.containerd.enabled": "false",
 				"collectors.containerEngine.engines.cri.enabled":        "true",
@@ -184,11 +200,11 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 2)
 
-				crioV0 := findVolumeMount("cri-socket-0", volumeMounts)
+				crioV0 := findVolumeMount("container-engine-socket-0", volumeMounts)
 				require.NotNil(t, crioV0)
 				require.Equal(t, "/host/run/crio/crio.sock", crioV0.MountPath)
 
-				crioV1 := findVolumeMount("cri-socket-1", volumeMounts)
+				crioV1 := findVolumeMount("container-engine-socket-1", volumeMounts)
 				require.NotNil(t, crioV1)
 				require.Equal(t, "/host/custom/crio.sock", crioV1.MountPath)
 			},

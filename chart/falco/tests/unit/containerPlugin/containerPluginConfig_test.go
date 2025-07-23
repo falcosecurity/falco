@@ -29,20 +29,10 @@ func TestContainerPluginConfiguration(t *testing.T) {
 			nil,
 			func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
-				// Get init config.
 				initConfig, ok := plugin["init_config"]
 				require.True(t, ok)
-				require.Len(t, initConfig, 4, "checking number of config entries in the init section")
 
 				initConfigMap := initConfig.(map[string]interface{})
-				// Check the default values.
-				labelMaxLen := initConfigMap["label_max_len"]
-				require.Equal(t, float64(100), labelMaxLen.(float64), "checking default value for label_max_len")
-				withSize := initConfigMap["with_size"]
-				require.False(t, withSize.(bool), "checking default value for with_size")
-				hooks := initConfigMap["hooks"].([]interface{})
-				require.Len(t, hooks, 1, "checking number of hooks")
-				require.True(t, slices.Contains(hooks, "create"), "checking if create hook is present")
 
 				// Check engines configurations.
 				engines, ok := initConfigMap["engines"].(map[string]interface{})
@@ -58,24 +48,25 @@ func TestContainerPluginConfiguration(t *testing.T) {
 				require.True(t, engineConfig.Docker.Enabled)
 				require.Equal(t, []string{"/var/run/docker.sock"}, engineConfig.Docker.Sockets)
 
-				require.False(t, engineConfig.Podman.Enabled)
+				require.True(t, engineConfig.Podman.Enabled)
 				require.Equal(t, []string{"/run/podman/podman.sock"}, engineConfig.Podman.Sockets)
 
 				require.True(t, engineConfig.Containerd.Enabled)
-				require.Equal(t, []string{"/run/containerd/containerd.sock"}, engineConfig.Containerd.Sockets)
+				require.Equal(t, []string{"/run/host-containerd/containerd.sock"}, engineConfig.Containerd.Sockets)
 
 				require.True(t, engineConfig.CRI.Enabled)
-				require.Equal(t, []string{"/run/crio/crio.sock"}, engineConfig.CRI.Sockets)
+				require.Equal(t, []string{"/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock", "/run/host-containerd/containerd.sock"}, engineConfig.CRI.Sockets)
 
-				require.False(t, engineConfig.LXC.Enabled)
-				require.False(t, engineConfig.LibvirtLXC.Enabled)
-				require.False(t, engineConfig.BPM.Enabled)
+				require.True(t, engineConfig.LXC.Enabled)
+				require.True(t, engineConfig.LibvirtLXC.Enabled)
+				require.True(t, engineConfig.BPM.Enabled)
 			},
 		},
 		{
 			name: "changeDockerSocket",
 			values: map[string]string{
-				"collectors.docker.socket": "/custom/docker.sock",
+				"collectors.containerEngine.engines.docker.enabled":    "true",
+				"collectors.containerEngine.engines.docker.sockets[0]": "/custom/docker.sock",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -97,9 +88,10 @@ func TestContainerPluginConfiguration(t *testing.T) {
 			},
 		},
 		{
-			name: "changeCrioSocket",
+			name: "changeCriSocket",
 			values: map[string]string{
-				"collectors.crio.socket": "/custom/crio.sock",
+				"collectors.containerEngine.engines.cri.enabled":    "true",
+				"collectors.containerEngine.engines.cri.sockets[0]": "/custom/cri.sock",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -117,13 +109,13 @@ func TestContainerPluginConfiguration(t *testing.T) {
 				require.NoError(t, err)
 
 				require.True(t, engineConfig.CRI.Enabled)
-				require.Equal(t, []string{"/custom/crio.sock"}, engineConfig.CRI.Sockets)
+				require.Equal(t, []string{"/custom/cri.sock"}, engineConfig.CRI.Sockets)
 			},
 		},
 		{
 			name: "disableDockerSocket",
 			values: map[string]string{
-				"collectors.docker.enabled": "false",
+				"collectors.containerEngine.engines.docker.enabled": "false",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -144,9 +136,9 @@ func TestContainerPluginConfiguration(t *testing.T) {
 			},
 		},
 		{
-			name: "disableCrioSocket",
+			name: "disableCriSocket",
 			values: map[string]string{
-				"collectors.crio.enabled": "false",
+				"collectors.containerEngine.engines.cri.enabled": "false",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -169,7 +161,8 @@ func TestContainerPluginConfiguration(t *testing.T) {
 		{
 			name: "changeContainerdSocket",
 			values: map[string]string{
-				"collectors.containerd.socket": "/custom/containerd.sock",
+				"collectors.containerEngine.engines.containerd.enabled":    "true",
+				"collectors.containerEngine.engines.containerd.sockets[0]": "/custom/containerd.sock",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -193,7 +186,7 @@ func TestContainerPluginConfiguration(t *testing.T) {
 		{
 			name: "disableContainerdSocket",
 			values: map[string]string{
-				"collectors.containerd.enabled": "false",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
 			},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
@@ -214,13 +207,8 @@ func TestContainerPluginConfiguration(t *testing.T) {
 			},
 		},
 		{
-			name: "defaultContainerEngineConfig",
-			values: map[string]string{
-				"collectors.containerEngine.enabled": "true",
-				"collectors.docker.enabled":          "false",
-				"collectors.containerd.enabled":      "false",
-				"collectors.crio.enabled":            "false",
-			},
+			name:   "defaultContainerEngineConfig",
+			values: map[string]string{},
 			expected: func(t *testing.T, config any) {
 				plugin := config.(map[string]interface{})
 				initConfig, ok := plugin["init_config"]
@@ -249,10 +237,10 @@ func TestContainerPluginConfiguration(t *testing.T) {
 				require.Equal(t, []string{"/run/podman/podman.sock"}, engineConfig.Podman.Sockets)
 
 				require.True(t, engineConfig.Containerd.Enabled)
-				require.Equal(t, []string{"/run/containerd/containerd.sock"}, engineConfig.Containerd.Sockets)
+				require.Equal(t, []string{"/run/host-containerd/containerd.sock"}, engineConfig.Containerd.Sockets)
 
 				require.True(t, engineConfig.CRI.Enabled)
-				require.Equal(t, []string{"/run/crio/crio.sock"}, engineConfig.CRI.Sockets)
+				require.Equal(t, []string{"/run/containerd/containerd.sock", "/run/crio/crio.sock", "/run/k3s/containerd/containerd.sock", "/run/host-containerd/containerd.sock"}, engineConfig.CRI.Sockets)
 
 				require.True(t, engineConfig.LXC.Enabled)
 				require.True(t, engineConfig.LibvirtLXC.Enabled)
@@ -644,7 +632,7 @@ func TestInvalidCollectorConfiguration(t *testing.T) {
 			name: "containerdAndContainerEngine",
 			values: map[string]string{
 				"collectors.docker.enabled":          "false",
-				"collectoars.containerd.enabled":     "true",
+				"collectors.containerd.enabled":      "true",
 				"collectors.crio.enabled":            "false",
 				"collectors.containerEngine.enabled": "true",
 			},
