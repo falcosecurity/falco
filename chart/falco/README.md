@@ -583,7 +583,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v6.1.0 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v6.2.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -597,20 +597,21 @@ The following table lists the main configurable parameters of the falco chart v6
 | certs.existingSecret | string | `""` | Existing secret containing the following key, crt and ca as well as the bundle pem. |
 | certs.server.crt | string | `""` | Certificate used by gRPC and webserver. |
 | certs.server.key | string | `""` | Key used by gRPC and webserver. |
-| collectors.containerEngine | object | `{"enabled":false,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/crio/crio.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.3.1","withSize":false}` | This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors. It is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
-| collectors.containerEngine.enabled | bool | `false` | Enable Container Engine support. |
+| collectors.containerEngine | object | `{"enabled":true,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/host-containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/containerd/containerd.sock","/run/crio/crio.sock","/run/k3s/containerd/containerd.sock","/run/host-containerd/containerd.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.3.2","withSize":false}` | This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors. It is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
+| collectors.containerEngine.enabled | bool | `true` | Enable Container Engine support. |
+| collectors.containerEngine.engines | object | `{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/host-containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/containerd/containerd.sock","/run/crio/crio.sock","/run/k3s/containerd/containerd.sock","/run/host-containerd/containerd.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}}` | engines specify the container engines that will be used to collect metadata. See https://github.com/falcosecurity/plugins/blob/main/plugins/container/README.md#configuration |
 | collectors.containerEngine.hooks | list | `["create"]` | hooks specify the hooks that will be used to collect metadata from the container engine. The available hooks are: create, start. |
 | collectors.containerEngine.labelMaxLen | int | `100` | labelMaxLen is the maximum length of the labels that can be used in the container plugin. container labels larger than this value won't be collected. |
-| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.3.1"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.3.1". Or just name + tag: container:0.3.1. |
+| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.3.2"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.3.2". Or just name + tag: container:0.3.2. |
 | collectors.containerEngine.withSize | bool | `false` | withSize specifies whether to enable container size inspection, which is inherently slow. |
-| collectors.containerd | object | `{"enabled":true,"socket":"/run/containerd/containerd.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
-| collectors.containerd.enabled | bool | `true` | Enable ContainerD support. |
-| collectors.containerd.socket | string | `"/run/containerd/containerd.sock"` | The path of the ContainerD socket. |
-| collectors.crio | object | `{"enabled":true,"socket":"/run/crio/crio.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
-| collectors.crio.enabled | bool | `true` | Enable CRI-O support. |
+| collectors.containerd | object | `{"enabled":false,"socket":"/run/host-containerd/containerd.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
+| collectors.containerd.enabled | bool | `false` | Enable ContainerD support. |
+| collectors.containerd.socket | string | `"/run/host-containerd/containerd.sock"` | The path of the ContainerD socket. |
+| collectors.crio | object | `{"enabled":false,"socket":"/run/crio/crio.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
+| collectors.crio.enabled | bool | `false` | Enable CRI-O support. |
 | collectors.crio.socket | string | `"/run/crio/crio.sock"` | The path of the CRI-O socket. |
-| collectors.docker | object | `{"enabled":true,"socket":"/var/run/docker.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
-| collectors.docker.enabled | bool | `true` | Enable Docker support. |
+| collectors.docker | object | `{"enabled":false,"socket":"/var/run/docker.sock"}` | This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead. |
+| collectors.docker.enabled | bool | `false` | Enable Docker support. |
 | collectors.docker.socket | string | `"/var/run/docker.sock"` | The path of the Docker daemon socket. |
 | collectors.enabled | bool | `true` | Enable/disable all the metadata collectors. |
 | collectors.kubernetes | object | `{"collectorHostname":"","collectorPort":"","enabled":false,"hostProc":"/host","pluginRef":"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0","verbosity":"info"}` | kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973 |
