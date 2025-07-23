@@ -365,21 +365,21 @@ collectors:
   # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   docker:
     # -- Enable Docker support.
-    enabled: true
+    enabled: false
     # -- The path of the Docker daemon socket.
     socket: /var/run/docker.sock
 
   # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   containerd:
     # -- Enable ContainerD support.
-    enabled: true
+    enabled: false
     # -- The path of the ContainerD socket.
-    socket: /run/containerd/containerd.sock
+    socket: /run/host-containerd/containerd.sock
 
   # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
   crio:
     # -- Enable CRI-O support.
-    enabled: true
+    enabled: false
     # -- The path of the CRI-O socket.
     socket: /run/crio/crio.sock
 
@@ -389,7 +389,7 @@ collectors:
   # Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood.
   containerEngine:
     # -- Enable Container Engine support.
-    enabled: false
+    enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
     # "ghcr.io/falcosecurity/plugins/plugin/container:0.3.1". Or just name + tag: container:0.3.1.
     pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.3.1"
@@ -401,6 +401,8 @@ collectors:
     # -- hooks specify the hooks that will be used to collect metadata from the container engine.
     # The available hooks are: create, start.
     hooks: ["create"]
+    # -- engines specify the container engines that will be used to collect metadata.
+    # See https://github.com/falcosecurity/plugins/blob/main/plugins/container/README.md#configuration
     engines:
       docker:
         enabled: true
@@ -410,10 +412,16 @@ collectors:
         sockets: ["/run/podman/podman.sock"]
       containerd:
         enabled: true
-        sockets: ["/run/containerd/containerd.sock"]
+        sockets: ["/run/host-containerd/containerd.sock"]
       cri:
         enabled: true
-        sockets: ["/run/crio/crio.sock"]
+        sockets:
+          [
+            "/run/containerd/containerd.sock",
+            "/run/crio/crio.sock",
+            "/run/k3s/containerd/containerd.sock",
+            "/run/host-containerd/containerd.sock",
+          ]
       lxc:
         enabled: true
       libvirt_lxc:

@@ -515,7 +515,7 @@ This helper is used to add container plugin volumeMounts to the falco pod.
 {{- define "falco.containerPluginVolumeMounts" -}}
 {{- if and .Values.driver.enabled .Values.collectors.enabled -}}
 {{- if and (or .Values.collectors.docker.enabled .Values.collectors.crio.enabled .Values.collectors.containerd.enabled) .Values.collectors.containerEngine.enabled -}}
-{{ fail "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated." }}
+{{ fail "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated." }}
 {{- end -}}
 {{ $volumeMounts := list -}}
 {{- if .Values.collectors.docker.enabled -}}
