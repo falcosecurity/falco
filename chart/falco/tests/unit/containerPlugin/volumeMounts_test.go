@@ -263,7 +263,7 @@ func TestInvalidVolumeMountConfiguration(t *testing.T) {
 				"collectors.docker.enabled":          "true",
 				"collectors.containerEngine.enabled": "true",
 			},
-			expectedErr: "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time",
+			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time",
 		},
 	}
 

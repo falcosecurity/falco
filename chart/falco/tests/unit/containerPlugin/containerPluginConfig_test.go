@@ -638,7 +638,7 @@ func TestInvalidCollectorConfiguration(t *testing.T) {
 				"collectors.crio.enabled":            "false",
 				"collectors.containerEngine.enabled": "true",
 			},
-			expectedErr: "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
+			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
 		},
 		{
 			name: "containerdAndContainerEngine",
@@ -648,7 +648,7 @@ func TestInvalidCollectorConfiguration(t *testing.T) {
 				"collectors.crio.enabled":            "false",
 				"collectors.containerEngine.enabled": "true",
 			},
-			expectedErr: "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
+			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
 		},
 		{
 			name: "crioAndContainerEngine",
@@ -658,7 +658,7 @@ func TestInvalidCollectorConfiguration(t *testing.T) {
 				"collectors.crio.enabled":            "true",
 				"collectors.containerEngine.enabled": "true",
 			},
-			expectedErr: "You can not enable one of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
+			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
 		},
 	}
 
