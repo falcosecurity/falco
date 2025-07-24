@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.2.1
+
+* Bump container plugin to 0.3.3
+
 ## v6.2.0
 
 * Switch to `collectors.containerEngine` configuration by default
