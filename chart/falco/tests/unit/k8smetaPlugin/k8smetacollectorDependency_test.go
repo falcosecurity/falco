@@ -18,11 +18,12 @@ package k8smetaPlugin
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 
 	"slices"
 
@@ -590,7 +591,7 @@ func TestFalcoctlRefs(t *testing.T) {
 		require.Len(t, refs, 3)
 		require.True(t, slices.Contains(refs, "falco-rules:4"))
 		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0"))
-		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.3.1"))
+		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.3.2"))
 	}
 
 	testCases := []struct {
