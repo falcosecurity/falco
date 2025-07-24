@@ -329,7 +329,7 @@ const std::string& rule_loader::result::as_summary_string() {
 
 			os << " " << schema_validation_status.size() << " schema warnings: [";
 			bool first = true;
-			for(auto& status : schema_validation_status) {
+			for(const auto& status : schema_validation_status) {
 				if(!first) {
 					os << " ";
 				}
@@ -409,7 +409,7 @@ const std::string& rule_loader::result::as_verbose_string(const rules_contents_t
 
 			os << schema_validation_status.size() << " Schema warnings:" << std::endl;
 
-			for(auto& status : schema_validation_status) {
+			for(const auto& status : schema_validation_status) {
 				os << "------" << std::endl;
 				os << status << std::endl;
 			}

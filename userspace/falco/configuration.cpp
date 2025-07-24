@@ -331,7 +331,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_loaded_rules_filenames.clear();
 	m_loaded_rules_filenames_sha256sum.clear();
 	m_loaded_rules_folders.clear();
-	for(auto &file : rules_files) {
+	for(const auto &file : rules_files) {
 		// Here, we only include files that exist
 		struct stat buffer;
 		if(stat(file.c_str(), &buffer) == 0) {
@@ -735,7 +735,7 @@ void falco_configuration::read_rules_file_directory(const std::string &path,
 
 		std::sort(dir_filenames.begin(), dir_filenames.end());
 
-		for(std::string &ent : dir_filenames) {
+		for(const std::string &ent : dir_filenames) {
 			// only consider yaml files
 			if(falco::utils::matches_wildcard("*.yaml", ent) ||
 			   falco::utils::matches_wildcard("*.yml", ent)) {

@@ -1,10 +1,11 @@
 #include "test_falco_engine.h"
 
-test_falco_engine::test_falco_engine() {
+test_falco_engine::test_falco_engine():
+	m_engine(std::make_shared<falco_engine>())
+{
 	// create a falco engine ready to load the ruleset
 	m_filter_factory = std::make_shared<sinsp_filter_factory>(&m_inspector, m_filterlist);
 	m_formatter_factory = std::make_shared<sinsp_evt_formatter_factory>(&m_inspector, m_filterlist);
-	m_engine = std::make_shared<falco_engine>();
 	m_engine->add_source(m_sample_source, m_filter_factory, m_formatter_factory);
 }
 

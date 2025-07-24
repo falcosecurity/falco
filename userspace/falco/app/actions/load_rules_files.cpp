@@ -27,8 +27,6 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& s) {
-	std::string all_rules;
-
 	if(!s.options.rules_filenames.empty()) {
 		s.config->m_rules_filenames = s.options.rules_filenames;
 	}
