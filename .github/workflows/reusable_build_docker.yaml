@@ -46,6 +46,7 @@ jobs:
           docker build -f docker/falco/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-${{ inputs.arch }}.tar
@@ -55,6 +56,7 @@ jobs:
           docker build -f docker/falco-debian/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian --output /tmp/falco-${{ inputs.arch }}-debian.tar
@@ -72,6 +74,7 @@ jobs:
           docker build -f docker/driver-loader-buster/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster --output /tmp/falco-driver-loader-${{ inputs.arch }}-buster.tar
