@@ -226,7 +226,7 @@ static falco::app::run_result do_inspect(
 			if(source_engine_idx == sinsp_no_event_source_idx) {
 				std::string msg = "Unknown event source for inspector's event";
 				if(ev->get_type() == PPME_PLUGINEVENT_E || ev->get_type() == PPME_ASYNCEVENT_E) {
-					auto pluginID = *(uint32_t*)ev->get_param(0)->m_val;
+					auto pluginID = ev->get_param(0)->as<uint32_t>();
 					if(pluginID != 0) {
 						msg += " (plugin ID: " + std::to_string(pluginID) + ")";
 					}
