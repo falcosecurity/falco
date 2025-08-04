@@ -391,8 +391,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.3.3". Or just name + tag: container:0.3.3.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.3.3"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.3.5". Or just name + tag: container:0.3.5.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.3.5"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
@@ -443,7 +443,7 @@ collectors:
     enabled: false
     # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
     # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.0"
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.1"
     # -- collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match
     # k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override
     # it, make sure to set here the address of the k8s-metacollector.
