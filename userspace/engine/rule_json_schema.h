@@ -74,6 +74,12 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 "priority": {
                     "$ref": "#/definitions/Priority"
                 },
+                "capture": {
+                    "type": "boolean"
+                },
+                "capture_duration": {
+                    "type": "integer"
+                },
                 "source": {
 	                "type": "string"
                 },

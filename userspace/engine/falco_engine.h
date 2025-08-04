@@ -228,6 +228,8 @@ public:
 		std::set<std::string> exception_fields;
 		std::set<std::string> tags;
 		extra_output_field_t extra_output_fields;
+		bool capture;
+		uint64_t capture_duration_ns;
 	};
 
 	//
