@@ -1,7 +1,7 @@
 FROM debian:buster
 
 ARG FALCO_COMMIT_SHA
-ARG FALCO_VERSION
+ARG FALCO_VERSION=latest
 
 LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
       org.opencontainers.image.url='https://falco.org' \
@@ -16,7 +16,6 @@ LABEL usage="docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc
 
 ARG TARGETARCH
 
-ARG FALCO_VERSION=latest
 ARG VERSION_BUCKET=deb
 ENV VERSION_BUCKET=${VERSION_BUCKET}
 
