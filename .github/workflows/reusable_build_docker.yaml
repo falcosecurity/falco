@@ -65,6 +65,8 @@ jobs:
         run: |
           docker build -f docker/driver-loader/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-driver-loader-${{ inputs.arch }}.tar

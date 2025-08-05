@@ -1,6 +1,7 @@
 FROM cgr.dev/chainguard/wolfi-base
 
 ARG FALCO_COMMIT_SHA
+ARG FALCO_VERSION
 
 LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
       org.opencontainers.image.url='https://falco.org' \
@@ -8,12 +9,12 @@ LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
       org.opencontainers.image.vendor='Falco Organization' \
       org.opencontainers.image.licenses='Apache-2.0' \
       org.opencontainers.image.revision=${FALCO_COMMIT_SHA} \
+      org.opencontainers.image.version=${FALCO_VERSION} \
       maintainer="cncf-falco-dev@lists.cncf.io"
 
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /proc:/host/proc:ro  -v /etc:/host/etc:ro falcosecurity/falco:latest"
 # NOTE: for the "least privileged" use case, please refer to the official documentation
 
-ARG FALCO_VERSION
 ARG VERSION_BUCKET=bin
 
 ENV FALCO_VERSION=${FALCO_VERSION}
