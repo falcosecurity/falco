@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.2.5
+
+* Removed allowedUnsafeSysctls from SCC
+
 ## v6.2.4
 
 * Bump container plugin to 0.3.6
