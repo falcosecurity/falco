@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
       org.opencontainers.image.source='https://github.com/falcosecurity/falco' \
       org.opencontainers.image.vendor='Falco Organization' \
       org.opencontainers.image.licenses='Apache-2.0' \
-	  org.opencontainers.image.revision=${FALCO_COMMIT_SHA} \
+      org.opencontainers.image.revision=${FALCO_COMMIT_SHA} \
       org.opencontainers.image.version=${FALCO_VERSION} \
       maintainer="cncf-falco-dev@lists.cncf.io"
 
