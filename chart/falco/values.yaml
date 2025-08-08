@@ -552,6 +552,8 @@ falcoctl:
       enabled: true
       # -- Extra environment variables that will be pass onto falcoctl-artifact-install init container.
       env: []
+      # -- Extra environment variables that will be passed onto falcoctl-artifact-install sidecar container that can come from a ConfigMap or Secret.
+      envFrom: []
       # -- Arguments to pass to the falcoctl-artifact-install init container.
       args: ["--log-format=json"]
       # -- Resources requests and limits for the falcoctl-artifact-install init container.
@@ -570,6 +572,8 @@ falcoctl:
       enabled: true
       # -- Extra environment variables that will be pass onto falcoctl-artifact-follow sidecar container.
       env: []
+      # -- Extra environment variables that will be passed onto falcoctl-artifact-follow sidecar container that can come from a ConfigMap or Secret.
+      envFrom: []
       # -- Arguments to pass to the falcoctl-artifact-follow sidecar container.
       args: ["--log-format=json"]
       # -- Resources requests and limits for the falcoctl-artifact-follow sidecar container.
