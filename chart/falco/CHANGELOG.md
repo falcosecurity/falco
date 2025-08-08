@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.2.3
+
+* Add support for envFrom for falcoctl.install|follow
+
 ## v6.2.2
 
 * Bump container plugin to 0.3.5

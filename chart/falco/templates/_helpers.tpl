@@ -284,6 +284,10 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
   env:
   {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.install.env "context" $) | nindent 4 }}
   {{- end }}
+  {{- if .Values.falcoctl.artifact.install.envFrom }}
+  envFrom:
+  {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.install.envFrom "context" $) | nindent 4 }}
+  {{- end }}
 {{- end -}}
 
 {{- define "falcoctl.sidecar" -}}
@@ -317,6 +321,10 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
   {{- if .Values.falcoctl.artifact.follow.env }}
   env:
   {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.follow.env "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.falcoctl.artifact.follow.envFrom }}
+  envFrom:
+  {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.follow.envFrom "context" $) | nindent 4 }}
   {{- end }}
 {{- end -}}
 
