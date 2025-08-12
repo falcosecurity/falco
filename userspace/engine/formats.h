@@ -28,6 +28,7 @@ public:
 	              bool json_include_tags_property,
 	              bool json_include_message_property,
 	              bool json_include_output_fields_property,
+	              const std::string &json_container,
 	              bool time_format_iso_8601);
 	virtual ~falco_formats();
 
@@ -47,6 +48,7 @@ public:
 	std::map<std::string, std::string> get_field_values(sinsp_evt *evt,
 	                                                    const std::string &source,
 	                                                    const std::string &format) const;
+	std::string format_json_container(nlohmann::json &json, time_t evttime) const;
 
 protected:
 	std::shared_ptr<const falco_engine> m_falco_engine;
@@ -54,5 +56,6 @@ protected:
 	bool m_json_include_tags_property;
 	bool m_json_include_message_property;
 	bool m_json_include_output_fields_property;
+	const std::string m_json_container;
 	bool m_time_format_iso_8601;
 };
