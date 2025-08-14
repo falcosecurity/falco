@@ -356,7 +356,7 @@ static void read_rule_exceptions(rule_loader::configuration& cfg,
 		v_ex.name = name;
 
 		// Check if an exception with the same name has already been defined
-		for(auto& exception : exceptions) {
+		for(const auto& exception : exceptions) {
 			if(v_ex.name == exception.name) {
 				cfg.res->add_warning(
 				        falco::load_result::LOAD_EXCEPTION_NAME_NOT_UNIQUE,

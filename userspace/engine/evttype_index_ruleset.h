@@ -43,7 +43,7 @@ struct evttype_index_wrapper {
 class evttype_index_ruleset : public indexable_ruleset<evttype_index_wrapper> {
 public:
 	explicit evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> factory);
-	virtual ~evttype_index_ruleset();
+	virtual ~evttype_index_ruleset() override;
 
 	// From filter_ruleset
 	void add(const falco_rule &rule,

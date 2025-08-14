@@ -56,7 +56,7 @@ protected:
 	   ast_out/filter_out with the compiled filter + ast. Returns false if
 	   the condition could not be compiled and should be skipped.
 	   */
-	bool compile_condition(configuration& cfg,
+	bool compile_condition(const configuration& cfg,
 	                       filter_macro_resolver& macro_resolver,
 	                       indexed_vector<falco_list>& lists,
 	                       const indexed_vector<rule_loader::macro_info>& macros,
@@ -70,16 +70,16 @@ protected:
 	                       std::shared_ptr<sinsp_filter>& filter_out) const;
 
 private:
-	void compile_list_infos(configuration& cfg,
+	void compile_list_infos(const configuration& cfg,
 	                        const collector& col,
 	                        indexed_vector<falco_list>& out) const;
 
-	void compile_macros_infos(configuration& cfg,
+	void compile_macros_infos(const configuration& cfg,
 	                          const collector& col,
 	                          indexed_vector<falco_list>& lists,
 	                          indexed_vector<falco_macro>& out) const;
 
-	void compile_rule_infos(configuration& cfg,
+	void compile_rule_infos(const configuration& cfg,
 	                        const collector& col,
 	                        indexed_vector<falco_list>& lists,
 	                        indexed_vector<falco_macro>& macros,

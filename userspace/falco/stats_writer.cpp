@@ -442,7 +442,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		nlohmann::json j;
 		malloc_stats_print(
 		        [](void* to, const char* from) {
-			        nlohmann::json* j = (nlohmann::json*)to;
+			        nlohmann::json* j = static_cast<nlohmann::json*>(to);
 			        *j = nlohmann::json::parse(from);
 		        },
 		        &j,
