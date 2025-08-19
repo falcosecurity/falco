@@ -44,7 +44,7 @@ template<class Service, class Request, class Response>
 class request_stream_context : public request_context_base {
 public:
 	request_stream_context(): m_process_func(nullptr), m_request_func(nullptr) {};
-	~request_stream_context() = default;
+	~request_stream_context() override = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
@@ -73,7 +73,7 @@ template<class Service, class Request, class Response>
 class request_context : public request_context_base {
 public:
 	request_context(): m_process_func(nullptr), m_request_func(nullptr) {};
-	~request_context() = default;
+	~request_context() override = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const context&, const Request&, Response&);
@@ -99,7 +99,7 @@ template<class Service, class Request, class Response>
 class request_bidi_context : public request_context_base {
 public:
 	request_bidi_context(): m_process_func(nullptr), m_request_func(nullptr) {};
-	~request_bidi_context() = default;
+	~request_bidi_context() override = default;
 
 	// Pointer to function that does actual processing
 	void (server::*m_process_func)(const bidi_context&, const Request&, Response&);

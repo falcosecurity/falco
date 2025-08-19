@@ -383,13 +383,11 @@ private:
 	 */
 	void get_node(YAML::Node& ret, const std::string& key, bool can_append = false) const {
 		try {
-			char c;
-			bool should_shift;
 			std::string nodeKey;
 			ret.reset(m_root);
 			for(std::string::size_type i = 0; i < key.size(); ++i) {
-				c = key[i];
-				should_shift = c == '.' || c == '[' || i == key.size() - 1;
+				char c = key[i];
+				bool should_shift = c == '.' || c == '[' || i == key.size() - 1;
 
 				if(c != '.' && c != '[') {
 					if(i > 0 && nodeKey.empty() && key[i - 1] != '.') {
@@ -458,11 +456,6 @@ namespace YAML {
 template<>
 struct convert<nlohmann::json> {
 	static bool decode(const Node& node, nlohmann::json& res) {
-		int int_val;
-		double double_val;
-		bool bool_val;
-		std::string str_val;
-
 		switch(node.Type()) {
 		case YAML::NodeType::Map:
 			for(auto&& it : node) {
@@ -479,14 +472,20 @@ struct convert<nlohmann::json> {
 			}
 			break;
 		case YAML::NodeType::Scalar:
-			if(YAML::convert<int>::decode(node, int_val)) {
-				res = int_val;
-			} else if(YAML::convert<double>::decode(node, double_val)) {
-				res = double_val;
-			} else if(YAML::convert<bool>::decode(node, bool_val)) {
-				res = bool_val;
-			} else if(YAML::convert<std::string>::decode(node, str_val)) {
-				res = str_val;
+			{
+				int int_val;
+				double double_val;
+				bool bool_val;
+				std::string str_val;
+				if(YAML::convert<int>::decode(node, int_val)) {
+					res = int_val;
+				} else if(YAML::convert<double>::decode(node, double_val)) {
+					res = double_val;
+				} else if(YAML::convert<bool>::decode(node, bool_val)) {
+					res = bool_val;
+				} else if(YAML::convert<std::string>::decode(node, str_val)) {
+					res = str_val;
+				}
 			}
 		default:
 			break;

@@ -120,11 +120,10 @@ uint64_t parse_prometheus_interval(std::string interval_str) {
 		                                                            ONE_MS_TO_MS};
 
 		for(size_t i = 0; i < sizeof(all_prometheus_units) / sizeof(const char*); i++) {
-			std::string cur_interval_str;
-			uint64_t cur_interval = 0;
 			const auto& group_it = named_groups.find(all_prometheus_units[i]);
 			if(group_it != named_groups.end()) {
-				cur_interval_str = args[group_it->second - 1];
+				uint64_t cur_interval = 0;
+				std::string cur_interval_str = args[group_it->second - 1];
 				if(!cur_interval_str.empty()) {
 					cur_interval = std::stoull(cur_interval_str, nullptr, 0);
 				}

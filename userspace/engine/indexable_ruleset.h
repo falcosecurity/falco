@@ -46,7 +46,7 @@ template<class filter_wrapper>
 class indexable_ruleset : public filter_ruleset {
 public:
 	indexable_ruleset() = default;
-	virtual ~indexable_ruleset() = default;
+	virtual ~indexable_ruleset() override = default;
 
 	// Required to implement filter_ruleset
 	void clear() override {
@@ -229,7 +229,7 @@ private:
 	// A group of filters all having the same ruleset
 	class ruleset_filters {
 	public:
-		ruleset_filters(uint16_t ruleset_id): m_ruleset_id(ruleset_id) {}
+		explicit ruleset_filters(uint16_t ruleset_id): m_ruleset_id(ruleset_id) {}
 
 		virtual ~ruleset_filters() {};
 

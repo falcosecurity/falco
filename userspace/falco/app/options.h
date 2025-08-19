@@ -51,7 +51,7 @@ public:
 	std::string gvisor_generate_config_with_socket;
 	bool describe_all_rules = false;
 	std::string describe_rule;
-	bool print_ignored_events;
+	bool print_ignored_events = false;
 	bool list_fields = false;
 	std::string list_source_fields;
 	bool list_plugins = false;
