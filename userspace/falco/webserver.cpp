@@ -21,6 +21,7 @@ limitations under the License.
 #include "app/state.h"
 #include "versions_info.h"
 #include <atomic>
+#include <signal.h>
 
 falco_webserver::~falco_webserver() {
 	stop();
@@ -58,47 +59,62 @@ void falco_webserver::start(const falco::app::state &state,
 		              res.set_content(versions_json_str, "application/json");
 	              });
 
-	// run server in a separate thread
 	if(!m_server->is_valid()) {
 		m_server = nullptr;
 		throw falco_exception("invalid webserver configuration");
 	}
 
 	m_failed.store(false, std::memory_order_release);
-	m_server_thread = std::thread([this, webserver_config] {
+
+	// fork the server
+	m_pid = fork();
+
+	if(m_pid == 0) {
+		falco_logger::log(falco_logger::level::INFO, "Webserver: forked\n");
+		int res = setgid(webserver_config.m_uid);
+		if(res != NOERROR) {
+			throw falco_exception("Webserver: an error occurred while setting group id: " +
+			                      std::to_string(errno));
+		}
+		res = setuid(webserver_config.m_gid);
+		if(res != NOERROR) {
+			throw falco_exception("Webserver: an error occurred while setting user id: " +
+			                      std::to_string(errno));
+		}
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Webserver: fork running as " + std::to_string(webserver_config.m_uid) +
+		                          ":" + std::to_string(webserver_config.m_gid) + "\n");
 		try {
 			this->m_server->listen(webserver_config.m_listen_address,
 			                       webserver_config.m_listen_port);
 		} catch(std::exception &e) {
 			falco_logger::log(falco_logger::level::ERR,
-			                  "falco_webserver: " + std::string(e.what()) + "\n");
+			                  "Webserver: " + std::string(e.what()) + "\n");
+			m_failed.store(true, std::memory_order_release);
 		}
-		this->m_failed.store(true, std::memory_order_release);
-	});
-
-	// wait for the server to actually start up
-	// note: is_running() is atomic
-	while(!m_server->is_running() && !m_failed.load(std::memory_order_acquire)) {
-		std::this_thread::yield();
-	}
-	m_running = true;
-	if(m_failed.load(std::memory_order_acquire)) {
-		stop();
-		throw falco_exception("an error occurred while starting webserver");
+	} else if(m_pid < 0) {
+		throw falco_exception("Webserver: an error occurred while forking webserver");
 	}
 }
 
 void falco_webserver::stop() {
-	if(m_running) {
+	if(m_pid > 0) {
+		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping server\n");
 		if(m_server != nullptr) {
 			m_server->stop();
 		}
-		if(m_server_thread.joinable()) {
-			m_server_thread.join();
+		falco_logger::log(falco_logger::level::INFO, "Webserver: killing fork\n");
+		int res = kill(m_pid, SIGTERM);
+		if(res != 0) {
+			throw falco_exception("Webserver: an error occurred while killing fork: " +
+			                      std::to_string(errno));
 		}
-		m_server = nullptr;
-		m_running = false;
+		m_pid = 0;
+		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping fork done\n");
 	}
+
+	m_server = nullptr;
+	m_running = false;
 }
 
 void falco_webserver::enable_prometheus_metrics(const falco::app::state &state) {

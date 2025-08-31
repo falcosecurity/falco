@@ -737,6 +737,12 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "ssl_certificate": {
                     "type": "string"
+                },
+                "uid": {
+                    "type": "integer"
+                },
+                "gid": {
+                    "type": "integer"
                 }
             },
             "minProperties": 1,

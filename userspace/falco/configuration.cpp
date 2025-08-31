@@ -489,6 +489,8 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 	m_webserver_config.m_prometheus_metrics_enabled =
 	        m_config.get_scalar<bool>("webserver.prometheus_metrics_enabled", false);
+	m_webserver_config.m_uid = m_config.get_scalar<uint32_t>("webserver.uid", 1000);
+	m_webserver_config.m_gid = m_config.get_scalar<uint32_t>("webserver.gid", 1000);
 
 	std::list<std::string> syscall_event_drop_acts;
 	m_config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
