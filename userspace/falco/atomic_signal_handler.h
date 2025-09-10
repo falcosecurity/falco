@@ -85,21 +85,23 @@ public:
 	inline bool handle(std::function<void()> f) {
 		if(triggered() && !handled()) {
 			std::unique_lock<std::mutex> lock(m_mtx);
-			try {
-				f();
-				// note: the action may have forcely reset
-				// the signal handler, so we don't want to create
-				// an inconsistent state
-				if(triggered()) {
-					m_handled.store(true, std::memory_order_seq_cst);
+			if(!handled()) {
+				try {
+					f();
+					// note: the action may have forcely reset
+					// the signal handler, so we don't want to create
+					// an inconsistent state
+					if(triggered()) {
+						m_handled.store(true, std::memory_order_seq_cst);
+					}
+				} catch(std::exception&) {
+					if(triggered()) {
+						m_handled.store(true, std::memory_order_seq_cst);
+					}
+					throw;
 				}
-			} catch(std::exception&) {
-				if(triggered()) {
-					m_handled.store(true, std::memory_order_seq_cst);
-				}
-				throw;
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}
