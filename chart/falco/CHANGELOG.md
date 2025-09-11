@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v6.3.0
+
+* Bump falcosidekick dep to 0.11.X
+
 ## v6.2.5
 
 * Removed allowedUnsafeSysctls from SCC
