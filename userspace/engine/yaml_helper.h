@@ -471,22 +471,21 @@ struct convert<nlohmann::json> {
 				res.emplace_back(sub);
 			}
 			break;
-		case YAML::NodeType::Scalar:
-			{
-				int int_val;
-				double double_val;
-				bool bool_val;
-				std::string str_val;
-				if(YAML::convert<int>::decode(node, int_val)) {
-					res = int_val;
-				} else if(YAML::convert<double>::decode(node, double_val)) {
-					res = double_val;
-				} else if(YAML::convert<bool>::decode(node, bool_val)) {
-					res = bool_val;
-				} else if(YAML::convert<std::string>::decode(node, str_val)) {
-					res = str_val;
-				}
+		case YAML::NodeType::Scalar: {
+			int int_val;
+			double double_val;
+			bool bool_val;
+			std::string str_val;
+			if(YAML::convert<int>::decode(node, int_val)) {
+				res = int_val;
+			} else if(YAML::convert<double>::decode(node, double_val)) {
+				res = double_val;
+			} else if(YAML::convert<bool>::decode(node, bool_val)) {
+				res = bool_val;
+			} else if(YAML::convert<std::string>::decode(node, str_val)) {
+				res = str_val;
 			}
+		}
 		default:
 			break;
 		}
