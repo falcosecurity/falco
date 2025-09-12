@@ -353,6 +353,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install NSIS
+        run: choco install nsis -y
+
       # NOTE: Backslash doesn't work as line continuation on Windows.
       - name: Prepare project
         run: |
