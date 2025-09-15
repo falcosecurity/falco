@@ -1416,6 +1416,27 @@ base_syscalls:
 # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
 # if you should increase this value for optimal performance.
 #
+# `thread_table_auto_purging_interval_s`
+#
+# Sets the interval (in seconds) at which the automatic threads purging routine runs. The
+# automatic threads purging is essential for Falco to remove stale inactive/dead threads
+# from its internal threadtable. The presence of this kind of threads could be the
+# results of multiple conditions, process exit events dropping or event re-ordering being
+# the most probable ones.
+#
+# Reducing the interval can help in better memory management, but as a consequence, could
+# impact the CPU usage.
+#
+# `thread_table_auto_purging_thread_timeout_s`
+#
+# Sets the amount of time after which a thread which has seen no events can be purged
+# through the automatic threads purging routine. As the purging happens only every
+# `thread_table_auto_purging_interval_s`, the max time a thread may linger is actually
+# `thread_table_auto_purging_interval_s` + `thread_table_auto_purging_thread_timeout_s`
+#
+# Reducing the interval can help in better memory management, but as a consequence, could
+# impact the CPU usage.
+#
 # `snaplen`
 #
 # Set how many bytes are collected of each I/O buffer for 'syscall' events.
@@ -1423,4 +1444,6 @@ base_syscalls:
 #
 falco_libs:
   thread_table_size: 262144
+  thread_table_auto_purging_interval_s: 300
+  thread_table_auto_purging_thread_timeout_s: 300
   snaplen: 80

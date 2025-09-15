@@ -29,6 +29,8 @@ limitations under the License.
 #define DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE std::ptrdiff_t(~size_t(0) / 2)
 
 #define DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE 262144
+#define DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_INTERVAL_S (5 * 60)        // 5 minutes.
+#define DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_THREAD_TIMEOUT_S (5 * 60)  // 5 minutes.
 
 //
 // Most falco_* classes can throw exceptions. Unless directly related

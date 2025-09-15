@@ -471,6 +471,12 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "thread_table_size": {
                     "type": "integer"
                 },
+                "thread_table_auto_purging_interval_s": {
+                    "type": "integer"
+                },
+                "thread_table_auto_purging_thread_timeout_s": {
+                    "type": "integer"
+                },
                 "snaplen": {
                     "type": "integer"
                 }

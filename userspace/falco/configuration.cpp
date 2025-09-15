@@ -86,6 +86,10 @@ falco_configuration::falco_configuration():
         m_syscall_evt_simulate_drops(false),
         m_syscall_evt_timeout_max_consecutives(1000),
         m_falco_libs_thread_table_size(DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE),
+        m_falco_libs_thread_table_auto_purging_interval_s(
+                DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_INTERVAL_S),
+        m_falco_libs_thread_table_auto_purging_thread_timeout_s(
+                DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_THREAD_TIMEOUT_S),
         m_falco_libs_snaplen(0),
         m_base_syscalls_all(false),
         m_base_syscalls_repair(false),
@@ -594,6 +598,12 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_falco_libs_thread_table_size =
 	        m_config.get_scalar<std::uint32_t>("falco_libs.thread_table_size",
 	                                           DEFAULT_FALCO_LIBS_THREAD_TABLE_SIZE);
+	m_falco_libs_thread_table_auto_purging_interval_s = m_config.get_scalar<std::uint32_t>(
+	        "falco_libs.thread_table_auto_purging_interval_s",
+	        DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_INTERVAL_S);
+	m_falco_libs_thread_table_auto_purging_thread_timeout_s = m_config.get_scalar<std::uint32_t>(
+	        "falco_libs.thread_table_auto_purging_thread_timeout_s",
+	        DEFAULT_FALCO_LIBS_THREAD_TABLE_AUTO_PURGING_THREAD_TIMEOUT_S);
 
 	// if falco_libs.snaplen is not set we'll let libs configure it
 	m_falco_libs_snaplen = m_config.get_scalar<std::uint64_t>("falco_libs.snaplen", 0);
