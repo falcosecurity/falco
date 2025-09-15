@@ -50,6 +50,12 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 			        s.config->m_falco_libs_thread_table_size);
 		}
 
+		inspector->set_auto_threads_purging(true);
+		inspector->set_auto_threads_purging_interval_s(
+		        s.config->m_falco_libs_thread_table_auto_purging_interval_s);
+		inspector->set_thread_timeout_s(
+		        s.config->m_falco_libs_thread_table_auto_purging_thread_timeout_s);
+
 		if(source != falco_common::syscall_source) /* Plugin engine */
 		{
 			for(const auto& p : inspector->get_plugin_manager()->plugins()) {

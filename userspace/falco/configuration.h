@@ -190,6 +190,8 @@ public:
 	uint32_t m_syscall_evt_timeout_max_consecutives;
 
 	uint32_t m_falco_libs_thread_table_size;
+	uint32_t m_falco_libs_thread_table_auto_purging_interval_s;
+	uint32_t m_falco_libs_thread_table_auto_purging_thread_timeout_s;
 	uint64_t m_falco_libs_snaplen;
 
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
