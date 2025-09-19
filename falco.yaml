@@ -963,6 +963,9 @@ webserver:
   prometheus_metrics_enabled: false
   ssl_enabled: false
   ssl_certificate: /etc/falco/falco.pem
+  # User and group id under which the server should run
+  uid: 1000
+  gid: 1000
 
 ##############################################################################
 # Falco logging / alerting / metrics related to software functioning (basic) #
