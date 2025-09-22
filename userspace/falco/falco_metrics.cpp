@@ -72,6 +72,34 @@ namespace fs = std::filesystem;
 */
 const std::string falco_metrics::content_type_prometheus = "text/plain; version=0.0.4";
 
+// Helper function to convert metric to prometheus text with custom help text
+static std::string convert_metric_to_text_prometheus_with_deprecation_notice(
+        libs::metrics::prometheus_metrics_converter& converter,
+        const metrics_v2& metric,
+        const std::string& prefix,
+        const std::string& subsystem,
+        const std::map<std::string, std::string>& labels) {
+	// First get the standard prometheus text
+	std::string prometheus_text =
+	        converter.convert_metric_to_text_prometheus(metric, prefix, subsystem, labels);
+
+	// Find the first occurrence of "# HELP" and append the deprecation notice
+	size_t help_pos = prometheus_text.find("# HELP");
+	if(help_pos != std::string::npos) {
+		// Find the end of the help line
+		size_t help_end = prometheus_text.find('\n', help_pos);
+		if(help_end != std::string::npos) {
+			// Append (DEPRECATED: enter events are no longer tracked in falcosecurity/libs) to the
+			// help text
+			prometheus_text.insert(
+			        help_end,
+			        " (DEPRECATED: enter events are no longer tracked in falcosecurity/libs)");
+		}
+	}
+
+	return prometheus_text;
+}
+
 std::string falco_metrics::falco_to_text_prometheus(
         const falco::app::state& state,
         libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
@@ -234,7 +262,7 @@ std::string falco_metrics::sources_to_text_prometheus(
 	                                           SOURCE_PLUGIN_ENGINE,
 	                                           NODRIVER_ENGINE,
 	                                           GVISOR_ENGINE};
-	static re2::RE2 drops_buffer_pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_(enter|exit)$");
+	static re2::RE2 drops_buffer_pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_exit$");
 	static re2::RE2 cpu_pattern("(\\d+)");
 
 	std::string prometheus_text;
@@ -355,9 +383,8 @@ std::string falco_metrics::sources_to_text_prometheus(
 				} else if(strncmp(metric.name, "n_drops_buffer", 14) == 0)  // prefix match
 				{
 					std::string drop;
-					std::string dir;
 					std::string name_str(metric.name);
-					if(re2::RE2::FullMatch(name_str, drops_buffer_pattern, &drop, &dir)) {
+					if(re2::RE2::FullMatch(name_str, drops_buffer_pattern, &drop)) {
 						auto metric_new = libs::metrics::libsinsp_metrics::new_metric(
 						        "n_drops_buffer",
 						        METRICS_V2_KERNEL_COUNTERS,
@@ -366,16 +393,12 @@ std::string falco_metrics::sources_to_text_prometheus(
 						        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
 						        metric.value.u64);
 						const std::map<std::string, std::string>& const_labels = {{"drop", drop},
-						                                                          {"dir", dir}};
+						                                                          {"dir", "exit"}};
 						/* Examples ...
 						    # HELP falcosecurity_scap_n_drops_buffer_total
 						   https://falco.org/docs/metrics/ # TYPE
 						   falcosecurity_scap_n_drops_buffer_total counter
-						    falcosecurity_scap_n_drops_buffer_total{dir="enter",drop="clone_fork"} 0
-						    # HELP falcosecurity_scap_n_drops_buffer_total
-						   https://falco.org/docs/metrics/ # TYPE
-						   falcosecurity_scap_n_drops_buffer_total counter
-						    falcosecurity_scap_n_drops_buffer_total{dir="exit",drop="clone_fork"} 0
+						   falcosecurity_scap_n_drops_buffer_total{dir="exit",drop="clone_fork"} 0
 						*/
 						prometheus_text +=
 						        prometheus_metrics_converter.convert_metric_to_text_prometheus(
@@ -391,6 +414,30 @@ std::string falco_metrics::sources_to_text_prometheus(
 					                "falcosecurity",
 					                prometheus_subsystem);
 				}
+			}
+
+			// Add deprecated enter event metrics with 0 values for backward compatibility
+			static const std::vector<std::string> deprecated_enter_drops =
+			        {"clone_fork", "execve", "connect", "open", "dir_file", "other_interest"};
+
+			for(const auto& drop_type : deprecated_enter_drops) {
+				auto metric_new = libs::metrics::libsinsp_metrics::new_metric(
+				        "n_drops_buffer",
+				        METRICS_V2_KERNEL_COUNTERS,
+				        METRIC_VALUE_TYPE_U64,
+				        METRIC_VALUE_UNIT_COUNT,
+				        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+				        0);  // Always 0 for deprecated enter events
+				const std::map<std::string, std::string>& const_labels = {{"drop", drop_type},
+				                                                          {"dir", "enter"}};
+
+				// Add deprecation notice to the help text
+				prometheus_text += convert_metric_to_text_prometheus_with_deprecation_notice(
+				        prometheus_metrics_converter,
+				        metric_new,
+				        "falcosecurity",
+				        "scap",  // Use "scap" subsystem for kernel counters
+				        const_labels);
 			}
 		}
 
