@@ -138,15 +138,16 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now,
 	std::string rule = "Falco internal: syscall event drop";
 	std::string msg =
 	        rule + ". " + std::to_string(delta.n_drops) + " system calls dropped in last second.";
+	bool ret = true;
 
 	for(auto &act : m_actions) {
 		switch(act) {
 		case syscall_evt_drop_action::DISREGARD:
-			return true;
+			continue;
 
 		case syscall_evt_drop_action::LOG:
 			falco_logger::log(falco_logger::level::DEBUG, std::move(msg));
-			return true;
+			continue;
 
 		case syscall_evt_drop_action::ALERT: {
 			nlohmann::json output_fields;
@@ -199,19 +200,20 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now,
 			                               kernel instrumentation). */
 			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
 			m_outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, output_fields);
-			return true;
+			continue;
 		}
 		case syscall_evt_drop_action::EXIT:
 			falco_logger::log(falco_logger::level::CRIT, std::move(msg));
 			falco_logger::log(falco_logger::level::CRIT, "Exiting.");
-			return false;
+			ret = false;
+			continue;
 
 		default:
 			falco_logger::log(falco_logger::level::ERR,
 			                  "Ignoring unknown action " + std::to_string(int(act)));
-			return true;
+			continue;
 		}
 	}
 
-	return true;
+	return ret;
 }
