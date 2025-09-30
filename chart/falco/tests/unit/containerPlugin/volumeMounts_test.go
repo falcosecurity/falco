@@ -263,43 +263,6 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 	}
 }
 
-func TestInvalidVolumeMountConfiguration(t *testing.T) {
-	t.Parallel()
-	helmChartPath, err := filepath.Abs(unit.ChartPath)
-	require.NoError(t, err)
-
-	testCases := []struct {
-		name        string
-		values      map[string]string
-		expectedErr string
-	}{
-		{
-			name: "bothOldAndNewConfigEnabled",
-			values: map[string]string{
-				"collectors.docker.enabled":          "true",
-				"collectors.containerEngine.enabled": "true",
-			},
-			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			options := &helm.Options{
-				SetValues: tc.values,
-			}
-
-			// Attempt to render the template, expect an error
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/daemonset.yaml"})
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expectedErr)
-		})
-	}
-}
-
 func findVolumeMount(name string, volumeMounts []corev1.VolumeMount) *corev1.VolumeMount {
 	for _, v := range volumeMounts {
 		if v.Name == name {

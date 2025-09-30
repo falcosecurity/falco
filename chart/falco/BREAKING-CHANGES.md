@@ -11,6 +11,18 @@
     - [Falco Images](#drop-support-for-falcosecurityfalco-image)
     - [Driver Loader Init Container](#driver-loader-simplified-logic)
 
+
+### 7.0.0
+
+### Deprecated container metadata collectors have been removed
+
+The following collectors options were deprecated in the Falco chart v4.22 and have been removed from the chart:
+- `collectors.containerd`
+- `collectors.cri`
+- `collectors.docker`
+
+Please use the `collectors.containerEngine` instead.
+
 ## 6.0.0
 
 ### Falco Talon configuration changes

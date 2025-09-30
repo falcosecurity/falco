@@ -366,29 +366,7 @@ collectors:
   # -- Enable/disable all the metadata collectors.
   enabled: true
 
-  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
-  docker:
-    # -- Enable Docker support.
-    enabled: false
-    # -- The path of the Docker daemon socket.
-    socket: /var/run/docker.sock
-
-  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
-  containerd:
-    # -- Enable ContainerD support.
-    enabled: false
-    # -- The path of the ContainerD socket.
-    socket: /run/host-containerd/containerd.sock
-
-  # -- This collector is deprecated and will be removed in the future. Please use the containerEngine collector instead.
-  crio:
-    # -- Enable CRI-O support.
-    enabled: false
-    # -- The path of the CRI-O socket.
-    socket: /run/crio/crio.sock
-
-  # -- This collector is the new container engine collector that replaces the old docker, containerd, crio and podman collectors.
-  # It is designed to collect metadata from various container engines and provide a unified interface through the container plugin.
+  # -- This collector is designed to collect metadata from various container engines and provide a unified interface through the container plugin.
   # When enabled, it will deploy the container plugin and use it to collect metadata from the container engines.
   # Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood.
   containerEngine:
@@ -503,8 +481,7 @@ certs:
     crt: ""
 
 # -- Third party rules enabled for Falco. More info on the dedicated section in README.md file.
-customRules:
-  {}
+customRules: {}
   # Although Falco comes with a nice default rule set for detecting weird
   # behavior in containers, our users are going to customize the run-time
   # security rule sets or policies for the specific container images and
@@ -648,8 +625,7 @@ serviceMonitor:
   # scraping metrics from a service. It allows you to define the details of the TLS connection, such as
   # CA certificate, client certificate, and client key. Currently, the k8s-metacollector does not support
   # TLS configuration for the metrics endpoint.
-  tlsConfig:
-    {}
+  tlsConfig: {}
     # insecureSkipVerify: false
     # caFile: /path/to/ca.crt
     # certFile: /path/to/client.crt

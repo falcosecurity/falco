@@ -326,43 +326,6 @@ func TestContainerPluginVolumes(t *testing.T) {
 	}
 }
 
-func TestInvalidVolumeConfiguration(t *testing.T) {
-	t.Parallel()
-	helmChartPath, err := filepath.Abs(unit.ChartPath)
-	require.NoError(t, err)
-
-	testCases := []struct {
-		name        string
-		values      map[string]string
-		expectedErr string
-	}{
-		{
-			name: "bothOldAndNewConfigEnabled",
-			values: map[string]string{
-				"collectors.docker.enabled":          "true",
-				"collectors.containerEngine.enabled": "true",
-			},
-			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			options := &helm.Options{
-				SetValues: tc.values,
-			}
-
-			// Attempt to render the template, expect an error
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/daemonset.yaml"})
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expectedErr)
-		})
-	}
-}
-
 func findVolume(name string, volumes []corev1.Volume) *corev1.Volume {
 	for _, v := range volumes {
 		if v.Name == name {
