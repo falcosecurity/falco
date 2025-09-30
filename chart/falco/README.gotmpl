@@ -74,7 +74,9 @@ Falco needs **kernel headers** installed on the host as a prerequisite to build 
 
 ##### Selecting a different driver loader image
 
-Note that since Falco 0.36.0 and Helm chart version 3.7.0 the driver loader image has been updated to be compatible with newer kernels (5.x and above) meaning that if you have an older kernel version and you are trying to build the kernel module you may experience issues. In that case you can use the `falco-driver-loader-legacy` image to use the previous version of the toolchain. To do so you can set the appropriate value, i.e. `--set driver.loader.initContainer.image.repository=falcosecurity/falco-driver-loader-legacy`.
+Note that since Falco 0.36.0 and Helm chart version 3.7.0 the driver loader image has been updated to be compatible with newer kernels (5.x and above) meaning that if you have an older kernel version and you are trying to build the kernel module you may experience issues. 
+In that case you can use an alternative `falco-driver-loader` image flavor (e.g. `falcosecurity/falco-driver-loader:latest-buster`) to use an older version of the toolchain. To do so you can set the appropriate value, i.e. `--set driver.loader.initContainer.image.tag=latest-buster`.
+For more information please refer to the documentation regarding the [currently supported images](https://github.com/falcosecurity/falco/blob/master/docker/README.md).
 
 #### About Plugins
 [Plugins](https://falco.org/docs/plugins/) are used to extend Falco to support new **data sources**. The current **plugin framework** supports *plugins* with the following *capabilities*:
