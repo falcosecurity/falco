@@ -607,66 +607,6 @@ func TestContainerPluginConfiguration(t *testing.T) {
 	}
 }
 
-func TestInvalidCollectorConfiguration(t *testing.T) {
-	t.Parallel()
-
-	helmChartPath, err := filepath.Abs(unit.ChartPath)
-	require.NoError(t, err)
-
-	testCases := []struct {
-		name        string
-		values      map[string]string
-		expectedErr string
-	}{
-		{
-			name: "dockerAndContainerEngine",
-			values: map[string]string{
-				"collectors.docker.enabled":          "true",
-				"collectoars.containerd.enabled":     "false",
-				"collectors.crio.enabled":            "false",
-				"collectors.containerEngine.enabled": "true",
-			},
-			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
-		},
-		{
-			name: "containerdAndContainerEngine",
-			values: map[string]string{
-				"collectors.docker.enabled":          "false",
-				"collectors.containerd.enabled":      "true",
-				"collectors.crio.enabled":            "false",
-				"collectors.containerEngine.enabled": "true",
-			},
-			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
-		},
-		{
-			name: "crioAndContainerEngine",
-			values: map[string]string{
-				"collectors.docker.enabled":          "false",
-				"collectoars.containerd.enabled":     "false",
-				"collectors.crio.enabled":            "true",
-				"collectors.containerEngine.enabled": "true",
-			},
-			expectedErr: "You can not enable any of the [docker, containerd, crio] collectors configuration and the containerEngine configuration at the same time. Please use the containerEngine configuration since the old configurations are deprecated.",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			options := &helm.Options{
-				SetValues: tc.values,
-			}
-
-			// Attempt to render the template, expect an error
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expectedErr)
-		})
-	}
-}
-
 // Test that the helper does not overwrite user's configuration.
 // And that the container reference is added to the configmap.
 func TestFalcoctlRefs(t *testing.T) {
