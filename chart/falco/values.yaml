@@ -238,6 +238,15 @@ metrics:
   # Additionally, please be aware that the current implementation of `libbpf` does
   # not support granularity of statistics at the bpf tail call level.
   libbpfStatsEnabled: true
+  # -- pluginsMetricsEnabled adds custom plugins metrics to the metrics output.
+  # Please note that if a plugin has no metrics implemented, there will be no
+  # metrics available from it.
+  pluginsMetricsEnabled: true
+  # -- jemallocStatsEnabled adds jemalloc stats to the metrics output.
+  # This option requires that Falco is built with jemalloc support; otherwise
+  # it will have no effect.
+  jemallocStatsEnabled: false
+
   # -- convertMemoryToMB specifies whether the memory should be converted to mb.
   convertMemoryToMB: true
   # -- includeEmptyValues specifies whether the empty values should be included in the metrics.
