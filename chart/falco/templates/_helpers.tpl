@@ -440,6 +440,8 @@ Based on the user input it populates the metrics configuration in the falco conf
 {{- $_ = set .Values.falco.metrics "kernel_event_counters_enabled" .Values.metrics.kernelEventCountersEnabled -}}
 {{- $_ = set .Values.falco.metrics "kernel_event_counters_per_cpu_enabled" .Values.metrics.kernelEventCountersPerCPUEnabled -}}
 {{- $_ = set .Values.falco.metrics "libbpf_stats_enabled" .Values.metrics.libbpfStatsEnabled -}}
+{{- $_ = set .Values.falco.metrics "plugins_metrics_enabled" .Values.metrics.pluginsMetricsEnabled -}}
+{{- $_ = set .Values.falco.metrics "jemalloc_stats_enabled" .Values.metrics.jemallocStatsEnabled -}}
 {{- $_ = set .Values.falco.metrics "convert_memory_to_mb" .Values.metrics.convertMemoryToMB -}}
 {{- $_ = set .Values.falco.metrics "include_empty_values" .Values.metrics.includeEmptyValues -}}
 {{- end -}}
