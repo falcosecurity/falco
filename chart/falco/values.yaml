@@ -662,17 +662,73 @@ grafana:
 ######################
 # falco.yaml config  #
 ######################
+# -- Directly set values in the falco.yaml configuration file.
+#
+# Please, note that some values may be overridden by other chart settings,
+# for specific features are managed by the chart itself. This includes:
+# - drivers configuration
+# - collectors configuration (this affects container and k8smeta plugins configurations)
+# - metrics configuration
 falco:
-  #####################
-  # Falco rules files #
-  #####################
+  ###############################
+  # Falco config files settings #
+  ###############################
 
-  # [Stable] `rules_file`
+  # [Stable] `config_files`
   #
-  # Falco rules can be specified using files or directories, which are loaded at
-  # startup. The name "rules_file" is maintained for backwards compatibility. If
-  # the entry is a file, it will be read directly. If the entry is a directory,
-  # all files within that directory will be read in alphabetical order.
+  # -- Allow to load additional configs files, beside the main one.
+  #
+  # Their loading is assumed to be made *after* main config file has been processed,
+  # exactly in the order they are specified.
+  # Therefore, loaded config files *can* override values from main config file.
+  # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
+  #
+  # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
+  #
+  # 3 merge-strategies are available:
+  # `append` (default):
+  #   * existing sequence keys will be appended
+  #   * existing scalar keys will be overridden
+  #   * non-existing keys will be added
+  # `override`:
+  #   * existing keys will be overridden
+  #   * non-existing keys will be added
+  # `add-only`:
+  #   * existing keys will be ignored
+  #   * non-existing keys will be added
+  #
+  # Each item on the list can be either a yaml map or a simple string.
+  # The simple string will be interpreted as the config file path, and the `append` merge-strategy will be enforced.
+  # When the item is a yaml map instead, it will be of the form: `   path: foo\n   strategy: X`.
+  # When `strategy` is omitted, once again `append` is used.
+  #
+  # When a merge-strategy is enabled for a folder entry, all the included config files will use that merge-strategy.
+  config_files:
+    - /etc/falco/config.d
+    # Example of config file specified as yaml map with strategy made explicit.
+    # - path: $HOME/falco_local_configs/
+    #   strategy: add-only
+
+  # [Stable] `watch_config_files`
+  #
+  # -- Falco monitors configuration and rules files for changes and automatically
+  # reloads itself to apply the updated configuration when any modifications are
+  # detected. This feature is particularly useful when you want to make real-time
+  # changes to the configuration or rules of Falco without interrupting its
+  # operation or losing its state. For more information about Falco's state
+  # engine, please refer to the `base_syscalls` section.
+  watch_config_files: true
+
+  ###############
+  # Falco rules #
+  ###############
+
+  # [Stable] `rules_files`
+  #
+  # -- The locations of rules files (or directories) to load.
+  #
+  # If the entry is a yaml file, it will be read directly. If the entry is a directory,
+  # all yaml files within that directory will be read in alphabetical order.
   #
   # The falco_rules.yaml file ships with the Falco package and is overridden with
   # every new software version. falco_rules.local.yaml is only created if it
@@ -694,7 +750,19 @@ falco:
   # By arranging the order of files and rules thoughtfully, you can ensure that
   # desired customizations and rule behaviors are prioritized and applied as
   # intended.
-  # -- The location of the rules files that will be consumed by Falco.
+  #
+  # With Falco 0.36 and beyond, it's now possible to apply multiple rules that match
+  # the same event type, eliminating concerns about rule prioritization based on the
+  # "first match wins" principle. However, enabling the `all` matching option may result
+  # in a performance penalty. We recommend carefully testing this alternative setting
+  # before deploying it in production. Read more under the `rule_matching` configuration.
+  #
+  # Since Falco 0.41 only files with .yml and .yaml extensions are considered,
+  # including directory contents. This means that you may specify directories that
+  # contain yaml files for rules and other files which will be ignored.
+  #
+  # NOTICE: Before Falco 0.38, this config key was `rules_file` (singular form),
+  # which is now deprecated in favor of `rules_files` (plural form).
   rules_files:
     - /etc/falco/falco_rules.yaml
     - /etc/falco/falco_rules.local.yaml
@@ -702,9 +770,7 @@ falco:
 
   # [Incubating] `rules`
   #
-  # --- [Description]
-  #
-  # Falco rules can be enabled or disabled by name (with wildcards *) and/or by tag.
+  # -- Falco rules can be enabled or disabled by name (with wildcards *) and/or by tag.
   #
   # This configuration is applied after all rules files have been loaded, including
   # their overrides, and will take precedence over the enabled/disabled configuration
@@ -733,71 +799,106 @@ falco:
   #       tag: network
   #
 
-  # [Incubating] `rule_matching`
-  #
-  # - Falco has to be performant when evaluating rules against events. To quickly
-  # understand which rules could trigger on a specific event, Falco maintains
-  # buckets of rules sharing the same event type in a map. Then, the lookup
-  # in each bucket is performed through linear search. The `rule_matching`
-  # configuration key's values are:
-  #  - "first": when evaluating conditions of rules in a bucket, Falco will stop
-  #    to evaluate rules if it finds a matching rules. Since rules are stored
-  #    in buckets in the order they are defined in the rules files, this option
-  #    could prevent other rules to trigger even if their condition is met, causing
-  #    a shadowing problem.
-  #  - "all": with this value Falco will continue evaluating all the rules
-  #    stored in the bucket, so that multiple rules could be triggered upon one
-  #    event.
+  ################
+  # Falco engine #
+  ################
 
-  rule_matching: first
+  # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by the this Helm chart.
+  # To customize the Falco engine settings within the chart, please refer to `driver` settings section above.
 
-  # [Incubating] `outputs_queue`
+  ##################
+  # Falco captures #
+  ##################
+
+  # [Sandbox] `capture`
   #
-  # -- Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
-  # allows you to customize the queue capacity. Please refer to the official documentation:
-  # https://uxlfoundation.github.io/oneTBB/main/tbb_userguide/Concurrent_Queue_Classes.html.
-  # On a healthy system with optimized Falco rules, the queue should not fill up.
-  # If it does, it is most likely happening due to the entire event flow being too slow,
-  # indicating that the server is under heavy load.
+  # -- Falco captures allow you to record events and their associated data for
+  # later analysis. This feature is particularly useful for debugging and
+  # forensics purposes.
   #
-  # `capacity`: the maximum number of items allowed in the queue is determined by this value.
-  # Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded.
-  # In other words, when this configuration is set to 0, the number of allowed items is
-  # effectively set to the largest possible long value, disabling this setting.
+  # Captures operate in two modes:
   #
-  # In the case of an unbounded queue, if the available memory on the system is consumed,
-  # the Falco process would be OOM killed. When using this option and setting the capacity,
-  # the current event would be dropped, and the event loop would continue. This behavior mirrors
-  # kernel-side event drops when the buffer between kernel space and user space is full.
-  outputs_queue:
-    capacity: 0
+  # 1. `rules`: Captures events only when specific rules are triggered.
+  #    Enable capturing for individual rules by adding `capture: true` to the rule.
+  #
+  # 2. `all_rules`: Captures events when any enabled rule is triggered.
+  #
+  # When a capture starts, Falco records events from the moment the triggering rule
+  # fires until the deadline is reached. The deadline is determined by the rule's
+  # `capture_duration` if specified, otherwise the `default_duration` is used.
+  # If additional rules trigger during an active capture, the deadline is extended
+  # accordingly. Once the deadline expires, the capture stops and data is written
+  # to a file. Subsequent captures create new files with unique names.
+  #
+  # Captured data is stored in files with a `.scap` extension, which can be
+  # analyzed later using:
+  #   falco -o engine.kind=replay -o replay.capture_file=/path/to/file.scap
+  #
+  # --- [Usage]
+  #
+  # Enable captures by setting `capture.enabled` to `true`.
+  #
+  # Configure `capture.path_prefix` to specify where capture files are stored.
+  # Falco generates unique filenames based on timestamp and event number for
+  # proper ordering. For example, with `path_prefix: /tmp/falco`, files are
+  # named like `/tmp/falco_00000001234567890_00000000000000042.scap`.
+  #
+  # Use `capture.mode` to choose between `rules` and `all_rules` modes.
+  #
+  # Set `capture.default_duration` to define the default capture duration
+  # in milliseconds.
+  #
+  # --- [Suggestion]
+  #
+  # When using `mode: rules`, configure individual rules to enable capture by
+  # adding `capture: true` and optionally `capture_duration` to specific rules.
+  # For example:
+  #
+  # - rule: Suspicious File Access
+  #   desc: Detect suspicious file access patterns
+  #   condition: >
+  #     open_read and fd.name startswith "/etc/"
+  #   output: >
+  #     Suspicious file access (user=%user.name command=%proc.cmdline file=%fd.name)
+  #   priority: WARNING
+  #   capture: true
+  #   capture_duration: 10000  # Capture for 10 seconds when this rule triggers
+  #
+  # This configuration will capture events for 10 seconds whenever the
+  # "Suspicious File Access" rule is triggered, overriding the default duration.
+  capture:
+    # -- Set to true to enable event capturing.
+    enabled: false
+    # -- Prefix for capture files. Falco appends a timestamp and event number to ensure unique filenames.
+    path_prefix: /tmp/falco
+    # -- Capture mode. Can be "rules" or "all_rules".
+    mode: rules
+    # -- Default capture duration in milliseconds if not specified in the rule.
+    default_duration: 5000
 
   #################
   # Falco plugins #
   #################
 
-  # [Stable] `load_plugins` and `plugins`
+  # Plugins allow Falco to extend its functionality and leverage data sources such as
+  # Kubernetes audit logs or enable integration with other services in your ecosystem.
+  # This enables Falco to perform fast on-host detections beyond syscalls.
+  # Furthermore, plugins allows to enrich existing data sources with additional metadata,
+  # and add other advanced capabilities to Falco.
   #
-  # --- [Description]
-  #
-  # Falco plugins enable integration with other services in the your ecosystem.
-  # They allow Falco to extend its functionality and leverage data sources such as
-  # Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
-  # fast on-host detections beyond syscalls and container events. The plugin
-  # system will continue to evolve with more specialized functionality in future
+  # The plugin system will continue to evolve with more specialized functionality in future
   # releases.
   #
-  # Please refer to the plugins repo at
-  # https://github.com/falcosecurity/plugins/blob/master/plugins/ for detailed
+  # Please refer to the plugins repo at https://github.com/falcosecurity/plugins for detailed
   # documentation on the available plugins. This repository provides comprehensive
   # information about each plugin and how to utilize them with Falco.
   #
   # Please note that if your intention is to enrich Falco syscall logs with fields
   # such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
-  # the `k8saudit` plugin. This information is automatically extracted from the
-  # container runtime socket. The `k8saudit` plugin is specifically designed to
-  # integrate with Kubernetes audit logs and is not required for basic enrichment
-  # of syscall logs with Kubernetes-related fields.
+  # the `k8saudit` plugin. This information is automatically extracted from
+  # the container runtime socket by the 'container' plugin.
+  # The `k8saudit` plugin is specifically designed to integrate with Kubernetes audit logs
+  # and is not required for basic enrichment of syscall logs with Kubernetes-related fields.
   #
   # --- [Usage]
   #
@@ -807,80 +908,29 @@ falco:
   # For example, if you want to use the `k8saudit` plugin,
   # ensure it is configured appropriately and then change this to:
   # load_plugins: [k8saudit, json]
-  # -- Add here all plugins and their configuration. Please
-  # consult the plugins documentation for more info. Remember to add the plugins name in
-  # "load_plugins: []" in order to load them in Falco.
+
+  # [Stable] `load_plugins`
+  #
+  # -- List of plugins to load.
   load_plugins: []
 
+  # # [Stable] `plugins`
+  #
   # -- Customize subsettings for each enabled plugin. These settings will only be
   # applied when the corresponding plugin is enabled using the `load_plugins`
   # option.
-  plugins:
-    - name: k8saudit
-      library_path: libk8saudit.so
-      init_config:
-      #   maxEventSize: 262144
-      #   webhookMaxBatchSize: 12582912
-      #   sslCertificate: /etc/falco/falco.pem
-      open_params: "http://:9765/k8s-audit"
-    - name: cloudtrail
-      library_path: libcloudtrail.so
-      # see docs for init_config and open_params:
-      # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
-    - name: json
-      library_path: libjson.so
-      init_config: ""
+  plugins: []
+  # NOTICE: For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
+  # To use these plugins with this chart, please refer to `collectors` settings section above.
 
-  ######################
-  # Falco config files #
-  ######################
-
-  # [Stable] `config_files`
+  # [Sandbox] `plugins_hostinfo`
   #
-  # Falco will load additional configs files specified here.
-  # Their loading is assumed to be made *after* main config file has been processed,
-  # exactly in the order they are specified.
-  # Therefore, loaded config files *can* override values from main config file.
-  # Also, nested include is not allowed, ie: included config files won't be able to include other config files.
-  #
-  # Like for 'rules_files', specifying a folder will load all the configs files present in it in a lexicographical order.
-  #
-  # 3 merge-strategies are available:
-  # `append` (default):
-  #   * existing sequence keys will be appended
-  #   * existing scalar keys will be overridden
-  #   * non-existing keys will be added
-  # `override`:
-  #   * existing keys will be overridden
-  #   * non-existing keys will be added
-  # `add-only`:
-  #   * existing keys will be ignored
-  #   * non-existing keys will be added
-  #
-  # Each item on the list can be either a yaml map or a simple string.
-  # The simple string will be interpreted as the config file path, and the `append` merge-strategy will be enforced.
-  # When the item is a yaml map instead, it will be of the form: `   path: foo\n   strategy: X`.
-  # When `strategy` is omitted, once again `append` is used.
-  #
-  # When a merge-strategy is enabled for a folder entry, all the included config files will use that merge-strategy.
-  config_files:
-    - /etc/falco/config.d
-  # Example of config file specified as yaml map with strategy made explicit.
-  # - path: $HOME/falco_local_configs/
-  #  strategy: add-only
-
-  # [Stable] `watch_config_files`
-  #
-  # Falco monitors configuration and rule files for changes and automatically
-  # reloads itself to apply the updated configuration when any modifications are
-  # detected. This feature is particularly useful when you want to make real-time
-  # changes to the configuration or rules of Falco without interrupting its
-  # operation or losing its state. For more information about Falco's state
-  # engine, please refer to the `base_syscalls` section.
-  # -- Watch config file and rules files for modification.
-  # When a file is modified, Falco will propagate new config,
-  # by reloading itself.
-  watch_config_files: true
+  # -- Disable host info support for source plugins
+  # that DO NOT generate raw events from the libscap event table
+  # or for plugins that DO NOT parse raw events generated by drivers,
+  # effectively dropping the `proc-fs` hostPath volume requirement for them:
+  # https://github.com/falcosecurity/charts/blob/bd57711e7c8e00919ea288716e0d9d5fdad8867e/charts/falco/templates/pod-template.tpl#L302-L304
+  plugins_hostinfo: true
 
   ##########################
   # Falco outputs settings #
@@ -892,6 +942,13 @@ falco:
   # 8601 format. By default, times are shown in the local time zone determined by
   # the /etc/localtime configuration.
   time_format_iso_8601: false
+
+  # [Incubating] `buffer_format_base64`
+  #
+  # -- When enabled, Falco will output data buffer with base64 encoding. This is useful
+  # for encoding binary data that needs to be used over media designed to consume
+  # this format.
+  buffer_format_base64: false
 
   # [Stable] `priority`
   #
@@ -919,6 +976,22 @@ falco:
   # case.
   json_include_output_property: true
 
+  # [Incubating] `json_include_message_property`
+  #
+  # -- When using JSON output in Falco, you have the option to include the formatted
+  # rule output without timestamp or priority. For instance, if a rule specifies
+  # an "output" property like "Opened process %proc.name" the "message" field will
+  # only contain "Opened process bash" whereas the "output" field will contain more
+  # information.
+  json_include_message_property: false
+
+  # [Incubating] `json_include_output_fields_property`
+  #
+  # -- When using JSON output in Falco, you have the option to include the individual
+  # output fields for easier access. To reduce the logging volume, it is recommended
+  # to turn it off if it's not necessary for your use case.
+  json_include_output_fields_property: true
+
   # [Stable] `json_include_tags_property`
   #
   # -- When using JSON output in Falco, you have the option to include the "tags"
@@ -928,32 +1001,66 @@ falco:
   # be added at a later stage, it is recommended to turn it off.
   json_include_tags_property: true
 
-  # [Incubating] `json_include_message_property`
-  #
-  # When using JSON output in Falco, you have the option to include the formatted
-  # rule output without timestamp or priority. For instance, if a rule specifies
-  # an "output" property like "Opened process %proc.name" the "message" field will
-  # only contain "Opened process bash" whereas the "output" field will contain more
-  # information.
-  json_include_message_property: false
-
-  # [Incubating] `json_include_output_fields_property`
-  #
-  # When using JSON output in Falco, you have the option to include the individual
-  # output fields for easier access. To reduce the logging volume, it is recommended
-  # to turn it off if it's not necessary for your use case.
-  json_include_output_fields_property: true
-
   # [Stable] `buffered_outputs`
   #
-  # -- Enabling buffering for the output queue can offer performance optimization,
-  # efficient resource usage, and smoother data flow, resulting in a more reliable
-  # output mechanism. By default, buffering is disabled (false).
+  # -- Global buffering option for output channels. When disabled, the output channel
+  # that supports buffering flushes the output buffer on every alert. This can lead to
+  # increased CPU usage but is useful when piping outputs to another process or script.
+  # Buffering is currently supported by `file_output`, `program_output`, and `std_output`.
+  # Some output channels may implement buffering strategies you cannot control.
+  # Additionally, this setting is separate from the `output_queue` option. The output queue
+  # sits between the rule engine and the output channels, while output buffering occurs
+  # afterward once the specific channel implementation outputs the formatted message.
   buffered_outputs: false
+
+  # [Incubating] `rule_matching`
+  #
+  # The `rule_matching` configuration key's values are:
+  #  - `first`: Falco stops checking conditions of rules against upcoming event
+  #    at the first matching rule
+  #  - `all`: Falco will continue checking conditions of rules even if a matching
+  #    one was already found
+  #
+  # Rules conditions are evaluated in the order they are defined in the rules files.
+  # For this reason, when using `first` as value, only the first defined rule will
+  # trigger, possibly shadowing other rules.
+  # In case `all` is used as value, rules still trigger in the order they were
+  # defined.
+  #
+  # Effectively, with this setting, it is now possible to apply multiple rules that match
+  # the same event type. This eliminates concerns about rule prioritization based on the
+  # "first match wins" principle. However, enabling the `all` matching option may result in
+  # a performance penalty. We recommend carefully testing this alternative setting before
+  # deploying it in production.
+  # -- Default value is `first`, which stops checking conditions of rules against upcoming event
+  # at the first matching rule.
+  rule_matching: first
+
+  # [Stable] `outputs_queue`
+  #
+  # -- Configure the output queue capacity.
+  #
+  # Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
+  # allows you to customize the queue capacity. Please refer to the official documentation:
+  # https://uxlfoundation.github.io/oneTBB/main/tbb_userguide/Concurrent_Queue_Classes.html.
+  # On a healthy system with optimized Falco rules, the queue should not fill up.
+  # If it does, it is most likely happening due to the entire event flow being too slow,
+  # indicating that the server is under heavy load.
+  #
+  # In the case of an unbounded queue, if the available memory on the system is consumed,
+  # the Falco process would be OOM killed. When using this option and setting the capacity,
+  # the current event would be dropped, and the event loop would continue. This behavior mirrors
+  # kernel-side event drops when the buffer between kernel space and user space is full.
+  outputs_queue:
+    # -- The maximum number of items allowed in the queue is determined by this value.
+    # Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded.
+    # In other words, when this configuration is set to 0, the number of allowed items is
+    # effectively set to the largest possible long value, disabling this setting.
+    capacity: 0
 
   # [Sandbox] `append_output`
   #
-  # Add information to the Falco output.
+  # --Add information to the Falco output.
   # With this setting you can add more information to the Falco output message, customizable by
   # rule, tag or source.
   # You can also add additional data that will appear in the output_fields property
@@ -977,7 +1084,7 @@ falco:
   #             affect the regular Falco message in any way. These can be specified as a
   #             custom name with a custom format or as any supported field
   #             (see: https://falco.org/docs/reference/rules/supported-fields/)
-  #   `suggested_output`: enable the use of extractor plugins suggested fields for the matching source output.
+  #   `suggested_output`: automatically append fields that are suggested to rules output
   #
   # Example:
   #
@@ -993,13 +1100,26 @@ falco:
   # at the end telling the CPU number. In addition, if `json_output` is true, in the "output_fields"
   # property you will find three new ones: "evt.cpu", "home_directory" which will contain the value of the
   # environment variable $HOME, and "evt.hostname" which will contain the hostname.
-
+  #
   # By default, we enable suggested_output for any source.
   # This means that any extractor plugin that indicates some of its fields
   # as suggested output formats, will see these fields in the output
   # in the form "foo_bar=$foo.bar"
   append_output:
+    # -- Automatically append fields that are suggested to rules output.
     - suggested_output: true
+
+  # [Sandbox] `static_fields`
+  #
+  # Add statically defined fields to the Falco engine.
+  # Then, they can be used as normal rule conditions, by prepending `static.` prefix,
+  # eg: evt.type=open and static.foo=bar
+  # Also, if `append_output.suggested_output` is true,
+  # they'll be automatically appended to each rule output,
+  # in the form "static_foo=bar"
+  # static_fields:
+  #  foo: bar
+  #  foo2: ${env}
 
   ##########################
   # Falco outputs channels #
@@ -1013,35 +1133,42 @@ falco:
 
   # [Stable] `stdout_output`
   #
-  # -- Redirect logs to standard output.
+  # -- Send alters to standard output.
   stdout_output:
     enabled: true
 
   # [Stable] `syslog_output`
   #
-  # -- Send logs to syslog.
+  # -- Send alerts to syslog.
   syslog_output:
     enabled: true
 
   # [Stable] `file_output`
   #
-  # -- When appending Falco alerts to a file, each new alert will be added to a new
-  # line. It's important to note that Falco does not perform log rotation for this
-  # file. If the `keep_alive` option is set to `true`, the file will be opened once
-  # and continuously written to, else the file will be reopened for each output
-  # message. Furthermore, the file will be closed and reopened if Falco receives
+  # -- Send alerts to a file.
+  # Each new alert will be added to a new line.
+  # It's important to note that Falco does not perform log rotation for this
+  # file. Furthermore, the file will be closed and reopened if Falco receives
   # the SIGUSR1 signal.
   file_output:
     enabled: false
+    # -- If true, the file will be opened once and continuously written to.
+    # If false, the file will be reopened for each output message.
     keep_alive: false
+    # -- Path to the file where alerts will be appended.
     filename: ./events.txt
 
   # [Stable] `http_output`
   #
-  # -- Send logs to an HTTP endpoint or webhook.
+  # -- Send alerts to an HTTP endpoint or webhook.
+  #
+  # When using falcosidekick, it is necessary to set `json_output` to true, which is
+  # conveniently done automatically for you when using `falcosidekick.enabled=true`.
   http_output:
     enabled: false
+    # -- URL of the remote server to send the alerts to.
     url: ""
+    # -- User agent string to be used in the HTTP request.
     user_agent: "falcosecurity/falco"
     # -- Tell Falco to not verify the remote server.
     insecure: false
@@ -1051,25 +1178,28 @@ falco:
     ca_bundle: ""
     # -- Path to a folder that will be used as the CA certificate store. CA certificate need to be
     # stored as indivitual PEM files in this directory.
+    # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
     ca_path: "/etc/falco/certs/"
-    # -- Tell Falco to use mTLS
+    # -- Tell Falco to use mTLS.
     mtls: false
     # -- Path to the client cert.
+    # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
     client_cert: "/etc/falco/certs/client/client.crt"
     # -- Path to the client key.
+    # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
     client_key: "/etc/falco/certs/client/client.key"
-    # -- Whether to echo server answers to stdout
+    # -- Whether to echo server answers to stdout.
     echo: false
-    # -- compress_uploads whether to compress data sent to http endpoint.
+    # -- Whether to compress the payload sent to the http server.
     compress_uploads: false
-    # -- keep_alive whether to keep alive the connection.
+    # -- If true, the HTTP connection will be kept alive and reused.
     keep_alive: false
-    # Maximum consecutive timeouts of libcurl to ignore
+    # -- Maximum consecutive timeouts of libcurl to ignore.
     max_consecutive_timeouts: 5
 
   # [Stable] `program_output`
   #
-  # -- Redirect the output to another program or command.
+  # -- Send alerts to another program or command.
   #
   # Possible additional things you might want to do with program output:
   #   - send to a slack webhook:
@@ -1078,14 +1208,15 @@ falco:
   #         program: logger -t falco-test
   #   - send over a network connection:
   #         program: nc host.example.com 80
-  # If `keep_alive` is set to `true`, the program will be started once and
-  # continuously written to, with each output message on its own line. If
-  # `keep_alive` is set to `false`, the program will be re-spawned for each output
-  # message. Furthermore, the program will be re-spawned if Falco receives
-  # the SIGUSR1 signal.
+  #
+  # The program will be re-spawned if Falco receives the SIGUSR1 signal.
   program_output:
     enabled: false
+    # -- If true, the program will be started once and continuously written to,
+    # with each output message on its own line.
+    # If false, the program will be re-spawned for each output message.
     keep_alive: false
+    # -- The program to execute.
     program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
   # [Stable] `grpc_output`
@@ -1126,7 +1257,7 @@ falco:
   #
   # Keep in mind that if any issues arise while creating the gRPC server, the
   # information will be logged, but it will not stop the main Falco daemon.
-
+  #
   # gRPC server using mTLS
   # grpc:
   #   enabled: true
@@ -1137,10 +1268,12 @@ falco:
   #   private_key: "/etc/falco/certs/server.key"
   #   cert_chain: "/etc/falco/certs/server.crt"
   #   root_certs: "/etc/falco/certs/ca.crt"
-
-  # -- gRPC server using a local unix socket
+  #
+  # gRPC server using a local unix socket (see default below)
   grpc:
     enabled: false
+    # -- Address to bind and expose the gRPC server. Use either a local unix socket with
+    # no authentication, or a network address with mTLS.
     bind_address: "unix:///run/falco/falco.sock"
     # -- When the `threadiness` value is set to 0, Falco will automatically determine
     # the appropriate number of threads based on the number of online cores in the system.
@@ -1163,45 +1296,54 @@ falco:
   # instance. If you plan to use `falcoctl` locally or with Kubernetes, make sure
   # the Falco webserver is enabled.
   #
-  # The behavior of the webserver can be controlled with the following options,
-  # which are enabled by default:
-  #
-  # The `ssl_certificate` option specifies a combined SSL certificate and
-  # corresponding key that are contained in a single file. You can generate a
-  # key/cert as follows:
-  #
-  # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out
-  # certificate.pem $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem
-  # /etc/falco/falco.pem
   webserver:
     enabled: true
-    # When the `threadiness` value is set to 0, Falco will automatically determine
+    # -- When the `threadiness` value is set to 0, Falco will automatically determine
     # the appropriate number of threads based on the number of online cores in the system.
     threadiness: 0
+    # -- Port to listen on.
     listen_port: 8765
+    # -- Address to listen on.
+    # Can be an IPV4 or IPV6 address, defaults to IPV4.
+    listen_address: 0.0.0.0
+    # -- Endpoint to use for the health check.
     k8s_healthz_endpoint: /healthz
-    # [Incubating] `prometheus_metrics_enabled`
-    #
+    # -- [Incubating] `prometheus_metrics_enabled`
     # Enable the metrics endpoint providing Prometheus values
     # It will only have an effect if metrics.enabled is set to true as well.
     prometheus_metrics_enabled: false
+    # -- Enable SSL.
     ssl_enabled: false
+    # -- Path to the combined SSL certificate and key file.
+    # You can generate a key/cert as follows:
+    # ```
+    # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+    # $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem
+    # ```
     ssl_certificate: /etc/falco/falco.pem
 
   ##############################################################################
   # Falco logging / alerting / metrics related to software functioning (basic) #
   ##############################################################################
 
-  # [Stable] `log_stderr` and `log_syslog`
+  # [Stable] `log_stderr`
   #
   # Falco's logs related to the functioning of the software, which are not related
   # to Falco alert outputs but rather its lifecycle, settings and potential
   # errors, can be directed to stderr and/or syslog.
-  # -- Send information logs to stderr. Note these are *not* security
-  # notification logs! These are just Falco lifecycle (and possibly error) logs.
+  #
+  # -- Send information logs to stderr.
+  # Note that these are just Falco lifecycle (and possibly error) logs.
+  # These are *not* alerts related to Falco outputs, so must not be considered
+  # as security notification logs!
   log_stderr: true
-  # -- Send information logs to syslog. Note these are *not* security
-  # notification logs! These are just Falco lifecycle (and possibly error) logs.
+
+  # [Stable] `log_syslog`
+  #
+  # -- Send information logs to syslog.
+  # Note that these are just Falco lifecycle (and possibly error) logs.
+  # These are *not* alerts related to Falco outputs, so must not be considered
+  # as security notification logs!
   log_syslog: true
 
   # [Stable] `log_level`
@@ -1224,11 +1366,15 @@ falco:
   # operational logs. It allows you to specify the desired log level for the `libs`
   # library specifically, providing more granular control over the logging
   # behavior of the underlying components used by Falco. Only logs of a certain
-  # severity level or higher will be emitted. Supported levels: "emergency",
-  # "alert", "critical", "error", "warning", "notice", "info", "debug". It is not
-  # recommended for production use.
+  # severity level or higher will be emitted. Supported levels: "fatal",
+  # "critical", "error", "warning", "notice", "info", "debug", "trace".
+  #  It is not recommended to use "debug" and "trace" for production use.
   libs_logger:
+    # -- Enable logging from the underlying `libs` library.
     enabled: true
+    # -- The minimum log level to include in the `libs` logs. Only logs of a certain
+    # severity level or higher will be emitted. Supported levels: "fatal", "critical",
+    # "error", "warning", "notice", "info", "debug", "trace".
     severity: info
 
   #################################################################################
@@ -1263,9 +1409,9 @@ falco:
 
   # [Stable] `syscall_event_timeouts`
   #
-  # -- Generates Falco operational logs when `log_level=notice` at minimum
+  # Generates Falco operational logs when `log_level=notice` at minimum
   #
-  # Falco utilizes a shared buffer between the kernel and userspace to receive
+  # -- Falco utilizes a shared buffer between the kernel and userspace to receive
   # events, such as system call information, in userspace. However, there may be
   # cases where timeouts occur in the underlying libraries due to issues in
   # reading events or the need to skip a particular event. While it is uncommon
@@ -1277,15 +1423,14 @@ falco:
   # without receiving any events. The mapping of this value to a time interval
   # depends on the CPU frequency.
   syscall_event_timeouts:
+    # -- The maximum number of consecutive timeouts without an event after which Falco will generate an alert.
     max_consecutives: 1000
 
   # [Stable] `syscall_event_drops`
   #
-  # Generates "Falco internal: syscall event drop" rule output when `priority=debug` at minimum
+  # Take actions when syscall events are dropped.
   #
-  # --- [Description]
-  #
-  # Falco uses a shared buffer between the kernel and userspace to pass system
+  # -- Falco uses a shared buffer between the kernel and userspace to pass system
   # call information. When Falco detects that this buffer is full and system calls
   # have been dropped, it can take one or more of the following actions:
   #   - ignore: do nothing (default when list of actions is empty)
@@ -1299,14 +1444,6 @@ falco:
   # bucket. The rate corresponds to one message every 30 seconds with a burst of
   # one message (by default).
   #
-  # The messages are emitted when the percentage of dropped system calls with
-  # respect the number of events in the last second is greater than the given
-  # threshold (a double in the range [0, 1]). If you want to be alerted on any
-  # drops, set the threshold to 0.
-  #
-  # For debugging/testing it is possible to simulate the drops using the
-  # `simulate_drops: true`. In this case the threshold does not apply.
-  #
   # --- [Usage]
   #
   # Enabled by default, but requires Falco rules config `priority` set to `debug`.
@@ -1317,32 +1454,36 @@ falco:
   # If instead you prefer periodic metrics of monotonic counters at a regular
   # interval, which include syscall drop statistics and additional metrics,
   # explore the `metrics` configuration option.
-  # -- For debugging/testing it is possible to simulate the drops using
-  # the `simulate_drops: true`. In this case the threshold does not apply.
+  #
+  # --- [Notice]
+  #
+  # Automatic notifications will be simplified in future Falco versions!
+  # If you depend on the detailed drop counters payload, use 'metrics.output_rule'
+  # along with 'metrics.kernel_event_counters_enabled' instead.
   syscall_event_drops:
-    # -- The messages are emitted when the percentage of dropped system calls
-    # with respect the number of events in the last second
-    # is greater than the given threshold (a double in the range [0, 1]).
+    # -- The percentage of dropped syscall events with respect to the number of events in the last second
+    # that will trigger the actions. A value in the range [0, 1]. If you want to be alerted on any drops,
+    # set the threshold to 0.
     threshold: .1
-    # -- Actions to be taken when system calls were dropped from the circular buffer.
+    # -- The list of actions to take when the threshold is exceeded. Possible values are:
+    # `ignore`, `log`, `alert`, `exit`. If the list is empty, no action is taken.
     actions:
       - log
       - alert
-    # -- Rate at which log/alert messages are emitted.
+    # -- The rate at which log/alert messages are emitted is governed by a token bucket. The rate
+    # corresponds to one message every `1/rate` seconds.
+    # The default rate corresponds to one message every 30 seconds.
     rate: .03333
-    # -- Max burst of messages emitted.
+    # -- The maximum number of messages that can be emitted in a burst.
     max_burst: 1
-    # -- Flag to enable drops for debug purposes.
+    # -- For debugging/testing it is possible to simulate the drops. In this case the threshold does not apply.
+    # This is useful to test the actions taken when drops are detected.
     simulate_drops: false
 
-  # [Experimental] `metrics`
+  # [Stable] `metrics`
   #
-  # -- Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
-  #
-  # periodic metric snapshots (including stats and resource utilization) captured
-  # at regular intervals
-  #
-  # --- [Description]
+  # Falco's `metrics` feature provides a comprehensive and flexible framework for
+  # capturing and exporting metrics.
   #
   # Consider these key points about the `metrics` feature in Falco:
   #
@@ -1369,138 +1510,111 @@ falco:
   #
   # It's important to note that the output fields and their names can be subject
   # to change until the metrics feature reaches a stable release.
+  # In addition, the majority of fields represent an instant snapshot, with the
+  # exception of event rates per second and drop percentage stats. These values
+  # are computed based on the delta between two snapshots.
   #
   # To customize the hostname in Falco, you can set the environment variable
   # `FALCO_HOSTNAME` to your desired hostname. This is particularly useful in
   # Kubernetes deployments where the hostname can be set to the pod name.
   #
-  # --- [Usage]
+  # If metrics are enabled, the web server can be configured to activate the
+  # corresponding Prometheus endpoint using `webserver.prometheus_metrics_enabled`.
+  # Prometheus output can be used in combination with the other output options.
   #
-  # `enabled`: Disabled by default.
+  # --- [Warning]
   #
-  # `interval`: The stats interval in Falco follows the time duration definitions
-  # used by Prometheus.
-  # https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
-  #
-  # Time durations are specified as a number, followed immediately by one of the
-  # following units:
-  #
-  # ms - millisecond
-  # s - second
-  # m - minute
-  # h - hour
-  # d - day - assuming a day has always 24h
-  # w - week - assuming a week has always 7d
-  # y - year - assuming a year has always 365d
-  #
-  # Example of a valid time duration: 1h30m20s10ms
-  #
-  # A minimum interval of 100ms is enforced for metric collection. However, for
-  # production environments, we recommend selecting one of the following intervals
-  # for optimal monitoring:
-  #
-  # 15m
-  # 30m
-  # 1h
-  # 4h
-  # 6h
-  #
-  # `output_rule`: To enable seamless metrics and performance monitoring, we
-  # recommend emitting metrics as the rule "Falco internal: metrics snapshot".
-  # This option is particularly useful when Falco logs are preserved in a data
-  # lake. Please note that to use this option, the Falco rules config `priority`
-  # must be set to `info` at a minimum.
-  #
-  # `output_file`: Append stats to a `jsonl` file. Use with caution in production
-  # as Falco does not automatically rotate the file.
-  #
-  # `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
-  # is reported as a percentage of one CPU and can be normalized to the total
-  # number of CPUs to determine overall usage. Memory metrics are provided in raw
-  # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
-  # and can be uniformly converted to megabytes (MB) using the
-  # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
-  # deployed as daemonset, it is crucial to track Falco's container memory usage.
-  # To customize the path of the memory metric file, you can create an environment
-  # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
-  # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
-  # monitor container memory usage, which aligns with Kubernetes'
-  # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
-  # CPU and memory usages, along with the total number of processes and open file
-  # descriptors (fds) on the host, obtained from the proc file system unrelated to
-  # Falco's monitoring. These metrics help assess Falco's usage in relation to the
-  # server's workload intensity.
-  #
-  # `rules_counters_enabled`: Emit counts for each rule.
-  #
-  # `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
-  # is reported as a percentage of one CPU and can be normalized to the total
-  # number of CPUs to determine overall usage. Memory metrics are provided in raw
-  # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
-  # and can be uniformly converted to megabytes (MB) using the
-  # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
-  # deployed as daemonset, it is crucial to track Falco's container memory usage.
-  # To customize the path of the memory metric file, you can create an environment
-  # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
-  # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
-  # monitor container memory usage, which aligns with Kubernetes'
-  # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
-  # CPU and memory usages, along with the total number of processes and open file
-  # descriptors (fds) on the host, obtained from the proc file system unrelated to
-  # Falco's monitoring. These metrics help assess Falco's usage in relation to the
-  # server's workload intensity.
-  #
-  # `state_counters_enabled`: Emit counters related to Falco's state engine, including
-  # added, removed threads or file descriptors (fds), and failed lookup, store, or
-  # retrieve actions in relation to Falco's underlying process cache table (threadtable).
-  # We also log the number of currently cached containers if applicable.
-  #
-  # `kernel_event_counters_enabled`: Emit kernel side event and drop counters, as
-  # an alternative to `syscall_event_drops`, but with some differences. These
-  # counters reflect monotonic values since Falco's start and are exported at a
-  # constant stats interval.
-  #
-  # `kernel_event_counters_per_cpu_enabled`: Detailed kernel event and drop counters
-  # per CPU. Typically used when debugging and not in production.
-  #
-  # `libbpf_stats_enabled`: Exposes statistics similar to `bpftool prog show`,
-  # providing information such as the number of invocations of each BPF program
-  # attached by Falco and the time spent in each program measured in nanoseconds.
-  # To enable this feature, the kernel must be >= 5.1, and the kernel
-  # configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
-  # or an equivalent statistics feature, is not available for non `*bpf*` drivers.
-  # Additionally, please be aware that the current implementation of `libbpf` does
-  # not support granularity of statistics at the bpf tail call level.
-  #
-  # `include_empty_values`: When the option is set to true, fields with an empty
-  # numeric value will be included in the output. However, this rule does not
-  # apply to high-level fields such as `n_evts` or `n_drops`; they will always be
-  # included in the output even if their value is empty. This option can be
-  # beneficial for exploring the data schema and ensuring that fields with empty
-  # values are included in the output.
-  # todo: prometheus export option
-  # todo: syscall_counters_enabled option
+  # Due to a regression (https://github.com/falcosecurity/falco/issues/2821) some metrics
+  # like `falco.host_num_cpus` or `falco.start_ts` will not be available when you use
+  # source plugins (like k8saudit).
   metrics:
     enabled: false
-    interval: 1h
+    # -- Interval at which stats are collected and emitted. This follows the time duration definitions
+    # used by Prometheus (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations).
+    # Time durations are specified as a number, followed immediately by one of the following units:
+    # ms - millisecond
+    # s - second
+    # m - minute
+    # h - hour
+    # d - day - assuming a day has always 24h
+    # w - week - assuming a week has always 7d
+    # y - year - assuming a year has always 365d
+    # A minimum interval of 100ms is enforced for metric collection. However, for
+    # production environments, we recommend selecting one of the following intervals
+    # for optimal monitoring: 15m, 30m, 1h, 4h, 6h.
+
+    # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
+    # -- Emit stats as an output alert "Falco internal: metrics snapshot".
+    # This option is particularly useful when Falco logs are preserved in a data
+    # lake. Please note that to use this option, the Falco rules config `priority`
+    # must be set to `info` at a minimum.
     output_rule: true
+    # Append stats to a `jsonl` file. Use with caution in production as Falco
+    # does not automatically rotate the file.
+    # It can be used in combination with `output_rule`, however enabling both is not typical.
     # output_file: /tmp/falco_stats.jsonl
+
+    # -- Add counts for each rule to metrics output.
     rules_counters_enabled: true
+    # -- Add CPU and memory usage metrics to metrics output.
+    # Usage is reported as a percentage of one CPU and can be normalized to the total
+    # number of CPUs to determine overall usage. Memory metrics are provided in raw
+    # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
+    # and can be uniformly converted to megabytes (MB) using the
+    # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
+    # deployed as daemonset, it is crucial to track Falco's container memory usage.
+    # To customize the path of the memory metric file, you can create an environment
+    # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
+    # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
+    # monitor container memory usage, which aligns with Kubernetes'
+    # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
+    # CPU and memory usages, along with the total number of processes and open file
+    # descriptors (fds) on the host, obtained from the proc file system unrelated to
+    # Falco's monitoring. These metrics help assess Falco's usage in relation to the
+    # server's workload intensity.
     resource_utilization_enabled: true
+    # -- Add Falco's internal state counters to metrics output.
+    # Including added, removed threads or file descriptors (fds), and failed lookup,
+    # store, or retrieve actions in relation to Falco's underlying process cache table
+    # (a.k.a. the threadtable).
     state_counters_enabled: true
+    # -- Add kernel side event and drop counters to metrics output.
+    # This isan alternative to `syscall_event_drops`, but with some differences.
+    # These counters reflect monotonic values since Falco's start and are exported at a
+    # constant stats interval.
     kernel_event_counters_enabled: true
-    libbpf_stats_enabled: true
-    convert_memory_to_mb: true
-    include_empty_values: false
+    # -- Add kernel side event and drop counters per CPU to metrics output.
+    # Enabling this option automatically enables `kernel_event_counters_enabled`.
     kernel_event_counters_per_cpu_enabled: false
+    # -- Add statistics similar to `bpftool prog show` to metrics output.
+    # This provides information such as the number of invocations of each BPF program
+    # attached by Falco and the time spent in each program measured in nanoseconds.
+    # To enable this feature, the kernel must be >= 5.1, and the kernel
+    # configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
+    # or an equivalent statistics feature, is not available for non `*bpf*` drivers.
+    # Additionally, please be aware that the current implementation of `libbpf` does
+    # not support granularity of statistics at the bpf tail call level.
+    libbpf_stats_enabled: true
+    # -- Add custom plugins metrics to metrics output.
+    # Please note that if the respective plugin has no metrics implemented,
+    # there will be no metrics available.
+    plugins_metrics_enabled: true
+    # -- Add jemalloc stats to metrics output.
+    # This option requires that Falco is built with jemalloc support, otherwise
+    # it will have no effect.
+    jemalloc_stats_enabled: false
+    # -- Convert memory metrics to megabytes.
+    convert_memory_to_mb: true
+    # -- Include fields with empty values in the metrics output.
+    # Still, this option does not apply to high-level fields such as `n_evts` or `n_drops`;
+    # they will always be included in the metrics output even if their value is empty.
+    include_empty_values: false
 
   #######################################
   # Falco performance tuning (advanced) #
   #######################################
 
-  # [Experimental] `base_syscalls`, use with caution, read carefully
-  #
-  # --- [Description]
+  # [Stable] `base_syscalls`, use with caution, read carefully
   #
   # -- This option configures the set of syscalls that Falco traces.
   #
@@ -1528,40 +1642,6 @@ falco:
   # If the default behavior described above does not fit the user's use case for
   # Falco, the `base_syscalls` option allows for finer end-user control of
   # syscalls traced by Falco.
-  #
-  # --- [base_syscalls.custom_set]
-  #
-  # CAUTION: Misconfiguration of this setting may result in incomplete Falco event
-  # logs or Falco being unable to trace events entirely.
-  #
-  # `base_syscalls.custom_set` allows the user to explicitly define an additional
-  # set of syscalls to be traced in addition to the syscalls from each enabled
-  # Falco rule.
-  #
-  # This is useful in lowering CPU utilization and further tailoring Falco to
-  # specific environments according to your threat model and budget constraints.
-  #
-  # --- [base_syscalls.repair]
-  #
-  # `base_syscalls.repair` is an alternative to Falco's default state engine
-  # enforcement. When enabled, this option is designed to (1) ensure that Falco's
-  # state engine is correctly and successfully built-up (2) be the most system
-  # resource-friendly by activating the least number of additional syscalls
-  # (outside of those enabled for enabled rules)
-  #
-  # Setting `base_syscalls.repair` to `true` allows Falco to automatically
-  # configure what is described in the [Suggestions] section below.
-  #
-  # `base_syscalls.repair` can be enabled with an empty custom set, meaning with
-  # the following,
-  #   ```
-  #   base_syscalls.custom_set = []
-  #   base_syscalls.repair = true
-  #   ```
-  # Falco enables tracing for a syscall set gathered: (1) from (enabled) Falco
-  #   rules (2) from minimal set of additional syscalls needed to "repair" the
-  #   state engine and properly log event conditions specified in enabled Falco
-  #   rules
   #
   # --- [Usage]
   #
@@ -1610,74 +1690,68 @@ falco:
   # setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot,
   # fchdir ...
   base_syscalls:
+    # -- Custom set of syscalls to trace in addition to the ones required by enabled rules.
+    # This is useful in lowering CPU utilization and further tailoring Falco to
+    # specific environments according to your threat model and budget constraints.
+    # In the `base_syscalls.custom_set` list, it is possible either to use syscall names
+    # (e.g. "mprotect") to be included or the negative notation ("!<syscall-name>")
+    # for those to be excluded.
+    # CAUTION: Misconfiguration of this setting may result in incomplete Falco event
+    # logs, Falco being unable to trace events entirely, or Falco being unable to properly
+    # garbage collect its internal process cache table.
     custom_set: []
+    # -- When true, Falco will automatically add the minimal set of additional
+    # syscalls needed to properly build up (e.g. "repair") its state engine and life-cycle
+    # management. The repair mode can be enabled with an empty custom set.
+    # This is an alternative to Falco's default state engine enforcement and is designed to be
+    # the most system resource-friendly by activating the least number of additional syscalls
+    # (outside of those enabled for enabled rules).
     repair: false
+    # -- Enable monitoring for all events supported by Falco and used in rules and configs.
+    # By default some events, such as `write`, are ignored (run `falco -i` to get
+    # the full list) unless this option is true.
+    # Enabling this option may negatively impact performance.
+    all: false
 
   ##############
   # Falco libs #
   ##############
 
-  # [Experimental] `falco_libs` - Potentially subject to more frequent changes
+  # [Incubating] `falco_libs`
   #
-  # `thread_table_size`
+  # -- Falco's performance and resource utilization can be fine-tuned by adjusting `falco_libs`
+  # parameters. For advanced users and specific use cases only.
   #
-  # Set the maximum number of entries (the absolute maximum value can only be MAX UINT32)
-  # for Falco's internal threadtable (process cache). Please note that Falco operates at a
-  # granular level, focusing on individual threads. Falco rules reference the thread leader
-  # as the process. The size of the threadtable should typically be much higher than the
-  # number of currently alive processes. The default value should work well on modern
-  # infrastructures and be sufficient to absorb bursts.
-  #
-  # Reducing its size can help in better memory management, but as a consequence, your
-  # process tree may be more frequently disrupted due to missing threads. You can explore
-  # `metrics.state_counters_enabled` to measure how the internal state handling is performing,
-  # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
-  # if you should increase this value for optimal performance.
   falco_libs:
+    # -- Maximum number of entries for Falco's internal threadtable (process cache).
+    # The absolute maximum value can only be MAX UINT32.
+    # Please note that Falco operates at a granular level, focusing on individual threads.
+    # Falco rules reference the thread leader (i.e. the thread which spawned the thread)
+    # as the process. The size of the threadtable should typically be much higher than the
+    # number of currently alive processes. The default value should work well on modern
+    # infrastructures and be sufficient to absorb bursts.
+    # Reducing its size can help in better memory management, but as a consequence, your
+    # process tree may be more frequently disrupted due to missing threads. You can explore
+    # `metrics.state_counters_enabled` to measure how the internal state handling is performing,
+    # and the fields called `n_drops_full_threadtable` or `n_store_evts_drops` will inform you
+    # if you should increase this value for optimal performance.
     thread_table_size: 262144
-
-  # [Incubating] `container_engines`
-  #
-  # This option allows you to explicitly enable or disable API lookups against container
-  # runtime sockets for each supported container runtime.
-  # Access to these sockets enables Falco to retrieve container and Kubernetes fields,
-  # helping identify workload owners in modern containerized environments.
-  # Refer to the fields docs:
-  #
-  # - [Kubernetes fields](https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s)
-  # - [Container fields](https://falco.org/docs/reference/rules/supported-fields/#container)
-  #
-  # Additionally, Falco can use container events as a data source for alerting (evt.type = container).
-  #
-  # For most container engines, you can solely enable or disable them, and Falco will search the
-  # default (hard-coded) container runtime socket paths, such as `/var/run/docker.sock` for Docker.
-  #
-  # However, for Kubernetes settings, you can customize the CRI socket paths:
-  #
-  # - `container_engines.cri.sockets`: Pass a list of container runtime sockets.
-  # - `container_engines.cri.disable_async`: Since API lookups may not always be quick or
-  # perfect, resulting in empty fields for container metadata, you can use this option option
-  # to disable asynchronous fetching. Note that missing fields may still occasionally occur.
-
-  # Please use the collectors section to configure the container engines.
-
-  container_engines:
-    docker:
-      enabled: false
-    cri:
-      enabled: false
-      sockets:
-        [
-          "/run/containerd/containerd.sock",
-          "/run/crio/crio.sock",
-          "/run/k3s/containerd/containerd.sock",
-        ]
-      disable_async: false
-    podman:
-      enabled: false
-    lxc:
-      enabled: false
-    libvirt_lxc:
-      enabled: false
-    bpm:
-      enabled: false
+    # -- Interval at which the automatic threads purging routine runs, in seconds.
+    # Theautomatic threads purging is essential for Falco to remove stale inactive/dead threads
+    # from its internal threadtable. The presence of this kind of threads could be the
+    # results of multiple conditions, process exit events dropping or event re-ordering being
+    # the most probable ones.
+    # Reducing the interval can help in better memory management, but as a consequence, could
+    # impact the CPU usage.
+    thread_table_auto_purging_interval_s: 300
+    # -- Amount of time after which a thread which has seen no events can be purged
+    # through the automatic threads purging routine, in seconds.
+    # As the purging happens only every `thread_table_auto_purging_interval_s`,
+    # the max time a thread may linger is actually
+    # `thread_table_auto_purging_interval_s` + `thread_table_auto_purging_thread_timeout_s`.
+    # Reducing the interval can help in better memory management, but as a consequence, could
+    # impact the CPU usage.
+    thread_table_auto_purging_thread_timeout_s: 300
+    # -- Set how many bytes are collected of each I/O buffer for 'syscall' events.
+    # Use this option with caution since it can have a strong performance impact.
+    snaplen: 80
