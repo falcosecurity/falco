@@ -16,6 +16,19 @@
 # limitations under the License.
 #
 
+#############################
+# Documentation style guide #
+#############################
+
+# This file uses a structured, helm-docs–friendly comment style:
+# - Macro sections use banner headers to group topics.
+# - Feature titles use "# [Maturity] `key`" and leaf docs use "# -- ..." lines.
+# - Subsections use "################### `subkey`" and may include "--- [Usage]/[Suggestions]".
+# - For booleans, add a "# -- Enable ..." line above "enabled:" flags.
+# - Empty string values indicate "unset"; comments may clarify semantics.
+# Note: This style is a superset of Helm-docs and is fully compatible with helm-docs,
+# because this file is also consumed by the Falco Helm chart.
+
 ################
 # Config index #
 ################
@@ -271,10 +284,10 @@ rules_files:
 # Choose the appropriate engine kind based on your system's configuration and requirements.
 #
 # Available engines:
-# - `kmod`: Kernel Module (Kernel Module)
-# - `ebpf`: eBPF (eBPF probe)
+# - `kmod`: Kernel Module
+# - `ebpf`: Legacy eBPF probe
 # - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
-# - `gvisor`: gVisor (gVisor sandbox)
+# - `gvisor`: gVisor sandbox
 # - `replay`: Replay a scap trace file
 # - `nodriver`: No driver is injected into the system.
 #   This is useful to debug and to run plugins with 'syscall' source.
@@ -344,7 +357,7 @@ rules_files:
 #
 ################### `cpus_for_each_buffer` (modern_ebpf only)
 #
-# The modern_bpf driver in Falco utilizes the new BPF ring buffer, which has a
+# The modern_ebpf driver in Falco utilizes the new BPF ring buffer, which has a
 # different memory footprint compared to the current BPF driver that uses the
 # perf buffer. The Falco core maintainers have discussed the differences and
 # their implications, particularly in Kubernetes environments where limits need
@@ -355,7 +368,7 @@ rules_files:
 # and prevent potential issues related to memory usage.
 #
 # This is an index that controls how many CPUs you want to assign to a single
-# syscall buffer (ring buffer). By default, for modern_bpf every syscall buffer
+# syscall buffer (ring buffer). By default, for modern_ebpf every syscall buffer
 # is associated to 2 CPUs, so the mapping is 1:2. The modern BPF probe allows
 # you to choose different mappings, for example, changing the value to `1`
 # results in a 1:1 mapping and would mean one syscall buffer for each CPU (this
@@ -440,7 +453,7 @@ engine:
   replay:
     # -- Path to the capture file to replay (eg: /path/to/file.scap)
     capture_file: ""
-  ## -- Engine-specific configuration for gVisor (gvisor) engine.
+  # -- Engine-specific configuration for gVisor (gvisor) engine.
   gvisor:
     # -- A Falco-compatible configuration file can be generated with
     # '--gvisor-generate-config' and utilized for both runsc and Falco.
@@ -492,7 +505,7 @@ engine:
 # Set `capture.default_duration` to define the default capture duration
 # in milliseconds.
 #
-# --- [Suggestion]
+# --- [Suggestions]
 #
 # When using `mode: rules`, configure individual rules to enable capture by
 # adding `capture: true` and optionally `capture_duration` to specific rules.
@@ -527,7 +540,7 @@ capture:
 # Plugins allow Falco to extend its functionality and leverage data sources such as
 # Kubernetes audit logs or enable integration with other services in your ecosystem.
 # This enables Falco to perform fast on-host detections beyond syscalls.
-# Furthermore, plugins allows to enrich existing data sources with additional metadata,
+# Furthermore, plugins allow enriching existing data sources with additional metadata,
 # and add other advanced capabilities to Falco.
 #
 # The plugin system will continue to evolve with more specialized functionality in future
@@ -558,7 +571,7 @@ capture:
 # -- List of plugins to load.
 load_plugins: []
 
-# # [Stable] `plugins`
+# [Stable] `plugins`
 #
 # -- Customize subsettings for each enabled plugin. These settings will only be
 # applied when the corresponding plugin is enabled using the `load_plugins`
@@ -666,7 +679,7 @@ json_include_tags_property: true
 # -- Global buffering option for output channels. When disabled, the output channel
 # that supports buffering flushes the output buffer on every alert. This can lead to
 # increased CPU usage but is useful when piping outputs to another process or script.
-# Buffering is currently supported by `file_output`, `program_output`, and `std_output`.
+# Buffering is currently supported by `file_output`, `program_output`, and `stdout_output`.
 # Some output channels may implement buffering strategies you cannot control.
 # Additionally, this setting is separate from the `output_queue` option. The output queue
 # sits between the rule engine and the output channels, while output buffering occurs
@@ -793,14 +806,16 @@ append_output:
 
 # [Stable] `stdout_output`
 #
-# -- Send alters to standard output.
+# -- Send alerts to standard output.
 stdout_output:
+  # -- Enable sending alerts to standard output.
   enabled: true
 
 # [Stable] `syslog_output`
 #
 # -- Send alerts to syslog.
 syslog_output:
+  # -- Enable sending alerts to syslog.
   enabled: true
 
 # [Stable] `file_output`
@@ -811,6 +826,7 @@ syslog_output:
 # file. Furthermore, the file will be closed and reopened if Falco receives
 # the SIGUSR1 signal.
 file_output:
+  # -- Enable sending alerts to a file.
   enabled: false
   # -- If true, the file will be opened once and continuously written to.
   # If false, the file will be reopened for each output message.
@@ -825,6 +841,7 @@ file_output:
 # When using falcosidekick, it is necessary to set `json_output` to true, which is
 # conveniently done automatically for you when using `falcosidekick.enabled=true`.
 http_output:
+  # -- Enable sending alerts to an HTTP endpoint or webhook.
   enabled: false
   # -- URL of the remote server to send the alerts to.
   url: ""
@@ -837,7 +854,7 @@ http_output:
   # -- Path to a specific file that will be used as the CA certificate store.
   ca_bundle: ""
   # -- Path to a folder that will be used as the CA certificate store. CA certificate need to be
-  # stored as indivitual PEM files in this directory.
+  # stored as individual PEM files in this directory.
   ca_path: "/etc/ssl/certs"
   # -- Tell Falco to use mTLS.
   mtls: false
@@ -868,6 +885,7 @@ http_output:
 #
 # The program will be re-spawned if Falco receives the SIGUSR1 signal.
 program_output:
+  # -- Enable sending alerts to another program or command.
   enabled: false
   # -- If true, the program will be started once and continuously written to,
   # with each output message on its own line.
@@ -887,6 +905,7 @@ program_output:
 # output events in memory until they are consumed by a gRPC client. Ensure that
 # you have a consumer for the output events or leave it disabled.
 grpc_output:
+  # -- Enable gRPC as an output service.
   enabled: false
 
 ##########################
@@ -899,8 +918,8 @@ grpc_output:
 # 1. Over the network with mandatory mutual TLS authentication (mTLS), which
 #    ensures secure communication
 # 2. Local Unix socket binding with no authentication. By default, the
-#    gRPCserver in Falco is turned off with no enabled services (see
-#    `grpc_output`setting).
+#    gRPC server in Falco is turned off with no enabled services (see
+#    `grpc_output` setting).
 #
 # To configure the gRPC server in Falco, you can make the following changes to
 # the options:
@@ -928,6 +947,7 @@ grpc_output:
 #
 # gRPC server using a local unix socket (see default below)
 grpc:
+  # -- Enable the gRPC server.
   enabled: false
   # -- Address to bind and expose the gRPC server. Use either a local unix socket with
   # no authentication, or a network address with mTLS.
@@ -954,6 +974,7 @@ grpc:
 # the Falco webserver is enabled.
 #
 webserver:
+  # -- Enable the embedded webserver.
   enabled: true
   # -- When the `threadiness` value is set to 0, Falco will automatically determine
   # the appropriate number of threads based on the number of online cores in the system.
@@ -965,9 +986,9 @@ webserver:
   listen_address: 0.0.0.0
   # -- Endpoint to use for the health check.
   k8s_healthz_endpoint: /healthz
-  # -- [Incubating] `prometheus_metrics_enabled`
-  # Enable the metrics endpoint providing Prometheus values
-  # It will only have an effect if metrics.enabled is set to true as well.
+  # [Incubating] `webserver.prometheus_metrics_enabled`
+  # -- Enable the metrics endpoint providing Prometheus values.
+  # It is effective only if metrics.enabled is set to true.
   prometheus_metrics_enabled: false
   # -- Enable SSL.
   ssl_enabled: false
@@ -1185,6 +1206,7 @@ syscall_event_drops:
 # like `falco.host_num_cpus` or `falco.start_ts` will not be available when you use
 # source plugins (like k8saudit).
 metrics:
+  # -- Enable metrics collection and export.
   enabled: false
   # -- Interval at which stats are collected and emitted. This follows the time duration definitions
   # used by Prometheus (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations).
@@ -1199,18 +1221,18 @@ metrics:
   # A minimum interval of 100ms is enforced for metric collection. However, for
   # production environments, we recommend selecting one of the following intervals
   # for optimal monitoring: 15m, 30m, 1h, 4h, 6h.
-
+  interval: 1h
   # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
   # -- Emit stats as an output alert "Falco internal: metrics snapshot".
   # This option is particularly useful when Falco logs are preserved in a data
   # lake. Please note that to use this option, the Falco rules config `priority`
   # must be set to `info` at a minimum.
   output_rule: true
-  # Append stats to a `jsonl` file. Use with caution in production as Falco
-  # does not automatically rotate the file.
+  # -- Append stats to a `jsonl` file. If empty, no file is written.
+  # Use with caution in production as Falco does not automatically rotate the file.
   # It can be used in combination with `output_rule`, however enabling both is not typical.
-  # output_file: /tmp/falco_stats.jsonl
-
+  # e.g. output_file: /tmp/falco_stats.jsonl
+  output_file: ""
   # -- Add counts for each rule to metrics output.
   rules_counters_enabled: true
   # -- Add CPU and memory usage metrics to metrics output.
