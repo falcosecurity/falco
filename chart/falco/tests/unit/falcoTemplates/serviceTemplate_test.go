@@ -17,9 +17,10 @@ package falcoTemplates
 
 import (
 	"fmt"
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 	"path/filepath"
 	"testing"
+
+	"github.com/falcosecurity/charts/charts/falco/tests/unit"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
@@ -58,7 +59,7 @@ func (s *serviceTemplateTest) TestCreationDefaultValues() {
 }
 
 func (s *serviceTemplateTest) TestDefaultLabelsValues() {
-	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true"}}
+	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true", "falco.metrics.enabled": "false"}}
 	output, err := helm.RenderTemplateE(s.T(), options, s.chartPath, s.releaseName, s.templates)
 	s.NoError(err, "should render template")
 
@@ -99,6 +100,7 @@ func (s *serviceTemplateTest) TestDefaultLabelsValues() {
 
 func (s *serviceTemplateTest) TestCustomLabelsValues() {
 	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true",
+		"falco.metrics.enabled":              "false",
 		"metrics.service.labels.customLabel": "customLabelValues"}}
 	output, err := helm.RenderTemplateE(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
@@ -142,7 +144,7 @@ func (s *serviceTemplateTest) TestCustomLabelsValues() {
 }
 
 func (s *serviceTemplateTest) TestDefaultAnnotationsValues() {
-	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true"}}
+	options := &helm.Options{SetValues: map[string]string{"metrics.enabled": "true", "falco.metrics.enabled": "false"}}
 	output, err := helm.RenderTemplateE(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
 	s.NoError(err)
@@ -155,6 +157,7 @@ func (s *serviceTemplateTest) TestDefaultAnnotationsValues() {
 func (s *serviceTemplateTest) TestCustomAnnotationsValues() {
 	values := map[string]string{
 		"metrics.enabled":                         "true",
+		"falco.metrics.enabled":                   "false",
 		"metrics.service.annotations.annotation1": "customAnnotation1",
 		"metrics.service.annotations.annotation2": "customAnnotation2",
 	}

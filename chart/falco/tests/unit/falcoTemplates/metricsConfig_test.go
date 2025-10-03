@@ -68,24 +68,8 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 			"defaultValues",
 			nil,
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 12, "should have twelve items")
-
-				metrics, err := getMetricsConfig(metricsConfig)
-				require.NoError(t, err)
-				require.NotNil(t, metrics)
-				require.True(t, metrics.ConvertMemoryToMB)
-				require.False(t, metrics.Enabled)
-				require.False(t, metrics.IncludeEmptyValues)
-				require.True(t, metrics.KernelEventCountersEnabled)
-				require.True(t, metrics.ResourceUtilizationEnabled)
-				require.True(t, metrics.RulesCountersEnabled)
-				require.Empty(t, metrics.Interval)
-				require.True(t, metrics.LibbpfStatsEnabled)
-				require.True(t, metrics.OutputRule)
-				require.True(t, metrics.StateCountersEnabled)
-				require.False(t, metrics.KernelEventCountersPerCPUEnabled)
-				require.True(t, metrics.PluginsMetricsEnabled)
-				require.False(t, metrics.JemallocStatsEnabled)
+				// When metrics are disabled by default, the 'metrics' section is omitted from falco.yaml.
+				require.Nil(t, metricsConfig, "metrics section should be absent by default")
 
 				webServer, err := getWebServerConfig(webServerConfig)
 				require.NoError(t, err)
@@ -97,7 +81,8 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 		{
 			"metricsEnabled",
 			map[string]string{
-				"metrics.enabled": "true",
+				"metrics.enabled":       "true",
+				"falco.metrics.enabled": "false",
 			},
 			func(t *testing.T, metricsConfig, webServerConfig any) {
 				require.Len(t, metricsConfig, 13, "should have thirteen items")
@@ -131,6 +116,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 			"Flip/Change Values",
 			map[string]string{
 				"metrics.enabled":                          "true",
+				"falco.metrics.enabled":                    "false",
 				"metrics.convertMemoryToMB":                "false",
 				"metrics.includeEmptyValues":               "true",
 				"metrics.kernelEventCountersEnabled":       "false",

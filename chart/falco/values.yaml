@@ -246,7 +246,6 @@ metrics:
   # This option requires that Falco is built with jemalloc support; otherwise
   # it will have no effect.
   jemallocStatsEnabled: false
-
   # -- convertMemoryToMB specifies whether the memory should be converted to mb.
   convertMemoryToMB: true
   # -- includeEmptyValues specifies whether the empty values should be included in the metrics.
@@ -812,7 +811,7 @@ falco:
   # Falco engine #
   ################
 
-  # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by the this Helm chart.
+  # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by this Helm chart.
   # To customize the Falco engine settings within the chart, please refer to `driver` settings section above.
 
   ##################
@@ -921,6 +920,9 @@ falco:
   # [Stable] `load_plugins`
   #
   # -- List of plugins to load.
+  # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
+  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
+  # To use these plugins with this chart, please refer to `collectors` settings.
   load_plugins: []
 
   # # [Stable] `plugins`
@@ -928,9 +930,10 @@ falco:
   # -- Customize subsettings for each enabled plugin. These settings will only be
   # applied when the corresponding plugin is enabled using the `load_plugins`
   # option.
+  # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
+  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
+  # To use these plugins with this chart, please refer to `collectors` settings.
   plugins: []
-  # NOTICE: For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
-  # To use these plugins with this chart, please refer to `collectors` settings section above.
 
   # [Sandbox] `plugins_hostinfo`
   #
@@ -1491,133 +1494,8 @@ falco:
 
   # [Stable] `metrics`
   #
-  # Falco's `metrics` feature provides a comprehensive and flexible framework for
-  # capturing and exporting metrics.
-  #
-  # Consider these key points about the `metrics` feature in Falco:
-  #
-  # - It introduces a redesigned stats/metrics system.
-  # - Native support for resource utilization metrics and specialized performance
-  #   metrics.
-  # - Metrics are emitted as monotonic counters at predefined intervals
-  #   (snapshots).
-  # - All metrics are consolidated into a single log message, adhering to the
-  #   established rules schema and naming conventions.
-  # - Additional info fields complement the metrics and facilitate customized
-  #   statistical analyses and correlations.
-  # - The metrics framework is designed for easy future extension.
-  #
-  # The `metrics` feature follows a specific schema and field naming convention.
-  # All metrics are collected as subfields under the `output_fields` key, similar
-  # to regular Falco rules. Each metric field name adheres to the grammar used in
-  # Falco rules. There are two new field classes introduced: `falco.` and `scap.`.
-  # The `falco.` class represents userspace counters, statistics, resource
-  # utilization, or useful information fields. The `scap.` class represents
-  # counters and statistics mostly obtained from Falco's kernel instrumentation
-  # before events are sent to userspace, but can include scap userspace stats as
-  # well.
-  #
-  # It's important to note that the output fields and their names can be subject
-  # to change until the metrics feature reaches a stable release.
-  # In addition, the majority of fields represent an instant snapshot, with the
-  # exception of event rates per second and drop percentage stats. These values
-  # are computed based on the delta between two snapshots.
-  #
-  # To customize the hostname in Falco, you can set the environment variable
-  # `FALCO_HOSTNAME` to your desired hostname. This is particularly useful in
-  # Kubernetes deployments where the hostname can be set to the pod name.
-  #
-  # If metrics are enabled, the web server can be configured to activate the
-  # corresponding Prometheus endpoint using `webserver.prometheus_metrics_enabled`.
-  # Prometheus output can be used in combination with the other output options.
-  #
-  # --- [Warning]
-  #
-  # Due to a regression (https://github.com/falcosecurity/falco/issues/2821) some metrics
-  # like `falco.host_num_cpus` or `falco.start_ts` will not be available when you use
-  # source plugins (like k8saudit).
-  metrics:
-    enabled: false
-    # -- Interval at which stats are collected and emitted. This follows the time duration definitions
-    # used by Prometheus (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations).
-    # Time durations are specified as a number, followed immediately by one of the following units:
-    # ms - millisecond
-    # s - second
-    # m - minute
-    # h - hour
-    # d - day - assuming a day has always 24h
-    # w - week - assuming a week has always 7d
-    # y - year - assuming a year has always 365d
-    # A minimum interval of 100ms is enforced for metric collection. However, for
-    # production environments, we recommend selecting one of the following intervals
-    # for optimal monitoring: 15m, 30m, 1h, 4h, 6h.
-
-    # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
-    # -- Emit stats as an output alert "Falco internal: metrics snapshot".
-    # This option is particularly useful when Falco logs are preserved in a data
-    # lake. Please note that to use this option, the Falco rules config `priority`
-    # must be set to `info` at a minimum.
-    output_rule: true
-    # Append stats to a `jsonl` file. Use with caution in production as Falco
-    # does not automatically rotate the file.
-    # It can be used in combination with `output_rule`, however enabling both is not typical.
-    # output_file: /tmp/falco_stats.jsonl
-
-    # -- Add counts for each rule to metrics output.
-    rules_counters_enabled: true
-    # -- Add CPU and memory usage metrics to metrics output.
-    # Usage is reported as a percentage of one CPU and can be normalized to the total
-    # number of CPUs to determine overall usage. Memory metrics are provided in raw
-    # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
-    # and can be uniformly converted to megabytes (MB) using the
-    # `convert_memory_to_mb` functionality. In environments such as Kubernetes when
-    # deployed as daemonset, it is crucial to track Falco's container memory usage.
-    # To customize the path of the memory metric file, you can create an environment
-    # variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By
-    # default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to
-    # monitor container memory usage, which aligns with Kubernetes'
-    # `container_memory_working_set_bytes` metric. Finally, we emit the overall host
-    # CPU and memory usages, along with the total number of processes and open file
-    # descriptors (fds) on the host, obtained from the proc file system unrelated to
-    # Falco's monitoring. These metrics help assess Falco's usage in relation to the
-    # server's workload intensity.
-    resource_utilization_enabled: true
-    # -- Add Falco's internal state counters to metrics output.
-    # Including added, removed threads or file descriptors (fds), and failed lookup,
-    # store, or retrieve actions in relation to Falco's underlying process cache table
-    # (a.k.a. the threadtable).
-    state_counters_enabled: true
-    # -- Add kernel side event and drop counters to metrics output.
-    # This isan alternative to `syscall_event_drops`, but with some differences.
-    # These counters reflect monotonic values since Falco's start and are exported at a
-    # constant stats interval.
-    kernel_event_counters_enabled: true
-    # -- Add kernel side event and drop counters per CPU to metrics output.
-    # Enabling this option automatically enables `kernel_event_counters_enabled`.
-    kernel_event_counters_per_cpu_enabled: false
-    # -- Add statistics similar to `bpftool prog show` to metrics output.
-    # This provides information such as the number of invocations of each BPF program
-    # attached by Falco and the time spent in each program measured in nanoseconds.
-    # To enable this feature, the kernel must be >= 5.1, and the kernel
-    # configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
-    # or an equivalent statistics feature, is not available for non `*bpf*` drivers.
-    # Additionally, please be aware that the current implementation of `libbpf` does
-    # not support granularity of statistics at the bpf tail call level.
-    libbpf_stats_enabled: true
-    # -- Add custom plugins metrics to metrics output.
-    # Please note that if the respective plugin has no metrics implemented,
-    # there will be no metrics available.
-    plugins_metrics_enabled: true
-    # -- Add jemalloc stats to metrics output.
-    # This option requires that Falco is built with jemalloc support, otherwise
-    # it will have no effect.
-    jemalloc_stats_enabled: false
-    # -- Convert memory metrics to megabytes.
-    convert_memory_to_mb: true
-    # -- Include fields with empty values in the metrics output.
-    # Still, this option does not apply to high-level fields such as `n_evts` or `n_drops`;
-    # they will always be included in the metrics output even if their value is empty.
-    include_empty_values: false
+  # NOTICE: The `falco.metrics` configuration is omitted here since it is fully managed by this Helm chart.
+  # To customize the Falco engine settings within the chart, please refer to `metrics` settings section above.
 
   #######################################
   # Falco performance tuning (advanced) #
