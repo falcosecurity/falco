@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <string>
 #include <libsinsp/sinsp.h>
 #include "filter_warning_resolver.h"
 
@@ -25,6 +26,10 @@ static const char* no_value = "<NA>";
 static inline bool is_unsafe_field(const std::string& f) {
 	return !strncmp(f.c_str(), "ka.", strlen("ka.")) ||
 	       !strncmp(f.c_str(), "jevt.", strlen("jevt."));
+}
+
+static inline bool is_deprecated_dir_field(const std::string& f) {
+	return f == "evt.dir";
 }
 
 static inline bool is_equality_operator(const std::string& op) {
@@ -54,6 +59,11 @@ void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::binary_check
 
 void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::field_expr* e) {
 	m_last_node_is_unsafe_field = is_unsafe_field(e->field);
+
+	// Check for deprecated dir field usage
+	if(is_deprecated_dir_field(e->field)) {
+		m_warnings->insert(load_result::LOAD_DEPRECATED_DIR_FIELD);
+	}
 }
 
 void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::value_expr* e) {

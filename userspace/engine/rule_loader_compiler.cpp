@@ -19,7 +19,6 @@ limitations under the License.
 #include <memory>
 #include <set>
 #include <vector>
-#include <functional>
 
 #include "rule_loader_compiler.h"
 #include "filter_warning_resolver.h"

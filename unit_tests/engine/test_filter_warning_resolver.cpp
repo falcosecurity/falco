@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <string>
 #include <gtest/gtest.h>
 #include <engine/filter_warning_resolver.h>
 
@@ -38,4 +39,8 @@ TEST(WarningResolver, warnings_in_filtering_conditions) {
 	ASSERT_TRUE(warns("ka.field intersects (otherval, <NA>)"));
 	ASSERT_TRUE(warns("ka.field pmatch (<NA>)"));
 	ASSERT_TRUE(warns("ka.field pmatch (otherval, <NA>)"));
+	ASSERT_TRUE(warns("evt.dir = <"));
+	ASSERT_TRUE(warns("evt.dir = >"));
+	ASSERT_TRUE(warns("proc.name=test and evt.dir = <"));
+	ASSERT_TRUE(warns("evt.dir = < and proc.name=test"));
 }
