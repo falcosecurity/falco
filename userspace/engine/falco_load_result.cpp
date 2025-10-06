@@ -73,7 +73,8 @@ static const std::string warning_codes[] = {"LOAD_UNKNOWN_SOURCE",
                                             "LOAD_EXCEPTION_NAME_NOT_UNIQUE",
                                             "LOAD_INVALID_MACRO_NAME",
                                             "LOAD_INVALID_LIST_NAME",
-                                            "LOAD_COMPILE_CONDITION"};
+                                            "LOAD_COMPILE_CONDITION",
+                                            "LOAD_DEPRECATED_DIR_FIELD"};
 
 const std::string& falco::load_result::warning_code_str(warning_code wc) {
 	return warning_codes[wc];
@@ -92,7 +93,8 @@ static const std::string warning_strings[] = {"Unknown event source",
                                               "Multiple exceptions defined with the same name",
                                               "Invalid macro name",
                                               "Invalid list name",
-                                              "Warning in rule condition"};
+                                              "Warning in rule condition",
+                                              "Deprecated evt.dir field usage"};
 
 const std::string& falco::load_result::warning_str(warning_code wc) {
 	return warning_strings[wc];
@@ -119,7 +121,10 @@ static const std::string warning_descs[] = {
         "A rule is defining multiple exceptions with the same name",
         "A macro is defined with an invalid name",
         "A list is defined with an invalid name",
-        "A rule condition or output have been parsed with a warning"};
+        "A rule condition or output have been parsed with a warning",
+        "A rule condition uses the deprecated 'evt.dir' field. Due to the drop of enter events, "
+        "'evt.dir = <' always evaluates to true, and 'evt.dir = >' always evaluates to false. The "
+        "rule expression can be simplified by removing the condition on 'evt.dir'."};
 
 const std::string& falco::load_result::warning_desc(warning_code wc) {
 	return warning_descs[wc];
