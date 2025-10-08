@@ -188,7 +188,7 @@ void rule_loader::collector::define(configuration& cfg, rule_info& info) {
 	const auto* source = cfg.sources.at(info.source);
 	if(!source) {
 		info.unknown_source = true;
-		cfg.res->add_warning(falco::load_result::LOAD_UNKNOWN_SOURCE,
+		cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_SOURCE,
 		                     "Unknown source " + info.source + ", skipping",
 		                     info.ctx);
 	}

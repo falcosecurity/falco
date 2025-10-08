@@ -359,7 +359,7 @@ static void read_rule_exceptions(rule_loader::configuration& cfg,
 		for(const auto& exception : exceptions) {
 			if(v_ex.name == exception.name) {
 				cfg.res->add_warning(
-				        falco::load_result::LOAD_EXCEPTION_NAME_NOT_UNIQUE,
+				        falco::load_result::warning_code::LOAD_EXCEPTION_NAME_NOT_UNIQUE,
 				        "Multiple definitions of exception '" + v_ex.name + "' in the same rule",
 				        ex_ctx);
 			}
@@ -385,7 +385,7 @@ static void read_rule_exceptions(rule_loader::configuration& cfg,
 				v_ex.values.push_back(v_ex_val);
 			}
 		} else if(append) {
-			cfg.res->add_warning(falco::load_result::LOAD_APPEND_NO_VALUES,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_APPEND_NO_VALUES,
 			                     "Overriding/appending exception with no values",
 			                     ex_ctx);
 		}
@@ -524,7 +524,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_barestr);
 		if(invalid_name) {
-			cfg.res->add_warning(falco::load_result::LOAD_INVALID_LIST_NAME,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_INVALID_LIST_NAME,
 			                     "List has an invalid name. List names should match a regular "
 			                     "expression: " RGX_BARESTR,
 			                     ctx);
@@ -538,7 +538,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		decode_optional_val(item, "append", append, ctx);
 		if(append) {
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM,
+			                     WARNING_APPEND,
+			                     ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -567,7 +569,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		bool invalid_name = !re2::RE2::FullMatch(name, s_rgx_identifier);
 		if(invalid_name) {
-			cfg.res->add_warning(falco::load_result::LOAD_INVALID_MACRO_NAME,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_INVALID_MACRO_NAME,
 			                     "Macro has an invalid name. Macro names should match a regular "
 			                     "expression: " RGX_IDENTIFIER,
 			                     ctx);
@@ -587,7 +589,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 		decode_optional_val(item, "append", append, ctx);
 		if(append) {
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM,
+			                     WARNING_APPEND,
+			                     ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -621,7 +625,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		bool has_append_flag = false;
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag) {
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM,
+			                     WARNING_APPEND,
+			                     ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -849,7 +855,7 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 			if(!item["condition"].IsDefined() && !item["output"].IsDefined() &&
 			   !item["desc"].IsDefined() && !item["priority"].IsDefined()) {
 				decode_val(item, "enabled", v.enabled, ctx);
-				cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM,
+				cfg.res->add_warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM,
 				                     WARNING_ENABLED,
 				                     ctx);
 				collector.enable(cfg, v);
@@ -894,7 +900,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		}
 	} else {
 		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
-		cfg.res->add_warning(falco::load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
+		cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_ITEM,
+		                     "Unknown top level item",
+		                     ctx);
 	}
 }
 

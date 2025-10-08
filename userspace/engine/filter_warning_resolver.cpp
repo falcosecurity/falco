@@ -28,23 +28,35 @@ static inline bool is_unsafe_field(const std::string& f) {
 	       !strncmp(f.c_str(), "jevt.", strlen("jevt."));
 }
 
-static inline bool is_deprecated_dir_field(const std::string& f) {
-	return f == "evt.dir";
-}
-
 static inline bool is_equality_operator(const std::string& op) {
 	return op == "==" || op == "=" || op == "!=" || op == "in" || op == "intersects" ||
 	       op == "pmatch";
 }
 
-bool filter_warning_resolver::run(libsinsp::filter::ast::expr* filter,
-                                  std::set<load_result::warning_code>& warnings) const {
-	visitor v;
-	auto size = warnings.size();
+bool filter_warning_resolver::run(const rule_loader::context& ctx,
+                                  rule_loader::result& res,
+                                  libsinsp::filter::ast::expr& filter) const {
+	std::set<falco::load_result::warning_code> warnings;
+	std::set<falco::load_result::deprecated_field> deprecated_fields;
+	visitor v(warnings, deprecated_fields);
 	v.m_is_equality_check = false;
-	v.m_warnings = &warnings;
-	filter->accept(&v);
-	return warnings.size() > size;
+	filter.accept(&v);
+	for(auto& w : warnings) {
+		switch(w) {
+		case falco::load_result::warning_code::LOAD_DEPRECATED_ITEM:
+			// add a warning for each deprecated field
+			for(auto& deprecated_field : deprecated_fields) {
+				res.add_deprecated_field_warning(
+				        deprecated_field,
+				        falco::load_result::deprecated_field_desc(deprecated_field),
+				        ctx);
+			}
+			break;
+		default:
+			res.add_warning(w, "", ctx);
+		}
+	}
+	return !warnings.empty();
 }
 
 void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::binary_check_expr* e) {
@@ -61,20 +73,22 @@ void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::field_expr* 
 	m_last_node_is_unsafe_field = is_unsafe_field(e->field);
 
 	// Check for deprecated dir field usage
-	if(is_deprecated_dir_field(e->field)) {
-		m_warnings->insert(load_result::LOAD_DEPRECATED_DIR_FIELD);
+	if(auto df = falco::load_result::deprecated_field_from_str(e->field);
+	   df != falco::load_result::deprecated_field::DEPRECATED_FIELD_NOT_FOUND) {
+		m_deprecated_fields->insert(df);
+		m_warnings->insert(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM);
 	}
 }
 
 void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::value_expr* e) {
 	if(m_is_equality_check && e->value == no_value) {
-		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
+		m_warnings->insert(falco::load_result::warning_code::LOAD_UNSAFE_NA_CHECK);
 	}
 }
 
 void filter_warning_resolver::visitor::visit(libsinsp::filter::ast::list_expr* e) {
 	if(m_is_equality_check &&
 	   std::find(e->values.begin(), e->values.end(), no_value) != e->values.end()) {
-		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
+		m_warnings->insert(falco::load_result::warning_code::LOAD_UNSAFE_NA_CHECK);
 	}
 }

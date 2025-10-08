@@ -116,7 +116,7 @@ void rule_loader::context::init(const std::string& name,
 	m_locs.push_back(loc);
 }
 
-std::string rule_loader::context::as_string() {
+std::string rule_loader::context::as_string() const {
 	std::ostringstream os;
 
 	// All valid contexts should have at least one location.
@@ -142,7 +142,7 @@ std::string rule_loader::context::as_string() {
 	return os.str();
 }
 
-nlohmann::json rule_loader::context::as_json() {
+nlohmann::json rule_loader::context::as_json() const {
 	nlohmann::json ret;
 
 	ret["locations"] = nlohmann::json::array();
@@ -282,9 +282,13 @@ void rule_loader::result::add_error(load_result::error_code ec,
 void rule_loader::result::add_warning(load_result::warning_code wc,
                                       const std::string& msg,
                                       const context& ctx) {
-	warning warn = {wc, msg, ctx};
+	warnings.emplace_back(std::make_unique<warning>(wc, msg, ctx));
+}
 
-	warnings.push_back(warn);
+void rule_loader::result::add_deprecated_field_warning(load_result::deprecated_field df,
+                                                       const std::string& msg,
+                                                       const context& ctx) {
+	warnings.emplace_back(std::make_unique<deprecated_field_warning>(df, msg, ctx));
 }
 
 void rule_loader::result::set_schema_validation_status(const std::vector<std::string>& status) {
@@ -369,8 +373,7 @@ const std::string& rule_loader::result::as_summary_string() {
 			}
 			first = false;
 
-			os << load_result::warning_code_str(warn.wc) << " ("
-			   << load_result::warning_str(warn.wc) << ")";
+			os << warn->code_string() << " (" << warn->as_string() << ")";
 		}
 		os << "]";
 	}
@@ -438,14 +441,13 @@ const std::string& rule_loader::result::as_verbose_string(const rules_contents_t
 		os << warnings.size() << " Warnings:" << std::endl;
 
 		for(auto& warn : warnings) {
-			os << warn.ctx.as_string();
+			os << warn->ctx.as_string();
 
 			os << "------" << std::endl;
-			os << warn.ctx.snippet(contents);
+			os << warn->ctx.snippet(contents);
 			os << "------" << std::endl;
 
-			os << load_result::warning_code_str(warn.wc) << " ("
-			   << load_result::warning_str(warn.wc) << "): " << warn.msg;
+			os << warn->code_string() << " (" << warn->as_string() << "): " << warn->msg;
 			os << std::endl;
 		}
 	}
@@ -492,16 +494,7 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 
 	j["warnings"] = nlohmann::json::array();
 	for(auto& warn : warnings) {
-		nlohmann::json jwarn;
-
-		jwarn["context"] = warn.ctx.as_json();
-		jwarn["context"]["snippet"] = warn.ctx.snippet(contents);
-
-		jwarn["code"] = load_result::warning_code_str(warn.wc);
-		jwarn["codedesc"] = load_result::warning_desc(warn.wc);
-		jwarn["message"] = warn.msg;
-
-		j["warnings"].push_back(jwarn);
+		j["warnings"].push_back(warn->as_json(contents));
 	}
 
 	res_json = j;

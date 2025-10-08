@@ -355,11 +355,7 @@ bool rule_loader::compiler::compile_condition(const configuration& cfg,
 	               parent_ctx);
 
 	// check for warnings in the filtering condition
-	if(warn_resolver.run(ast_out.get(), warn_codes)) {
-		for(const auto& w : warn_codes) {
-			cfg.res->add_warning(w, "", parent_ctx);
-		}
-	}
+	warn_resolver.run(cond_ctx, *cfg.res, *ast_out.get());
 
 	// validate the rule's condition: we compile it into a sinsp filter
 	// on-the-fly and we throw an exception with details on failure
@@ -372,17 +368,17 @@ bool rule_loader::compiler::compile_condition(const configuration& cfg,
 		std::string err = e.what();
 		rule_loader::context ctx(compiler.get_pos(), condition, cond_ctx);
 		if(err_is_unknown_type_or_field(err) && allow_unknown_fields) {
-			cfg.res->add_warning(falco::load_result::load_result::LOAD_UNKNOWN_FILTER, err, ctx);
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_FILTER, err, ctx);
 			return false;
 		}
 		throw rule_loader::rule_load_exception(
-		        falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
+		        falco::load_result::error_code::LOAD_ERR_COMPILE_CONDITION,
 		        err,
 		        ctx);
 	}
 	for(const auto& w : compiler.get_warnings()) {
 		rule_loader::context ctx(w.pos, condition, cond_ctx);
-		cfg.res->add_warning(falco::load_result::load_result::LOAD_COMPILE_CONDITION, w.msg, ctx);
+		cfg.res->add_warning(falco::load_result::warning_code::LOAD_COMPILE_CONDITION, w.msg, ctx);
 	}
 
 	return true;
@@ -437,7 +433,7 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 		}
 
 		if(rule.output.find(s_container_info_fmt) != std::string::npos) {
-			cfg.res->add_warning(falco::load_result::load_result::LOAD_DEPRECATED_ITEM,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM,
 			                     "%container.info is deprecated and no more useful, and will be "
 			                     "dropped by Falco 1.0.0. "
 			                     "The container plugin will automatically add required fields to "
@@ -472,12 +468,12 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 			// skip the rule silently if skip_if_unknown_filter is true and
 			// we encountered some specific kind of errors
 			if(err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter) {
-				cfg.res->add_warning(falco::load_result::load_result::LOAD_UNKNOWN_FILTER,
+				cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_FILTER,
 				                     err,
 				                     r.output_ctx);
 				continue;
 			}
-			throw rule_load_exception(falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
+			throw rule_load_exception(falco::load_result::error_code::LOAD_ERR_COMPILE_OUTPUT,
 			                          err,
 			                          r.output_ctx);
 		}
@@ -485,7 +481,7 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 		// validate the rule's extra fields if any
 		for(auto const& ef : rule.extra_output_fields) {
 			if(!is_format_valid(*cfg.sources.at(r.source), ef.second.first, err)) {
-				throw rule_load_exception(falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
+				throw rule_load_exception(falco::load_result::error_code::LOAD_ERR_COMPILE_OUTPUT,
 				                          err,
 				                          r.output_ctx);
 			}
@@ -510,7 +506,7 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 		if(r.source == falco_common::syscall_source) {
 			auto evttypes = libsinsp::filter::ast::ppm_event_codes(rule.condition.get());
 			if((evttypes.empty() || evttypes.size() > 100) && r.warn_evttypes) {
-				cfg.res->add_warning(falco::load_result::load_result::LOAD_NO_EVTTYPE,
+				cfg.res->add_warning(falco::load_result::warning_code::LOAD_NO_EVTTYPE,
 				                     "Rule matches too many evt.type values. This has a "
 				                     "significant performance penalty.",
 				                     r.ctx);
@@ -550,14 +546,14 @@ void rule_loader::compiler::compile(configuration& cfg,
 	// print info on any dangling lists or macros that were not used anywhere
 	for(const auto& m : out.macros) {
 		if(!m.used) {
-			cfg.res->add_warning(falco::load_result::load_result::LOAD_UNUSED_MACRO,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNUSED_MACRO,
 			                     "Macro not referred to by any other rule/macro",
 			                     macro_info_from_name(col, m.name)->ctx);
 		}
 	}
 	for(const auto& l : out.lists) {
 		if(!l.used) {
-			cfg.res->add_warning(falco::load_result::LOAD_UNUSED_LIST,
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNUSED_LIST,
 			                     "List not referred to by any other rule/macro",
 			                     list_info_from_name(col, l.name)->ctx);
 		}
