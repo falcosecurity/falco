@@ -73,11 +73,16 @@ static const std::string warning_codes[] = {"LOAD_UNKNOWN_SOURCE",
                                             "LOAD_EXCEPTION_NAME_NOT_UNIQUE",
                                             "LOAD_INVALID_MACRO_NAME",
                                             "LOAD_INVALID_LIST_NAME",
-                                            "LOAD_COMPILE_CONDITION",
-                                            "LOAD_DEPRECATED_DIR_FIELD"};
+                                            "LOAD_COMPILE_CONDITION"};
+
+// Compile-time check to ensure warning_codes array has the correct size
+static_assert(std::size(warning_codes) ==
+                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
+                              1,
+              "warning_codes array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_code_str(warning_code wc) {
-	return warning_codes[wc];
+	return warning_codes[static_cast<int>(wc)];
 }
 
 static const std::string warning_strings[] = {"Unknown event source",
@@ -93,11 +98,16 @@ static const std::string warning_strings[] = {"Unknown event source",
                                               "Multiple exceptions defined with the same name",
                                               "Invalid macro name",
                                               "Invalid list name",
-                                              "Warning in rule condition",
-                                              "Deprecated evt.dir field usage"};
+                                              "Warning in rule condition"};
+
+// Compile-time check to ensure warning_strings array has the correct size
+static_assert(std::size(warning_strings) ==
+                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
+                              1,
+              "warning_strings array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_str(warning_code wc) {
-	return warning_strings[wc];
+	return warning_strings[static_cast<int>(wc)];
 }
 
 static const std::string warning_descs[] = {
@@ -121,11 +131,48 @@ static const std::string warning_descs[] = {
         "A rule is defining multiple exceptions with the same name",
         "A macro is defined with an invalid name",
         "A list is defined with an invalid name",
-        "A rule condition or output have been parsed with a warning",
-        "A rule condition uses the deprecated 'evt.dir' field. Due to the drop of enter events, "
-        "'evt.dir = <' always evaluates to true, and 'evt.dir = >' always evaluates to false. The "
-        "rule expression can be simplified by removing the condition on 'evt.dir'."};
+        "A rule condition or output have been parsed with a warning"};
+
+// Compile-time check to ensure warning_descs array has the correct size
+static_assert(std::size(warning_descs) ==
+                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
+                              1,
+              "warning_descs array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_desc(warning_code wc) {
-	return warning_descs[wc];
+	return warning_descs[static_cast<int>(wc)];
+}
+
+static const std::string deprecated_fields[] = {"evt.dir"};
+
+// Compile-time check to ensure deprecated_fields array has the correct size
+static_assert(
+        std::size(deprecated_fields) ==
+                static_cast<int>(falco::load_result::deprecated_field::DEPRECATED_FIELD_NOT_FOUND),
+        "deprecated_fields array size must match DEPRECATED_FIELD_NOT_FOUND enum value");
+
+const std::string& falco::load_result::deprecated_field_str(deprecated_field df) {
+	return deprecated_fields[static_cast<int>(df)];
+}
+
+static const std::string deprecated_field_descs[] = {
+        "due to the drop of enter events, 'evt.dir = <' always evaluates to true, and 'evt.dir = "
+        ">' always evaluates to false. The rule expression can be simplified by removing the "
+        "condition on 'evt.dir'"};
+
+// Compile-time check to ensure deprecated_field_descs array has the correct size
+static_assert(
+        std::size(deprecated_field_descs) ==
+                static_cast<int>(falco::load_result::deprecated_field::DEPRECATED_FIELD_NOT_FOUND),
+        "deprecated_field_descs array size must match DEPRECATED_FIELD_NOT_FOUND enum value");
+
+const std::string& falco::load_result::deprecated_field_desc(deprecated_field df) {
+	return deprecated_field_descs[static_cast<int>(df)];
+}
+
+falco::load_result::deprecated_field falco::load_result::deprecated_field_from_str(
+        const std::string& f) {
+	return falco::load_result::deprecated_field(
+	        std::find(std::begin(deprecated_fields), std::end(deprecated_fields), f) -
+	        std::begin(deprecated_fields));
 }

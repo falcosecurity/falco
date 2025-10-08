@@ -23,6 +23,7 @@ limitations under the License.
 #include <memory>
 #include "falco_common.h"
 #include "falco_load_result.h"
+#include "rule_loader.h"
 
 /*!
     \brief Searches for bad practices in filter conditions and
@@ -31,25 +32,23 @@ limitations under the License.
 class filter_warning_resolver {
 public:
 	/*!
-	    \brief Visits a filter AST and substitutes macro references
-	    according with all the definitions added through set_macro(),
-	    by replacing the reference with a clone of the macro AST.
+	    \brief Runs the filter warning resolver on a filter AST and adds the warnings to the result
+	   object \param ctx The context of the warning \param res The result to add the warnings to
 	    \param filter The filter AST to be visited
-	    \param warnings Set of strings to be filled with warning codes. This
-	    is not cleared up before the visit
-	    \param blocking Filled-out with true if at least one warning is
-	    found and at least one warning prevents the filter from being loaded
 	    \return true if at least one warning is generated
 	*/
-	bool run(libsinsp::filter::ast::expr* filter,
-	         std::set<falco::load_result::warning_code>& warnings) const;
+	bool run(const rule_loader::context& ctx,
+	         rule_loader::result& res,
+	         libsinsp::filter::ast::expr& filter) const;
 
 private:
 	struct visitor : public libsinsp::filter::ast::base_expr_visitor {
-		visitor():
+		visitor(std::set<falco::load_result::warning_code>& warnings,
+		        std::set<falco::load_result::deprecated_field>& deprecated_fields):
 		        m_is_equality_check(false),
 		        m_last_node_is_unsafe_field(false),
-		        m_warnings(nullptr) {}
+		        m_warnings(&warnings),
+		        m_deprecated_fields(&deprecated_fields) {}
 		visitor(visitor&&) = default;
 		visitor& operator=(visitor&&) = default;
 		visitor(const visitor&) = delete;
@@ -58,6 +57,7 @@ private:
 		bool m_is_equality_check;
 		bool m_last_node_is_unsafe_field;
 		std::set<falco::load_result::warning_code>* m_warnings;
+		std::set<falco::load_result::deprecated_field>* m_deprecated_fields;
 
 		void visit(libsinsp::filter::ast::value_expr* e) override;
 		void visit(libsinsp::filter::ast::list_expr* e) override;

@@ -154,8 +154,8 @@ public:
 	std::string snippet(const falco::load_result::rules_contents_t& rules_contents,
 	                    size_t snippet_width = default_snippet_width) const;
 
-	std::string as_string();
-	nlohmann::json as_json();
+	std::string as_string() const;
+	nlohmann::json as_json() const;
 
 private:
 	void init(const std::string& name,
@@ -183,13 +183,51 @@ struct warning {
 	        msg(m),
 	        ctx(c) {}
 	warning(warning&&) = default;
-	warning& operator=(warning&&) = default;
-	warning(const warning&) = default;
-	warning& operator=(const warning&) = default;
+
+	virtual ~warning() = default;
+
+	virtual std::string code_string() const { return falco::load_result::warning_code_str(wc); };
+	virtual std::string as_string() const { return falco::load_result::warning_str(wc); };
+	virtual std::string description() const { return falco::load_result::warning_desc(wc); };
+	virtual nlohmann::json as_json(const falco::load_result::rules_contents_t& contents) const {
+		nlohmann::json jwarn;
+
+		jwarn["context"] = ctx.as_json();
+		jwarn["context"]["snippet"] = ctx.snippet(contents);
+
+		jwarn["code"] = falco::load_result::warning_code_str(wc);
+		jwarn["codedesc"] = falco::load_result::warning_desc(wc);
+		jwarn["message"] = msg;
+		return jwarn;
+	};
 
 	falco::load_result::warning_code wc;
 	std::string msg;
 	context ctx;
+};
+
+struct deprecated_field_warning : warning {
+	deprecated_field_warning(): warning() {}
+	deprecated_field_warning(falco::load_result::deprecated_field df,
+	                         const std::string& m,
+	                         const context& c):
+	        warning(falco::load_result::warning_code::LOAD_DEPRECATED_ITEM, m, c),
+	        df(df) {}
+
+	std::string as_string() const override {
+		return warning::as_string() + ": field '" + falco::load_result::deprecated_field_str(df) +
+		       "' is deprecated";
+	};
+	std::string description() const override {
+		return warning::description() + ": " + falco::load_result::deprecated_field_desc(df);
+	};
+	nlohmann::json as_json(const falco::load_result::rules_contents_t& contents) const override {
+		auto jwarn = warning::as_json(contents);
+		jwarn["deprecated_field"] = falco::load_result::deprecated_field_str(df);
+		return jwarn;
+	};
+
+	falco::load_result::deprecated_field df;
 };
 
 struct error {
@@ -248,6 +286,9 @@ public:
 	void add_warning(falco::load_result::warning_code ec,
 	                 const std::string& msg,
 	                 const context& ctx);
+	void add_deprecated_field_warning(falco::load_result::deprecated_field df,
+	                                  const std::string& msg,
+	                                  const context& ctx);
 
 	void set_schema_validation_status(const std::vector<std::string>& status);
 	std::string schema_validation() override;
@@ -260,7 +301,7 @@ protected:
 	std::vector<std::string> schema_validation_status;
 
 	std::vector<error> errors;
-	std::vector<warning> warnings;
+	std::vector<std::unique_ptr<warning>> warnings;
 
 	std::string res_summary_string;
 	std::string res_verbose_string;

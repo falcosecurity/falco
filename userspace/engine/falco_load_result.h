@@ -46,7 +46,9 @@ public:
 	// impact.
 	static const std::string& error_desc(error_code ec);
 
-	enum warning_code {
+	virtual ~load_result() = default;
+
+	enum class warning_code {
 		LOAD_UNKNOWN_SOURCE = 0,
 		LOAD_UNSAFE_NA_CHECK,
 		LOAD_NO_EVTTYPE,
@@ -60,11 +62,8 @@ public:
 		LOAD_EXCEPTION_NAME_NOT_UNIQUE,
 		LOAD_INVALID_MACRO_NAME,
 		LOAD_INVALID_LIST_NAME,
-		LOAD_COMPILE_CONDITION,
-		LOAD_DEPRECATED_DIR_FIELD
+		LOAD_COMPILE_CONDITION
 	};
-
-	virtual ~load_result() = default;
 
 	// The warning code as a string
 	static const std::string& warning_code_str(warning_code ec);
@@ -75,6 +74,19 @@ public:
 	// A longer description of what the warning represents and the
 	// impact.
 	static const std::string& warning_desc(warning_code ec);
+
+	enum class deprecated_field { DEPRECATED_FIELD_EVT_DIR, DEPRECATED_FIELD_NOT_FOUND };
+
+	// The deprecated field as a string
+	static const std::string& deprecated_field_str(deprecated_field df);
+
+	// A longer description of what the deprecated field represents and the
+	// impact.
+	static const std::string& deprecated_field_desc(deprecated_field df);
+
+	// Return the deprecated field from a field string name, or DEPRECATED_FIELD_NOT_FOUND if the
+	// field is not deprecated
+	static deprecated_field deprecated_field_from_str(const std::string& f);
 
 	// If true, the rules were loaded successfully and can be used
 	// against events. If false, there were one or more
