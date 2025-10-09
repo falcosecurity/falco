@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -20,16 +20,16 @@ option(ADD_FALCOCTL_DEPENDENCY "Add falcoctl dependency while building falco" ON
 if(ADD_FALCOCTL_DEPENDENCY)
 	string(TOLOWER ${CMAKE_HOST_SYSTEM_NAME} FALCOCTL_SYSTEM_NAME)
 
-	set(FALCOCTL_VERSION "0.11.2")
+	set(FALCOCTL_VERSION "0.11.4")
 
 	message(STATUS "Building with falcoctl: ${FALCOCTL_VERSION}")
 
 	if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 		set(FALCOCTL_SYSTEM_PROC_GO "amd64")
-		set(FALCOCTL_HASH "8d55818987c90e54f7406e1c1441a18df1f485db858bb0b3efda5db217be3b48")
+		set(FALCOCTL_HASH "8015cadcb4328abcbf140c3ca88031cd46426f7f3279d2802f0937ab1e41d66c")
 	else() # aarch64
 		set(FALCOCTL_SYSTEM_PROC_GO "arm64")
-		set(FALCOCTL_HASH "7c36404b5b7a515df25e7dc6d827a74ebc8526b1b49850954bbdd40860961bc2")
+		set(FALCOCTL_HASH "246874f1168abb7a8463509c6191ede460e5a2b8a39058ef5c4a17b67cb86c85")
 	endif()
 
 	ExternalProject_Add(
