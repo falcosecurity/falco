@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2025 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -42,9 +42,9 @@ else()
 	# version (or branch, or commit) just pass the variable - ie., `cmake
 	# -DFALCOSECURITY_LIBS_VERSION=dev ..`
 	if(NOT FALCOSECURITY_LIBS_VERSION)
-		set(FALCOSECURITY_LIBS_VERSION "f8f2249d72bbe558d2f05bb5eb8df585f179538b")
+		set(FALCOSECURITY_LIBS_VERSION "5902a1a306172e1523195ad9930f7c93761a06e8")
 		set(FALCOSECURITY_LIBS_CHECKSUM
-			"SHA256=68ffed19d0e225d3c41372bb9d22c24ffbee596b08243eaf247c8ce9ef0eee29"
+			"SHA256=9b7b4c50e5c395cf401f24eb86d21f81794e9a198c0f299383b7f365b7e10386"
 		)
 	endif()
 
