@@ -59,6 +59,10 @@ if(NOT MSVC)
 	if(USE_ASAN)
 		set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fsanitize=address")
 	endif()
+	# todo(leogr): this should be passed down to libs cmake modules RTLD_DEEPBIND flag is
+	# incompatible with sanitizer runtime (see https://github.com/google/sanitizers/issues/611 for
+	# details)
+	add_compile_definitions(DISABLE_RTLD_DEEPBIND=$<IF:$<BOOL:${USE_ASAN}>,1,0>)
 
 	if(USE_UBSAN)
 		set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fsanitize=undefined")
