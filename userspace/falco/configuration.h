@@ -95,6 +95,8 @@ public:
 		bool m_ssl_enabled = false;
 		std::string m_ssl_certificate;
 		bool m_prometheus_metrics_enabled = false;
+		uint32_t m_uid = 1000;
+		uint32_t m_gid = 1000;
 	};
 
 	enum class rule_selection_operation { enable, disable };
