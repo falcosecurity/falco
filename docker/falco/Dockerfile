@@ -19,8 +19,8 @@ ARG VERSION_BUCKET=bin
 
 ENV FALCO_VERSION=${FALCO_VERSION}
 ENV VERSION_BUCKET=${VERSION_BUCKET}
-ENV HOST_ROOT /host
-ENV HOME /root
+ENV HOST_ROOT=/host
+ENV HOME=/root
 
 RUN apk update && apk add curl ca-certificates jq libstdc++
 
