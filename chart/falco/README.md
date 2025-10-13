@@ -619,8 +619,9 @@ The following table lists the main configurable parameters of the falco chart v7
 | controller.kind | string | `"daemonset"` |  |
 | controller.labels | object | `{}` | Extra labels to add to the daemonset or deployment |
 | customRules | object | `{}` | Third party rules enabled for Falco. More info on the dedicated section in README.md file. |
-| driver.ebpf | object | `{"bufSizePreset":4,"dropFailedExit":false,"hostNetwork":false,"leastPrivileged":false,"path":"${HOME}/.falco/falco-bpf.o"}` | Configuration section for ebpf driver. |
+| driver.ebpf | object | `{"bufSizePreset":4,"debugfs":true,"dropFailedExit":false,"hostNetwork":false,"leastPrivileged":false,"path":"${HOME}/.falco/falco-bpf.o"}` | Configuration section for ebpf driver. |
 | driver.ebpf.bufSizePreset | int | `4` | bufSizePreset determines the size of the shared space between Falco and its drivers. This shared space serves as a temporary storage for syscall events. |
+| driver.ebpf.debugfs | bool | `true` | debugfs if set true `/sys/kernel/debug` is automatically mounted into the Falco container. |
 | driver.ebpf.dropFailedExit | bool | `false` | dropFailedExit if set true drops failed system call exit events before pushing them to userspace. |
 | driver.ebpf.hostNetwork | bool | `false` | Needed to enable eBPF JIT at runtime for performance reasons. Can be skipped if eBPF JIT is enabled from outside the container |
 | driver.ebpf.leastPrivileged | bool | `false` | Constrain Falco with capabilities instead of running a privileged container. Ensure the eBPF driver is enabled (i.e., setting the `driver.kind` option to `ebpf`). Capabilities used: {CAP_SYS_RESOURCE, CAP_SYS_ADMIN, CAP_SYS_PTRACE}. On kernel versions >= 5.8 'CAP_PERFMON' and 'CAP_BPF' could replace 'CAP_SYS_ADMIN' but please pay attention to the 'kernel.perf_event_paranoid' value on your system. Usually 'kernel.perf_event_paranoid>2' means that you cannot use 'CAP_PERFMON' and you should fallback to 'CAP_SYS_ADMIN', but the behavior changes across different distros. Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe |
@@ -646,8 +647,9 @@ The following table lists the main configurable parameters of the falco chart v7
 | driver.loader.initContainer.securityContext | object | `{}` | Security context for the Falco driver loader init container. Overrides the default security context. If driver.kind == "module" you must at least set `privileged: true`. |
 | driver.modernEbpf.bufSizePreset | int | `4` | bufSizePreset determines the size of the shared space between Falco and its drivers. This shared space serves as a temporary storage for syscall events. |
 | driver.modernEbpf.cpusForEachBuffer | int | `2` | cpusForEachBuffer is the index that controls how many CPUs to assign to a single syscall buffer. |
+| driver.modernEbpf.debugfs | bool | `true` | debugfs if set true `/sys/kernel/debug` is automatically mounted into the Falco container. |
 | driver.modernEbpf.dropFailedExit | bool | `false` | dropFailedExit if set true drops failed system call exit events before pushing them to userspace. |
-| driver.modernEbpf.leastPrivileged | bool | `false` | Constrain Falco with capabilities instead of running a privileged container. Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern-bpf`). Capabilities used: {CAP_SYS_RESOURCE, CAP_BPF, CAP_PERFMON, CAP_SYS_PTRACE}. Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe |
+| driver.modernEbpf.leastPrivileged | bool | `false` | Constrain Falco with capabilities instead of running a privileged container. Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern_ebpf`). Capabilities used: {CAP_SYS_RESOURCE, CAP_BPF, CAP_PERFMON, CAP_SYS_PTRACE}. Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe |
 | extra.args | list | `[]` | Extra command-line arguments. |
 | extra.env | list | `[]` | Extra environment variables that will be pass onto Falco containers. |
 | extra.initContainers | list | `[]` | Additional initContainers for Falco pods. |

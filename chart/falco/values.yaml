@@ -293,6 +293,13 @@ driver:
   enabled: true
   # -- kind tells Falco which driver to use. Available options: kmod (kernel driver), ebpf (eBPF probe), modern_ebpf (modern eBPF probe).
   kind: auto
+  # -- Path on the host to mount inside the container for kernel-level access. Automatically mounted when `kind` is set to `auto`,
+  # or when `kind` is set either to `ebpf` or `modern_ebpf` and the corresponding `sysfsMount` option is set to `true`.
+  # Common values:
+  #   /sys/kernel                - covers both tracefs and debugfs (failsafe option)
+  #   /sys/kernel/tracing        - for systems using separate tracefs mount (newer distros)
+  #   /sys/kernel/debug          - for systems exposing tracing under debugfs (legacy distros)
+  sysfsMountPath: "/sys/kernel"
   # -- kmod holds the configuration for the kernel module.
   kmod:
     # -- bufSizePreset determines the size of the shared space between Falco and its drivers.
@@ -320,6 +327,8 @@ driver:
     bufSizePreset: 4
     # -- dropFailedExit if set true drops failed system call exit events before pushing them to userspace.
     dropFailedExit: false
+    # -- sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container.
+    sysfsMount: true
   modernEbpf:
     # -- Constrain Falco with capabilities instead of running a privileged container.
     # Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern_ebpf`).
@@ -333,7 +342,8 @@ driver:
     dropFailedExit: false
     # -- cpusForEachBuffer is the index that controls how many CPUs to assign to a single syscall buffer.
     cpusForEachBuffer: 2
-
+    # -- sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container.
+    sysfsMount: true
   # -- Gvisor configuration. Based on your system you need to set the appropriate values.
   # Please, remember to add pod tolerations and affinities in order to schedule the Falco pods in the gVisor enabled nodes.
   gvisor:
@@ -345,7 +355,6 @@ driver:
       root: /run/containerd/runsc
       # -- Absolute path of the `runsc` configuration file, used by Falco to set its configuration and make aware `gVisor` of its presence.
       config: /run/containerd/runsc/config.toml
-
   # -- Configuration for the Falco init container.
   loader:
     # -- Enable/disable the init container.
