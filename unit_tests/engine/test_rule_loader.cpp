@@ -1327,3 +1327,36 @@ TEST_F(test_falco_engine, empty_string_source_addl_rule) {
 
 	EXPECT_TRUE(load_rules(rules_content, "rules.yaml"));
 }
+
+TEST_F(test_falco_engine, deprecated_field_in_output) {
+	std::string rules_content = R"END(
+- rule: test_rule_with_evt_dir_in_output
+  desc: test rule with evt.dir in output
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name evt.dir=%evt.dir
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_TRUE(has_warnings());
+	ASSERT_TRUE(check_warning_message(
+	        "usage of deprecated field 'evt.dir' has been detected in the rule output"))
+	        << m_load_result_string;
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+}
+
+TEST_F(test_falco_engine, no_deprecated_field_warning_in_output) {
+	std::string rules_content = R"END(
+- rule: test_rule_without_evt_dir
+  desc: test rule without evt.dir in output
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_FALSE(check_warning_message("evt.dir")) << m_load_result_string;
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+}
