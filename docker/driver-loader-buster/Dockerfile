@@ -20,8 +20,8 @@ ARG VERSION_BUCKET=deb
 ENV VERSION_BUCKET=${VERSION_BUCKET}
 
 ENV FALCO_VERSION=${FALCO_VERSION}
-ENV HOST_ROOT /host
-ENV HOME /root
+ENV HOST_ROOT=/host
+ENV HOME=/root
 
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 

@@ -15,8 +15,8 @@ LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
 
 LABEL usage="docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader:latest [driver] [options]"
 
-ENV HOST_ROOT /host
-ENV HOME /root
+ENV HOST_ROOT=/host
+ENV HOME=/root
 
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
