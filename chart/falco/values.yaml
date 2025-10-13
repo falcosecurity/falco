@@ -60,7 +60,7 @@ podSecurityContext: {}
 # 1) driver.enabled = false:
 #    securityContext: {}
 #
-# 2) driver.enabled = true and (driver.kind = module || driver.kind = modern-bpf):
+# 2) driver.enabled = true and (driver.kind = kmod || driver.kind = modern_ebpf):
 #    securityContext:
 #     privileged: true
 #
@@ -322,7 +322,7 @@ driver:
     dropFailedExit: false
   modernEbpf:
     # -- Constrain Falco with capabilities instead of running a privileged container.
-    # Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern-bpf`).
+    # Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern_ebpf`).
     # Capabilities used: {CAP_SYS_RESOURCE, CAP_BPF, CAP_PERFMON, CAP_SYS_PTRACE}.
     # Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe
     leastPrivileged: false
