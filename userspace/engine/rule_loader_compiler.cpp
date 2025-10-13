@@ -72,6 +72,24 @@ static bool is_format_valid(const falco_source& source, std::string fmt, std::st
 	}
 }
 
+static void check_deprecated_fields_in_output(const std::string& fmt,
+                                              const rule_loader::context& ctx,
+                                              rule_loader::result& res) {
+	// Check for evt.dir field usage in output format
+	for(int i = 0;
+	    i < static_cast<int>(falco::load_result::deprecated_field::DEPRECATED_FIELD_NOT_FOUND);
+	    i++) {
+		auto df = falco::load_result::deprecated_field(i);
+		if(fmt.find(falco::load_result::deprecated_field_str(df)) != std::string::npos) {
+			res.add_deprecated_field_warning(df,
+			                                 "usage of deprecated field '" +
+			                                         falco::load_result::deprecated_field_str(df) +
+			                                         "' has been detected in the rule output",
+			                                 ctx);
+		}
+	}
+}
+
 static void build_rule_exception_infos(
         const std::vector<rule_loader::rule_exception_info>& exceptions,
         std::set<std::string>& exception_fields,
@@ -478,6 +496,9 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 			                          r.output_ctx);
 		}
 
+		// check for deprecated fields in output format
+		check_deprecated_fields_in_output(rule.output, r.output_ctx, *cfg.res);
+
 		// validate the rule's extra fields if any
 		for(auto const& ef : rule.extra_output_fields) {
 			if(!is_format_valid(*cfg.sources.at(r.source), ef.second.first, err)) {
@@ -485,6 +506,8 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 				                          err,
 				                          r.output_ctx);
 			}
+			// check for deprecated fields in extra output fields
+			check_deprecated_fields_in_output(ef.second.first, r.output_ctx, *cfg.res);
 		}
 
 		if(!compile_condition(cfg,
