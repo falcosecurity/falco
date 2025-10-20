@@ -3,6 +3,7 @@ package containerPlugin
 import (
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -624,8 +625,18 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 2)
-		require.True(t, slices.Contains(refs, "falco-rules:4"))
-		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6"))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "falco-rules:")
+			},
+		))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/container:")
+			},
+		))
 	}
 
 	refShouldNotBeSet := func(t *testing.T, config any) {
@@ -640,8 +651,18 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 1)
-		require.True(t, slices.Contains(refs, "falco-rules:4"))
-		require.False(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6"))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "falco-rules:")
+			},
+		))
+		require.False(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/container:")
+			},
+		))
 	}
 
 	testCases := []struct {

@@ -53,11 +53,11 @@ falcoctl:
       install:
         # -- List of artifacts to be installed by the falcoctl init container.
         # We do not recommend installing (or following) plugins for security reasons since they are executable objects.
-        refs: [falco-rules:4]
+        refs: [falco-rules:5.0.0]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
         # We do not recommend installing (or following) plugins for security reasons since they are executable objects.
-        refs: [falco-rules:4]
+        refs: [falco-rules:5.0.0]
 
 # Set this to true to force Falco so output the logs as soon as they are emmitted.
 tty: false
