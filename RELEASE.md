@@ -87,7 +87,7 @@ Before proceeding with the release, make sure to complete the following preparat
 - Double-check, by using the following filters, if there is any closed issue/merge PR with no milestone assigned:
   - `is:issue state:closed no:milestone closed:>YYYY-MM-DD`
     [filter](https://github.com/falcosecurity/falco/issues?q=is%3Aissue%20state%3Aclosed%20no%3Amilestone%20closed%3A%3EYYYY-MM-DD)
-  - `is:pr state:closed no:milestone closed:>YYYY-MM-DD`
+  - `is:pr is:merged no:milestone closed:>YYYY-MM-DD`
     [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD)
 - Assign any issue/PR identified in the previous point to the milestone corresponding to the currently undergoing release
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
