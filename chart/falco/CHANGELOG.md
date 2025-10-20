@@ -3,6 +3,18 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.0.0
+
+* Upgrade Falco to v0.42.0
+* Upgrade default ruleset to v5.0.0
+* Upgrade falcoctl to v0.11.4
+* Upgrade container plugin to v0.4.0
+* Upgrade k8smeta plugin to v0.4.0
+* Upgrade k8saudit plugins and rules to v0.16
+* Remove deprecated container metadata collectors settings in favor of `collectors.containerEngine`
+* Revised Falco configuration in `falco.*` settings
+* The path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is now automatically mounted into the Falco container when `driver.kind` is set to `auto`, or when `driver.kind` is set either to `ebpf` or `modern_ebpf` and the corresponding `mountSysfs` option is set to `true`.
+
 ## v6.4.1
 
 * Fix rendering issue due to .Values.falco.metrics not being defined

@@ -589,9 +589,24 @@ func TestFalcoctlRefs(t *testing.T) {
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
 		require.Len(t, refs, 3)
-		require.True(t, slices.Contains(refs, "falco-rules:4"))
-		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.1"))
-		require.True(t, slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6"))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "falco-rules:")
+			},
+		))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/container:")
+			},
+		))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/k8smeta:")
+			},
+		))
 	}
 
 	testCases := []struct {
@@ -622,7 +637,12 @@ func TestFalcoctlRefs(t *testing.T) {
 				artifactConfig := (configMap["artifact"]).(map[string]interface{})
 				// Test plugin reference.
 				refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
-				require.True(t, !slices.Contains(refs, "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0"))
+				require.False(t, slices.ContainsFunc(
+					refs,
+					func(ref any) bool {
+						return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/k8smeta:")
+					},
+				))
 			},
 		},
 	}

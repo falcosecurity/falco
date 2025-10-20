@@ -390,8 +390,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6". Or just name + tag: container:0.3.6.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.3.6"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.4.0". Or just name + tag: container:0.4.0.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.4.0"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
@@ -441,8 +441,8 @@ collectors:
     # In such a case, only the ID, name, namespace, labels of the pod will be available.
     enabled: false
     # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
-    # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.3.1"
+    # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0". Or just name + tag: k8smeta:0.4.0.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0"
     # -- collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match
     # k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override
     # it, make sure to set here the address of the k8s-metacollector.
@@ -542,7 +542,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.11.2"
+    tag: "0.11.4"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artfacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
@@ -599,7 +599,7 @@ falcoctl:
         # -- Resolve the dependencies for artifacts.
         resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:4]
+        refs: [falco-rules:5.0.0]
         # -- Directory where the rulesfiles are saved. The path is relative to the container, which in this case is an emptyDir
         # mounted also by the Falco pod.
         rulesfilesDir: /rulesfiles
@@ -607,7 +607,7 @@ falcoctl:
         pluginsDir: /plugins
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:4]
+        refs: [falco-rules:5.0.0]
         # -- How often the tool checks for new versions of the followed artifacts.
         every: 6h
         # -- HTTP endpoint that serves the api versions of the Falco instance. It is used to check if the new versions are compatible
