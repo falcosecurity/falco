@@ -24,6 +24,7 @@ The Falco Project codebase is maintained under the [falcosecurity GitHub organiz
 - [falcosecurity/rules](https://github.com/falcosecurity/rules): It contains the official ruleset for Falco, offering pre-defined detection rules for various security threats and abnormal behaviors.
 - [falcosecurity/plugins](https://github.com/falcosecurity/plugins): This repository supports integration with external services through plugins that extend Falco's capabilities beyond syscalls and container events, with plans for evolving specialized functionalities in future releases.
 - [falcosecurity/falcoctl](https://github.com/falcosecurity/falcoctl): A command-line utility designed for managing and interacting with Falco.
+- [falcosecurity/falco-talon](https://github.com/falcosecurity/falco-talon): A dedicated response engine for Falco. With similar YAML-based response rules, you can response to detection events from Falco in milliseconds.
 - [falcosecurity/charts](https://github.com/falcosecurity/charts): This repository provides Helm charts for deploying Falco and its ecosystem, simplifying the installation and management process.
 
 For further insights into our repositories and additional details about our governance model, please visit the official hub of The Falco Project: [falcosecurity/evolution](https://github.com/falcosecurity/evolution).
