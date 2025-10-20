@@ -1,5 +1,82 @@
 # Change Log
 
+## v0.42.0
+
+Released on 2025-10-22
+
+
+### Major Changes
+
+* feat: add `falco_libs.thread_table_auto_purging_interval_s` and `thread_table_auto_purging_thread_timeout_s` configuration options [[#3670](https://github.com/falcosecurity/falco/pull/3670)] - [@ekoops](https://github.com/ekoops)
+* feat: log plugin version info at loading time [[#3657](https://github.com/falcosecurity/falco/pull/3657)] - [@FedeDP](https://github.com/FedeDP)
+* feat: ability to add statically defined fields via `static_fields` configuration [[#3557](https://github.com/falcosecurity/falco/pull/3557)] - [@FedeDP](https://github.com/FedeDP)
+* feat(engine): emit warning when a rule containing the `evt.dir` field in output is encountered [[#3697](https://github.com/falcosecurity/falco/pull/3697)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* feat(engine): emit warning when a rule containing a condition on the deprecated `evt.dir` field is encountered [[#3690](https://github.com/falcosecurity/falco/pull/3690)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* new: ability to record `.scap` files (capture feature) [[#3645](https://github.com/falcosecurity/falco/pull/3645)] - [@leogr](https://github.com/leogr)
+* new(docker): includes sha on the image labels [[#3658](https://github.com/falcosecurity/falco/pull/3658)] - [@jcchavezs](https://github.com/jcchavezs)
+* new(cmake,userspace,ci): add mimalloc support [[#3616](https://github.com/falcosecurity/falco/pull/3616)] - [@FedeDP](https://github.com/FedeDP)
+
+
+### Minor Changes
+
+* docs(falco.yaml): refactor config documentation [[#3685](https://github.com/falcosecurity/falco/pull/3685)] - [@leogr](https://github.com/leogr)
+* build: fix `debian:buster` apt debian repo URL in `:driver-loader-buster` container image [[#3644](https://github.com/falcosecurity/falco/pull/3644)] - [@ekoops](https://github.com/ekoops)
+* build: updagrade libs to version 0.22.1 [[#3705](https://github.com/falcosecurity/falco/pull/3705)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* build: upgrade drivers to v9.0.0+driver [[#3701](https://github.com/falcosecurity/falco/pull/3701)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* build: upgrade cpp-httplib to v0.23.1 [[#3647](https://github.com/falcosecurity/falco/pull/3647)] - [@FedeDP](https://github.com/FedeDP)
+* update: upgrade default ruleset to v5.0.0 [[#3700](https://github.com/falcosecurity/falco/pull/3700)] - [@leogr](https://github.com/leogr)
+* build: upgrade `falcoctl` to v0.11.4 [[#3694](https://github.com/falcosecurity/falco/pull/3694)] - [@leogr](https://github.com/leogr)
+* chore(prometheus): deprecate enter events drop stats [[#3675](https://github.com/falcosecurity/falco/pull/3675)] - [@irozzo-1A](https://github.com/irozzo-1A)
+
+
+### Bug Fixes
+
+* fix(cmake): correct abseil-cpp for alpine build [[#3598](https://github.com/falcosecurity/falco/pull/3598)] - [@RomanenkoDenys](https://github.com/RomanenkoDenys)
+* fix: enable handling of multiple actions configured with `syscall_event_drops.actions` [[#3676](https://github.com/falcosecurity/falco/pull/3676)] - [@terror96](https://github.com/terror96)
+* fix: disable dry-run restarts when Falco runs with config-watching disabled [[#3640](https://github.com/falcosecurity/falco/pull/3640)] - [@Proximyst](https://github.com/Proximyst)
+
+
+
+### Non user-facing changes
+
+* fix(userspace/falco): correct default duration calculation [[#3715](https://github.com/falcosecurity/falco/pull/3715)] - [@leogr](https://github.com/leogr)
+* chore(falcoctl): update falco rules to version 5 [[#3712](https://github.com/falcosecurity/falco/pull/3712)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* doc(OWNERS): move incertum (Melissa Kilby) to emeritus_approvers [[#3605](https://github.com/falcosecurity/falco/pull/3605)] - [@incertum](https://github.com/incertum)
+* update(cmake): update libs and driver to latest master [[#3689](https://github.com/falcosecurity/falco/pull/3689)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(docker): use new `ENV` syntax in place of deprecated one [[#3696](https://github.com/falcosecurity/falco/pull/3696)] - [@ekoops](https://github.com/ekoops)
+* chore(cmake/modules): update rules to 5.0.0-rc1 [[#3698](https://github.com/falcosecurity/falco/pull/3698)] - [@leogr](https://github.com/leogr)
+* fix(userspace/engine): fix logger date format [[#3672](https://github.com/falcosecurity/falco/pull/3672)] - [@ekoops](https://github.com/ekoops)
+* docs(OWNERS): add `ekoops`(Leonardo Di Giovanna) as approver [[#3688](https://github.com/falcosecurity/falco/pull/3688)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest master [[#3665](https://github.com/falcosecurity/falco/pull/3665)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* Refactor: cppcheck cleanups [[#3649](https://github.com/falcosecurity/falco/pull/3649)] - [@sgaist](https://github.com/sgaist)
+* update(userspace/engine): update falco engine version and checksum [[#3648](https://github.com/falcosecurity/falco/pull/3648)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest master [[#3662](https://github.com/falcosecurity/falco/pull/3662)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(cmake): update libs and driver to latest master [[#3661](https://github.com/falcosecurity/falco/pull/3661)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(cmake): update libs and driver to latest master [[#3653](https://github.com/falcosecurity/falco/pull/3653)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(ci): disable mimalloc for master builds. [[#3655](https://github.com/falcosecurity/falco/pull/3655)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump submodules/falcosecurity-rules from `1208816` to `be38001` [[#3651](https://github.com/falcosecurity/falco/pull/3651)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* docs(falco.yaml): avoid out-of-sync config options for `container` pl… [[#3650](https://github.com/falcosecurity/falco/pull/3650)] - [@leogr](https://github.com/leogr)
+* update(cmake): update libs and driver to latest master [[#3636](https://github.com/falcosecurity/falco/pull/3636)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(CHANGELOG.md): release 0.41.3 (cherry-pick) [[#3634](https://github.com/falcosecurity/falco/pull/3634)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest master [[#3628](https://github.com/falcosecurity/falco/pull/3628)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(CHANGELOG.md): release 0.41.2 (cherry-pick) [[#3623](https://github.com/falcosecurity/falco/pull/3623)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest master [[#3618](https://github.com/falcosecurity/falco/pull/3618)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(cmake): update libs and driver to latest master [[#3602](https://github.com/falcosecurity/falco/pull/3602)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(falco.yaml): clean up plugins config leftover [[#3596](https://github.com/falcosecurity/falco/pull/3596)] - [@leogr](https://github.com/leogr)
+* chore(deps): Bump submodules/falcosecurity-rules from `b4437c4` to `4d51b18` [[#3607](https://github.com/falcosecurity/falco/pull/3607)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(docs): cherry pick CHANGELOG. [[#3600](https://github.com/falcosecurity/falco/pull/3600)] - [@FedeDP](https://github.com/FedeDP)
+* update(cmake): update libs and driver to latest master [[#3592](https://github.com/falcosecurity/falco/pull/3592)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(docs): bumped changelog for release 0.41.0, master sync [[#3586](https://github.com/falcosecurity/falco/pull/3586)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump submodules/falcosecurity-rules from `cb17833` to `b4437c4` [[#3578](https://github.com/falcosecurity/falco/pull/3578)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |     29 |
+| Release note    |     23 |
+| Total           |     52 |
+
 ## v0.41.3
 
 Released on 2025-07-01
