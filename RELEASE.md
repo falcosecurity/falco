@@ -116,7 +116,7 @@ The release PR is meant to be made against the respective `release/M.m.x` branch
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` updates itself automatically
 - Generate the change log using [rn2md](https://github.com/leodido/rn2md):
-    - Execute `rn2md -r falcosecurity/falco -m M.m.p -b release/M.m.x`
+    - Execute `rn2md -r falcosecurity/falco -m M.m.p`
     - In case `rn2md` emits error try to generate an GitHub OAuth access token and provide it with the `-t` flag
 - Add the latest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
