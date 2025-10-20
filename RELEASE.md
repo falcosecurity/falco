@@ -90,7 +90,7 @@ Before proceeding with the release, make sure to complete the following preparat
   - `is:pr state:closed no:milestone closed:>YYYY-MM-DD`
     [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD)
 - Assign any issue/PR identified in the previous point to the milestone corresponding to the currently undergoing release
-- Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
+- Check the release note block of every PR matching the `is:pr is:merged milestone:M.m.p` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+milestone%3AM.m.p)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
 
