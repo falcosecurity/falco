@@ -428,6 +428,9 @@ Based on the user input it populates the metrics configuration in the falco conf
 {{- if .Values.metrics.enabled -}}
 {{- $_ := set .Values.falco.webserver "prometheus_metrics_enabled" true -}}
 {{- $_ = set .Values.falco.webserver "enabled" true -}}
+{{- if not .Values.falco.metrics -}}
+{{- $_ = set .Values.falco "metrics" dict -}}
+{{- end -}}
 {{- $_ = set .Values.falco.metrics "enabled" .Values.metrics.enabled -}}
 {{- $_ = set .Values.falco.metrics "interval" .Values.metrics.interval -}}
 {{- $_ = set .Values.falco.metrics "output_rule" .Values.metrics.outputRule -}}
