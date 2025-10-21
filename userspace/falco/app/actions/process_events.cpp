@@ -320,9 +320,16 @@ static falco::app::run_result do_inspect(
 					if(capture_mode_t::RULES == s.config->m_capture_mode && rule_res.capture) {
 						capture = true;
 					}
-					// Extend deadline if defined by the rule
-					if((rule_res.capture_duration_ns + ev->get_ts()) > dump_deadline_ts) {
-						dump_deadline_ts = ev->get_ts() + rule_res.capture_duration_ns;
+					// Compute the capture deadline for this event,
+					// based on the rule’s duration or the default one if unspecified
+					auto evt_deadline_ts =
+					        ev->get_ts() + (rule_res.capture_duration_ns > 0
+					                                ? rule_res.capture_duration_ns
+					                                : s.config->m_capture_default_duration_ns);
+					// Update the capture deadline if this event needs to extend it beyond the
+					// current deadline or if no deadline is currently set
+					if(evt_deadline_ts > dump_deadline_ts) {
+						dump_deadline_ts = evt_deadline_ts;
 					}
 				}
 			}
@@ -336,10 +343,6 @@ static falco::app::run_result do_inspect(
 				                                     ev->get_num()),
 				             true);  // Enable compression
 				dump_started_ts = ev->get_ts();
-				// If no rule has set a deadline, use the default one
-				if(dump_deadline_ts == 0) {
-					dump_deadline_ts = dump_started_ts + s.config->m_capture_default_duration_ns;
-				}
 			}
 		}
 
