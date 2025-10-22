@@ -1,34 +1,15 @@
+{{- println }}
 {{- if eq .Values.controller.kind "daemonset" }}
 Falco agents are spinning up on each node in your cluster. After a few
 seconds, they are going to start monitoring your containers looking for
 security issues.
-{{printf "\n" }}
-{{- end}}
-{{- if .Values.integrations }}
-WARNING: The following integrations have been deprecated and removed
- - gcscc
- - natsOutput
- - snsOutput
- - pubsubOutput
-Consider to use falcosidekick (https://github.com/falcosecurity/falcosidekick) as replacement.
-{{- else }}
-No further action should be required.
-{{- end }}
-{{printf "\n" }}
-
-{{- if not .Values.falcosidekick.enabled }}
-Tip: 
-You can easily forward Falco events to Slack, Kafka, AWS Lambda and more with falcosidekick. 
-Full list of outputs: https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick.
-You can enable its deployment with `--set falcosidekick.enabled=true` or in your values.yaml. 
-See: https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml for configuration values.
-
+{{- println }}
 {{- end}}
 
 
 {{- if  (has .Values.driver.kind (list "module" "modern-bpf")) -}}
 {{- println }}
-WARNING(drivers):
+WARNING(driver):
 {{- printf "\nThe driver kind: \"%s\" is an alias and might be removed in the future.\n" .Values.driver.kind -}}
 {{- $driver := "" -}}
 {{- if eq .Values.driver.kind "module" -}}
@@ -39,9 +20,44 @@ WARNING(drivers):
 {{- printf "Please use \"%s\" instead." $driver}}
 {{- end -}}
 
-{{- if and (not (empty .Values.falco.load_plugins)) (or .Values.falcoctl.artifact.follow.enabled .Values.falcoctl.artifact.install.enabled) }}
+
+{{- if or (hasKey .Values.collectors "containerd") (hasKey .Values.collectors "cri") (hasKey .Values.collectors "docker") -}}
+{{- println }}
+WARNING(collectors):
+Deprecated container metadata collectors have been removed from this chart and the following values will be ignored:
+{{- println }}
+{{- if hasKey .Values.collectors "containerd" }} - collectors.containerd{{- end }}
+{{- if hasKey .Values.collectors "cri" }} - collectors.cri{{- end }}
+{{- if hasKey .Values.collectors "docker" }} - collectors.docker{{- end }}
+{{- println }}
+Please use the `collectors.containerEngine` instead.
+{{- end }}
+
+{{- $refs := .Values.falcoctl.config.artifact.install.refs | default (list) -}}
+{{- $missing := dict "list" (list) -}}
+{{- range $p := .Values.falco.load_plugins -}}
+  {{- $found := dict "v" false -}}
+  {{- range $r := $refs -}}
+    {{- if contains $p $r -}}
+      {{- $_ := set $found "v" true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $found.v -}}
+    {{- $_ := set $missing "list" (append $missing.list $p) -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (not (empty .Values.falco.load_plugins)) (or .Values.falcoctl.artifact.follow.enabled .Values.falcoctl.artifact.install.enabled) (gt (len $missing.list) 0) }}
 
 NOTICE:
-{{ printf "It seems you are loading the following plugins %v, please make sure to install them by specifying the correct reference to falcoctl.config.artifact.install.refs: %v" .Values.falco.load_plugins .Values.falcoctl.config.artifact.install.refs -}}
-{{ printf "Ignore this notice if the value of falcoctl.config.artifact.install.refs is correct already." -}}
+{{ printf "It seems you are loading the following plugins without corresponding falcoctl.config.artifact.install.refs: %v" $missing.list -}}
+{{- println }}
+{{ printf "Please add references under falcoctl.config.artifact.install.refs. Ignore this notice if the refs already include these plugins." -}}
 {{- end }}
+
+{{- if not .Values.falcosidekick.enabled }}
+TIP:
+You can easily forward Falco events to Slack, Kafka, AWS Lambda and more with falcosidekick.
+Full list of outputs: https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick.
+You can enable its deployment with `--set falcosidekick.enabled=true` or in your values.yaml.
+See: https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml for configuration values.
+{{- end}}
