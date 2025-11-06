@@ -390,8 +390,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.4.0". Or just name + tag: container:0.4.0.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.4.0"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1". Or just name + tag: container:0.4.1.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
