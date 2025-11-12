@@ -153,8 +153,8 @@ static void build_rule_exception_infos(
 	}
 }
 
-static inline rule_loader::list_info* list_info_from_name(const rule_loader::collector& c,
-                                                          const std::string& name) {
+static inline const rule_loader::list_info* list_info_from_name(const rule_loader::collector& c,
+                                                                const std::string& name) {
 	auto ret = c.lists().at(name);
 	if(!ret) {
 		throw falco_exception("can't find internal list info at name: " + name);
@@ -162,8 +162,8 @@ static inline rule_loader::list_info* list_info_from_name(const rule_loader::col
 	return ret;
 }
 
-static inline rule_loader::macro_info* macro_info_from_name(const rule_loader::collector& c,
-                                                            const std::string& name) {
+static inline const rule_loader::macro_info* macro_info_from_name(const rule_loader::collector& c,
+                                                                   const std::string& name) {
 	auto ret = c.macros().at(name);
 	if(!ret) {
 		throw falco_exception("can't find internal macro info at name: " + name);
