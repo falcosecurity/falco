@@ -150,13 +150,15 @@ std::string falco_metrics::falco_to_text_prometheus(
 	// # HELP falcosecurity_falco_outputs_queue_num_drops_total https://falco.org/docs/metrics/
 	// # TYPE falcosecurity_falco_outputs_queue_num_drops_total counter
 	// falcosecurity_falco_outputs_queue_num_drops_total 0
-	additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
-	        "outputs_queue_num_drops",
-	        METRICS_V2_MISC,
-	        METRIC_VALUE_TYPE_U64,
-	        METRIC_VALUE_UNIT_COUNT,
-	        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
-	        state.outputs->get_outputs_queue_num_drops()));
+	if(state.outputs != nullptr) {
+		additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
+		        "outputs_queue_num_drops",
+		        METRICS_V2_MISC,
+		        METRIC_VALUE_TYPE_U64,
+		        METRIC_VALUE_UNIT_COUNT,
+		        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+		        state.outputs->get_outputs_queue_num_drops()));
+	}
 
 	// # HELP falcosecurity_falco_reload_timestamp_nanoseconds https://falco.org/docs/metrics/
 	// # TYPE falcosecurity_falco_reload_timestamp_nanoseconds gauge
