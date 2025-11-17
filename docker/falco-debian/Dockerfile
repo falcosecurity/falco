@@ -16,13 +16,12 @@ LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run
 
 ARG VERSION_BUCKET=deb
 
-ENV FALCO_VERSION=${FALCO_VERSION}
-ENV VERSION_BUCKET=${VERSION_BUCKET}
+ENV FALCO_VERSION="${FALCO_VERSION}" \
+    VERSION_BUCKET="${VERSION_BUCKET}" \
+    HOST_ROOT="/host" \
+    HOME="/root"
 
-ENV HOST_ROOT=/host
-ENV HOME=/root
-
-RUN apt-get -y update && apt-get -y install ca-certificates curl jq ca-certificates gnupg2 \
+RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg2 \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
