@@ -17,11 +17,10 @@ LABEL usage="docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc
 ARG TARGETARCH
 
 ARG VERSION_BUCKET=deb
-ENV VERSION_BUCKET=${VERSION_BUCKET}
-
-ENV FALCO_VERSION=${FALCO_VERSION}
-ENV HOST_ROOT=/host
-ENV HOME=/root
+ENV FALCO_VERSION="${FALCO_VERSION}" \
+    VERSION_BUCKET="${VERSION_BUCKET}" \
+    HOST_ROOT="/host" \
+    HOME="/root"
 
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
