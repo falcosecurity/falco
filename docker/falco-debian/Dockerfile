@@ -15,11 +15,16 @@ LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /proc:/host/proc:ro -v /etc:/host/etc:ro falcosecurity/falco:latest-debian"
 
 ARG VERSION_BUCKET=deb
+ARG FALCO_VERSION=latest
+ARG HOST_ROOT=/host
+ARG HOME=/root
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 ENV FALCO_VERSION="${FALCO_VERSION}" \
     VERSION_BUCKET="${VERSION_BUCKET}" \
-    HOST_ROOT="/host" \
-    HOME="/root"
+    HOST_ROOT="${HOST_ROOT}" \
+    HOME="${HOME}"
 
 RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg2 \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
@@ -34,6 +39,6 @@ RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Change the falco config within the container to enable ISO 8601 output.
-ADD ./config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
+ADD config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
 
 CMD ["/usr/bin/falco"]
