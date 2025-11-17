@@ -91,6 +91,7 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	        falco::app::actions::unregister_signal_handlers,
 	        falco::app::actions::stop_grpc_server,
 	        falco::app::actions::stop_webserver,
+	        falco::app::actions::cleanup_outputs,
 	        falco::app::actions::close_inspectors,
 	};
 
