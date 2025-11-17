@@ -16,22 +16,27 @@ LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run
 # NOTE: for the "least privileged" use case, please refer to the official documentation
 
 ARG VERSION_BUCKET=bin
+#ARG FALCO_VERSION=latest --> Removed because can't find the "latest" >> https://github.com/falcosecurity/falco/releases
+ARG HOST_ROOT=/host
+ARG HOME=/root
 
 ENV FALCO_VERSION="${FALCO_VERSION}" \
     VERSION_BUCKET="${VERSION_BUCKET}" \
-    HOST_ROOT="/host" \
-    HOME="/root"
+    HOST_ROOT="${HOST_ROOT}" \
+    HOME="${HOME}"
 
 RUN apk update && apk add curl ca-certificates jq libstdc++
 
 WORKDIR /
 
-RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
+RUN ARCH=$(uname -m) && \
+    FALCO_VERSION_URLENCODED=$(echo -n "${FALCO_VERSION}" | jq -sRr @uri) && \
+    echo "Downloading Falco ${FALCO_VERSION} for ${ARCH}" && \
     curl -L -o falco.tar.gz \
-    https://download.falco.org/packages/${VERSION_BUCKET}/$(uname -m)/falco-${FALCO_VERSION_URLENCODED}-$(uname -m).tar.gz && \
+      https://download.falco.org/packages/${VERSION_BUCKET}/${ARCH}/falco-${FALCO_VERSION}-${ARCH}.tar.gz && \
     tar -xvf falco.tar.gz && \
     rm -f falco.tar.gz && \
-    mv falco-${FALCO_VERSION}-$(uname -m) falco && \
+    mv falco-${FALCO_VERSION}-${ARCH} falco && \
     rm -rf /falco/usr/src/falco-* && \
     cp -r /falco/* / && \
     rm -rf /falco && \
@@ -39,6 +44,6 @@ RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
 
 
 # Change the falco config within the container to enable ISO 8601 output.
-ADD ./config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
+ADD config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
 
 CMD ["/usr/bin/falco"]
