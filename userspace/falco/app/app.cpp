@@ -87,6 +87,8 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	std::list<app_action> const teardown_steps = {
 	        falco::app::actions::unregister_signal_handlers,
 	        falco::app::actions::stop_webserver,
+	        // Note: calls print_stats internally after resetting outputs.
+	        falco::app::actions::cleanup_outputs,
 	        falco::app::actions::close_inspectors,
 	};
 

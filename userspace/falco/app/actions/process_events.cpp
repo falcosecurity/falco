@@ -646,13 +646,5 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		}
 	}
 
-	// By deleting s.outputs, we make sure that the engine will wait until
-	// regular output has been completely sent before printing stats, avoiding
-	// intermixed stats with output.
-	// Note that this will only work if this is the last reference held by the
-	// shared pointer.
-	s.outputs.reset();
-	s.engine->print_stats();
-
 	return res;
 }
