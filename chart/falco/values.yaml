@@ -609,7 +609,7 @@ falcoctl:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
         refs: [falco-rules:5]
         # -- How often the tool checks for new versions of the followed artifacts.
-        every: 6h
+        every: 168h
         # -- HTTP endpoint that serves the api versions of the Falco instance. It is used to check if the new versions are compatible
         # with the running Falco instance.
         falcoversions: http://localhost:8765/versions
