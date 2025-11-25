@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.0.2
+
+* Reduce artifact follow default interval value to 1 week
+
 ## v7.0.1
 
 * Upgrade Falco to v0.42.1
