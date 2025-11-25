@@ -75,7 +75,15 @@ public:
 	// impact.
 	static const std::string& warning_desc(warning_code ec);
 
-	enum class deprecated_field { DEPRECATED_FIELD_EVT_DIR, DEPRECATED_FIELD_NOT_FOUND };
+	enum class deprecated_field {
+		DEPRECATED_FIELD_EVT_DIR,
+		DEPRECATED_FIELD_EVT_LATENCY,
+		DEPRECATED_FIELD_EVT_LATENCY_S,
+		DEPRECATED_FIELD_EVT_LATENCY_NS,
+		DEPRECATED_FIELD_EVT_LATENCY_HUMAN,
+		DEPRECATED_FIELD_EVT_WAIT_LATENCY,
+		DEPRECATED_FIELD_NOT_FOUND
+	};
 
 	// The deprecated field as a string
 	static const std::string& deprecated_field_str(deprecated_field df);
