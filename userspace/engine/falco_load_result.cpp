@@ -143,7 +143,12 @@ const std::string& falco::load_result::warning_desc(warning_code wc) {
 	return warning_descs[static_cast<int>(wc)];
 }
 
-static const std::string deprecated_fields[] = {"evt.dir"};
+static const std::string deprecated_fields[] = {"evt.dir",
+                                                "evt.latency",
+                                                "evt.latency.s",
+                                                "evt.latency.ns",
+                                                "evt.latency.human",
+                                                "evt.wait_latency"};
 
 // Compile-time check to ensure deprecated_fields array has the correct size
 static_assert(
@@ -155,10 +160,19 @@ const std::string& falco::load_result::deprecated_field_str(deprecated_field df)
 	return deprecated_fields[static_cast<int>(df)];
 }
 
+// Shared description suffix for latency fields
+static const std::string latency_field_desc_suffix =
+        "field is not available due to the drop of enter events.";
+
 static const std::string deprecated_field_descs[] = {
         "due to the drop of enter events, 'evt.dir = <' always evaluates to true, and 'evt.dir = "
         ">' always evaluates to false. The rule expression can be simplified by removing the "
-        "condition on 'evt.dir'"};
+        "condition on 'evt.dir'",
+        latency_field_desc_suffix,
+        latency_field_desc_suffix,
+        latency_field_desc_suffix,
+        latency_field_desc_suffix,
+        latency_field_desc_suffix};
 
 // Compile-time check to ensure deprecated_field_descs array has the correct size
 static_assert(

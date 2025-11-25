@@ -215,8 +215,7 @@ struct deprecated_field_warning : warning {
 	        df(df) {}
 
 	std::string as_string() const override {
-		return warning::as_string() + ": field '" + falco::load_result::deprecated_field_str(df) +
-		       "' is deprecated";
+		return warning::as_string() + ": field '" + falco::load_result::deprecated_field_str(df);
 	};
 	std::string description() const override {
 		return warning::description() + ": " + falco::load_result::deprecated_field_desc(df);
