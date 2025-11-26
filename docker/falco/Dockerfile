@@ -35,6 +35,7 @@ RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
     rm -rf /falco/usr/src/falco-* && \
     cp -r /falco/* / && \
     rm -rf /falco && \
+    for plugin in json k8smeta k8saudit; do falcoctl artifact install $plugin; done && \
     rm -rf /usr/bin/falcoctl /etc/falcoctl/
 
 
