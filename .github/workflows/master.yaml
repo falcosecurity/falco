@@ -3,6 +3,10 @@ on:
   push:
     branches: [master]
 
+permissions:  
+  contents: read
+  packages: read
+
 # Checks if any concurrent jobs is running for master CI and eventually cancel it
 concurrency:
   group: ci-master

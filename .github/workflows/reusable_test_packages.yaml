@@ -23,6 +23,7 @@ on:
 
 permissions:  
   contents: read
+  packages: read
   
 jobs:
   test-packages:
@@ -56,6 +57,10 @@ jobs:
       - name: Run tests
         env:
           LSAN_OPTIONS: "intercept_tls_get_addr=0"
+          # Authenticate to GitHub Container Registry to pull falcoctl image
+          # This is a temporary mitigation for the rate limiting issue
+          # See https://github.com/falcosecurity/rules/issues/331
+          FALCOCTL_REGISTRY_AUTH_BASIC: ghcr.io,${{ github.actor }},${{ github.token }}
         uses: falcosecurity/testing@main
         with:
           test-falco: 'true'
