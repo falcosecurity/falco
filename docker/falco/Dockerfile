@@ -34,12 +34,12 @@ RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
     mv falco-${FALCO_VERSION}-$(uname -m) falco && \
     rm -rf /falco/usr/src/falco-* && \
     cp -r /falco/* / && \
-    rm -rf /falco
+    rm -rf /falco && \
+    for plugin in json k8smeta k8saudit; do falcoctl artifact install $plugin; done && \
+    rm -rf /usr/bin/falcoctl /etc/falcoctl/
+
 
 # Change the falco config within the container to enable ISO 8601 output.
 ADD ./config/falco.iso8601_timeformat.yaml /etc/falco/config.d/
-
-# Falcoctl is not included here.
-RUN rm -rf /usr/bin/falcoctl /etc/falcoctl/
 
 CMD ["/usr/bin/falco"]
