@@ -32,7 +32,7 @@ class output_program : public abstract_output {
 private:
 	void open_pfile();
 
-	FILE *m_pfile;
+	FILE *m_pfile = nullptr;
 };
 
 }  // namespace outputs
