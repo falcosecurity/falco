@@ -51,6 +51,7 @@ add_library(
 	app/actions/validate_rules_files.cpp
 	app/actions/create_requested_paths.cpp
 	app/actions/close_inspectors.cpp
+	app/actions/cleanup_outputs.cpp
 	app/actions/print_config_schema.cpp
 	app/actions/print_rule_schema.cpp
 	configuration.cpp
