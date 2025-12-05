@@ -36,4 +36,4 @@ limitations under the License.
 // It represents the fields supported by this version of Falco,
 // the event types, and the underlying driverevent schema. It's used to
 // detetect changes in engine version in our CI jobs.
-#define FALCO_ENGINE_CHECKSUM "fc2c6a925b4f7d59efd79f752ff5db2460e778ec00788213c5b7292e0a80586f"
+#define FALCO_ENGINE_CHECKSUM "f79bef5f51844f9e620a1899c75a26af6216b0575c44de64e22d9cf6d52fba49"
