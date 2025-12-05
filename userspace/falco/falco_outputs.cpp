@@ -46,6 +46,7 @@ falco_outputs::falco_outputs(std::shared_ptr<falco_engine> engine,
                              bool json_include_tags_property,
                              bool json_include_message_property,
                              bool json_include_output_fields_property,
+                             const std::string &json_container,
                              uint32_t timeout,
                              bool buffered,
                              size_t outputs_queue_capacity,
@@ -56,6 +57,7 @@ falco_outputs::falco_outputs(std::shared_ptr<falco_engine> engine,
                                                   json_include_tags_property,
                                                   json_include_message_property,
                                                   json_include_output_fields_property,
+                                                  json_container,
                                                   time_format_iso_8601)),
         m_buffered(buffered),
         m_json_output(json_output),
@@ -201,7 +203,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		jmsg["hostname"] = m_hostname;
 		jmsg["source"] = s_internal_source;
 
-		cmsg.msg = jmsg.dump();
+		cmsg.msg = m_formats->format_json_container(jmsg, evttime);
 	} else {
 		std::string timestr;
 		bool first = true;
