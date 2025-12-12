@@ -60,7 +60,7 @@ jobs:
           # Authenticate to GitHub Container Registry to pull falcoctl image
           # This is a temporary mitigation for the rate limiting issue
           # See https://github.com/falcosecurity/rules/issues/331
-          FALCOCTL_REGISTRY_AUTH_BASIC: ghcr.io,${{ github.repository_owner }},${{ github.token }}
+          FALCOCTL_REGISTRY_AUTH_BASIC: ghcr.io,${{ github.actor }},${{ github.token }}
         uses: falcosecurity/testing@main
         with:
           test-falco: 'true'
