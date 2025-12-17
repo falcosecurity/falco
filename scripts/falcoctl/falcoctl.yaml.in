@@ -7,7 +7,7 @@ driver:
     hostroot: "/"
 artifact:
   follow:
-    every: 6h0m0s
+    every: 168h0m0s
     falcoVersions: http://localhost:8765/versions
     refs:
     - falco-rules:5
