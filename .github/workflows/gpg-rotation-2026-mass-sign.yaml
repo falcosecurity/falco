@@ -1,0 +1,82 @@
+name: GPG 2026 Mass Re-sign Packages (TEMPORARY)
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Target packages channel (stable or dev)"
+        required: true
+        type: choice
+        options:
+          - stable
+          - dev
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_S3_REGION: eu-west-1
+  AWS_CLOUDFRONT_DIST_ID: E1CQNPFWRXLGQD
+
+jobs:
+  mass-sign-rpm:
+    name: Mass re-sign RPM packages (${{ github.event.inputs.channel }})
+    runs-on: ubuntu-latest
+    container: docker.io/library/fedora:38
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Install dependencies
+        run: |
+          dnf install rpm-sign expect which createrepo gpg python python-pip -y
+          pip install awscli==1.29.60
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ github.event.inputs.channel == 'dev' && '-dev' || '' }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}
+
+      - name: Import GPG key
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+        run: printenv GPG_KEY | gpg --import -
+
+      - name: Mass re-sign RPM repository
+        env:
+          REPO_SUFFIX: ${{ github.event.inputs.channel == 'dev' && '-dev' || '' }}
+        run: |
+          ./scripts/publish-rpm -r rpm${REPO_SUFFIX} -s
+
+  mass-sign-deb:
+    name: Mass re-sign DEB packages (${{ github.event.inputs.channel }})
+    runs-on: ubuntu-latest
+    container: docker.io/debian:stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Install dependencies
+        run: |
+          apt update -y
+          apt-get install apt-utils bzip2 gpg awscli -y
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ github.event.inputs.channel == 'dev' && '-dev' || '' }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}
+
+      - name: Import GPG key
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+        run: printenv GPG_KEY | gpg --import -
+
+      - name: Mass re-sign DEB repository
+        env:
+          REPO_SUFFIX: ${{ github.event.inputs.channel == 'dev' && '-dev' || '' }}
+        run: |
+          ./scripts/publish-deb -r deb${REPO_SUFFIX} -s
+
