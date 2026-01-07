@@ -16,7 +16,6 @@ LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run
 # NOTE: for the "least privileged" use case, please refer to the official documentation
 
 ARG VERSION_BUCKET=bin
-#ARG FALCO_VERSION=latest --> Removed because can't find the "latest" >> https://github.com/falcosecurity/falco/releases
 ARG HOST_ROOT=/host
 ARG HOME=/root
 
