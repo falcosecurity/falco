@@ -277,6 +277,8 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       name: rulesfiles-install-dir
     - mountPath: /etc/falcoctl
       name: falcoctl-config-volume
+    - mountPath: {{ .Values.falcoctl.config.artifact.install.stateDir }}
+      name: artifact-state-dir
       {{- with .Values.falcoctl.artifact.install.mounts.volumeMounts }}
         {{- toYaml . | nindent 4 }}
       {{- end }}
@@ -315,6 +317,8 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       name: rulesfiles-install-dir
     - mountPath: /etc/falcoctl
       name: falcoctl-config-volume
+    - mountPath: {{ .Values.falcoctl.config.artifact.follow.stateDir }}
+      name: artifact-state-dir
       {{- with .Values.falcoctl.artifact.follow.mounts.volumeMounts }}
         {{- toYaml . | nindent 4 }}
       {{- end }}

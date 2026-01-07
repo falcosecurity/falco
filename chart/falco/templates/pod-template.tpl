@@ -240,6 +240,8 @@ spec:
       emptyDir: {}
     - name: rulesfiles-install-dir
       emptyDir: {}
+    - name: artifact-state-dir
+      emptyDir: {}
     {{- end }}
     - name: root-falco-fs
       emptyDir: {}
