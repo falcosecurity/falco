@@ -768,10 +768,12 @@ The following table lists the main configurable parameters of the falco chart v7
 | falcoctl.config.artifact.follow.pluginsDir | string | `"/plugins"` | See the fields of the artifact.install section. |
 | falcoctl.config.artifact.follow.refs | list | `["falco-rules:5"]` | List of artifacts to be followed by the falcoctl sidecar container. |
 | falcoctl.config.artifact.follow.rulesfilesDir | string | `"/rulesfiles"` | See the fields of the artifact.install section. |
+| falcoctl.config.artifact.follow.stateDir | string | `"/artifactstate"` | Directory where falcoctl will save its artifact state files. This directory is shared between the init container and the sidecar to maintain state consistency across artifact install and follow operations. |
 | falcoctl.config.artifact.install.pluginsDir | string | `"/plugins"` | Same as the one above but for the artifacts. |
 | falcoctl.config.artifact.install.refs | list | `["falco-rules:5"]` | List of artifacts to be installed by the falcoctl init container. |
 | falcoctl.config.artifact.install.resolveDeps | bool | `true` | Resolve the dependencies for artifacts. |
 | falcoctl.config.artifact.install.rulesfilesDir | string | `"/rulesfiles"` | Directory where the rulesfiles are saved. The path is relative to the container, which in this case is an emptyDir mounted also by the Falco pod. |
+| falcoctl.config.artifact.install.stateDir | string | `"/artifactstate"` | Directory where falcoctl will save its artifact state files. This directory is shared between the init container and the sidecar to maintain state consistency across artifact install and follow operations. |
 | falcoctl.config.indexes | list | `[{"name":"falcosecurity","url":"https://falcosecurity.github.io/falcoctl/index.yaml"}]` | List of indexes that falcoctl downloads and uses to locate and download artiafcts. For more info see: https://github.com/falcosecurity/falcoctl/blob/main/proposals/20220916-rules-and-plugin-distribution.md#index-file-overview |
 | falcoctl.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy. |
 | falcoctl.image.registry | string | `"docker.io"` | The image registry to pull from. |

@@ -619,7 +619,8 @@ falcoctl:
         rulesfilesDir: /rulesfiles
         # -- Same as the one above but for the artifacts.
         pluginsDir: /plugins
-        # -- Directory where falcoctl will save its artifact state files. This is used to keep track of the installed artifacts between install and follow.
+        # -- Directory where falcoctl will save its artifact state files. This directory is shared between the init container
+        # and the sidecar to maintain state consistency across artifact install and follow operations.
         stateDir: /artifactstate
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
