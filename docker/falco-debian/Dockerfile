@@ -15,7 +15,6 @@ LABEL org.opencontainers.image.authors='The Falco Authors https://falco.org' \
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /proc:/host/proc:ro -v /etc:/host/etc:ro falcosecurity/falco:latest-debian"
 
 ARG VERSION_BUCKET=deb
-ARG FALCO_VERSION=latest
 ARG HOST_ROOT=/host
 ARG HOME=/root
 
