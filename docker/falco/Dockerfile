@@ -33,7 +33,7 @@ RUN ARCH=$(uname -m) && \
     FALCO_VERSION_URLENCODED=$(echo -n "${FALCO_VERSION}" | jq -sRr @uri) && \
     echo "Downloading Falco ${FALCO_VERSION} for ${ARCH}" && \
     curl -L -o falco.tar.gz \
-      https://download.falco.org/packages/${VERSION_BUCKET}/${ARCH}/falco-${FALCO_VERSION}-${ARCH}.tar.gz && \
+    https://download.falco.org/packages/${VERSION_BUCKET}/${ARCH}/falco-${FALCO_VERSION_URLENCODED}-${ARCH}.tar.gz && \
     tar -xvf falco.tar.gz && \
     rm -f falco.tar.gz && \
     mv falco-${FALCO_VERSION}-${ARCH} falco && \
