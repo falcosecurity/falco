@@ -254,6 +254,12 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		                       driver_mode_str + "' is not a valid kind.");
 	}
 
+	if(m_engine_mode == engine_kind_t::EBPF || m_engine_mode == engine_kind_t::GVISOR) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "Using deprecated engine '" + driver_mode_str +
+		                          "'. Please consider switching to another engine.");
+	}
+
 	switch(m_engine_mode) {
 	case engine_kind_t::KMOD:
 		m_kmod.m_buf_size_preset = m_config.get_scalar<int16_t>("engine.kmod.buf_size_preset",
@@ -473,6 +479,11 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 
 	m_grpc_enabled = m_config.get_scalar<bool>("grpc.enabled", false);
+	if(m_grpc_enabled) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "Using deprecated gRPC server (deprecated as consequence of gRPC output "
+		                  "deprecation).");
+	}
 	m_grpc_bind_address = m_config.get_scalar<std::string>("grpc.bind_address", "0.0.0.0:5060");
 	m_grpc_threadiness = m_config.get_scalar<uint32_t>("grpc.threadiness", 0);
 	if(m_grpc_threadiness == 0) {
@@ -488,8 +499,13 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 
 	falco::outputs::config grpc_output;
 	grpc_output.name = "grpc";
+	const auto grpc_output_enabled = m_config.get_scalar<bool>("grpc_output.enabled", true);
+	if(grpc_output_enabled) {
+		falco_logger::log(falco_logger::level::WARNING,
+		                  "Using deprecated gRPC output. Please consider using other outputs.");
+	}
 	// gRPC output is enabled only if gRPC server is enabled too
-	if(m_config.get_scalar<bool>("grpc_output.enabled", true) && m_grpc_enabled) {
+	if(grpc_output_enabled && m_grpc_enabled) {
 		m_outputs.push_back(grpc_output);
 	}
 
