@@ -585,7 +585,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v7.0.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v7.0.3 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -790,13 +790,19 @@ The following table lists the main configurable parameters of the falco chart v7
 | grafana.dashboards.configMaps.falco.name | string | `"falco-grafana-dashboard"` | name specifies the name for the configmap. |
 | grafana.dashboards.configMaps.falco.namespace | string | `""` | namespace specifies the namespace for the configmap. |
 | grafana.dashboards.enabled | bool | `false` | enabled specifies whether the dashboards should be deployed. |
-| healthChecks | object | `{"livenessProbe":{"initialDelaySeconds":60,"periodSeconds":15,"timeoutSeconds":5},"readinessProbe":{"initialDelaySeconds":30,"periodSeconds":15,"timeoutSeconds":5}}` | Parameters used |
-| healthChecks.livenessProbe.initialDelaySeconds | int | `60` | Tells the kubelet that it should wait X seconds before performing the first probe. |
+| healthChecks | object | `{"livenessProbe":{"failureThreshold":3,"initialDelaySeconds":0,"periodSeconds":15,"timeoutSeconds":5},"readinessProbe":{"failureThreshold":3,"initialDelaySeconds":0,"periodSeconds":15,"timeoutSeconds":5},"startupProbe":{"failureThreshold":20,"initialDelaySeconds":3,"periodSeconds":5,"timeoutSeconds":5}}` | Parameters used |
+| healthChecks.livenessProbe.failureThreshold | int | `3` | Number of times in a row before the check fails |
+| healthChecks.livenessProbe.initialDelaySeconds | int | `0` | Tells the kubelet that it should wait X seconds before performing the first probe. |
 | healthChecks.livenessProbe.periodSeconds | int | `15` | Specifies that the kubelet should perform the check every x seconds. |
 | healthChecks.livenessProbe.timeoutSeconds | int | `5` | Number of seconds after which the probe times out. |
-| healthChecks.readinessProbe.initialDelaySeconds | int | `30` | Tells the kubelet that it should wait X seconds before performing the first probe. |
+| healthChecks.readinessProbe.failureThreshold | int | `3` | Number of times in a row before the check fails |
+| healthChecks.readinessProbe.initialDelaySeconds | int | `0` | Tells the kubelet that it should wait X seconds before performing the first probe. |
 | healthChecks.readinessProbe.periodSeconds | int | `15` | Specifies that the kubelet should perform the check every x seconds. |
 | healthChecks.readinessProbe.timeoutSeconds | int | `5` | Number of seconds after which the probe times out. |
+| healthChecks.startupProbe.failureThreshold | int | `20` | failureThreshold * periodSeconds is the max startup time |
+| healthChecks.startupProbe.initialDelaySeconds | int | `3` | Tells the kubelet that it should wait X seconds before performing the first probe. |
+| healthChecks.startupProbe.periodSeconds | int | `5` | Specifies that the kubelet should perform the check every x seconds. |
+| healthChecks.startupProbe.timeoutSeconds | int | `5` | Number of seconds after which the probe times out. |
 | image.pullPolicy | string | `"IfNotPresent"` | The image pull policy. |
 | image.registry | string | `"docker.io"` | The image registry to pull from. |
 | image.repository | string | `"falcosecurity/falco"` | The image repository to pull from |

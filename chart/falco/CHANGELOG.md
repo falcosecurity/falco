@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.0.3
+
+* Replace initialDelaySeconds in liveness/readiness probes by startupProbe for quicker startup
+
 ## v7.0.2
 
 * Reduce artifact follow default interval value to 1 week
