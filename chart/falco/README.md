@@ -585,7 +585,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v7.1.2 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v7.2.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -760,15 +760,15 @@ The following table lists the main configurable parameters of the falco chart v7
 | falcoctl.artifact.install.mounts | object | `{"volumeMounts":[]}` | A list of volume mounts you want to add to the falcoctl-artifact-install init container. |
 | falcoctl.artifact.install.resources | object | `{}` | Resources requests and limits for the falcoctl-artifact-install init container. |
 | falcoctl.artifact.install.securityContext | object | `{}` | Security context for the falcoctl init container. |
-| falcoctl.config | object | `{"artifact":{"allowedTypes":["rulesfile","plugin"],"follow":{"every":"168h","falcoversions":"http://localhost:8765/versions","pluginsDir":"/plugins","refs":["falco-rules:5"],"rulesfilesDir":"/rulesfiles"},"install":{"pluginsDir":"/plugins","refs":["falco-rules:5"],"resolveDeps":true,"rulesfilesDir":"/rulesfiles"}},"indexes":[{"name":"falcosecurity","url":"https://falcosecurity.github.io/falcoctl/index.yaml"}]}` | Configuration file of the falcoctl tool. It is saved in a configmap and mounted on the falcotl containers. |
-| falcoctl.config.artifact | object | `{"allowedTypes":["rulesfile","plugin"],"follow":{"every":"168h","falcoversions":"http://localhost:8765/versions","pluginsDir":"/plugins","refs":["falco-rules:5"],"rulesfilesDir":"/rulesfiles"},"install":{"pluginsDir":"/plugins","refs":["falco-rules:5"],"resolveDeps":true,"rulesfilesDir":"/rulesfiles"}}` | Configuration used by the artifact commands. |
+| falcoctl.config | object | `{"artifact":{"allowedTypes":["rulesfile","plugin"],"follow":{"every":"168h","falcoversions":"http://localhost:8765/versions","pluginsDir":"/plugins","refs":["falco-rules:5"],"rulesfilesDir":"/rulesfiles","stateDir":"/artifactstate"},"install":{"pluginsDir":"/plugins","refs":["falco-rules:5"],"resolveDeps":true,"rulesfilesDir":"/rulesfiles","stateDir":"/artifactstate"}},"indexes":[{"name":"falcosecurity","url":"https://falcosecurity.github.io/falcoctl/index.yaml"}]}` | Configuration file of the falcoctl tool. It is saved in a configmap and mounted on the falcotl containers. |
+| falcoctl.config.artifact | object | `{"allowedTypes":["rulesfile","plugin"],"follow":{"every":"168h","falcoversions":"http://localhost:8765/versions","pluginsDir":"/plugins","refs":["falco-rules:5"],"rulesfilesDir":"/rulesfiles","stateDir":"/artifactstate"},"install":{"pluginsDir":"/plugins","refs":["falco-rules:5"],"resolveDeps":true,"rulesfilesDir":"/rulesfiles","stateDir":"/artifactstate"}}` | Configuration used by the artifact commands. |
 | falcoctl.config.artifact.allowedTypes | list | `["rulesfile","plugin"]` | List of artifact types that falcoctl will handle. If the configured refs resolves to an artifact whose type is not contained in the list it will refuse to download and install that artifact. |
 | falcoctl.config.artifact.follow.every | string | `"168h"` | How often the tool checks for new versions of the followed artifacts. |
 | falcoctl.config.artifact.follow.falcoversions | string | `"http://localhost:8765/versions"` | HTTP endpoint that serves the api versions of the Falco instance. It is used to check if the new versions are compatible with the running Falco instance. |
 | falcoctl.config.artifact.follow.pluginsDir | string | `"/plugins"` | See the fields of the artifact.install section. |
 | falcoctl.config.artifact.follow.refs | list | `["falco-rules:5"]` | List of artifacts to be followed by the falcoctl sidecar container. |
 | falcoctl.config.artifact.follow.rulesfilesDir | string | `"/rulesfiles"` | See the fields of the artifact.install section. |
-| falcoctl.config.artifact.follow.stateDir | string | `"/artifactstate"` | Directory where falcoctl will save its artifact state files. This directory is shared between the init container and the sidecar to maintain state consistency across artifact install and follow operations. |
+| falcoctl.config.artifact.follow.stateDir | string | `"/artifactstate"` | See the fields of the artifact.install section. |
 | falcoctl.config.artifact.install.pluginsDir | string | `"/plugins"` | Same as the one above but for the artifacts. |
 | falcoctl.config.artifact.install.refs | list | `["falco-rules:5"]` | List of artifacts to be installed by the falcoctl init container. |
 | falcoctl.config.artifact.install.resolveDeps | bool | `true` | Resolve the dependencies for artifacts. |
