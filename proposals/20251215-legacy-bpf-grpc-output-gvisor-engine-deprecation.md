@@ -102,8 +102,9 @@ The deprecation of these components introduces user-facing changes that must be 
 deprecation policy for "non-backward compatible user-facing changes" (see
 [20231220-features-adoption-and-deprecation.md#deprecation-policy](./20231220-features-adoption-and-deprecation.md#deprecation-policy)).
 
-All components are stable, and given that the current stable Falco version is `0.43.0` (ante `1.0.0`), the minimum
-deprecation period length is 1 release: this means that components cannot be removed before Falco `0.44.0`.
+All components are stable, and considering that deprecations will first be enforced in the stable Falco version `0.43.0`
+(ante `1.0.0`), the minimum deprecation period length is 1 release: this means that components cannot be removed before
+Falco `0.44.0`.
 
 At high level, the action plan is to inform users, during the deprecation period, about the deprecation: this is
 achieved by emitting a deprecation notice if the user try to leverage any of the feature exposed by any component, and
