@@ -70,9 +70,9 @@
 #     file_output [Stable]
 #     http_output [Stable]
 #     program_output [Stable]
-#     grpc_output [Stable]
+#     grpc_output [Deprecated]
 # Falco exposed services
-#     grpc [Stable]
+#     grpc [Deprecated]
 #     webserver [Stable]
 # Falco logging / alerting / metrics related to software functioning (basic)
 #     log_stderr [Stable]
@@ -282,12 +282,14 @@ rules_files:
 #
 # -- Falco supports different engines to generate events.
 # Choose the appropriate engine kind based on your system's configuration and requirements.
+# DEPRECATION NOTICE: the Legacy eBPF probe and the gVisor engine are currently deprecated. Consider using other
+# engines.
 #
 # Available engines:
 # - `kmod`: Kernel Module
-# - `ebpf`: Legacy eBPF probe
+# - `ebpf`: Legacy eBPF probe (deprecated)
 # - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
-# - `gvisor`: gVisor sandbox
+# - `gvisor`: gVisor sandbox (deprecated)
 # - `replay`: Replay a scap trace file
 # - `nodriver`: No driver is injected into the system.
 #   This is useful to debug and to run plugins with 'syscall' source.
@@ -438,7 +440,8 @@ engine:
   kmod:
     buf_size_preset: 4
     drop_failed_exit: false
-  # -- Engine-specific configuration for Legacy eBPF (ebpf) engine.
+  # -- Engine-specific configuration for Legacy eBPF (ebpf) engine. DEPRECATION NOTICE: the Legacy eBPF engine is
+  # deprecated.
   ebpf:
     # -- Path to the elf file to load.
     probe: ${HOME}/.falco/falco-bpf.o
@@ -453,7 +456,7 @@ engine:
   replay:
     # -- Path to the capture file to replay (eg: /path/to/file.scap)
     capture_file: ""
-  # -- Engine-specific configuration for gVisor (gvisor) engine.
+  # -- Engine-specific configuration for gVisor (gvisor) engine. DEPRECATION NOTICE: the gVisor engine is deprecated.
   gvisor:
     # -- A Falco-compatible configuration file can be generated with
     # '--gvisor-generate-config' and utilized for both runsc and Falco.
@@ -798,7 +801,7 @@ append_output:
 # Falco outputs channels #
 ##########################
 
-# Falco supports various output channels, such as syslog, stdout, file, gRPC,
+# Falco supports various output channels, such as syslog, stdout, file, gRPC (deprecated),
 # webhook, and more. You can enable or disable these channels as needed to
 # control where Falco alerts and log messages are directed. This flexibility
 # allows seamless integration with your preferred logging and alerting systems.
@@ -894,14 +897,14 @@ program_output:
   # -- The program to execute.
   program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
-# [Stable] `grpc_output`
+# [Deprecated] `grpc_output`
 #
-# -- Use gRPC as an output service.
+# -- Use gRPC as an output service. DEPRECATION NOTICE: The gRPC output is deprecated. Consider using other outputs.
 #
 # gRPC is a modern and high-performance framework for remote procedure calls
 # (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC
 # output in Falco provides a modern and efficient way to integrate with other
-# systems. By default the setting is turned off. Enabling this option stores
+# systems. By default, the setting is turned off. Enabling this option stores
 # output events in memory until they are consumed by a gRPC client. Ensure that
 # you have a consumer for the output events or leave it disabled.
 grpc_output:
@@ -912,7 +915,10 @@ grpc_output:
 # Falco exposed services #
 ##########################
 
-# [Stable] `grpc`
+# [Deprecated] `grpc`
+#
+# -- A gRPC server (needed by the gRPC output). DEPRECATION NOTICE: The gRPC server is deprecated as a consequence of
+# the gRPC output deprecation.
 #
 # Falco provides support for running a gRPC server using two main binding types:
 # 1. Over the network with mandatory mutual TLS authentication (mTLS), which
