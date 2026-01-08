@@ -112,20 +112,33 @@ tolerations:
 
 # -- Parameters used
 healthChecks:
+  startupProbe:
+    # -- Tells the kubelet that it should wait X seconds before performing the first probe.
+    initialDelaySeconds: 3
+    # -- Number of seconds after which the probe times out.
+    timeoutSeconds: 5
+    # -- Specifies that the kubelet should perform the check every x seconds.
+    periodSeconds: 5
+    # -- failureThreshold * periodSeconds is the max startup time
+    failureThreshold: 20
   livenessProbe:
     # -- Tells the kubelet that it should wait X seconds before performing the first probe.
-    initialDelaySeconds: 60
+    initialDelaySeconds: 0
     # -- Number of seconds after which the probe times out.
     timeoutSeconds: 5
     # -- Specifies that the kubelet should perform the check every x seconds.
     periodSeconds: 15
+    # -- Number of times in a row before the check fails
+    failureThreshold: 3
   readinessProbe:
     # -- Tells the kubelet that it should wait X seconds before performing the first probe.
-    initialDelaySeconds: 30
+    initialDelaySeconds: 0
     # -- Number of seconds after which the probe times out.
     timeoutSeconds: 5
     # -- Specifies that the kubelet should perform the check every x seconds.
     periodSeconds: 15
+    # -- Number of times in a row before the check fails
+    failureThreshold: 3
 
 # -- Attach the Falco process to a tty inside the container. Needed to flush Falco logs as soon as they are emitted.
 # Set it to "true" when you need the Falco logs to be immediately displayed.

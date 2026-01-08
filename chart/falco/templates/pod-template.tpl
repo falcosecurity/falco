@@ -99,10 +99,22 @@ spec:
         - containerPort: {{ .Values.falco.webserver.listen_port }}
           name: web
           protocol: TCP
+      startupProbe:
+        initialDelaySeconds: {{ .Values.healthChecks.startupProbe.initialDelaySeconds }}
+        timeoutSeconds: {{ .Values.healthChecks.startupProbe.timeoutSeconds }}
+        periodSeconds: {{ .Values.healthChecks.startupProbe.periodSeconds }}
+        failureThreshold: {{ .Values.healthChecks.startupProbe.failureThreshold }}
+        httpGet:
+          path: {{ .Values.falco.webserver.k8s_healthz_endpoint }}
+          port: {{ .Values.falco.webserver.listen_port }}
+          {{- if .Values.falco.webserver.ssl_enabled }}
+          scheme: HTTPS
+          {{- end }}
       livenessProbe:
         initialDelaySeconds: {{ .Values.healthChecks.livenessProbe.initialDelaySeconds }}
         timeoutSeconds: {{ .Values.healthChecks.livenessProbe.timeoutSeconds }}
         periodSeconds: {{ .Values.healthChecks.livenessProbe.periodSeconds }}
+        failureThreshold: {{ .Values.healthChecks.livenessProbe.failureThreshold }}
         httpGet:
           path: {{ .Values.falco.webserver.k8s_healthz_endpoint }}
           port: {{ .Values.falco.webserver.listen_port }}
@@ -113,6 +125,7 @@ spec:
         initialDelaySeconds: {{ .Values.healthChecks.readinessProbe.initialDelaySeconds }}
         timeoutSeconds: {{ .Values.healthChecks.readinessProbe.timeoutSeconds }}
         periodSeconds: {{ .Values.healthChecks.readinessProbe.periodSeconds }}
+        failureThreshold: {{ .Values.healthChecks.readinessProbe.failureThreshold }}
         httpGet:
           path: {{ .Values.falco.webserver.k8s_healthz_endpoint }}
           port: {{ .Values.falco.webserver.listen_port }}
