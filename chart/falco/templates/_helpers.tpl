@@ -488,10 +488,8 @@ This helper is used to add the container plugin to the falco configuration.
 {{ $loadedPlugins := append .Values.falco.load_plugins "container" -}}
 {{ $_ = set .Values.falco "load_plugins" ($loadedPlugins | uniq) -}}
 {{ end -}}
-{{- if .Values.collectors.containerEngine.pluginRef -}}
 {{ $_ := set .Values.falcoctl.config.artifact.install "refs" ((append .Values.falcoctl.config.artifact.install.refs .Values.collectors.containerEngine.pluginRef) | uniq) -}}
 {{ $_ = set .Values.falcoctl.config.artifact "allowedTypes" ((append .Values.falcoctl.config.artifact.allowedTypes "plugin") | uniq) -}}
-{{ end -}}
 {{ end -}}
 {{ end -}}
 {{ end -}}
