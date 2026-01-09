@@ -21,7 +21,7 @@ ARG HOST_ROOT=/host
 ARG HOME=/root
 ENV FALCO_VERSION="${FALCO_VERSION}" \
     VERSION_BUCKET="${VERSION_BUCKET}" \
-    HOST_ROOT="/host" \
+    HOST_ROOT="${HOST_ROOT}" \
     HOME="${HOME}"
 
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
