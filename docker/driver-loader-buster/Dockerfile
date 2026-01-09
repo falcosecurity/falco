@@ -17,6 +17,8 @@ LABEL usage="docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc
 ARG TARGETARCH
 
 ARG VERSION_BUCKET=deb
+ARG HOST_ROOT=/host
+ARG HOME=/root
 ENV FALCO_VERSION="${FALCO_VERSION}" \
     VERSION_BUCKET="${VERSION_BUCKET}" \
     HOST_ROOT="/host" \
@@ -135,6 +137,6 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 	&& dpkg -i *binutils*.deb \
 	&& rm -f *binutils*.deb
 
-COPY ./docker/driver-loader-buster/docker-entrypoint.sh /
+COPY docker/driver-loader-buster/docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
