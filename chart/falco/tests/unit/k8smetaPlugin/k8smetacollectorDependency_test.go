@@ -588,11 +588,17 @@ func TestFalcoctlRefs(t *testing.T) {
 		require.True(t, slices.Contains(allowedTypes.([]interface{}), "rulesfile"))
 		// Test plugin reference.
 		refs := artifactConfig["install"].(map[string]interface{})["refs"].([]interface{})
-		// When k8smeta collector is enabled, we expect the k8smeta plugin to be in the refs.
+		require.Len(t, refs, 3)
 		require.True(t, slices.ContainsFunc(
 			refs,
 			func(ref any) bool {
 				return strings.HasPrefix(ref.(string), "falco-rules:")
+			},
+		))
+		require.True(t, slices.ContainsFunc(
+			refs,
+			func(ref any) bool {
+				return strings.HasPrefix(ref.(string), "ghcr.io/falcosecurity/plugins/plugin/container:")
 			},
 		))
 		require.True(t, slices.ContainsFunc(
