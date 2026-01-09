@@ -673,17 +673,10 @@ func TestFalcoctlRefs(t *testing.T) {
 		{
 			"defaultValues",
 			nil,
-			refShouldNotBeSet,
+			refShouldBeSet,
 		},
 		{
-			"explicitPluginRef",
-			map[string]string{
-				"collectors.containerEngine.pluginRef": "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1",
-			},
-			refShouldBeSet, // When pluginRef is explicitly set, it should be added to refs
-		},
-		{
-			"collectorsDisabled",
+			"setPluginConfiguration",
 			map[string]string{
 				"collectors.enabled": "false",
 			},
