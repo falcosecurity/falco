@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.1.1
+
+* Improve documentation for container engine hooks and fix typos in values.yaml
+
 ## v7.1.0
 
 * Allow specifying folder annotation for grafana dashboards
