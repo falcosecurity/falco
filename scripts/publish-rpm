@@ -14,6 +14,16 @@ check_program() {
   fi
 }
 
+# Sign RPM packages with embedded GPG signature using rpmsign
+#
+# $@: paths of RPM files to sign.
+rpmsign_packages() {
+    echo "Signing RPM packages with rpmsign..."
+    rpmsign --define '_gpg_name Falcosecurity Package Signing' --resign "$@"
+    echo "Verifying RPM signatures..."
+    rpm -qp --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}: %|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{(none)}|}|\n' "$@"
+}
+
 # Updates the signature of a RPM package in the local repository
 #
 # $1: path of the repository.
@@ -127,6 +137,8 @@ fi
 check_program createrepo
 check_program gpg
 check_program aws
+check_program rpmsign
+check_program rpm
 
 # settings
 s3_bucket_repo="s3://falco-distribution/packages/${repo}"
@@ -140,18 +152,30 @@ aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
 # update signatures for all existing packages
 if [ "${sign_all}" ]; then
+  # collect all RPM files
+  rpm_files=()
   for file in ${tmp_repo_path}/*; do
-    if [ -f "$file" ]; then # exclude directories, symlinks, etc...
-      if [[ ! $file == *.asc ]]; then # exclude signature files
-        package=$(basename -- ${file})
-        echo "Signing ${package}..."
-        sign_rpm ${tmp_repo_path} ${file}
-
-        echo "Syncing ${package}.asc to ${s3_bucket_repo}..."
-        aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
-      fi
+    if [ -f "$file" ] && [[ $file == *.rpm ]]; then
+      rpm_files+=("$file")
     fi
   done
+
+  # sign all RPM packages with embedded GPG signature
+  if [ ${#rpm_files[@]} -gt 0 ]; then
+    rpmsign_packages "${rpm_files[@]}"
+  fi
+
+  # create detached signatures and upload
+  for file in "${rpm_files[@]}"; do
+    package=$(basename -- ${file})
+    echo "Creating detached signature for ${package}..."
+    sign_rpm ${tmp_repo_path} ${file}
+
+    echo "Syncing ${package} and ${package}.asc to ${s3_bucket_repo}..."
+    aws s3 cp ${tmp_repo_path}/${package} ${s3_bucket_repo}/${package} --acl public-read
+    aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
+  done
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/*.rpm
   aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/*.asc
   sign_repo ${tmp_repo_path}
 fi
@@ -161,8 +185,9 @@ if [[ ${repo} == "rpm-dev" ]]; then
   reduce_dir_size ${tmp_repo_path} 10 rpm
 fi
 
-# update the repo by adding new packages
+# sign and add new packages to the repo
 if ! [ ${#files[@]} -eq 0 ]; then
+  rpmsign_packages "${files[@]}"
   for file in "${files[@]}"; do
     echo "Adding ${file}..."
     add_rpm ${tmp_repo_path} ${file}
