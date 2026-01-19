@@ -82,11 +82,6 @@ jobs:
           GPG_KEY: ${{ secrets.GPG_KEY }}
         run: printenv GPG_KEY | gpg --import -
 
-      - name: Sign rpms
-        run: |
-          rpmsign --define '_gpg_name Falcosecurity Package Signing' --addsign /tmp/falco-build-rpm/falco-*.rpm
-          rpm -qp --qf '%|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{(none)}|}|\n' /tmp/falco-build-rpm/falco-*.rpm
-
       - name: Publish wasm
         run: |
           ./scripts/publish-wasm -f /tmp/falco-wasm/falco-${{ inputs.version }}-wasm.tar.gz
