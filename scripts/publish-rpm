@@ -177,6 +177,7 @@ if [ "${sign_all}" ]; then
   done
   aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/*.rpm
   aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/*.asc
+  update_repo ${tmp_repo_path}
   sign_repo ${tmp_repo_path}
 fi
 
