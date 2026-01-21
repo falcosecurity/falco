@@ -88,6 +88,9 @@ Plugin capabilities are *composable*, we can have a single plugin with both capa
 Note that **the driver is not required when using plugins**.
 
 #### About gVisor
+
+> **⚠️ DEPRECATION NOTICE**: The gVisor engine (`driver.kind=gvisor`) is **deprecated** starting with Falco 0.43.0. Consider using alternative monitoring approaches. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
+
 gVisor is an application kernel, written in Go, that implements a substantial portion of the Linux system call interface. It provides an additional layer of isolation between running applications and the host operating system. For more information please consult the [official docs](https://gvisor.dev/docs/). In version `0.32.1`, Falco first introduced support for gVisor by leveraging the stream of system call information coming from gVisor.
 Falco requires the version of [runsc](https://gvisor.dev/docs/user_guide/install/) to be equal to or above `20220704.0`. The following snippet shows the gVisor configuration variables found in [values.yaml](./values.yaml):
 ```yaml
@@ -164,6 +167,8 @@ helm install falco falcosecurity/falco \
 ```
 
 **Legacy eBPF probe**
+
+> **⚠️ DEPRECATION NOTICE**: The Legacy eBPF probe (`driver.kind=ebpf`) is **deprecated** starting with Falco 0.43.0. Please consider using the Modern eBPF probe (`driver.kind=modern_ebpf`) instead. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
 
 To run Falco with the [eBPF probe](http://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
 
@@ -503,6 +508,8 @@ spec:
 ```
 ## Enabling gRPC
 
+> **⚠️ DEPRECATION NOTICE**: The gRPC output and gRPC server are **deprecated** starting with Falco 0.43.0. Consider using alternative outputs such as HTTP output (`falco.http_output`), file output (`falco.file_output`), or [Falcosidekick](https://github.com/falcosecurity/falcosidekick) for advanced integrations. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for migration guidance.
+
 The Falco gRPC server and the Falco gRPC Outputs APIs are not enabled by default.
 Moreover, Falco supports running a gRPC server with two main binding types:
 - Over a local **Unix socket** with no authentication
@@ -585,7 +592,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v7.2.1 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v8.0.0 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -599,19 +606,19 @@ The following table lists the main configurable parameters of the falco chart v7
 | certs.existingSecret | string | `""` | Existing secret containing the following key, crt and ca as well as the bundle pem. |
 | certs.server.crt | string | `""` | Certificate used by gRPC and webserver. |
 | certs.server.key | string | `""` | Key used by gRPC and webserver. |
-| collectors.containerEngine | object | `{"enabled":true,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/host-containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/containerd/containerd.sock","/run/crio/crio.sock","/run/k3s/containerd/containerd.sock","/run/host-containerd/containerd.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.4.1","withSize":false}` | This collector is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
+| collectors.containerEngine | object | `{"enabled":true,"engines":{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/host-containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/containerd/containerd.sock","/run/crio/crio.sock","/run/k3s/containerd/containerd.sock","/run/host-containerd/containerd.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}},"hooks":["create"],"labelMaxLen":100,"pluginRef":"ghcr.io/falcosecurity/plugins/plugin/container:0.6.1","withSize":false}` | This collector is designed to collect metadata from various container engines and provide a unified interface through the container plugin. When enabled, it will deploy the container plugin and use it to collect metadata from the container engines. Keep in mind that the old collectors (docker, containerd, crio, podman) will use the container plugin to collect metadata under the hood. |
 | collectors.containerEngine.enabled | bool | `true` | Enable Container Engine support. |
 | collectors.containerEngine.engines | object | `{"bpm":{"enabled":true},"containerd":{"enabled":true,"sockets":["/run/host-containerd/containerd.sock"]},"cri":{"enabled":true,"sockets":["/run/containerd/containerd.sock","/run/crio/crio.sock","/run/k3s/containerd/containerd.sock","/run/host-containerd/containerd.sock"]},"docker":{"enabled":true,"sockets":["/var/run/docker.sock"]},"libvirt_lxc":{"enabled":true},"lxc":{"enabled":true},"podman":{"enabled":true,"sockets":["/run/podman/podman.sock"]}}` | engines specify the container engines that will be used to collect metadata. See https://github.com/falcosecurity/plugins/blob/main/plugins/container/README.md#configuration |
 | collectors.containerEngine.hooks | list | `["create"]` | hooks specify the hooks that will be used to collect metadata from the container engine. The available hooks are: create, start. Some fields might not be available in create hook, but we are guaranteed that it gets triggered before first process gets started. |
 | collectors.containerEngine.labelMaxLen | int | `100` | labelMaxLen is the maximum length of the labels that can be used in the container plugin. container labels larger than this value won't be collected. |
-| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.4.1"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1". Or just name + tag: container:0.4.1. |
+| collectors.containerEngine.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/container:0.6.1"` | pluginRef is the OCI reference for the container plugin. It could be a full reference such as "ghcr.io/falcosecurity/plugins/plugin/container:0.6.1". Or just name + tag: container:0.6.1. |
 | collectors.containerEngine.withSize | bool | `false` | withSize specifies whether to enable container size inspection, which is inherently slow. |
 | collectors.enabled | bool | `true` | Enable/disable all the metadata collectors. |
-| collectors.kubernetes | object | `{"collectorHostname":"","collectorPort":"","enabled":false,"hostProc":"/host","pluginRef":"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0","verbosity":"info"}` | kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973 |
+| collectors.kubernetes | object | `{"collectorHostname":"","collectorPort":"","enabled":false,"hostProc":"/host","pluginRef":"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1","verbosity":"info"}` | kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973 |
 | collectors.kubernetes.collectorHostname | string | `""` | collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override it, make sure to set here the address of the k8s-metacollector. It is used by the k8smeta plugin to connect to the k8s-metacollector. |
 | collectors.kubernetes.collectorPort | string | `""` | collectorPort designates the port on which the k8s-metacollector gRPC service listens. If not specified the value of the port named `broker-grpc` in k8s-metacollector.service.ports is used. The default values is 45000. It is used by the k8smeta plugin to connect to the k8s-metacollector. |
 | collectors.kubernetes.enabled | bool | `false` | enabled specifies whether the Kubernetes metadata should be collected using the k8smeta plugin and the k8s-metacollector component. It will deploy the k8s-metacollector external component that fetches Kubernetes metadata and pushes them to Falco instances. For more info see: https://github.com/falcosecurity/k8s-metacollector https://github.com/falcosecurity/charts/tree/master/charts/k8s-metacollector When this option is disabled, Falco falls back to the container annotations to grab the metadata. In such a case, only the ID, name, namespace, labels of the pod will be available. |
-| collectors.kubernetes.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0"` | pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0". Or just name + tag: k8smeta:0.4.0. |
+| collectors.kubernetes.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1"` | pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1". Or just name + tag: k8smeta:0.4.1. |
 | containerSecurityContext | object | `{}` | Set securityContext for the Falco container.For more info see the "falco.securityContext" helper in "pod-template.tpl" |
 | controller.annotations | object | `{}` |  |
 | controller.daemonset.updateStrategy.type | string | `"RollingUpdate"` | Perform rolling updates by default in the DaemonSet agent ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/ |
@@ -679,10 +686,11 @@ The following table lists the main configurable parameters of the falco chart v7
 | falco.file_output.enabled | bool | `false` | Enable sending alerts to a file. |
 | falco.file_output.filename | string | `"./events.txt"` | Path to the file where alerts will be appended. |
 | falco.file_output.keep_alive | bool | `false` | If true, the file will be opened once and continuously written to. If false, the file will be reopened for each output message. |
+| falco.grpc | object | `{"bind_address":"unix:///run/falco/falco.sock","enabled":false,"threadiness":0}` | A gRPC server (needed by the gRPC output). DEPRECATION NOTICE: The gRPC server is deprecated as a consequence of the gRPC output deprecation.  Falco provides support for running a gRPC server using two main binding types: 1. Over the network with mandatory mutual TLS authentication (mTLS), which    ensures secure communication 2. Local Unix socket binding with no authentication. By default, the    gRPC server in Falco is turned off with no enabled services (see    `grpc_output` setting).  To configure the gRPC server in Falco, you can make the following changes to the options:  - Uncomment the relevant configuration options related to the gRPC server. - Update the paths of the generated certificates for mutual TLS authentication   if you choose to use mTLS. - Specify the address to bind and expose the gRPC server. - Adjust the threadiness configuration to control the number of threads and   contexts used by the server.  Keep in mind that if any issues arise while creating the gRPC server, the information will be logged, but it will not stop the main Falco daemon.  gRPC server using mTLS grpc:   enabled: true   bind_address: "0.0.0.0:5060"   # When the `threadiness` value is set to 0, Falco will automatically determine   # the appropriate number of threads based on the number of online cores in the system.   threadiness: 0   private_key: "/etc/falco/certs/server.key"   cert_chain: "/etc/falco/certs/server.crt"   root_certs: "/etc/falco/certs/ca.crt"  gRPC server using a local unix socket (see default below) |
 | falco.grpc.bind_address | string | `"unix:///run/falco/falco.sock"` | Address to bind and expose the gRPC server. Use either a local unix socket with no authentication, or a network address with mTLS. |
 | falco.grpc.enabled | bool | `false` | Enable the gRPC server. |
 | falco.grpc.threadiness | int | `0` | When the `threadiness` value is set to 0, Falco will automatically determine the appropriate number of threads based on the number of online cores in the system. |
-| falco.grpc_output | object | `{"enabled":false}` | Use gRPC as an output service.  gRPC is a modern and high-performance framework for remote procedure calls (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC output in Falco provides a modern and efficient way to integrate with other systems. By default the setting is turned off. Enabling this option stores output events in memory until they are consumed by a gRPC client. Ensure that you have a consumer for the output events or leave it disabled. |
+| falco.grpc_output | object | `{"enabled":false}` | Use gRPC as an output service. DEPRECATION NOTICE: The gRPC output is deprecated. Consider using other outputs.  gRPC is a modern and high-performance framework for remote procedure calls (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC output in Falco provides a modern and efficient way to integrate with other systems. By default, the setting is turned off. Enabling this option stores output events in memory until they are consumed by a gRPC client. Ensure that you have a consumer for the output events or leave it disabled. |
 | falco.grpc_output.enabled | bool | `false` | Enable gRPC as an output service. |
 | falco.http_output | object | `{"ca_bundle":"","ca_cert":"","ca_path":"/etc/falco/certs/","client_cert":"/etc/falco/certs/client/client.crt","client_key":"/etc/falco/certs/client/client.key","compress_uploads":false,"echo":false,"enabled":false,"insecure":false,"keep_alive":false,"max_consecutive_timeouts":5,"mtls":false,"url":"","user_agent":"falcosecurity/falco"}` | Send alerts to an HTTP endpoint or webhook.  When using falcosidekick, it is necessary to set `json_output` to true, which is conveniently done automatically for you when using `falcosidekick.enabled=true`. |
 | falco.http_output.ca_bundle | string | `""` | Path to a specific file that will be used as the CA certificate store. |
@@ -778,7 +786,7 @@ The following table lists the main configurable parameters of the falco chart v7
 | falcoctl.image.pullPolicy | string | `"IfNotPresent"` | The image pull policy. |
 | falcoctl.image.registry | string | `"docker.io"` | The image registry to pull from. |
 | falcoctl.image.repository | string | `"falcosecurity/falcoctl"` | The image repository to pull from. |
-| falcoctl.image.tag | string | `"0.12.1"` | The image tag to pull. |
+| falcoctl.image.tag | string | `"0.12.2"` | The image tag to pull. |
 | falcosidekick | object | `{"enabled":false,"fullfqdn":false,"listenPort":""}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml |
 | falcosidekick.enabled | bool | `false` | Enable falcosidekick deployment. |
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
@@ -860,7 +868,7 @@ The following table lists the main configurable parameters of the falco chart v7
 | serviceMonitor.interval | string | `"15s"` | interval specifies the time interval at which Prometheus should scrape metrics from the service. |
 | serviceMonitor.labels | object | `{}` | labels set of labels to be applied to the ServiceMonitor resource. If your Prometheus deployment is configured to use serviceMonitorSelector, then add the right label here in order for the ServiceMonitor to be selected for target discovery. |
 | serviceMonitor.path | string | `"/metrics"` | path at which the metrics are exposed by Falco. |
-| serviceMonitor.relabelings | list | `[]` | relabelings configures the relabeling rules to apply the target’s metadata labels. |
+| serviceMonitor.relabelings | list | `[]` | relabelings configures the relabeling rules to apply the target's metadata labels. |
 | serviceMonitor.scheme | string | `"http"` | scheme specifies network protocol used by the metrics endpoint. In this case HTTP. |
 | serviceMonitor.scrapeTimeout | string | `"10s"` | scrapeTimeout determines the maximum time Prometheus should wait for a target to respond to a scrape request. If the target does not respond within the specified timeout, Prometheus considers the scrape as failed for that target. |
 | serviceMonitor.selector | object | `{}` | selector set of labels that should match the labels on the Service targeted by the current serviceMonitor. |

@@ -89,6 +89,9 @@ Plugin capabilities are *composable*, we can have a single plugin with both capa
 Note that **the driver is not required when using plugins**.
 
 #### About gVisor
+
+> **⚠️ DEPRECATION NOTICE**: The gVisor engine (`driver.kind=gvisor`) is **deprecated** starting with Falco 0.43.0. Consider using alternative monitoring approaches. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
+
 gVisor is an application kernel, written in Go, that implements a substantial portion of the Linux system call interface. It provides an additional layer of isolation between running applications and the host operating system. For more information please consult the [official docs](https://gvisor.dev/docs/). In version `0.32.1`, Falco first introduced support for gVisor by leveraging the stream of system call information coming from gVisor.
 Falco requires the version of [runsc](https://gvisor.dev/docs/user_guide/install/) to be equal to or above `20220704.0`. The following snippet shows the gVisor configuration variables found in [values.yaml](./values.yaml):
 ```yaml
@@ -165,6 +168,8 @@ helm install falco falcosecurity/falco \
 ```
 
 **Legacy eBPF probe**
+
+> **⚠️ DEPRECATION NOTICE**: The Legacy eBPF probe (`driver.kind=ebpf`) is **deprecated** starting with Falco 0.43.0. Please consider using the Modern eBPF probe (`driver.kind=modern_ebpf`) instead. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
 
 To run Falco with the [eBPF probe](http://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
 
@@ -506,6 +511,8 @@ spec:
     - Master
 ```
 ## Enabling gRPC
+
+> **⚠️ DEPRECATION NOTICE**: The gRPC output and gRPC server are **deprecated** starting with Falco 0.43.0. Consider using alternative outputs such as HTTP output (`falco.http_output`), file output (`falco.file_output`), or [Falcosidekick](https://github.com/falcosecurity/falcosidekick) for advanced integrations. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for migration guidance.
 
 The Falco gRPC server and the Falco gRPC Outputs APIs are not enabled by default.
 Moreover, Falco supports running a gRPC server with two main binding types:
