@@ -403,8 +403,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1". Or just name + tag: container:0.4.1.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.4.1"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.6.1". Or just name + tag: container:0.6.1.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.6.1"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
@@ -455,8 +455,8 @@ collectors:
     # In such a case, only the ID, name, namespace, labels of the pod will be available.
     enabled: false
     # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
-    # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0". Or just name + tag: k8smeta:0.4.0.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.0"
+    # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1". Or just name + tag: k8smeta:0.4.1.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1"
     # -- collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match
     # k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override
     # it, make sure to set here the address of the k8s-metacollector.
@@ -556,7 +556,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.12.1"
+    tag: "0.12.2"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artifacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
@@ -670,7 +670,7 @@ serviceMonitor:
   # If the target does not respond within the specified timeout, Prometheus considers the scrape as failed for
   # that target.
   scrapeTimeout: 10s
-  # -- relabelings configures the relabeling rules to apply the target’s metadata labels.
+  # -- relabelings configures the relabeling rules to apply the target's metadata labels.
   relabelings: []
   # -- targetLabels defines the labels which are transferred from the associated Kubernetes service object onto the ingested metrics.
   targetLabels: []
@@ -843,6 +843,8 @@ falco:
 
   # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by this Helm chart.
   # To customize the Falco engine settings within the chart, please refer to `driver` settings section above.
+  # DEPRECATION NOTICE: the Legacy eBPF probe and the gVisor engine are currently deprecated. Consider using other
+  # engines.
 
   ##################
   # Falco captures #
@@ -1168,7 +1170,7 @@ falco:
   # Falco outputs channels #
   ##########################
 
-  # Falco supports various output channels, such as syslog, stdout, file, gRPC,
+  # Falco supports various output channels, such as syslog, stdout, file, gRPC (deprecated),
   # webhook, and more. You can enable or disable these channels as needed to
   # control where Falco alerts and log messages are directed. This flexibility
   # allows seamless integration with your preferred logging and alerting systems.
@@ -1267,14 +1269,14 @@ falco:
     # -- The program to execute.
     program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
-  # [Stable] `grpc_output`
+  # [Deprecated] `grpc_output`
   #
-  # -- Use gRPC as an output service.
+  # -- Use gRPC as an output service. DEPRECATION NOTICE: The gRPC output is deprecated. Consider using other outputs.
   #
   # gRPC is a modern and high-performance framework for remote procedure calls
   # (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC
   # output in Falco provides a modern and efficient way to integrate with other
-  # systems. By default the setting is turned off. Enabling this option stores
+  # systems. By default, the setting is turned off. Enabling this option stores
   # output events in memory until they are consumed by a gRPC client. Ensure that
   # you have a consumer for the output events or leave it disabled.
   grpc_output:
@@ -1285,7 +1287,10 @@ falco:
   # Falco exposed services #
   ##########################
 
-  # [Stable] `grpc`
+  # [Deprecated] `grpc`
+  #
+  # -- A gRPC server (needed by the gRPC output). DEPRECATION NOTICE: The gRPC server is deprecated as a consequence of
+  # the gRPC output deprecation.
   #
   # Falco provides support for running a gRPC server using two main binding types:
   # 1. Over the network with mandatory mutual TLS authentication (mTLS), which

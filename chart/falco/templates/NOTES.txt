@@ -21,6 +21,37 @@ WARNING(driver):
 {{- end -}}
 
 
+{{- if or (and .Values.falco.grpc .Values.falco.grpc.enabled) (and .Values.falco.grpc_output .Values.falco.grpc_output.enabled) -}}
+{{- println }}
+WARNING(grpc):
+The gRPC output and gRPC server are deprecated in Falco 0.43.0.
+{{- if and .Values.falco.grpc .Values.falco.grpc.enabled }}
+  - falco.grpc.enabled is set to true (deprecated)
+{{- end }}
+{{- if and .Values.falco.grpc_output .Values.falco.grpc_output.enabled }}
+  - falco.grpc_output.enabled is set to true (deprecated)
+{{- end }}
+{{- println }}
+Consider migrating to alternative outputs such as HTTP output, file output, or Falcosidekick.
+See BREAKING-CHANGES.md for more information.
+{{- end }}
+
+
+{{- if has .Values.driver.kind (list "ebpf" "gvisor") -}}
+{{- println }}
+WARNING(engine):
+{{- if eq .Values.driver.kind "ebpf" }}
+The Legacy eBPF probe (driver.kind=ebpf) is deprecated in Falco 0.43.0.
+Please consider using the Modern eBPF probe (driver.kind=modern_ebpf) instead.
+{{- else if eq .Values.driver.kind "gvisor" }}
+The gVisor engine (driver.kind=gvisor) is deprecated in Falco 0.43.0.
+Please consider using alternative monitoring approaches.
+{{- end }}
+{{- println }}
+See BREAKING-CHANGES.md for more information.
+{{- end }}
+
+
 {{- if or (hasKey .Values.collectors "containerd") (hasKey .Values.collectors "cri") (hasKey .Values.collectors "docker") -}}
 {{- println }}
 WARNING(collectors):

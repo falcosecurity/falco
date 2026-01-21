@@ -3,6 +3,15 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v8.0.0
+
+* Upgrade Falco to v0.43.0
+* Upgrade Falcoctl to v0.12.2 (fixes issue with authentication to private registries during artifact signature verification)
+* Upgrade container plugin to v0.6.1
+* Upgrade k8smeta plugin to v0.4.1
+* Add deprecation notices for gRPC output and gRPC server (deprecated upstream in Falco 0.43.0)
+* Add deprecation notices for Legacy eBPF probe (`driver.kind=ebpf`) and gVisor engine (`driver.kind=gvisor`)
+
 ## v7.2.1
 
 * Bump falcoctl to v0.12.1 (fixes issue with state dir configuration through config file)
