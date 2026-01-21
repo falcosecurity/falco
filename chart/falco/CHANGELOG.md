@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.1.2
+
+* Upgrade falcoctl to v0.12.0 (adds Cosign v3 with Bundle Format support).
+
 ## v7.1.1
 
 * Improve documentation for container engine hooks and fix typos in values.yaml
