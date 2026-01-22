@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v7.2.1
+
+* Bump falcoctl to v0.12.1 (fixes issue with state dir configuration through config file)
+
 ## v7.2.0
 
 * Add `artifact-state-dir` volume shared between falcoctl-artifact-install and falcoctl-artifact-follow to maintain artifact state consistency
