@@ -344,44 +344,6 @@ jobs:
           path: |
             ${{ github.workspace }}/build/falco-${{ inputs.version }}-wasm.tar.gz
 
-  build-win32-package:
-    if: ${{ inputs.arch == 'x86_64' }}
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-        with:
-          fetch-depth: 0
-
-      - name: Install NSIS
-        run: choco install nsis -y
-
-      # NOTE: Backslash doesn't work as line continuation on Windows.
-      - name: Prepare project
-        run: |
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }}
-
-      - name: Build project
-        run: |
-          cmake --build build --target package --config Release
-
-      - name: Run unit Tests
-        run: |
-          build/unit_tests/Release/falco_unit_tests.exe
-
-      - name: Upload Falco win32 installer
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
-        with:
-          name: falco-installer-Release-win32.exe
-          path: build/falco-*.exe
-
-      - name: Upload Falco win32 package
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
-        with:
-          name: falco-Release-win32.exe
-          path: |
-            ${{ github.workspace }}/build/userspace/falco/Release/falco.exe
-
   build-macos-package:
     if: ${{ inputs.arch == 'x86_64' }}
     runs-on: macos-latest
