@@ -17,6 +17,7 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "actions.h"
+#include "logger.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -25,6 +26,10 @@ falco::app::run_result falco::app::actions::print_generated_gvisor_config(falco:
 	if(s.options.gvisor_generate_config_with_socket.empty()) {
 		return run_result::ok();
 	}
+
+	falco_logger::log(falco_logger::level::WARNING,
+	                  "Using feature for deprecated gVisor engine. Please consider switching to "
+	                  "another engine.");
 
 	sinsp i;
 	std::string gvisor_config =
