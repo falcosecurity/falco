@@ -60,7 +60,7 @@ if [ "$1" = "configure" ]; then
                     1 "Manual configuration (no unit is started)" \
                     2 "Automatic selection" \
                     3 "Kmod" \
-                    4 "eBPF" \
+                    4 "eBPF (deprecated)" \
                     5 "Modern eBPF" \
                     2>&1 >/dev/tty)
         fi
