@@ -51,7 +51,7 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 			return false;
 		}
 	} else {
-#ifndef BUILD_TYPE_RELEASE
+#ifdef BUILD_TYPE_DEBUG
 		conf_stream.open(FALCO_SOURCE_CONF_FILE);
 		if(conf_stream.is_open()) {
 			conf_filename = FALCO_SOURCE_CONF_FILE;
@@ -93,7 +93,7 @@ void options::define(cxxopts::Options& opts)
 {
 	opts.add_options()
 		("h,help",                   "Print this help list and exit.", cxxopts::value(help)->default_value("false"))
-#ifdef BUILD_TYPE_RELEASE
+#ifndef BUILD_TYPE_DEBUG
 		("c",                        "Configuration file. If not specified uses " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
 #else
 		("c",                        "Configuration file. If not specified tries " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
