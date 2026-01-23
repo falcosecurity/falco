@@ -78,14 +78,14 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 falco::app::run_result falco::app::actions::require_config_file(const falco::app::state& s) {
 #ifndef __EMSCRIPTEN__
 	if(s.options.conf_filename.empty()) {
-#ifndef BUILD_TYPE_RELEASE
+#ifdef BUILD_TYPE_DEBUG
 		return run_result::fatal(std::string("You must create a config file at ") +
 		                         FALCO_SOURCE_CONF_FILE + ", " + FALCO_INSTALL_CONF_FILE +
 		                         " or by passing -c");
-#else   // BUILD_TYPE_RELEASE
+#else
 		return run_result::fatal(std::string("You must create a config file at ") +
 		                         FALCO_INSTALL_CONF_FILE + " or by passing -c");
-#endif  // BUILD_TYPE_RELEASE
+#endif
 	}
 #endif  // __EMSCRIPTEN__
 	return run_result::ok();
