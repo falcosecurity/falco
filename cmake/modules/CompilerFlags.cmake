@@ -68,6 +68,10 @@ if(NOT MSVC)
 		endif()
 	endif()
 
+	if(USE_FRAME_POINTER)
+		set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fno-omit-frame-pointer")
+	endif()
+
 	set(CMAKE_COMMON_FLAGS
 		"${FALCO_SECURITY_FLAGS} -Wall -ggdb ${FALCO_EXTRA_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}"
 	)

@@ -29,6 +29,17 @@ option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 option(USE_ASAN "Build with AddressSanitizer" OFF)
 option(USE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
 option(UBSAN_HALT_ON_ERROR "Halt on error when building with UBSan" ON)
+option(USE_GPERFTOOLS "Build with gperftools CPU profiler support" OFF)
+option(USE_FRAME_POINTER "Build with frame pointers for accurate profiling" OFF)
+
+# Enable frame pointers by default when using gperftools for accurate stack traces
+if(USE_GPERFTOOLS AND NOT USE_FRAME_POINTER)
+	set(USE_FRAME_POINTER
+		ON
+		CACHE BOOL "Build with frame pointers for accurate profiling" FORCE
+	)
+	message(STATUS "Enabling USE_FRAME_POINTER since USE_GPERFTOOLS is enabled")
+endif()
 
 # Mem allocators - linux only for now
 if(NOT WIN32
@@ -206,6 +217,11 @@ endif()
 
 include(zlib)
 include(valijson)
+
+# CPU Profiling with gperftools
+if(USE_GPERFTOOLS)
+	include(gperftools)
+endif()
 if(NOT MINIMAL_BUILD)
 	if(NOT WIN32
 	   AND NOT APPLE
