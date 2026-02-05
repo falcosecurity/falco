@@ -74,8 +74,6 @@ falco_configuration::falco_configuration():
         m_time_format_iso_8601(false),
         m_buffer_format_base64(false),
         m_output_timeout(2000),
-        m_grpc_enabled(false),
-        m_grpc_threadiness(0),
         m_webserver_enabled(false),
         m_syscall_evt_drop_threshold(.1),
         m_syscall_evt_drop_rate(.03333),
@@ -441,37 +439,6 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 		http_output.options["max_consecutive_timeouts"] = std::to_string(max_consecutive_timeouts);
 
 		m_outputs.push_back(http_output);
-	}
-
-	m_grpc_enabled = m_config.get_scalar<bool>("grpc.enabled", false);
-	if(m_grpc_enabled) {
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "Using deprecated gRPC server (deprecated as consequence of gRPC output "
-		                  "deprecation).");
-	}
-	m_grpc_bind_address = m_config.get_scalar<std::string>("grpc.bind_address", "0.0.0.0:5060");
-	m_grpc_threadiness = m_config.get_scalar<uint32_t>("grpc.threadiness", 0);
-	if(m_grpc_threadiness == 0) {
-		m_grpc_threadiness = falco::utils::hardware_concurrency();
-	}
-	// todo > else limit threadiness to avoid oversubscription?
-	m_grpc_private_key =
-	        m_config.get_scalar<std::string>("grpc.private_key", "/etc/falco/certs/server.key");
-	m_grpc_cert_chain =
-	        m_config.get_scalar<std::string>("grpc.cert_chain", "/etc/falco/certs/server.crt");
-	m_grpc_root_certs =
-	        m_config.get_scalar<std::string>("grpc.root_certs", "/etc/falco/certs/ca.crt");
-
-	falco::outputs::config grpc_output;
-	grpc_output.name = "grpc";
-	const auto grpc_output_enabled = m_config.get_scalar<bool>("grpc_output.enabled", true);
-	if(grpc_output_enabled) {
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "Using deprecated gRPC output. Please consider using other outputs.");
-	}
-	// gRPC output is enabled only if gRPC server is enabled too
-	if(grpc_output_enabled && m_grpc_enabled) {
-		m_outputs.push_back(grpc_output);
 	}
 
 	m_output_timeout = m_config.get_scalar<uint32_t>("output_timeout", 2000);

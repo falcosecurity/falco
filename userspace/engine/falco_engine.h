@@ -201,11 +201,10 @@ public:
 	                             const std::set<std::string> &tags,
 	                             const std::string &rule);
 
-	// You can optionally add fields that will only show up in the object
-	// output (e.g. json, gRPC) alongside other output_fields
-	// and not in the text message output.
-	// You can add two types of fields: formatted which will act like
-	// an additional output format that appears in the output field
+	// You can optionally add fields that will only show up in the object output (e.g. json)
+	// alongside other output_fields and not in the text message output. You can add two types of
+	// fields: formatted which will act like an additional output format that appears in the output
+	// field
 	void add_extra_output_formatted_field(const std::string &key,
 	                                      const std::string &format,
 	                                      const std::string &source,

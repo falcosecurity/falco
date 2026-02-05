@@ -57,7 +57,7 @@ jobs:
 
       - name: Install build dependencies (non-minimal)
         if: inputs.minimal != true
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
 
       - name: Prepare project
         run: |

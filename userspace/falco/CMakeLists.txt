@@ -45,10 +45,8 @@ add_library(
 	app/actions/configure_syscall_buffer_size.cpp
 	app/actions/configure_syscall_buffer_num.cpp
 	app/actions/select_event_sources.cpp
-	app/actions/start_grpc_server.cpp
 	app/actions/start_webserver.cpp
 	app/actions/validate_rules_files.cpp
-	app/actions/create_requested_paths.cpp
 	app/actions/close_inspectors.cpp
 	app/actions/print_config_schema.cpp
 	app/actions/print_rule_schema.cpp
@@ -79,54 +77,21 @@ if(NOT WIN32)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
-	target_sources(
-		falco_application
-		PRIVATE outputs_grpc.cpp
-				outputs_http.cpp
-				falco_metrics.cpp
-				webserver.cpp
-				grpc_context.cpp
-				grpc_request_context.cpp
-				grpc_server.cpp
-				grpc_context.cpp
-				${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
-				${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
-				${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
-				${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
-				${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+	target_sources(falco_application PRIVATE outputs_http.cpp falco_metrics.cpp webserver.cpp)
+
+	list(APPEND FALCO_INCLUDE_DIRECTORIES FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
+		 "${CARES_INCLUDE}"
 	)
 
-	list(
-		APPEND
-		FALCO_INCLUDE_DIRECTORIES
-		FALCO_INCLUDE_DIRECTORIES
-		"${OPENSSL_INCLUDE_DIR}"
-		"${GRPC_INCLUDE}"
-		"${GRPCPP_INCLUDE}"
-		"${PROTOBUF_INCLUDE}"
-		"${CARES_INCLUDE}"
-	)
-
-	if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND USE_BUNDLED_GRPC)
-		list(APPEND FALCO_DEPENDENCIES grpc)
+	if(TARGET c-ares)
+		list(APPEND FALCO_DEPENDENCIES c-ares)
 	endif()
 
 	if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND USE_BUNDLED_CURL)
 		list(APPEND FALCO_DEPENDENCIES curl)
 	endif()
 
-	list(
-		APPEND
-		FALCO_LIBRARIES
-		httplib::httplib
-		"${CURL_LIBRARIES}"
-		"${GRPCPP_LIB}"
-		"${GRPC_LIB}"
-		"${GPR_LIB}"
-		"${GRPC_LIBRARIES}"
-		"${PROTOBUF_LIB}"
-		"${CARES_LIB}"
-	)
+	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}" "${CARES_LIB}")
 endif()
 
 if(EMSCRIPTEN)
@@ -154,37 +119,6 @@ if(EMSCRIPTEN)
 	target_link_options(falco PRIVATE "-sEXPORT_ES6=1")
 	target_link_options(falco PRIVATE "-sEXPORTED_RUNTIME_METHODS=['FS', 'callMain']")
 	target_link_options(falco PRIVATE "-sEXPORTED_FUNCTIONS=['_main','_htons','_ntohs']")
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
-	add_custom_command(
-		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
-			   ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.h
-			   ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
-			   ${CMAKE_CURRENT_BINARY_DIR}/version.pb.h
-			   ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
-			   ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.h
-			   ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
-			   ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.h
-			   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
-			   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
-		COMMENT "Generate gRPC API"
-		# Falco gRPC Version API
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-		COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=.
-				${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-		COMMAND
-			${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=.
-			--plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-		# Falco gRPC Outputs API
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-		COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=.
-				${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
-		COMMAND
-			${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=.
-			--plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-	)
 endif()
 
 # strip the Falco binary when releasing using musl

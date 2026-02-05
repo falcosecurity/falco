@@ -159,13 +159,6 @@ public:
 	bool m_buffer_format_base64;
 	uint32_t m_output_timeout;
 
-	bool m_grpc_enabled;
-	uint32_t m_grpc_threadiness;
-	std::string m_grpc_bind_address;
-	std::string m_grpc_private_key;
-	std::string m_grpc_cert_chain;
-	std::string m_grpc_root_certs;
-
 	bool m_webserver_enabled;
 	webserver_config m_webserver_config;
 
