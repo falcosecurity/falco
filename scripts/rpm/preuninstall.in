@@ -20,7 +20,6 @@ set -e
 # Currently running falco service uses the driver, so stop it before driver cleanup
 echo "[PRE-REMOVE] Stop all Falco services:"
 systemctl --system stop 'falco-kmod.service' || true
-systemctl --system stop 'falco-bpf.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
 systemctl --system stop 'falco-custom.service' || true
 systemctl --system stop 'falcoctl-artifact-follow.service' || true
@@ -36,7 +35,6 @@ falcoctl driver cleanup
 # if preuninstall:
 #  `systemd-update-helper remove-system-units <service>`
 %systemd_preun 'falco-kmod.service'
-%systemd_preun 'falco-bpf.service'
 %systemd_preun 'falco-modern-bpf.service'
 %systemd_preun 'falco-custom.service'
 %systemd_preun 'falcoctl-artifact-follow.service'

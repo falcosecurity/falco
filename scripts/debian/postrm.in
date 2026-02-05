@@ -25,7 +25,6 @@ set -e
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
         echo "[POST-REMOVE] Disable all Falco services:"
         systemctl --system disable 'falco-kmod.service' || true
-        systemctl --system disable 'falco-bpf.service' || true
         systemctl --system disable 'falco-modern-bpf.service' || true
         systemctl --system disable 'falco-custom.service' || true
         systemctl --system disable 'falcoctl-artifact-follow.service' || true

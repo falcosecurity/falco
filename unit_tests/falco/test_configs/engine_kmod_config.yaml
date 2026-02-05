@@ -25,10 +25,6 @@ engine:
   kmod:
     buf_size_preset: 2
     drop_failed_exit: false
-  ebpf:
-    probe: /path/to/probe.o
-    buf_size_preset: 7
-    drop_failed_exit: true
   modern_ebpf:
     cpus_for_each_buffer: 2
     buf_size_preset: 4

@@ -48,11 +48,10 @@ Alternatively Falco binaries or plugins can be downloaded from the Falco Artifac
 
 > Note: This section specifically applies to non-modern BPF drivers.
 
-The Falco Project publishes all drivers for each release for popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project's managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`) and clang (`bpf`) compilers sometimes fail to build the artifacts for a specific kernel version. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section. Short preview: If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with.
+The Falco Project publishes all drivers for each release for popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project's managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`)  sometimes fails to build the artifacts for a specific kernel version. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section. Short preview: If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with.
 
 - [Falco Artifacts Repo Drivers Root](https://download.falco.org/?prefix=driver/)
-    - Option 1: Kernel module (`.ko` files) - all under same driver version directory
-    - Option 2: eBPF (`.o` files) - all under same driver version directory
+    - Kernel module (`.ko` files) - all under same driver version directory
 
 
 ### Timeline

@@ -27,9 +27,6 @@ limitations under the License.
 #include <sys/stat.h>
 #ifndef _WIN32
 #include <unistd.h>
-#else
-// Used in the ebpf probe path.
-#define PATH_MAX 260
 #endif
 #include "falco_utils.h"
 
@@ -239,7 +236,6 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 	// Set driver mode if not already set.
 	const std::unordered_map<std::string, engine_kind_t> engine_mode_lut = {
 	        {"kmod", engine_kind_t::KMOD},
-	        {"ebpf", engine_kind_t::EBPF},
 	        {"modern_ebpf", engine_kind_t::MODERN_EBPF},
 	        {"replay", engine_kind_t::REPLAY},
 	        {"gvisor", engine_kind_t::GVISOR},
@@ -254,7 +250,7 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		                       driver_mode_str + "' is not a valid kind.");
 	}
 
-	if(m_engine_mode == engine_kind_t::EBPF || m_engine_mode == engine_kind_t::GVISOR) {
+	if(m_engine_mode == engine_kind_t::GVISOR) {
 		falco_logger::log(falco_logger::level::WARNING,
 		                  "Using deprecated engine '" + driver_mode_str +
 		                          "'. Please consider switching to another engine.");
@@ -267,21 +263,6 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		m_kmod.m_drop_failed_exit =
 		        m_config.get_scalar<bool>("engine.kmod.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
-	case engine_kind_t::EBPF: {
-		// default value for `m_probe_path` should be `$HOME/FALCO_PROBE_BPF_FILEPATH`
-		char full_path[PATH_MAX];
-		const char *home = std::getenv("HOME");
-		if(!home) {
-			throw std::logic_error("Cannot get the env variable 'HOME'");
-		}
-		snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
-		m_ebpf.m_probe_path =
-		        m_config.get_scalar<std::string>("engine.ebpf.probe", std::string(full_path));
-		m_ebpf.m_buf_size_preset = m_config.get_scalar<int16_t>("engine.ebpf.buf_size_preset",
-		                                                        DEFAULT_BUF_SIZE_PRESET);
-		m_ebpf.m_drop_failed_exit =
-		        m_config.get_scalar<bool>("engine.ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
-	} break;
 	case engine_kind_t::MODERN_EBPF:
 		m_modern_ebpf.m_cpus_for_each_buffer =
 		        m_config.get_scalar<uint16_t>("engine.modern_ebpf.cpus_for_each_buffer",

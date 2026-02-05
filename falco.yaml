@@ -282,12 +282,10 @@ rules_files:
 #
 # -- Falco supports different engines to generate events.
 # Choose the appropriate engine kind based on your system's configuration and requirements.
-# DEPRECATION NOTICE: the Legacy eBPF probe and the gVisor engine are currently deprecated. Consider using other
-# engines.
+# DEPRECATION NOTICE: the gVisor engine are currently deprecated. Consider using other engines.
 #
 # Available engines:
 # - `kmod`: Kernel Module
-# - `ebpf`: Legacy eBPF probe (deprecated)
 # - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
 # - `gvisor`: gVisor sandbox (deprecated)
 # - `replay`: Replay a scap trace file
@@ -359,15 +357,14 @@ rules_files:
 #
 ################### `cpus_for_each_buffer` (modern_ebpf only)
 #
-# The modern_ebpf driver in Falco utilizes the new BPF ring buffer, which has a
-# different memory footprint compared to the current BPF driver that uses the
-# perf buffer. The Falco core maintainers have discussed the differences and
-# their implications, particularly in Kubernetes environments where limits need
-# to be carefully set to avoid interference with the Falco daemonset deployment
-# from the OOM killer. Based on guidance received from the kernel mailing list,
-# it is recommended to assign multiple CPUs to one buffer instead of allocating
-# a buffer for each CPU individually. This helps optimize resource allocation
-# and prevent potential issues related to memory usage.
+# The modern_ebpf driver in Falco utilizes the new BPF ring buffer. The Falco
+# core maintainers have discussed the differences and their implications,
+# particularly in Kubernetes environments where limits need to be carefully set
+# to avoid interference with the Falco daemonset deployment from the OOM
+# killer. Based on guidance received from the kernel mailing list, it is
+# recommended to assign multiple CPUs to one buffer instead of allocating a
+# buffer for each CPU individually. This helps optimize resource allocation and
+# prevent potential issues related to memory usage.
 #
 # This is an index that controls how many CPUs you want to assign to a single
 # syscall buffer (ring buffer). By default, for modern_ebpf every syscall buffer
@@ -438,13 +435,6 @@ engine:
   kind: modern_ebpf
   # -- Engine-specific configuration for Kernel Module (kmod) engine.
   kmod:
-    buf_size_preset: 4
-    drop_failed_exit: false
-  # -- Engine-specific configuration for Legacy eBPF (ebpf) engine. DEPRECATION NOTICE: the Legacy eBPF engine is
-  # deprecated.
-  ebpf:
-    # -- Path to the elf file to load.
-    probe: ${HOME}/.falco/falco-bpf.o
     buf_size_preset: 4
     drop_failed_exit: false
   # -- Engine-specific configuration for Modern eBPF (modern_ebpf) engine.

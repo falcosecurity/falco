@@ -335,8 +335,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
         uint64_t num_evts,
         uint64_t now,
         double stats_snapshot_time_delta_sec) {
-	static const char* all_driver_engines[] = {BPF_ENGINE,
-	                                           KMOD_ENGINE,
+	static const char* all_driver_engines[] = {KMOD_ENGINE,
 	                                           MODERN_BPF_ENGINE,
 	                                           SOURCE_PLUGIN_ENGINE,
 	                                           NODRIVER_ENGINE,
@@ -620,8 +619,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector,
 			// Note: ENGINE_FLAG_BPF_STATS_ENABLED check has been moved to libs, that is, when
 			// libbpf stats is not enabled in the kernel settings we won't collect them even if the
 			// end user enabled the libbpf stats option
-			if(!(inspector->check_current_engine(BPF_ENGINE) ||
-			     inspector->check_current_engine(MODERN_BPF_ENGINE))) {
+			if(!inspector->check_current_engine(MODERN_BPF_ENGINE)) {
 				flags &= ~METRICS_V2_LIBBPF_STATS;
 			}
 			// Note: src is static for live captures
