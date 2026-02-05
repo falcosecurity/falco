@@ -157,12 +157,6 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "program_output": {
                     "$ref": "#/definitions/ProgramOutput"
                 },
-                "grpc_output": {
-                    "$ref": "#/definitions/Output"
-                },
-                "grpc": {
-                    "$ref": "#/definitions/Grpc"
-                },
                 "webserver": {
                     "$ref": "#/definitions/Webserver"
                 },
@@ -458,23 +452,6 @@ const char config_schema_string[] = LONG_STRING_CONST(
             },
             "minProperties": 1,
             "title": "FileOutput"
-        },
-        "Grpc": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "bind_address": {
-                    "type": "string"
-                },
-                "threadiness": {
-                    "type": "integer"
-                }
-            },
-            "minProperties": 1,
-            "title": "Grpc"
         },
         "Output": {
             "type": "object",

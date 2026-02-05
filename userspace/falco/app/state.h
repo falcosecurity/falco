@@ -24,7 +24,6 @@ limitations under the License.
 #include "../configuration.h"
 #include "../stats_writer.h"
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-#include "../grpc_server.h"
 #include "../webserver.h"
 #endif
 
@@ -111,9 +110,6 @@ struct state {
 	std::shared_ptr<restart_handler> restarter;
 
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	falco::grpc::server grpc_server;
-	std::thread grpc_server_thread;
-
 	falco_webserver webserver;
 #endif
 	// Set by start_webserver to start prometheus metrics

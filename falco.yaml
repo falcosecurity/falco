@@ -70,9 +70,7 @@
 #     file_output [Stable]
 #     http_output [Stable]
 #     program_output [Stable]
-#     grpc_output [Deprecated]
 # Falco exposed services
-#     grpc [Deprecated]
 #     webserver [Stable]
 # Falco logging / alerting / metrics related to software functioning (basic)
 #     log_stderr [Stable]
@@ -719,7 +717,7 @@ outputs_queue:
 # With this setting you can add more information to the Falco output message, customizable by
 # rule, tag or source.
 # You can also add additional data that will appear in the output_fields property
-# of JSON formatted messages or gRPC output but will not be part of the regular output message.
+# of JSON formatted messages but will not be part of the regular output message.
 # This allows you to add custom fields that can help you filter your Falco events without
 # polluting the message text.
 #
@@ -780,7 +778,7 @@ append_output:
 # Falco outputs channels #
 ##########################
 
-# Falco supports various output channels, such as syslog, stdout, file, gRPC (deprecated),
+# Falco supports various output channels, such as syslog, stdout, file,
 # webhook, and more. You can enable or disable these channels as needed to
 # control where Falco alerts and log messages are directed. This flexibility
 # allows seamless integration with your preferred logging and alerting systems.
@@ -876,70 +874,9 @@ program_output:
   # -- The program to execute.
   program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
-# [Deprecated] `grpc_output`
-#
-# -- Use gRPC as an output service. DEPRECATION NOTICE: The gRPC output is deprecated. Consider using other outputs.
-#
-# gRPC is a modern and high-performance framework for remote procedure calls
-# (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC
-# output in Falco provides a modern and efficient way to integrate with other
-# systems. By default, the setting is turned off. Enabling this option stores
-# output events in memory until they are consumed by a gRPC client. Ensure that
-# you have a consumer for the output events or leave it disabled.
-grpc_output:
-  # -- Enable gRPC as an output service.
-  enabled: false
-
 ##########################
 # Falco exposed services #
 ##########################
-
-# [Deprecated] `grpc`
-#
-# -- A gRPC server (needed by the gRPC output). DEPRECATION NOTICE: The gRPC server is deprecated as a consequence of
-# the gRPC output deprecation.
-#
-# Falco provides support for running a gRPC server using two main binding types:
-# 1. Over the network with mandatory mutual TLS authentication (mTLS), which
-#    ensures secure communication
-# 2. Local Unix socket binding with no authentication. By default, the
-#    gRPC server in Falco is turned off with no enabled services (see
-#    `grpc_output` setting).
-#
-# To configure the gRPC server in Falco, you can make the following changes to
-# the options:
-#
-# - Uncomment the relevant configuration options related to the gRPC server.
-# - Update the paths of the generated certificates for mutual TLS authentication
-#   if you choose to use mTLS.
-# - Specify the address to bind and expose the gRPC server.
-# - Adjust the threadiness configuration to control the number of threads and
-#   contexts used by the server.
-#
-# Keep in mind that if any issues arise while creating the gRPC server, the
-# information will be logged, but it will not stop the main Falco daemon.
-#
-# gRPC server using mTLS
-# grpc:
-#   enabled: true
-#   bind_address: "0.0.0.0:5060"
-#   # When the `threadiness` value is set to 0, Falco will automatically determine
-#   # the appropriate number of threads based on the number of online cores in the system.
-#   threadiness: 0
-#   private_key: "/etc/falco/certs/server.key"
-#   cert_chain: "/etc/falco/certs/server.crt"
-#   root_certs: "/etc/falco/certs/ca.crt"
-#
-# gRPC server using a local unix socket (see default below)
-grpc:
-  # -- Enable the gRPC server.
-  enabled: false
-  # -- Address to bind and expose the gRPC server. Use either a local unix socket with
-  # no authentication, or a network address with mTLS.
-  bind_address: "unix:///run/falco/falco.sock"
-  # -- When the `threadiness` value is set to 0, Falco will automatically determine
-  # the appropriate number of threads based on the number of online cores in the system.
-  threadiness: 0
 
 # [Stable] `webserver`
 #

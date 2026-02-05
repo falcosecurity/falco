@@ -192,9 +192,6 @@ if(NOT MINIMAL_BUILD)
 	   AND NOT EMSCRIPTEN
 	)
 		include(cares)
-		include(protobuf)
-		# gRPC
-		include(grpc)
 	endif()
 endif()
 

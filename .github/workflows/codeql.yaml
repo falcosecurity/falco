@@ -59,7 +59,7 @@ jobs:
       run: sudo apt update -y
 
     - name: Install build dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev libprotobuf-dev protobuf-compiler libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev libyaml-cpp-dev rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
 
     - name: Prepare project
       run: |

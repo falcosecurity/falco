@@ -76,19 +76,16 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	        falco::app::actions::print_support,
 	        falco::app::actions::init_outputs,
 	        falco::app::actions::create_signal_handlers,
-	        falco::app::actions::create_requested_paths,
 	        falco::app::actions::pidfile,
 	        falco::app::actions::configure_interesting_sets,
 	        falco::app::actions::configure_syscall_buffer_size,
 	        falco::app::actions::configure_syscall_buffer_num,
-	        falco::app::actions::start_grpc_server,
 	        falco::app::actions::start_webserver,
 	        falco::app::actions::process_events,
 	};
 
 	std::list<app_action> const teardown_steps = {
 	        falco::app::actions::unregister_signal_handlers,
-	        falco::app::actions::stop_grpc_server,
 	        falco::app::actions::stop_webserver,
 	        falco::app::actions::close_inspectors,
 	};

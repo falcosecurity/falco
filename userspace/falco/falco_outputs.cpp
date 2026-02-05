@@ -15,10 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-#include <google/protobuf/util/time_util.h>
-#endif
-
 #include "falco_outputs.h"
 #include "config_falco.h"
 
@@ -34,7 +30,6 @@ limitations under the License.
 #endif
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "outputs_http.h"
-#include "outputs_grpc.h"
 #endif
 
 static const char *s_internal_source = "internal";
@@ -101,8 +96,6 @@ void falco_outputs::add_output(const falco::outputs::config &oc) {
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	else if(oc.name == "http") {
 		oo = std::make_unique<falco::outputs::output_http>();
-	} else if(oc.name == "grpc") {
-		oo = std::make_unique<falco::outputs::output_grpc>();
 	}
 #endif
 	else {

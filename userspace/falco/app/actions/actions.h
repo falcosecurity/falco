@@ -27,7 +27,6 @@ namespace actions {
 falco::app::run_result configure_interesting_sets(falco::app::state& s);
 falco::app::run_result configure_syscall_buffer_size(falco::app::state& s);
 falco::app::run_result configure_syscall_buffer_num(const falco::app::state& s);
-falco::app::run_result create_requested_paths(falco::app::state& s);
 falco::app::run_result create_signal_handlers(falco::app::state& s);
 falco::app::run_result pidfile(const falco::app::state& s);
 falco::app::run_result init_falco_engine(falco::app::state& s);
@@ -51,9 +50,7 @@ falco::app::run_result print_version(falco::app::state& s);
 falco::app::run_result process_events(falco::app::state& s);
 falco::app::run_result require_config_file(const falco::app::state& s);
 falco::app::run_result select_event_sources(falco::app::state& s);
-falco::app::run_result start_grpc_server(falco::app::state& s);
 falco::app::run_result start_webserver(falco::app::state& s);
-falco::app::run_result stop_grpc_server(falco::app::state& s);
 falco::app::run_result stop_webserver(falco::app::state& s);
 falco::app::run_result unregister_signal_handlers(falco::app::state& s);
 falco::app::run_result validate_rules_files(falco::app::state& s);
