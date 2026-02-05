@@ -87,11 +87,8 @@ if(NOT LIBS_DIR)
 	set(LIBS_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
 endif()
 
-# configure gVisor support
-set(BUILD_LIBSCAP_GVISOR
-	${BUILD_FALCO_GVISOR}
-	CACHE BOOL ""
-)
+# todo(ekoops): remove this once we remove gvisor from libs
+option(BUILD_LIBSCAP_GVISOR OFF)
 
 # configure modern BPF support
 set(BUILD_LIBSCAP_MODERN_BPF

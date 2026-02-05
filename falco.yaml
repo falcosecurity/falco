@@ -282,12 +282,10 @@ rules_files:
 #
 # -- Falco supports different engines to generate events.
 # Choose the appropriate engine kind based on your system's configuration and requirements.
-# DEPRECATION NOTICE: the gVisor engine are currently deprecated. Consider using other engines.
 #
 # Available engines:
 # - `kmod`: Kernel Module
 # - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
-# - `gvisor`: gVisor sandbox (deprecated)
 # - `replay`: Replay a scap trace file
 # - `nodriver`: No driver is injected into the system.
 #   This is useful to debug and to run plugins with 'syscall' source.
@@ -446,15 +444,6 @@ engine:
   replay:
     # -- Path to the capture file to replay (eg: /path/to/file.scap)
     capture_file: ""
-  # -- Engine-specific configuration for gVisor (gvisor) engine. DEPRECATION NOTICE: the gVisor engine is deprecated.
-  gvisor:
-    # -- A Falco-compatible configuration file can be generated with
-    # '--gvisor-generate-config' and utilized for both runsc and Falco.
-    config: ""
-    # -- Set gVisor root directory for storage of container state when used
-    # in conjunction with 'gvisor.config'. The 'gvisor.root' to be passed
-    # is the one usually passed to 'runsc --root' flag.
-    root: ""
 
 ##################
 # Falco captures #

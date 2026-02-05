@@ -36,9 +36,6 @@ TEST(ActionLoadConfig, check_kmod_engine_config) {
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
 	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
-
-	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
-	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
 }
 
 TEST(ActionLoadConfig, check_modern_engine_config) {
@@ -59,9 +56,6 @@ TEST(ActionLoadConfig, check_modern_engine_config) {
 	EXPECT_FALSE(s.config->m_kmod.m_drop_failed_exit);
 
 	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
-
-	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
-	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
 }
 
 #endif

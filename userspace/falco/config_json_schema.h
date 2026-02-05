@@ -372,32 +372,12 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "replay": {
                     "$ref": "#/definitions/Replay"
-                },
-                "gvisor": {
-                    "$ref": "#/definitions/Gvisor"
                 }
             },
             "required": [
                 "kind"
             ],
             "title": "Engine"
-        },
-        "Gvisor": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "config": {
-                    "type": "string"
-                },
-                "root": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "config",
-                "root"
-            ],
-            "title": "Gvisor"
         },
         "Kmod": {
             "type": "object",

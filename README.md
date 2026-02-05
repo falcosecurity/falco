@@ -74,7 +74,6 @@ Here's an example of a `cmake` command that will enable everything you need for 
 ```bash
 cmake \
 -DUSE_BUNDLED_DEPS=ON \
--DBUILD_LIBSCAP_GVISOR=ON \
 -DBUILD_DRIVER=ON \
 -DBUILD_FALCO_MODERN_BPF=ON \
 -DCREATE_TEST_TARGETS=ON \

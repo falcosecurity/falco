@@ -122,8 +122,6 @@ struct state {
 
 	inline bool is_capture_mode() const { return config->m_engine_mode == engine_kind_t::REPLAY; }
 
-	inline bool is_gvisor() const { return config->m_engine_mode == engine_kind_t::GVISOR; }
-
 	inline bool is_kmod() const { return config->m_engine_mode == engine_kind_t::KMOD; }
 
 	inline bool is_modern_ebpf() const {

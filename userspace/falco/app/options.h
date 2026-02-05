@@ -48,7 +48,6 @@ public:
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> enable_sources;
-	std::string gvisor_generate_config_with_socket;
 	bool describe_all_rules = false;
 	std::string describe_rule;
 	bool print_ignored_events = false;

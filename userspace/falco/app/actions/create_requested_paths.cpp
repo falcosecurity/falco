@@ -26,36 +26,6 @@ using namespace falco::app::actions;
 static int create_dir(const std::string &path);
 
 falco::app::run_result falco::app::actions::create_requested_paths(falco::app::state &s) {
-	if(s.is_gvisor()) {
-		// This is bad: parsing gvisor config to get endpoint
-		// to be able to auto-create the path to the file for the user.
-		std::ifstream reader(s.config->m_gvisor.m_config);
-		if(reader.fail()) {
-			return run_result::fatal(s.config->m_gvisor.m_config + ": cannot open file");
-		}
-
-		nlohmann::json parsed_json;
-		std::string gvisor_socket;
-		try {
-			parsed_json = nlohmann::json::parse(reader);
-		} catch(const std::exception &e) {
-			return run_result::fatal(s.config->m_gvisor.m_config +
-			                         ": cannot parse JSON: " + e.what());
-		}
-
-		try {
-			gvisor_socket = parsed_json["trace_session"]["sinks"][0]["config"]["endpoint"];
-		} catch(const std::exception &e) {
-			return run_result::fatal(s.config->m_gvisor.m_config +
-			                         ": failed to fetch config.endpoint: " + e.what());
-		}
-
-		int ret = create_dir(gvisor_socket);
-		if(ret != 0) {
-			return run_result::fatal(gvisor_socket + ": " + strerror(errno));
-		}
-	}
-
 	if(s.config->m_grpc_enabled && !s.config->m_grpc_bind_address.empty()) {
 		if(falco::utils::network::is_unix_scheme(s.config->m_grpc_bind_address)) {
 			auto server_path = s.config->m_grpc_bind_address.substr(

@@ -238,7 +238,6 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 	        {"kmod", engine_kind_t::KMOD},
 	        {"modern_ebpf", engine_kind_t::MODERN_EBPF},
 	        {"replay", engine_kind_t::REPLAY},
-	        {"gvisor", engine_kind_t::GVISOR},
 	        {"nodriver", engine_kind_t::NODRIVER},
 	};
 
@@ -248,12 +247,6 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 	} else {
 		throw std::logic_error("Error reading config file (" + config_name + "): engine.kind '" +
 		                       driver_mode_str + "' is not a valid kind.");
-	}
-
-	if(m_engine_mode == engine_kind_t::GVISOR) {
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "Using deprecated engine '" + driver_mode_str +
-		                          "'. Please consider switching to another engine.");
 	}
 
 	switch(m_engine_mode) {
@@ -282,15 +275,6 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 			        "Error reading config file (" + config_name +
 			        "): engine.kind is 'replay' but no engine.replay.capture_file specified.");
 		}
-		break;
-	case engine_kind_t::GVISOR:
-		m_gvisor.m_config = m_config.get_scalar<std::string>("engine.gvisor.config", "");
-		if(m_gvisor.m_config.empty()) {
-			throw std::logic_error(
-			        "Error reading config file (" + config_name +
-			        "): engine.kind is 'gvisor' but no engine.gvisor.config specified.");
-		}
-		m_gvisor.m_root = m_config.get_scalar<std::string>("engine.gvisor.root", "");
 		break;
 	case engine_kind_t::NODRIVER:
 	default:

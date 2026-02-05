@@ -40,7 +40,7 @@ limitations under the License.
 // Falco only metric
 #define METRICS_V2_JEMALLOC_STATS 1 << 31
 
-enum class engine_kind_t : uint8_t { KMOD, MODERN_EBPF, REPLAY, GVISOR, NODRIVER };
+enum class engine_kind_t : uint8_t { KMOD, MODERN_EBPF, REPLAY, NODRIVER };
 
 enum class capture_mode_t : uint8_t { RULES, ALL_RULES };
 
@@ -74,11 +74,6 @@ public:
 
 	struct replay_config {
 		std::string m_capture_file;
-	};
-
-	struct gvisor_config {
-		std::string m_config;
-		std::string m_root;
 	};
 
 	struct webserver_config {
@@ -216,7 +211,6 @@ public:
 	kmod_config m_kmod = {};
 	modern_ebpf_config m_modern_ebpf = {};
 	replay_config m_replay = {};
-	gvisor_config m_gvisor = {};
 
 	yaml_helper m_config;
 
