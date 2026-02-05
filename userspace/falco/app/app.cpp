@@ -57,7 +57,6 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 	        falco::app::actions::print_help,
 	        falco::app::actions::print_config_schema,
 	        falco::app::actions::print_rule_schema,
-	        falco::app::actions::print_generated_gvisor_config,
 	        falco::app::actions::print_ignored_events,
 	        falco::app::actions::print_syscall_events,
 	        falco::app::actions::load_config,

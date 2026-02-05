@@ -70,17 +70,6 @@ elseif(EMSCRIPTEN)
 	)
 endif()
 
-# gVisor is currently only supported on Linux x86_64
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64"
-   AND CMAKE_SYSTEM_NAME MATCHES "Linux"
-   AND NOT MINIMAL_BUILD
-)
-	option(BUILD_FALCO_GVISOR "Build gVisor support for Falco" ON)
-	if(BUILD_FALCO_GVISOR)
-		add_definitions(-DHAS_GVISOR)
-	endif()
-endif()
-
 # Modern BPF is not supported on not Linux systems and in MINIMAL_BUILD
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
 	option(BUILD_FALCO_MODERN_BPF "Build modern BPF support for Falco" ON)

@@ -34,7 +34,6 @@ add_library(
 	app/actions/load_plugins.cpp
 	app/actions/load_rules_files.cpp
 	app/actions/process_events.cpp
-	app/actions/print_generated_gvisor_config.cpp
 	app/actions/print_help.cpp
 	app/actions/print_ignored_events.cpp
 	app/actions/print_kernel_version.cpp

@@ -88,9 +88,6 @@ void configure_output_format(falco::app::state& s) {
 		}
 	}
 
-	// See https://falco.org/docs/rules/style-guide/
-	const std::string gvisor_info = "vpid=%proc.vpid vtid=%thread.vtid";
-
 	if(!s.options.print_additional.empty()) {
 		falco_logger::log(falco_logger::level::WARNING,
 		                  "The -p/--print option is deprecated and will be removed. Use -o "
@@ -100,11 +97,6 @@ void configure_output_format(falco::app::state& s) {
 		   s.options.print_additional == "k" || s.options.print_additional == "kubernetes") {
 			// Don't do anything, we don't need these anymore
 			// since container plugin takes care of suggesting the output format fields itself.
-		} else if(s.options.print_additional == "cg" ||
-		          s.options.print_additional == "container-gvisor" ||
-		          s.options.print_additional == "kg" ||
-		          s.options.print_additional == "kubernetes-gvisor") {
-			s.engine->add_extra_output_format(gvisor_info, falco_common::syscall_source, {}, "");
 		} else {
 			s.engine->add_extra_output_format(s.options.print_additional, "", {}, "");
 		}

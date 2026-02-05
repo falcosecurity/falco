@@ -261,8 +261,7 @@ std::string falco_metrics::sources_to_text_prometheus(
 	static const char* all_driver_engines[] = {KMOD_ENGINE,
 	                                           MODERN_BPF_ENGINE,
 	                                           SOURCE_PLUGIN_ENGINE,
-	                                           NODRIVER_ENGINE,
-	                                           GVISOR_ENGINE};
+	                                           NODRIVER_ENGINE};
 	static re2::RE2 drops_buffer_pattern("n_drops_buffer_([^_]+(?:_[^_]+)*)_exit$");
 	static re2::RE2 cpu_pattern("(\\d+)");
 

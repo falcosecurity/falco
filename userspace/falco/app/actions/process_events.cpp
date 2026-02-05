@@ -379,8 +379,7 @@ static void process_inspector_events(
 		uint64_t num_evts = 0;
 		syscall_evt_drop_mgr sdropmgr;
 		bool is_capture_mode = source.empty();
-		bool check_drops_timeouts =
-		        is_capture_mode || (source == falco_common::syscall_source && !s.is_gvisor());
+		bool check_drops_timeouts = is_capture_mode || source == falco_common::syscall_source;
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC;
 

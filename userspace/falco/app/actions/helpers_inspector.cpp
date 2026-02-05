@@ -97,12 +97,6 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 			falco_logger::log(falco_logger::level::INFO,
 			                  "Opening '" + source + "' source with no driver\n");
 			inspector->open_nodriver();
-		} else if(s.is_gvisor()) /* gvisor engine. */
-		{
-			falco_logger::log(falco_logger::level::INFO,
-			                  "Opening '" + source + "' source with gVisor. Configuration path: " +
-			                          s.config->m_gvisor.m_config);
-			inspector->open_gvisor(s.config->m_gvisor.m_config, s.config->m_gvisor.m_root);
 		} else if(s.is_modern_ebpf()) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO,

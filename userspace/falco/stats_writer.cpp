@@ -338,8 +338,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	static const char* all_driver_engines[] = {KMOD_ENGINE,
 	                                           MODERN_BPF_ENGINE,
 	                                           SOURCE_PLUGIN_ENGINE,
-	                                           NODRIVER_ENGINE,
-	                                           GVISOR_ENGINE};
+	                                           NODRIVER_ENGINE};
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
 

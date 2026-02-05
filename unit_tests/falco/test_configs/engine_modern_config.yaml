@@ -31,6 +31,3 @@ engine:
     drop_failed_exit: true
   replay:
     capture_file: /path/to/file.scap
-  gvisor:
-    config: /path/to/gvisor_config.yaml
-    root: ""
