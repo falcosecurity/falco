@@ -24,7 +24,7 @@ jobs:
         run: |
           cmake -B build -S . \
                 -DCMAKE_BUILD_TYPE="release" \
-                -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DBUILD_BPF=Off -DBUILD_DRIVER=Off
+                -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DBUILD_DRIVER=Off
           cmake --build build -j4 --target cppcheck
           cmake --build build -j4 --target cppcheck_htmlreport
 

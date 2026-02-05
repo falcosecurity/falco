@@ -258,8 +258,7 @@ std::string falco_metrics::sources_to_text_prometheus(
         const falco::app::state& state,
         libs::metrics::prometheus_metrics_converter& prometheus_metrics_converter,
         std::vector<metrics_v2>& additional_wrapper_metrics) {
-	static const char* all_driver_engines[] = {BPF_ENGINE,
-	                                           KMOD_ENGINE,
+	static const char* all_driver_engines[] = {KMOD_ENGINE,
 	                                           MODERN_BPF_ENGINE,
 	                                           SOURCE_PLUGIN_ENGINE,
 	                                           NODRIVER_ENGINE,

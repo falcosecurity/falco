@@ -126,8 +126,6 @@ struct state {
 
 	inline bool is_kmod() const { return config->m_engine_mode == engine_kind_t::KMOD; }
 
-	inline bool is_ebpf() const { return config->m_engine_mode == engine_kind_t::EBPF; }
-
 	inline bool is_modern_ebpf() const {
 		return config->m_engine_mode == engine_kind_t::MODERN_EBPF;
 	}
@@ -144,9 +142,6 @@ struct state {
 		case engine_kind_t::KMOD:
 			drop_failed = config->m_kmod.m_drop_failed_exit;
 			break;
-		case engine_kind_t::EBPF:
-			drop_failed = config->m_ebpf.m_drop_failed_exit;
-			break;
 		case engine_kind_t::MODERN_EBPF:
 			drop_failed = config->m_modern_ebpf.m_drop_failed_exit;
 			break;
@@ -162,9 +157,6 @@ struct state {
 		switch(config->m_engine_mode) {
 		case engine_kind_t::KMOD:
 			index = config->m_kmod.m_buf_size_preset;
-			break;
-		case engine_kind_t::EBPF:
-			index = config->m_ebpf.m_buf_size_preset;
 			break;
 		case engine_kind_t::MODERN_EBPF:
 			index = config->m_modern_ebpf.m_buf_size_preset;

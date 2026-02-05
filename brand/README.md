@@ -53,15 +53,10 @@ Notice the capitalization of the following terms.
 
 This section contains key terms specifically used within the context of The Falco Project. For a more comprehensive list of Falco-related terminology, we invite you to visit the [Glossary](https://falco.org/docs/reference/glossary/) page on our official website.
 
-#### eBPF Probe
-
-Used to describe the `.o` object that would be dynamically loaded into the kernel as a secure and stable (e)BPF probe. 
-This is one option used to pass kernel events up to userspace for Falco to consume.
-
 #### Modern eBPF Probe
 
-More robust [eBPF probe](#ebpf-probe), which brings the CO-RE paradigm, better performances, and maintainability. 
-Unlike the legacy probe, the modern eBPF probe is not shipped as a separate artifact but bundled into the Falco binary itself.
+Robust eBPF probe, which brings the CO-RE paradigm, better performances, and maintainability. 
+The modern eBPF probe is not shipped as a separate artifact but bundled into the Falco binary itself.
 This is one option used to pass kernel events up to userspace for Falco to consume.
 
 #### Kernel Module
@@ -71,7 +66,7 @@ This is one option used to pass kernel events up to userspace for Falco to consu
 
 #### Driver 
 
-The global term for the software that sends events from the kernel. Such as the [eBPF probe](#ebpf-probe), the [Modern eBPF probe](#modern-ebpf-probe), or the [Kernel Module](#kernel-module).
+The global term for the software that sends events from the kernel. Such as the [Modern eBPF probe](#modern-ebpf-probe), or the [Kernel Module](#kernel-module).
 
 #### Plugin
 

@@ -25,10 +25,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY
 	)
 	configure_file(
-		"${PROJECT_SOURCE_DIR}/scripts/systemd/falco-bpf.service"
-		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY
-	)
-	configure_file(
 		"${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY
 	)
@@ -67,9 +63,6 @@ if(NOT WIN32
 	endif()
 	if(BUILD_DRIVER)
 		list(APPEND FALCOCTL_DRIVER_TYPES_LIST "kmod")
-	endif()
-	if(BUILD_BPF)
-		list(APPEND FALCOCTL_DRIVER_TYPES_LIST "ebpf")
 	endif()
 	string(REPLACE ";" ", " FALCOCTL_DRIVER_TYPES "${FALCOCTL_DRIVER_TYPES_LIST}")
 	configure_file(

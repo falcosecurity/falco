@@ -367,9 +367,6 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "kmod": {
                     "$ref": "#/definitions/Kmod"
                 },
-                "ebpf": {
-                    "$ref": "#/definitions/Ebpf"
-                },
                 "modern_ebpf": {
                     "$ref": "#/definitions/ModernEbpf"
                 },
@@ -384,25 +381,6 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "kind"
             ],
             "title": "Engine"
-        },
-        "Ebpf": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "probe": {
-                    "type": "string"
-                },
-                "buf_size_preset": {
-                    "type": "integer"
-                },
-                "drop_failed_exit": {
-                    "type": "boolean"
-                }
-            },
-            "required": [
-                "probe"
-            ],
-            "title": "Ebpf"
         },
         "Gvisor": {
             "type": "object",

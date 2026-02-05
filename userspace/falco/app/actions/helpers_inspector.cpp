@@ -116,14 +116,6 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 			                           s.config->m_modern_ebpf.m_cpus_for_each_buffer,
 			                           true,
 			                           s.selected_sc_set);
-		} else if(s.is_ebpf()) /* BPF engine. */
-		{
-			falco_logger::log(falco_logger::level::INFO,
-			                  "Opening '" + source + "' source with BPF probe. BPF probe path: " +
-			                          s.config->m_ebpf.m_probe_path);
-			inspector->open_bpf(s.config->m_ebpf.m_probe_path.c_str(),
-			                    s.syscall_buffer_bytes_size,
-			                    s.selected_sc_set);
 		} else /* Kernel module (default). */
 		{
 			try {

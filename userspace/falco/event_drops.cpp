@@ -109,11 +109,9 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 				if(m_bucket.claim(1, evt->get_ts())) {
 					m_num_actions++;
 
-					return perform_actions(
-					        evt->get_ts(),
-					        delta,
-					        inspector->check_current_engine(BPF_ENGINE) ||
-					                inspector->check_current_engine(MODERN_BPF_ENGINE));
+					return perform_actions(evt->get_ts(),
+					                       delta,
+					                       inspector->check_current_engine(MODERN_BPF_ENGINE));
 				} else {
 					falco_logger::log(
 					        falco_logger::level::DEBUG,

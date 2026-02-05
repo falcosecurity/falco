@@ -97,7 +97,6 @@ jobs:
               -DFALCO_ETC_DIR=/etc/falco \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
-              -DBUILD_BPF=Off \
               -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
               -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
               -DFALCO_VERSION=${{ inputs.version }}
@@ -170,7 +169,6 @@ jobs:
               -DFALCO_ETC_DIR=/etc/falco \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
-              -DBUILD_BPF=Off \
               -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
               -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
               -DFALCO_VERSION=${{ inputs.version }}
@@ -219,7 +217,6 @@ jobs:
               -DFALCO_ETC_DIR=/etc/falco \
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
-              -DBUILD_BPF=Off \
               -DUSE_JEMALLOC=Off \
               -DUSE_MIMALLOC=Off \
               -DUSE_ASAN=On \
@@ -265,7 +262,7 @@ jobs:
           cmake -B build -S . \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCPACK_GENERATOR=TGZ \
-                -DBUILD_BPF=Off -DBUILD_DRIVER=Off \
+                -DBUILD_DRIVER=Off \
                 -DUSE_JEMALLOC=${{ inputs.use_jemalloc }} \
                 -DUSE_MIMALLOC=${{ inputs.use_mimalloc }} \
                 -DUSE_BUNDLED_DEPS=On \

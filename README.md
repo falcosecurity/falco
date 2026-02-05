@@ -75,7 +75,6 @@ Here's an example of a `cmake` command that will enable everything you need for 
 cmake \
 -DUSE_BUNDLED_DEPS=ON \
 -DBUILD_LIBSCAP_GVISOR=ON \
--DBUILD_BPF=ON \
 -DBUILD_DRIVER=ON \
 -DBUILD_FALCO_MODERN_BPF=ON \
 -DCREATE_TEST_TARGETS=ON \
@@ -113,7 +112,7 @@ Please refer to the [Contributing](https://github.com/falcosecurity/.github/blob
 
 1. The first lines of code at the base of Falco were written some time ago, where Go didn't yet have the same level of maturity and adoption as today.
 2. The Falco execution model is sequential and mono-thread due to the statefulness requirements of the tool, and so most of the concurrency-related selling points of the Go runtime would not be leveraged at all.
-3. The Falco code deals with very low-level programming in many places (e.g. some headers are shared with the eBPF probe and the Kernel module), and we all know that interfacing Go with C is possible but brings tons of complexity and tradeoffs to the table.
+3. The Falco code deals with very low-level programming in many places, and we all know that interfacing Go with C is possible but brings tons of complexity and tradeoffs to the table.
 4. As a security tool meant to consume a crazy high throughput of events per second, Falco needs to squeeze performance in all hot paths at runtime and requires deep control on memory allocation, which the Go runtime can't provide (there's also garbage collection involved).
 5. Although Go didn't suit the engineering requirements of the core of Falco, we still thought that it could be a good candidate for writing Falco extensions through the plugin system. This is the main reason we gave special attention and high priority to the development of the plugin-sdk-go.
 6. Go is not a requirement for having statically-linked binaries. In fact, we provide fully-static Falco builds since few years. The only issue with those is that the plugin system can't be supported with the current dynamic library model we currently have.

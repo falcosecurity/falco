@@ -25,12 +25,10 @@ CHOICE=
 # Every time we call this script we want to stat from a clean state.
 echo "[POST-INSTALL] Disable all possible 'falco' services:"
 systemctl --system stop 'falco-kmod.service' || true
-systemctl --system stop 'falco-bpf.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
 systemctl --system stop 'falco-custom.service' || true
 systemctl --system stop 'falcoctl-artifact-follow.service' || true
 systemctl --system disable 'falco-kmod.service' || true
-systemctl --system disable 'falco-bpf.service' || true
 systemctl --system disable 'falco-modern-bpf.service' || true
 systemctl --system disable 'falco-custom.service' || true
 systemctl --system disable 'falcoctl-artifact-follow.service' || true
@@ -47,11 +45,8 @@ if [ "$1" = "configure" ]; then
               kmod)
                   CHOICE=3
                   ;;
-              ebpf)
-                  CHOICE=4
-                  ;;
               modern_ebpf)
-                  CHOICE=5
+                  CHOICE=4
                   ;;
         esac     
         if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
@@ -60,8 +55,7 @@ if [ "$1" = "configure" ]; then
                     1 "Manual configuration (no unit is started)" \
                     2 "Automatic selection" \
                     3 "Kmod" \
-                    4 "eBPF (deprecated)" \
-                    5 "Modern eBPF" \
+                    4 "Modern eBPF" \
                     2>&1 >/dev/tty)
         fi
         # "auto" case is not managed here since it is already the default, so no CHOICE=2
@@ -73,9 +67,6 @@ if [ "$1" = "configure" ]; then
                 chosen_driver="kmod"
                 ;;
             4)
-                chosen_driver="ebpf"
-                ;;
-            5)
                 chosen_driver="modern_ebpf"
                 ;;
         esac
@@ -83,7 +74,7 @@ if [ "$1" = "configure" ]; then
             echo "[POST-INSTALL] Configure falcoctl '$chosen_driver' driver type:"
             if [ "$chosen_driver" = "auto" ];  then
                 # Configure falcoctl to enable all drivers
-                falcoctl driver config --type "modern_ebpf" --type "kmod" --type "ebpf"
+                falcoctl driver config --type "modern_ebpf" --type "kmod"
                 # Load the actually automatic chosen driver
                 chosen_driver=$(falcoctl driver printenv | grep DRIVER= | cut -d'"' -f2)
             else
@@ -123,11 +114,6 @@ case "$chosen_driver" in
       echo "[POST-INSTALL] Call 'falcoctl driver install for kmod:"
       falcoctl driver install --download=false
       chosen_unit="kmod"
-      ;;
-    "ebpf")
-      echo "[POST-INSTALL] Call 'falcoctl driver install for ebpf':"
-      falcoctl driver install
-      chosen_unit="bpf"
       ;;
     "modern_ebpf")
       chosen_unit="modern-bpf"

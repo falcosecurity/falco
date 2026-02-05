@@ -28,7 +28,7 @@ using namespace falco::app::actions;
 falco::app::run_result falco::app::actions::print_kernel_version(const falco::app::state& s) {
 #ifdef __linux__
 	// We print this info only when a kernel driver is injected
-	bool const is_kernel_driver_injected = s.is_modern_ebpf() || s.is_ebpf() || s.is_kmod();
+	bool const is_kernel_driver_injected = s.is_modern_ebpf() || s.is_kmod();
 	if(!is_kernel_driver_injected) {
 		return run_result::ok();
 	}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,6 @@ print_usage() {
 	echo "  auto	       leverage automatic driver selection logic (default)"
 	echo "  modern_ebpf    modern eBPF CORE probe"
 	echo "  kmod           kernel module"
-	echo "  ebpf           eBPF probe"
 	echo ""
 	echo "Options:"
 	echo "  --help           show this help message"
@@ -59,7 +58,7 @@ driver=
 has_opts=
 while test $# -gt 0; do
 	case "$1" in
-		auto|kmod|ebpf|modern_ebpf)
+		auto|kmod|modern_ebpf)
 			if [ -n "$driver" ]; then
 				>&2 echo "Only one driver per invocation"
 				print_usage
@@ -120,7 +119,7 @@ if [ "$driver" != "auto" ]; then
   /usr/bin/falcoctl driver config --type $driver
 else
   # Needed because we need to configure Falco to start with correct driver
-  /usr/bin/falcoctl driver config --type modern_ebpf --type kmod --type ebpf
+  /usr/bin/falcoctl driver config --type modern_ebpf --type kmod
 fi
 
 /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"

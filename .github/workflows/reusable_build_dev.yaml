@@ -65,7 +65,6 @@ jobs:
             -DBUILD_FALCO_UNIT_TESTS=On \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
             -DBUILD_FALCO_MODERN_BPF=Off \
-            -DBUILD_BPF=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
             -DBUILD_DRIVER=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
             -DMINIMAL_BUILD=${{ inputs.minimal == true && 'ON' || 'OFF' }} \
             -DUSE_ASAN=${{ inputs.sanitizers == true && 'ON' || 'OFF' }} \

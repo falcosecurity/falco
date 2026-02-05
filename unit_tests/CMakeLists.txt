@@ -25,8 +25,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-# Create a libscap_test_var.h file with some variables used by our tests for example the kmod path
-# or the bpf path.
+# Create a libscap_test_var.h file with some variables used by our tests (e.g: the kmod path).
 configure_file(
 	${CMAKE_CURRENT_SOURCE_DIR}/falco_test_var.h.in ${CMAKE_CURRENT_BINARY_DIR}/falco_test_var.h
 )
