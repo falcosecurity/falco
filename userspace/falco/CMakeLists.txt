@@ -72,6 +72,11 @@ if(USE_JEMALLOC OR USE_MIMALLOC)
 	list(APPEND FALCO_LIBRARIES ${MALLOC_LIB})
 endif()
 
+if(USE_GPERFTOOLS)
+	list(APPEND FALCO_DEPENDENCIES gperftools)
+	list(APPEND FALCO_LIBRARIES "${GPERFTOOLS_PROFILER_LIB}")
+endif()
+
 if(NOT WIN32)
 	target_sources(falco_application PRIVATE outputs_program.cpp outputs_syslog.cpp)
 endif()
