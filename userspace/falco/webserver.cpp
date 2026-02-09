@@ -75,13 +75,15 @@ void falco_webserver::start(const falco::app::state &state,
 		falco_logger::log(falco_logger::level::INFO, "Webserver: forked\n");
 		int res = setgid(webserver_config.m_uid);
 		if(res != NOERROR) {
-			throw falco_exception("Webserver: an error occurred while setting group id: " +
-			                      std::to_string(errno));
+			throw falco_exception(
+			        std::string("Webserver: an error occurred while setting group id: ") +
+			        std::strerror(errno));
 		}
 		res = setuid(webserver_config.m_gid);
 		if(res != NOERROR) {
-			throw falco_exception("Webserver: an error occurred while setting user id: " +
-			                      std::to_string(errno));
+			throw falco_exception(
+			        std::string("Webserver: an error occurred while setting user id: ") +
+			        std::strerror(errno));
 		}
 		falco_logger::log(falco_logger::level::INFO,
 		                  "Webserver: fork running as " + std::to_string(webserver_config.m_uid) +
