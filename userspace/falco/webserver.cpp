@@ -23,6 +23,8 @@ limitations under the License.
 #include <atomic>
 #include <signal.h>
 
+using namespace std::chrono_literals;
+
 falco_webserver::~falco_webserver() {
 	stop();
 }
@@ -64,12 +66,12 @@ void falco_webserver::start(const falco::app::state &state,
 		throw falco_exception("invalid webserver configuration");
 	}
 
-	m_failed.store(false, std::memory_order_release);
-
 	// fork the server
 	m_pid = fork();
 
-	if(m_pid == 0) {
+	if(m_pid < 0) {
+		throw falco_exception("Webserver: an error occurred while forking webserver");
+	} else if(m_pid == 0) {
 		falco_logger::log(falco_logger::level::INFO, "Webserver: forked\n");
 		int res = setgid(webserver_config.m_uid);
 		if(res != NOERROR) {
@@ -90,10 +92,30 @@ void falco_webserver::start(const falco::app::state &state,
 		} catch(std::exception &e) {
 			falco_logger::log(falco_logger::level::ERR,
 			                  "Webserver: " + std::string(e.what()) + "\n");
-			m_failed.store(true, std::memory_order_release);
 		}
-	} else if(m_pid < 0) {
-		throw falco_exception("Webserver: an error occurred while forking webserver");
+	} else {
+		std::string schema = "http";
+		if(webserver_config.m_ssl_enabled) {
+			schema = "https";
+		}
+		std::string url = schema + "://localhost:" + std::to_string(webserver_config.m_listen_port);
+		httplib::Client cli(url);
+
+		const int max_retries = 10;
+		std::chrono::seconds delay = 1s;
+		int retry = 0;
+		m_running = false;
+		while(retry++ < max_retries) {
+			if(auto res = cli.Get(webserver_config.m_k8s_healthz_endpoint)) {
+				falco_logger::log(falco_logger::level::INFO, "Webserver: successfully started\n");
+				m_running = true;
+				break;
+			}
+			std::this_thread::sleep_for(delay * retry);
+		}
+		if(!m_running) {
+			throw falco_exception("Webserver: the server is not running");
+		}
 	}
 }
 

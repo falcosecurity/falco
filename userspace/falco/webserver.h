@@ -46,6 +46,5 @@ private:
 	bool m_running = false;
 	std::unique_ptr<httplib::Server> m_server = nullptr;
 	std::thread m_server_thread;
-	std::atomic<bool> m_failed;
 	int m_pid = -1;
 };
