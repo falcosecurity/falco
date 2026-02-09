@@ -130,8 +130,9 @@ void falco_webserver::stop() {
 		falco_logger::log(falco_logger::level::INFO, "Webserver: killing fork\n");
 		int res = kill(m_pid, SIGTERM);
 		if(res != 0) {
-			throw falco_exception("Webserver: an error occurred while killing fork: " +
-			                      std::to_string(errno));
+			falco_logger::log(falco_logger::level::ERR,
+			                  std::string("Webserver: an error occurred while killing fork: ") +
+			                          std::strerror(errno));
 		}
 		m_pid = 0;
 		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping fork done\n");
