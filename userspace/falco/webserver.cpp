@@ -86,8 +86,9 @@ void falco_webserver::start(const falco::app::state &state,
 			        std::strerror(errno));
 		}
 		falco_logger::log(falco_logger::level::INFO,
-		                  "Webserver: fork running as " + std::to_string(webserver_config.m_uid) +
-		                          ":" + std::to_string(webserver_config.m_gid) + "\n");
+		                  "Webserver: process running as " +
+		                          std::to_string(webserver_config.m_uid) + ":" +
+		                          std::to_string(webserver_config.m_gid) + "\n");
 		try {
 			this->m_server->listen(webserver_config.m_listen_address,
 			                       webserver_config.m_listen_port);
@@ -128,15 +129,16 @@ void falco_webserver::stop() {
 		if(m_server != nullptr) {
 			m_server->stop();
 		}
-		falco_logger::log(falco_logger::level::INFO, "Webserver: killing fork\n");
+		falco_logger::log(falco_logger::level::INFO, "Webserver: terminating process\n");
 		int res = kill(m_pid, SIGTERM);
 		if(res != 0) {
-			falco_logger::log(falco_logger::level::ERR,
-			                  std::string("Webserver: an error occurred while killing fork: ") +
-			                          std::strerror(errno));
+			falco_logger::log(
+			        falco_logger::level::ERR,
+			        std::string("Webserver: an error occurred while terminating process: ") +
+			                std::strerror(errno));
 		}
 		m_pid = 0;
-		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping fork done\n");
+		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping process done\n");
 	}
 
 	m_server = nullptr;
