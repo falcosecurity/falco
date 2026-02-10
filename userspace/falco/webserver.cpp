@@ -100,7 +100,8 @@ void falco_webserver::start(const falco::app::state &state,
 		if(webserver_config.m_ssl_enabled) {
 			schema = "https";
 		}
-		std::string url = schema + "://localhost:" + std::to_string(webserver_config.m_listen_port);
+		std::string url = schema + "://" + webserver_config.m_listen_address + ":" +
+		                  std::to_string(webserver_config.m_listen_port);
 		httplib::Client cli(url);
 
 		const int max_retries = 10;
