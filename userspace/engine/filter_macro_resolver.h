@@ -121,6 +121,7 @@ private:
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::field_expr* e) override;
 		void visit(libsinsp::filter::ast::field_transformer_expr* e) override;
+		void visit(libsinsp::filter::ast::transformer_list_expr* e) override;
 	};
 
 	std::vector<value_info> m_errors;

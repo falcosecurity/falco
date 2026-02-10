@@ -125,5 +125,13 @@ void filter_details_resolver::visitor::visit(ast::field_expr* e) {
 
 void filter_details_resolver::visitor::visit(ast::field_transformer_expr* e) {
 	m_details.transformers.insert(e->transformer);
-	e->value->accept(this);
+	for(auto& value : e->values) {
+		value->accept(this);
+	}
+}
+
+void filter_details_resolver::visitor::visit(ast::transformer_list_expr* e) {
+	for(auto& child : e->children) {
+		child->accept(this);
+	}
 }

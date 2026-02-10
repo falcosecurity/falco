@@ -105,6 +105,10 @@ void filter_macro_resolver::visitor::visit(ast::field_transformer_expr* e) {
 	m_node_substitute = nullptr;
 }
 
+void filter_macro_resolver::visitor::visit(ast::transformer_list_expr* e) {
+	m_node_substitute = nullptr;
+}
+
 void filter_macro_resolver::visitor::visit(ast::identifier_expr* e) {
 	const auto& macro = m_macros.find(e->identifier);
 	if(macro != m_macros.end() && macro->second)  // skip null-ptr macros
