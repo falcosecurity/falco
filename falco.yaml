@@ -921,6 +921,9 @@ webserver:
   # $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem
   # ```
   ssl_certificate: /etc/falco/falco.pem
+  # User and group id under which the server should run
+  uid: 65534
+  gid: 65534
 
 ##############################################################################
 # Falco logging / alerting / metrics related to software functioning (basic) #
