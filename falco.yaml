@@ -620,6 +620,18 @@ priority: debug
 # programs to process and consume the data. By default, this option is disabled.
 json_output: false
 
+# [Incubating] `json_container`
+#
+# When json_output is enabled, Falco will output alert messages and events as JSON. If
+# the json_container is also specified (optional), the event will be placed in that parent 
+# schema as defined in `falco_formats::format_json_container`
+# Supported json containers:
+# * `splunk_hec`: a container allowing direct posting to a Splunk HEC endpoint
+# * `slack_webhook`: a container allowing direct posting to a Slack webhook endpoint
+# * `generic_event_encoded`: a container that double encodes the json object as example container
+# * "" or omitted from config: the JSON object without any container is emitted (default behaviour) 
+json_container: ""
+
 # [Stable] `json_include_output_property`
 #
 # -- When using JSON output in Falco, you have the option to include the "output"
@@ -850,6 +862,8 @@ http_output:
   keep_alive: false
   # -- Maximum consecutive timeouts of libcurl to ignore.
   max_consecutive_timeouts: 5
+  # if provided, adds the value to the Authorization header in the POST
+  authorization: ""
 
 # [Stable] `program_output`
 #
