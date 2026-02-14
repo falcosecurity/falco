@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <libsinsp/event.h>
+#include "../output_format.h"
 
 #include <string>
 #include <vector>
@@ -57,6 +58,8 @@ public:
 	std::string print_plugin_info;
 	bool list_syscall_events = false;
 	bool markdown = false;
+	std::string format;
+	output_format output_fmt = output_format::TEXT;
 	int duration_to_tot = 0;
 	bool names_only = false;
 	std::vector<std::string> cmdline_config_options;

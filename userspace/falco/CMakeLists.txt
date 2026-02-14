@@ -40,6 +40,7 @@ add_library(
 	app/actions/print_plugin_info.cpp
 	app/actions/print_support.cpp
 	app/actions/print_syscall_events.cpp
+	app/actions/event_formatter.cpp
 	app/actions/print_version.cpp
 	app/actions/print_page_size.cpp
 	app/actions/configure_syscall_buffer_size.cpp
