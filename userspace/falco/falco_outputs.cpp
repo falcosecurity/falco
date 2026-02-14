@@ -28,7 +28,7 @@ limitations under the License.
 #include "outputs_program.h"
 #include "outputs_syslog.h"
 #endif
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "outputs_http.h"
 #endif
 
@@ -93,7 +93,7 @@ void falco_outputs::add_output(const falco::outputs::config &oc) {
 		oo = std::make_unique<falco::outputs::output_syslog>();
 	}
 #endif
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	else if(oc.name == "http") {
 		oo = std::make_unique<falco::outputs::output_http>();
 	}
