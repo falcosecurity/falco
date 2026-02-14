@@ -17,7 +17,7 @@ limitations under the License.
 
 #include "actions.h"
 
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "webserver.h"
 #endif
 
@@ -25,7 +25,7 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_webserver(falco::app::state& state) {
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	if(state.is_capture_mode() || !state.config->m_webserver_enabled) {
 		return run_result::ok();
 	}
@@ -50,7 +50,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 }
 
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& state) {
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	if(state.is_capture_mode() || !state.config->m_webserver_enabled) {
 		return run_result::ok();
 	}

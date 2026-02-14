@@ -23,7 +23,7 @@ limitations under the License.
 #include "restart_handler.h"
 #include "../configuration.h"
 #include "../stats_writer.h"
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "../webserver.h"
 #endif
 
@@ -109,7 +109,7 @@ struct state {
 	// Helper responsible for watching of handling hot application restarts
 	std::shared_ptr<restart_handler> restarter;
 
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	falco_webserver webserver;
 #endif
 	// Set by start_webserver to start prometheus metrics
