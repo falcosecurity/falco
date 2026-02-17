@@ -1328,6 +1328,162 @@ TEST_F(test_falco_engine, empty_string_source_addl_rule) {
 	EXPECT_TRUE(load_rules(rules_content, "rules.yaml"));
 }
 
+// Phase 1: Schema correctness — no false positives for valid rule properties
+
+TEST_F(test_falco_engine, rule_with_warn_evttypes) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  warn_evttypes: false
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, rule_with_skip_if_unknown_filter) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  skip-if-unknown-filter: true
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, override_replace_warn_evttypes) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  warn_evttypes: true
+
+- rule: test_rule
+  warn_evttypes: false
+  override:
+    warn_evttypes: replace
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, override_replace_capture) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: test_rule
+  capture: true
+  override:
+    capture: replace
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, override_replace_tags) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  tags: [filesystem]
+
+- rule: test_rule
+  tags: [network]
+  override:
+    tags: replace
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+// Phase 2: Unknown key detection
+
+TEST_F(test_falco_engine, rule_unknown_key) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  typo_field: some_value
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_TRUE(check_warning_message("Unknown key 'typo_field'"));
+}
+
+TEST_F(test_falco_engine, list_unknown_key) {
+	std::string rules_content = R"END(
+- list: my_list
+  items: [cat, bash]
+  typo_field: some_value
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close and proc.name in (my_list)
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_TRUE(check_warning_message("Unknown key 'typo_field'"));
+}
+
+TEST_F(test_falco_engine, macro_unknown_key) {
+	std::string rules_content = R"END(
+- macro: my_macro
+  condition: evt.type = close
+  typo_field: some_value
+
+- rule: test_rule
+  desc: test rule description
+  condition: my_macro
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_TRUE(check_warning_message("Unknown key 'typo_field'"));
+}
+
+TEST_F(test_falco_engine, list_cross_type_key_priority) {
+	std::string rules_content = R"END(
+- list: my_list
+  items: [cat, bash]
+  priority: INFO
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close and proc.name in (my_list)
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	// The flat-union schema accepts 'priority' on a list (validation_ok),
+	// but procedural detection catches the cross-type misuse.
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_TRUE(check_warning_message("Unknown key 'priority'"));
+}
+
 TEST_F(test_falco_engine, deprecated_field_in_output) {
 	std::string rules_content = R"END(
 - rule: test_rule_with_evt_dir_in_output
