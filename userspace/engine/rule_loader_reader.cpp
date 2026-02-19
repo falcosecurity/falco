@@ -404,6 +404,23 @@ static void read_rule_exceptions(
 	exceptions = decoded;
 }
 
+static void warn_unknown_keys(const YAML::Node& item,
+                              const std::set<std::string>& expected_keys,
+                              rule_loader::configuration& cfg,
+                              const rule_loader::context& ctx) {
+	if(!item.IsMap()) {
+		return;
+	}
+	for(auto it = item.begin(); it != item.end(); ++it) {
+		std::string key = it->first.as<std::string>();
+		if(expected_keys.find(key) == expected_keys.end()) {
+			cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_KEY,
+			                     "Unknown key '" + key + "'. The key will be ignored.",
+			                     ctx);
+		}
+	}
+}
+
 inline static bool check_update_expected(std::set<std::string>& expected_keys,
                                          const std::set<std::string>& overrides,
                                          const std::string& override_type,
@@ -460,6 +477,10 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		}
 
 		collector.define(cfg, v);
+
+		static const std::set<std::string> expected_required_engine_version_keys{
+		        "required_engine_version"};
+		warn_unknown_keys(item, expected_required_engine_version_keys, cfg, ctx);
 	} else if(item["required_plugin_versions"].IsDefined()) {
 		const YAML::Node& req_plugin_vers = item["required_plugin_versions"];
 		rule_loader::context ctx(req_plugin_vers,
@@ -514,6 +535,14 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 
 			collector.define(cfg, v);
 		}
+
+		static const std::set<std::string> expected_required_plugin_versions_keys{
+		        "required_plugin_versions"};
+		rule_loader::context rpv_ctx(item,
+		                             rule_loader::context::REQUIRED_PLUGIN_VERSIONS,
+		                             "",
+		                             parent);
+		warn_unknown_keys(item, expected_required_plugin_versions_keys, cfg, rpv_ctx);
 	} else if(item["list"].IsDefined()) {
 		std::string name;
 		// Using tmp context until name is decoded
@@ -559,6 +588,12 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		} else {
 			collector.define(cfg, v);
 		}
+
+		static const std::set<std::string> expected_list_keys{"list",
+		                                                      "items",
+		                                                      "append",
+		                                                      "override"};
+		warn_unknown_keys(item, expected_list_keys, cfg, ctx);
 	} else if(item["macro"].IsDefined()) {
 		std::string name;
 		// Using tmp context until name is decoded
@@ -610,6 +645,12 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		} else {
 			collector.define(cfg, v);
 		}
+
+		static const std::set<std::string> expected_macro_keys{"macro",
+		                                                       "condition",
+		                                                       "append",
+		                                                       "override"};
+		warn_unknown_keys(item, expected_macro_keys, cfg, ctx);
 	} else if(item["rule"].IsDefined()) {
 		std::string name;
 
@@ -898,6 +939,23 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				collector.define(cfg, v);
 			}
 		}
+
+		static const std::set<std::string> expected_rule_keys{"rule",
+		                                                      "condition",
+		                                                      "output",
+		                                                      "desc",
+		                                                      "priority",
+		                                                      "source",
+		                                                      "enabled",
+		                                                      "capture",
+		                                                      "capture_duration",
+		                                                      "warn_evttypes",
+		                                                      "skip-if-unknown-filter",
+		                                                      "tags",
+		                                                      "exceptions",
+		                                                      "override",
+		                                                      "append"};
+		warn_unknown_keys(item, expected_rule_keys, cfg, ctx);
 	} else {
 		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
 		cfg.res->add_warning(falco::load_result::warning_code::LOAD_UNKNOWN_ITEM,

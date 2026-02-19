@@ -97,6 +97,12 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                     "items": {
                         "type": "string"
                     }
+                },
+                "warn_evttypes": {
+                    "type": "boolean"
+                },
+                "skip-if-unknown-filter": {
+                    "type": "boolean"
                 }
             },
             "required": [],
@@ -150,7 +156,7 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 "append",
                 "replace"
             ],
-            "title": "Priority"
+            "title": "OverriddenItem"
         },
         "Override": {
             "type": "object",
@@ -175,6 +181,21 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                     "$ref": "#/definitions/OverriddenItem"
                 },
                 "exceptions": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "capture": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "capture_duration": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "tags": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "warn_evttypes": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "skip-if-unknown-filter": {
                     "$ref": "#/definitions/OverriddenItem"
                 }
             },
