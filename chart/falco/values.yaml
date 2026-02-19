@@ -64,19 +64,6 @@ podSecurityContext: {}
 #    securityContext:
 #     privileged: true
 #
-# 3) driver.enabled = true and driver.kind = ebpf:
-#    securityContext:
-#     privileged: true
-#
-# 4) driver.enabled = true and driver.kind = ebpf and driver.ebpf.leastPrivileged = true
-#    securityContext:
-#     capabilities:
-#      add:
-#      - BPF
-#      - SYS_RESOURCE
-#      - PERFMON
-#      - SYS_PTRACE
-#
 # -- Set securityContext for the Falco container.For more info see the "falco.securityContext" helper in "pod-template.tpl"
 containerSecurityContext: {}
 
@@ -247,7 +234,7 @@ metrics:
   # attached by Falco and the time spent in each program measured in nanoseconds.
   # To enable this feature, the kernel must be >= 5.1, and the kernel
   # configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
-  # or an equivalent statistics feature, is not available for non `*bpf*` drivers.
+  # or an equivalent statistics feature, is only available for the `*modern_bpf*` driver.
   # Additionally, please be aware that the current implementation of `libbpf` does
   # not support granularity of statistics at the bpf tail call level.
   libbpfStatsEnabled: true
@@ -304,10 +291,10 @@ driver:
   # -- Set it to false if you want to deploy Falco without the drivers.
   # Always set it to false when using Falco with plugins.
   enabled: true
-  # -- kind tells Falco which driver to use. Available options: kmod (kernel driver), ebpf (eBPF probe), modern_ebpf (modern eBPF probe).
+  # -- kind tells Falco which driver to use. Available options: kmod (kernel driver), modern_ebpf (modern eBPF probe).
   kind: auto
   # -- Path on the host to mount inside the container for kernel-level access. Automatically mounted when `kind` is set to `auto`,
-  # or when `kind` is set either to `ebpf` or `modern_ebpf` and the corresponding `sysfsMount` option is set to `true`.
+  # or when `kind` is set to `modern_ebpf` and the corresponding `sysfsMount` option is set to `true`.
   # Common values:
   #   /sys/kernel                - covers both tracefs and debugfs (failsafe option)
   #   /sys/kernel/tracing        - for systems using separate tracefs mount (newer distros)
@@ -320,28 +307,6 @@ driver:
     bufSizePreset: 4
     # -- dropFailedExit if set true drops failed system call exit events before pushing them to userspace.
     dropFailedExit: false
-  # -- Configuration section for ebpf driver.
-  ebpf:
-    # -- path where the eBPF probe is located. It comes handy when the probe have been installed in the nodes using tools other than the init
-    # container deployed with the chart.
-    path: "${HOME}/.falco/falco-bpf.o"
-    # -- Needed to enable eBPF JIT at runtime for performance reasons.
-    # Can be skipped if eBPF JIT is enabled from outside the container
-    hostNetwork: false
-    # -- Constrain Falco with capabilities instead of running a privileged container.
-    # Ensure the eBPF driver is enabled (i.e., setting the `driver.kind` option to `ebpf`).
-    # Capabilities used: {CAP_SYS_RESOURCE, CAP_SYS_ADMIN, CAP_SYS_PTRACE}.
-    # On kernel versions >= 5.8 'CAP_PERFMON' and 'CAP_BPF' could replace 'CAP_SYS_ADMIN' but please pay attention to the 'kernel.perf_event_paranoid' value on your system.
-    # Usually 'kernel.perf_event_paranoid>2' means that you cannot use 'CAP_PERFMON' and you should fallback to 'CAP_SYS_ADMIN', but the behavior changes across different distros.
-    # Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe
-    leastPrivileged: false
-    # -- bufSizePreset determines the size of the shared space between Falco and its drivers.
-    # This shared space serves as a temporary storage for syscall events.
-    bufSizePreset: 4
-    # -- dropFailedExit if set true drops failed system call exit events before pushing them to userspace.
-    dropFailedExit: false
-    # -- sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container.
-    sysfsMount: true
   modernEbpf:
     # -- Constrain Falco with capabilities instead of running a privileged container.
     # Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern_ebpf`).
@@ -836,7 +801,6 @@ falco:
 
   # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by this Helm chart.
   # To customize the Falco engine settings within the chart, please refer to `driver` settings section above.
-  # DEPRECATION NOTICE: the Legacy eBPF probe is currently deprecated. Consider using other engines.
 
   ##################
   # Falco captures #
