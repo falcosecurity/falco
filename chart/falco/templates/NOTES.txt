@@ -37,15 +37,12 @@ See BREAKING-CHANGES.md for more information.
 {{- end }}
 
 
-{{- if has .Values.driver.kind (list "ebpf" "gvisor") -}}
+{{- if has .Values.driver.kind (list "ebpf") -}}
 {{- println }}
 WARNING(engine):
 {{- if eq .Values.driver.kind "ebpf" }}
 The Legacy eBPF probe (driver.kind=ebpf) is deprecated in Falco 0.43.0.
 Please consider using the Modern eBPF probe (driver.kind=modern_ebpf) instead.
-{{- else if eq .Values.driver.kind "gvisor" }}
-The gVisor engine (driver.kind=gvisor) is deprecated in Falco 0.43.0.
-Please consider using alternative monitoring approaches.
 {{- end }}
 {{- println }}
 See BREAKING-CHANGES.md for more information.

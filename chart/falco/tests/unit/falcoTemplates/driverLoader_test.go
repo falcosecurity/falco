@@ -16,15 +16,14 @@
 package falcoTemplates
 
 import (
-	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"path/filepath"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -90,15 +89,6 @@ func TestDriverLoaderEnabled(t *testing.T) {
 			"driver.kind=modern_ebpf",
 			map[string]string{
 				"driver.kind": "modern_ebpf",
-			},
-			func(t *testing.T, initContainer any) {
-				require.Equal(t, initContainer, nil)
-			},
-		},
-		{
-			"driver.kind=gvisor",
-			map[string]string{
-				"driver.kind": "gvisor",
 			},
 			func(t *testing.T, initContainer any) {
 				require.Equal(t, initContainer, nil)
