@@ -55,16 +55,15 @@ Falco needs a **driver** to analyze the system workload and pass security events
 
 * [Modern eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#modern-ebpf-probe)
 * [Kernel module](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module)
-* [Legacy eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe)
 
-The driver must be loaded on the node where Falco is running. Falco now prefers the **Modern eBPF probe** by default. When using **falcoctl** with `driver.kind=auto`, it will automatically choose the best driver for your system. Specifically, it first attempts to use the Modern eBPF probe (which is shipped directly within the Falco binary) and will fall back to the _kernel module_ or the _original eBPF probe_ if the necessary BPF features are not available.
+The driver must be loaded on the node where Falco is running. Falco now prefers the **Modern eBPF probe** by default. When using **falcoctl** with `driver.kind=auto`, it will automatically choose the best driver for your system. Specifically, it first attempts to use the Modern eBPF probe (which is shipped directly within the Falco binary) and will fall back to the _kernel module_ if the necessary BPF features are not available.
 
 
 ##### Pre-built drivers
 
 The [kernel-crawler](https://github.com/falcosecurity/kernel-crawler) automatically discovers kernel versions and flavors. At the time being, it runs weekly. We have a site where users can check for the discovered kernel flavors and versions, [example for Amazon Linux 2](https://falcosecurity.github.io/kernel-crawler/?arch=x86_64&target=AmazonLinux2).
 
-The discovery of a kernel version by the [kernel-crawler](https://falcosecurity.github.io/kernel-crawler/) does not imply that pre-built kernel modules and bpf probes are available. That is because once kernel-crawler has discovered new kernels versions, the drivers need to be built by jobs running on our [Driver Build Grid infra](https://github.com/falcosecurity/test-infra#dbg). Please keep in mind that the building process is based on best effort. Users can check the existence of prebuilt modules at the following [link](https://download.falco.org/driver/site/index.html?lib=3.0.1%2Bdriver&target=all&arch=all&kind=all).
+The discovery of a kernel version by the [kernel-crawler](https://falcosecurity.github.io/kernel-crawler/) does not imply that pre-built kernel modules are available. That is because once kernel-crawler has discovered new kernels versions, the drivers need to be built by jobs running on our [Driver Build Grid infra](https://github.com/falcosecurity/test-infra#dbg). Please keep in mind that the building process is based on best effort. Users can check the existence of prebuilt modules at the following [link](https://download.falco.org/driver/site/index.html?lib=3.0.1%2Bdriver&target=all&arch=all&kind=all).
 
 ##### Building the driver on the fly (fallback)
 
@@ -105,39 +104,17 @@ The chart deploys Falco using a `daemonset` or a `deployment` depending on the *
 #### Daemonset
 When using the [drivers](#about-the-driver), Falco is typically deployed as a `DaemonSet`. By using a DaemonSet, Kubernetes ensures that a Falco instance is running on each node even as new nodes are added to your cluster. This makes it a perfect fit for monitoring across the entire cluster.
 
-By default, with `driver.kind=auto`, the correct driver will will be automatically selected for each node. This is accomplished through the **driver loader** (implemented by `falcoctl`), which generates a new Falco configuration file and picks the right engine driver (Modern eBPF, kmod, or legacy eBPF) based on the underlying environment. If you prefer to manually force a specific driver, see the other available options below.
+By default, with `driver.kind=auto`, the correct driver will will be automatically selected for each node. This is accomplished through the **driver loader** (implemented by `falcoctl`), which generates a new Falco configuration file and picks the right engine driver (Modern eBPF or kmod) based on the underlying environment. If you prefer to manually force a specific driver, see the other available options below.
 
 **Kernel module**
 
-To run Falco with the [eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module) you just need to set `driver.kind=kmod` as shown in the following snippet:
+To run Falco with the [kernel module](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module) you just need to set `driver.kind=kmod` as shown in the following snippet:
 
 ```bash
 helm install falco falcosecurity/falco \
     --create-namespace \
     --namespace falco
     --set driver.kind=kmod
-```
-
-**Legacy eBPF probe**
-
-> **⚠️ DEPRECATION NOTICE**: The Legacy eBPF probe (`driver.kind=ebpf`) is **deprecated** starting with Falco 0.43.0. Please consider using the Modern eBPF probe (`driver.kind=modern_ebpf`) instead. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
-
-To run Falco with the [eBPF probe](http://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
-
-```bash
-helm install falco falcosecurity/falco \
-    --create-namespace \
-    --namespace falco \
-    --set driver.kind=ebpf
-```
-
-There are other configurations related to the eBPF probe, for more info please check the [values.yaml](./values.yaml) file. After you have made your changes to the configuration file you just need to run:
-
-```bash
-helm install falco falcosecurity/falco \
-    --create-namespace \
-    --namespace "your-custom-name-space" \
-    -f "path-to-custom-values.yaml-file"
 ```
 
 **Modern eBPF probe**

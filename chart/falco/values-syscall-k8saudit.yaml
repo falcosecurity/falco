@@ -1,5 +1,5 @@
-# Enable the driver, and choose between the kernel module or the ebpf probe.
-# Default value: kernel module.
+# Enable the driver, and choose between the kernel module or the modern eBPF probe.
+# Default value: modern eBPF probe.
 driver:
   enabled: true
   kind: module
