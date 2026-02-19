@@ -332,7 +332,7 @@ Based on the user input it populates the driver configuration in the falco confi
 */}}
 {{- define "falco.engineConfiguration" -}}
 {{- if .Values.driver.enabled -}}
-{{- $supportedDrivers := list "kmod" "ebpf" "modern_ebpf" "auto" -}}
+{{- $supportedDrivers := list "kmod" "modern_ebpf" "auto" -}}
 {{- $aliasDrivers := list "module" "modern-bpf" -}}
 {{- if and (not (has .Values.driver.kind $supportedDrivers)) (not (has .Values.driver.kind $aliasDrivers)) -}}
 {{- fail (printf "unsupported driver kind: \"%s\". Supported drivers %s, alias %s" .Values.driver.kind $supportedDrivers $aliasDrivers) -}}
@@ -340,14 +340,11 @@ Based on the user input it populates the driver configuration in the falco confi
 {{- if or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") -}}
 {{- $kmodConfig := dict "kind" "kmod" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) -}}
 {{- $_ := set .Values.falco "engine" $kmodConfig -}}
-{{- else if eq .Values.driver.kind "ebpf" -}}
-{{- $ebpfConfig := dict "kind" "ebpf" "ebpf" (dict "buf_size_preset" .Values.driver.ebpf.bufSizePreset "drop_failed_exit" .Values.driver.ebpf.dropFailedExit "probe" .Values.driver.ebpf.path) -}}
-{{- $_ := set .Values.falco "engine" $ebpfConfig -}}
 {{- else if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") -}}
 {{- $ebpfConfig := dict "kind" "modern_ebpf" "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
 {{- $_ := set .Values.falco "engine" $ebpfConfig -}}
 {{- else if eq .Values.driver.kind "auto" -}}
-{{- $engineConfig := dict "kind" "modern_ebpf" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) "ebpf" (dict "buf_size_preset" .Values.driver.ebpf.bufSizePreset "drop_failed_exit" .Values.driver.ebpf.dropFailedExit "probe" .Values.driver.ebpf.path) "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
+{{- $engineConfig := dict "kind" "modern_ebpf" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
 {{- $_ := set .Values.falco "engine" $engineConfig -}}
 {{- end -}}
 {{- end -}}
@@ -370,12 +367,8 @@ It considers driver.enabled, driver.kind and the per-driver sysfsMount opt-outs 
 */}}
 {{- define "falco.sysfsMount.enabled" -}}
 {{- if .Values.driver.enabled -}}
-  {{- if eq .Values.driver.kind "ebpf" -}}
-    {{- if .Values.driver.ebpf.sysfsMount }}true{{- else }}false{{- end -}}
-  {{- else if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") -}}
+  {{- if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") (eq .Values.driver.kind "auto") -}}
     {{- if .Values.driver.modernEbpf.sysfsMount }}true{{- else }}false{{- end -}}
-  {{- else if eq .Values.driver.kind "auto" -}}
-    {{- if or .Values.driver.ebpf.sysfsMount .Values.driver.modernEbpf.sysfsMount }}true{{- else }}false{{- end -}}
   {{- end -}}
 {{- else -}}
 false

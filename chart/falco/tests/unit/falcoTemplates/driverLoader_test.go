@@ -151,25 +151,6 @@ func TestDriverLoaderEnabled(t *testing.T) {
 			},
 		},
 		{
-			"driver.kind=ebpf",
-			map[string]string{
-				"driver.kind": "ebpf",
-			},
-			func(t *testing.T, initContainer any) {
-				container, ok := initContainer.(v1.Container)
-				require.True(t, ok)
-
-				require.Contains(t, container.Args, "ebpf")
-				require.Nil(t, container.SecurityContext)
-				require.NotContains(t, container.Env, namespaceEnvVar)
-				require.Contains(t, container.Env, updateConfigMapEnvVar)
-				require.NotContains(t, container.Env, configmapEnvVar)
-
-				// Check that the expected volumes are there.
-				volumeMounts(t, container.VolumeMounts)
-			},
-		},
-		{
 			"driver.kind=kmod&driver.loader.disabled",
 			map[string]string{
 				"driver.kind":           "kmod",

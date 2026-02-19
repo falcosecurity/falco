@@ -17,10 +17,6 @@ metadata:
     {{- if .Values.driver.modernEbpf.leastPrivileged }}
     container.apparmor.security.beta.kubernetes.io/{{ .Chart.Name }}: unconfined
     {{- end }}
-    {{- else if eq .Values.driver.kind "ebpf" }}
-    {{- if .Values.driver.ebpf.leastPrivileged }}
-    container.apparmor.security.beta.kubernetes.io/{{ .Chart.Name }}: unconfined
-    {{- end }}
     {{- end }}
     {{- end }}
     {{- with .Values.podAnnotations }}
@@ -34,12 +30,6 @@ spec:
   {{- with .Values.podSecurityContext }}
   securityContext:
     {{- toYaml . | nindent 4}}
-  {{- end }}
-  {{- if .Values.driver.enabled }}
-  {{- if and (eq .Values.driver.kind "ebpf") .Values.driver.ebpf.hostNetwork }}
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-  {{- end }}
   {{- end }}
   {{- if .Values.podPriorityClassName }}
   priorityClassName: {{ .Values.podPriorityClassName }}
@@ -385,13 +375,6 @@ spec:
 {{- if .Values.driver.enabled -}}
   {{- if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") (eq .Values.driver.kind "auto")) -}}
     {{- $securityContext := set $securityContext "privileged" true -}}
-  {{- end -}}
-  {{- if eq .Values.driver.kind "ebpf" -}}
-    {{- if .Values.driver.ebpf.leastPrivileged -}}
-      {{- $securityContext := set $securityContext "capabilities" (dict "add" (list "SYS_ADMIN" "SYS_RESOURCE" "SYS_PTRACE")) -}}
-    {{- else -}}
-      {{- $securityContext := set $securityContext "privileged" true -}}
-    {{- end -}}
   {{- end -}}
   {{- if (or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf")) -}}
     {{- if .Values.driver.modernEbpf.leastPrivileged -}}

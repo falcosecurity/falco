@@ -55,15 +55,14 @@ Falco needs a **driver** to analyze the system workload and pass security events
 
 * [Modern eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#modern-ebpf-probe)
 * [Kernel module](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module)
-* [Legacy eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe)
 
-The driver must be loaded on the node where Falco is running. Falco now prefers the **Modern eBPF probe** by default. When using **falcoctl** with `driver.kind=auto`, it will automatically choose the best driver for your system. Specifically, it first attempts to use the Modern eBPF probe (which is shipped directly within the Falco binary) and will fall back to the _kernel module_ or the _original eBPF probe_ if the necessary BPF features are not available.
+The driver must be loaded on the node where Falco is running. Falco now prefers the **Modern eBPF probe** by default. When using **falcoctl** with `driver.kind=auto`, it will automatically choose the best driver for your system. Specifically, it first attempts to use the Modern eBPF probe (which is shipped directly within the Falco binary) and will fall back to the _kernel module_ if the necessary BPF features are not available.
 
 ##### Pre-built drivers
 
 The [kernel-crawler](https://github.com/falcosecurity/kernel-crawler) automatically discovers kernel versions and flavors. At the time being, it runs weekly. We have a site where users can check for the discovered kernel flavors and versions, [example for Amazon Linux 2](https://falcosecurity.github.io/kernel-crawler/?arch=x86_64&target=AmazonLinux2).
 
-The discovery of a kernel version by the [kernel-crawler](https://falcosecurity.github.io/kernel-crawler/) does not imply that pre-built kernel modules and bpf probes are available. That is because once kernel-crawler has discovered new kernels versions, the drivers need to be built by jobs running on our [Driver Build Grid infra](https://github.com/falcosecurity/test-infra#dbg). Please keep in mind that the building process is based on best effort. Users can check the existence of prebuilt modules at the following [link](https://download.falco.org/driver/site/index.html?lib=3.0.1%2Bdriver&target=all&arch=all&kind=all).
+The discovery of a kernel version by the [kernel-crawler](https://falcosecurity.github.io/kernel-crawler/) does not imply that pre-built kernel modules are available. That is because once kernel-crawler has discovered new kernels versions, the drivers need to be built by jobs running on our [Driver Build Grid infra](https://github.com/falcosecurity/test-infra#dbg). Please keep in mind that the building process is based on best effort. Users can check the existence of prebuilt modules at the following [link](https://download.falco.org/driver/site/index.html?lib=3.0.1%2Bdriver&target=all&arch=all&kind=all).
 
 ##### Building the driver on the fly (fallback)
 
@@ -104,39 +103,17 @@ The chart deploys Falco using a `daemonset` or a `deployment` depending on the *
 #### Daemonset
 When using the [drivers](#about-the-driver), Falco is typically deployed as a `DaemonSet`. By using a DaemonSet, Kubernetes ensures that a Falco instance is running on each node even as new nodes are added to your cluster. This makes it a perfect fit for monitoring across the entire cluster.
 
-By default, with `driver.kind=auto`, the correct driver will will be automatically selected for each node. This is accomplished through the **driver loader** (implemented by `falcoctl`), which generates a new Falco configuration file and picks the right engine driver (Modern eBPF, kmod, or legacy eBPF) based on the underlying environment. If you prefer to manually force a specific driver, see the other available options below.
+By default, with `driver.kind=auto`, the correct driver will will be automatically selected for each node. This is accomplished through the **driver loader** (implemented by `falcoctl`), which generates a new Falco configuration file and picks the right engine driver (Modern eBPF or kmod) based on the underlying environment. If you prefer to manually force a specific driver, see the other available options below.
 
 **Kernel module**
 
-To run Falco with the [eBPF probe](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module) you just need to set `driver.kind=kmod` as shown in the following snippet:
+To run Falco with the [kernel module](https://falco.org/docs/concepts/event-sources/kernel/#kernel-module) you just need to set `driver.kind=kmod` as shown in the following snippet:
 
 ```bash
 helm install falco falcosecurity/falco \
     --create-namespace \
     --namespace falco
     --set driver.kind=kmod
-```
-
-**Legacy eBPF probe**
-
-> **⚠️ DEPRECATION NOTICE**: The Legacy eBPF probe (`driver.kind=ebpf`) is **deprecated** starting with Falco 0.43.0. Please consider using the Modern eBPF probe (`driver.kind=modern_ebpf`) instead. See [BREAKING-CHANGES.md](./BREAKING-CHANGES.md) for more information.
-
-To run Falco with the [eBPF probe](http://falco.org/docs/concepts/event-sources/kernel/#legacy-ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
-
-```bash
-helm install falco falcosecurity/falco \
-    --create-namespace \
-    --namespace falco \
-    --set driver.kind=ebpf
-```
-
-There are other configurations related to the eBPF probe, for more info please check the [values.yaml](./values.yaml) file. After you have made your changes to the configuration file you just need to run:
-
-```bash
-helm install falco falcosecurity/falco \
-    --create-namespace \
-    --namespace "your-custom-name-space" \
-    -f "path-to-custom-values.yaml-file"
 ```
 
 **Modern eBPF probe**
@@ -577,15 +554,8 @@ The following table lists the main configurable parameters of the falco chart v8
 | controller.kind | string | `"daemonset"` |  |
 | controller.labels | object | `{}` | Extra labels to add to the daemonset or deployment |
 | customRules | object | `{}` | Third party rules enabled for Falco. More info on the dedicated section in README.md file. |
-| driver.ebpf | object | `{"bufSizePreset":4,"dropFailedExit":false,"hostNetwork":false,"leastPrivileged":false,"path":"${HOME}/.falco/falco-bpf.o","sysfsMount":true}` | Configuration section for ebpf driver. |
-| driver.ebpf.bufSizePreset | int | `4` | bufSizePreset determines the size of the shared space between Falco and its drivers. This shared space serves as a temporary storage for syscall events. |
-| driver.ebpf.dropFailedExit | bool | `false` | dropFailedExit if set true drops failed system call exit events before pushing them to userspace. |
-| driver.ebpf.hostNetwork | bool | `false` | Needed to enable eBPF JIT at runtime for performance reasons. Can be skipped if eBPF JIT is enabled from outside the container |
-| driver.ebpf.leastPrivileged | bool | `false` | Constrain Falco with capabilities instead of running a privileged container. Ensure the eBPF driver is enabled (i.e., setting the `driver.kind` option to `ebpf`). Capabilities used: {CAP_SYS_RESOURCE, CAP_SYS_ADMIN, CAP_SYS_PTRACE}. On kernel versions >= 5.8 'CAP_PERFMON' and 'CAP_BPF' could replace 'CAP_SYS_ADMIN' but please pay attention to the 'kernel.perf_event_paranoid' value on your system. Usually 'kernel.perf_event_paranoid>2' means that you cannot use 'CAP_PERFMON' and you should fallback to 'CAP_SYS_ADMIN', but the behavior changes across different distros. Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe |
-| driver.ebpf.path | string | `"${HOME}/.falco/falco-bpf.o"` | path where the eBPF probe is located. It comes handy when the probe have been installed in the nodes using tools other than the init container deployed with the chart. |
-| driver.ebpf.sysfsMount | bool | `true` | sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container. |
 | driver.enabled | bool | `true` | Set it to false if you want to deploy Falco without the drivers. Always set it to false when using Falco with plugins. |
-| driver.kind | string | `"auto"` | kind tells Falco which driver to use. Available options: kmod (kernel driver), ebpf (eBPF probe), modern_ebpf (modern eBPF probe). |
+| driver.kind | string | `"auto"` | kind tells Falco which driver to use. Available options: kmod (kernel driver), modern_ebpf (modern eBPF probe). |
 | driver.kmod | object | `{"bufSizePreset":4,"dropFailedExit":false}` | kmod holds the configuration for the kernel module. |
 | driver.kmod.bufSizePreset | int | `4` | bufSizePreset determines the size of the shared space between Falco and its drivers. This shared space serves as a temporary storage for syscall events. |
 | driver.kmod.dropFailedExit | bool | `false` | dropFailedExit if set true drops failed system call exit events before pushing them to userspace. |
@@ -603,7 +573,7 @@ The following table lists the main configurable parameters of the falco chart v8
 | driver.modernEbpf.dropFailedExit | bool | `false` | dropFailedExit if set true drops failed system call exit events before pushing them to userspace. |
 | driver.modernEbpf.leastPrivileged | bool | `false` | Constrain Falco with capabilities instead of running a privileged container. Ensure the modern bpf driver is enabled (i.e., setting the `driver.kind` option to `modern_ebpf`). Capabilities used: {CAP_SYS_RESOURCE, CAP_BPF, CAP_PERFMON, CAP_SYS_PTRACE}. Read more on that here: https://falco.org/docs/setup/container/#docker-least-privileged-ebpf-probe |
 | driver.modernEbpf.sysfsMount | bool | `true` | sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container. |
-| driver.sysfsMountPath | string | `"/sys/kernel"` | Path on the host to mount inside the container for kernel-level access. Automatically mounted when `kind` is set to `auto`, or when `kind` is set either to `ebpf` or `modern_ebpf` and the corresponding `sysfsMount` option is set to `true`. Common values:   /sys/kernel                - covers both tracefs and debugfs (failsafe option)   /sys/kernel/tracing        - for systems using separate tracefs mount (newer distros)   /sys/kernel/debug          - for systems exposing tracing under debugfs (legacy distros) |
+| driver.sysfsMountPath | string | `"/sys/kernel"` | Path on the host to mount inside the container for kernel-level access. Automatically mounted when `kind` is set to `auto`, or when `kind` is set to `modern_ebpf` and the corresponding `sysfsMount` option is set to `true`. Common values:   /sys/kernel                - covers both tracefs and debugfs (failsafe option)   /sys/kernel/tracing        - for systems using separate tracefs mount (newer distros)   /sys/kernel/debug          - for systems exposing tracing under debugfs (legacy distros) |
 | extra.args | list | `[]` | Extra command-line arguments. |
 | extra.env | list | `[]` | Extra environment variables that will be pass onto Falco containers. |
 | extra.initContainers | list | `[]` | Additional initContainers for Falco pods. |
@@ -773,7 +743,7 @@ The following table lists the main configurable parameters of the falco chart v8
 | metrics.interval | string | `"1h"` | interval is stats interval in Falco follows the time duration definitions used by Prometheus. https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations Time durations are specified as a number, followed immediately by one of the following units: ms - millisecond s - second m - minute h - hour d - day - assuming a day has always 24h w - week - assuming a week has always 7d y - year - assuming a year has always 365d Example of a valid time duration: 1h30m20s10ms A minimum interval of 100ms is enforced for metric collection. However, for production environments, we recommend selecting one of the following intervals for optimal monitoring: 15m 30m 1h 4h 6h |
 | metrics.jemallocStatsEnabled | bool | `false` | jemallocStatsEnabled adds jemalloc stats to the metrics output. This option requires that Falco is built with jemalloc support; otherwise it will have no effect. |
 | metrics.kernelEventCountersPerCPUEnabled | bool | `false` | kernelEventCountersPerCPUEnabled specifies whether the event counters per cpu should be enabled. |
-| metrics.libbpfStatsEnabled | bool | `true` | libbpfStatsEnabled exposes statistics similar to `bpftool prog show`, providing information such as the number of invocations of each BPF program attached by Falco and the time spent in each program measured in nanoseconds. To enable this feature, the kernel must be >= 5.1, and the kernel configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option, or an equivalent statistics feature, is not available for non `*bpf*` drivers. Additionally, please be aware that the current implementation of `libbpf` does not support granularity of statistics at the bpf tail call level. |
+| metrics.libbpfStatsEnabled | bool | `true` | libbpfStatsEnabled exposes statistics similar to `bpftool prog show`, providing information such as the number of invocations of each BPF program attached by Falco and the time spent in each program measured in nanoseconds. To enable this feature, the kernel must be >= 5.1, and the kernel configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option, or an equivalent statistics feature, is only available for the `*modern_bpf*` driver. Additionally, please be aware that the current implementation of `libbpf` does not support granularity of statistics at the bpf tail call level. |
 | metrics.outputRule | bool | `false` | outputRule enables seamless metrics and performance monitoring, we recommend emitting metrics as the rule "Falco internal: metrics snapshot". This option is particularly useful when Falco logs are preserved in a data lake. Please note that to use this option, the Falco rules config `priority` must be set to `info` at a minimum. |
 | metrics.pluginsMetricsEnabled | bool | `true` | pluginsMetricsEnabled adds custom plugins metrics to the metrics output. Please note that if a plugin has no metrics implemented, there will be no metrics available from it. |
 | metrics.resourceUtilizationEnabled | bool | `true` | resourceUtilizationEnabled`: Emit CPU and memory usage metrics. CPU usage is reported as a percentage of one CPU and can be normalized to the total number of CPUs to determine overall usage. Memory metrics are provided in raw units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`) and can be uniformly converted to megabytes (MB) using the `convert_memory_to_mb` functionality. In environments such as Kubernetes when deployed as daemonset, it is crucial to track Falco's container memory usage. To customize the path of the memory metric file, you can create an environment variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor container memory usage, which aligns with Kubernetes' `container_memory_working_set_bytes` metric. Finally, we emit the overall host CPU and memory usages, along with the total number of processes and open file descriptors (fds) on the host, obtained from the proc file system unrelated to Falco's monitoring. These metrics help assess Falco's usage in relation to the server's workload intensity. |
