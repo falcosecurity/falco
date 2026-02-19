@@ -17,11 +17,11 @@ package falcoTemplates
 
 import (
 	"fmt"
-	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -176,35 +176,6 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 			},
 		},
 		{
-			"kind=gvisor",
-			map[string]string{
-				"driver.kind": "gvisor",
-			},
-			func(t *testing.T, config any) {
-				require.Len(t, config, 2, "should have only two items")
-				kind, config, root, err := getGvisorConfig(config)
-				require.NoError(t, err)
-				require.Equal(t, "gvisor", kind)
-				require.Equal(t, "/gvisor-config/pod-init.json", config)
-				require.Equal(t, "/host/run/containerd/runsc/k8s.io", root)
-			},
-		},
-		{
-			"gvisor=config",
-			map[string]string{
-				"driver.kind":              "gvisor",
-				"driver.gvisor.runsc.root": "/my/root/test",
-			},
-			func(t *testing.T, config any) {
-				require.Len(t, config, 2, "should have only two items")
-				kind, config, root, err := getGvisorConfig(config)
-				require.NoError(t, err)
-				require.Equal(t, "gvisor", kind)
-				require.Equal(t, "/gvisor-config/pod-init.json", config)
-				require.Equal(t, "/host/my/root/test/k8s.io", root)
-			},
-		},
-		{
 			"kind=auto",
 			map[string]string{
 				"driver.kind": "auto",
@@ -268,7 +239,7 @@ func TestDriverConfigWithUnsupportedDriver(t *testing.T) {
 	_, err = helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/configmap.yaml"})
 	require.Error(t, err)
 	require.True(t, strings.Contains(err.Error(),
-		"unsupported driver kind: \"notExisting\". Supported drivers [kmod ebpf modern_ebpf gvisor auto], alias [module modern-bpf]"))
+		"unsupported driver kind: \"notExisting\". Supported drivers [kmod ebpf modern_ebpf auto], alias [module modern-bpf]"))
 }
 
 func getKmodConfig(config interface{}) (kind string, bufSizePreset float64, dropFailedExit bool, err error) {
@@ -314,21 +285,6 @@ func getModernEbpfConfig(config interface{}) (kind string, bufSizePreset, cpusFo
 	bufSizePreset = modernEbpf["buf_size_preset"].(float64)
 	dropFailedExit = modernEbpf["drop_failed_exit"].(bool)
 	cpusForEachBuffer = modernEbpf["cpus_for_each_buffer"].(float64)
-
-	return
-}
-
-func getGvisorConfig(cfg interface{}) (kind, config, root string, err error) {
-	configMap, ok := cfg.(map[string]interface{})
-	if !ok {
-		err = fmt.Errorf("can't assert type of config")
-		return
-	}
-
-	kind = configMap["kind"].(string)
-	gvisor := configMap["gvisor"].(map[string]interface{})
-	config = gvisor["config"].(string)
-	root = gvisor["root"].(string)
 
 	return
 }

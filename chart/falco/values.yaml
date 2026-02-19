@@ -357,17 +357,6 @@ driver:
     cpusForEachBuffer: 2
     # -- sysfsMount if set to true, the path specified by `driver.sysfsMountPath` (e.g. `/sys/kernel`) is automatically mounted into the Falco container.
     sysfsMount: true
-  # -- Gvisor configuration. Based on your system you need to set the appropriate values.
-  # Please, remember to add pod tolerations and affinities in order to schedule the Falco pods in the gVisor enabled nodes.
-  gvisor:
-    # -- Runsc container runtime configuration. Falco needs to interact with it in order to intercept the activity of the sandboxed pods.
-    runsc:
-      # -- Absolute path of the `runsc` binary in the k8s nodes.
-      path: /home/containerd/usr/local/sbin
-      # -- Absolute path of the root directory of the `runsc` container runtime. It is of vital importance for Falco since `runsc` stores there the information of the workloads handled by it;
-      root: /run/containerd/runsc
-      # -- Absolute path of the `runsc` configuration file, used by Falco to set its configuration and make aware `gVisor` of its presence.
-      config: /run/containerd/runsc/config.toml
   # -- Configuration for the Falco init container.
   loader:
     # -- Enable/disable the init container.
@@ -847,8 +836,7 @@ falco:
 
   # NOTICE: The `falco.engine` configuration is omitted here since it is fully managed by this Helm chart.
   # To customize the Falco engine settings within the chart, please refer to `driver` settings section above.
-  # DEPRECATION NOTICE: the Legacy eBPF probe and the gVisor engine are currently deprecated. Consider using other
-  # engines.
+  # DEPRECATION NOTICE: the Legacy eBPF probe is currently deprecated. Consider using other engines.
 
   ##################
   # Falco captures #

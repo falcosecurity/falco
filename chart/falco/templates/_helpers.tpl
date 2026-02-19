@@ -185,72 +185,15 @@ we just disable the sycall source.
 */}}
 {{- define "falco.configSyscallSource" -}}
 {{- $userspaceDisabled := true -}}
-{{- $gvisorDisabled := (ne .Values.driver.kind  "gvisor") -}}
 {{- $driverDisabled :=  (not .Values.driver.enabled) -}}
 {{- if or (has "-u" .Values.extra.args) (has "--userspace" .Values.extra.args) -}}
 {{- $userspaceDisabled = false -}}
 {{- end -}}
-{{- if and $driverDisabled $userspaceDisabled $gvisorDisabled }}
+{{- if and $driverDisabled $userspaceDisabled }}
 - --disable-source
 - syscall
 {{- end -}}
 {{- end -}}
-
-{{/*
-We need the falco binary in order to generate the configuration for gVisor. This init container
-is deployed within the Falco pod when gVisor is enabled. The image is the same as the one of Falco we are
-deploying and the configuration logic is a bash script passed as argument on the fly. This solution should
-be temporary and will stay here until we move this logic to the falcoctl tool.
-*/}}
-{{- define "falco.gvisor.initContainer" -}}
-- name: {{ .Chart.Name }}-gvisor-init
-  image: {{ include "falco.image" . }}
-  imagePullPolicy: {{ .Values.image.pullPolicy }}
-  args:
-    - /bin/bash
-    - -c
-    - |
-      set -o errexit
-      set -o nounset
-      set -o pipefail
-
-      root={{ .Values.driver.gvisor.runsc.root }}
-      config={{ .Values.driver.gvisor.runsc.config }}
-
-      echo "* Configuring Falco+gVisor integration...".
-      # Check if gVisor is configured on the node.
-      echo "* Checking for /host${config} file..."
-      if [[ -f /host${config} ]]; then
-          echo "* Generating the Falco configuration..."
-          /usr/bin/falco --gvisor-generate-config=${root}/falco.sock > /host${root}/pod-init.json
-          sed -E -i.orig '/"ignore_missing" : true,/d' /host${root}/pod-init.json
-          if [[ -z $(grep pod-init-config /host${config}) ]]; then
-            echo "* Updating the runsc config file /host${config}..."
-            echo "  pod-init-config = \"${root}/pod-init.json\"" >> /host${config}
-          fi
-          # Endpoint inside the container is different from outside, add
-          # "/host" to the endpoint path inside the container.
-          echo "* Setting the updated Falco configuration to /gvisor-config/pod-init.json..."
-          sed 's/"endpoint" : "\/run/"endpoint" : "\/host\/run/' /host${root}/pod-init.json > /gvisor-config/pod-init.json
-      else
-          echo "* File /host${config} not found."
-          echo "* Please make sure that the gVisor is configured in the current node and/or the runsc root and config file path are correct"
-          exit -1
-      fi
-      echo "* Falco+gVisor correctly configured."
-      exit 0
-  volumeMounts:
-    - mountPath: /host{{ .Values.driver.gvisor.runsc.path }}
-      name: runsc-path
-      readOnly: true
-    - mountPath: /host{{ .Values.driver.gvisor.runsc.root }}
-      name: runsc-root
-    - mountPath: /host{{ .Values.driver.gvisor.runsc.config }}
-      name: runsc-config
-    - mountPath: /gvisor-config
-      name: falco-gvisor-config
-{{- end -}}
-
 
 {{- define "falcoctl.initContainer" -}}
 - name: falcoctl-artifact-install
@@ -389,7 +332,7 @@ Based on the user input it populates the driver configuration in the falco confi
 */}}
 {{- define "falco.engineConfiguration" -}}
 {{- if .Values.driver.enabled -}}
-{{- $supportedDrivers := list "kmod" "ebpf" "modern_ebpf" "gvisor" "auto" -}}
+{{- $supportedDrivers := list "kmod" "ebpf" "modern_ebpf" "auto" -}}
 {{- $aliasDrivers := list "module" "modern-bpf" -}}
 {{- if and (not (has .Values.driver.kind $supportedDrivers)) (not (has .Values.driver.kind $aliasDrivers)) -}}
 {{- fail (printf "unsupported driver kind: \"%s\". Supported drivers %s, alias %s" .Values.driver.kind $supportedDrivers $aliasDrivers) -}}
@@ -403,10 +346,6 @@ Based on the user input it populates the driver configuration in the falco confi
 {{- else if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") -}}
 {{- $ebpfConfig := dict "kind" "modern_ebpf" "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
 {{- $_ := set .Values.falco "engine" $ebpfConfig -}}
-{{- else if eq .Values.driver.kind "gvisor" -}}
-{{- $root := printf "/host%s/k8s.io" .Values.driver.gvisor.runsc.root -}}
-{{- $gvisorConfig := dict "kind" "gvisor" "gvisor" (dict "config" "/gvisor-config/pod-init.json" "root" $root) -}}
-{{- $_ := set .Values.falco "engine" $gvisorConfig -}}
 {{- else if eq .Values.driver.kind "auto" -}}
 {{- $engineConfig := dict "kind" "modern_ebpf" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) "ebpf" (dict "buf_size_preset" .Values.driver.ebpf.bufSizePreset "drop_failed_exit" .Values.driver.ebpf.dropFailedExit "probe" .Values.driver.ebpf.path) "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
 {{- $_ := set .Values.falco "engine" $engineConfig -}}
@@ -418,7 +357,7 @@ Based on the user input it populates the driver configuration in the falco confi
 It returns "true" if the driver loader has to be enabled, otherwise false.
 */}}
 {{- define "driverLoader.enabled" -}}
-{{- if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") (eq .Values.driver.kind "gvisor") (not .Values.driver.enabled) (not .Values.driver.loader.enabled) -}}
+{{- if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") (not .Values.driver.enabled) (not .Values.driver.loader.enabled) -}}
 false
 {{- else -}}
 true
