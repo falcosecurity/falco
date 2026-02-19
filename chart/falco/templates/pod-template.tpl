@@ -60,11 +60,6 @@ spec:
   imagePullSecrets: 
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if eq .Values.driver.kind "gvisor" }}
-  hostNetwork: true
-  hostPID: true
-  dnsPolicy: ClusterFirstWithHostNet
-  {{- end }}
   containers:
     - name: {{ .Chart.Name }}
       image: {{ include "falco.image" . }}
@@ -220,26 +215,12 @@ spec:
         {{- with .Values.mounts.volumeMounts }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if eq .Values.driver.kind "gvisor" }}
-        - mountPath: /usr/local/bin/runsc
-          name: runsc-path
-          readOnly: true
-        - mountPath: /host{{ .Values.driver.gvisor.runsc.root }}
-          name: runsc-root
-        - mountPath: /host{{ .Values.driver.gvisor.runsc.config }}
-          name: runsc-config
-        - mountPath: /gvisor-config
-          name: falco-gvisor-config
-        {{- end }}
   {{- if .Values.falcoctl.artifact.follow.enabled }}
     {{- include "falcoctl.sidecar" . | nindent 4 }}
   {{- end }}
   initContainers:
   {{- with .Values.extra.initContainers }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- if eq .Values.driver.kind "gvisor" }}
-  {{- include "falco.gvisor.initContainer" . | nindent 4 }}
   {{- end }}
   {{- if eq (include "driverLoader.enabled" .) "true" }}
     {{- include "falco.driverLoader.initContainer" . | nindent 4 }}
@@ -294,21 +275,6 @@ spec:
     - name: proc-fs
       hostPath:
         path: /proc
-    {{- end }}
-    {{- if eq .Values.driver.kind "gvisor" }}
-    - name: runsc-path
-      hostPath:
-        path: {{ .Values.driver.gvisor.runsc.path }}/runsc
-        type: File
-    - name: runsc-root
-      hostPath:
-        path: {{ .Values.driver.gvisor.runsc.root }}
-    - name: runsc-config
-      hostPath:
-        path: {{ .Values.driver.gvisor.runsc.config }}
-        type: File
-    - name: falco-gvisor-config
-      emptyDir: {}
     {{- end }}
     - name: falcoctl-config-volume
       configMap: 
