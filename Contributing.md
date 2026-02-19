@@ -47,7 +47,7 @@ This simple command allows you to install the two `pre-commit` git hooks, `clang
 pre-commit install --install-hooks --hook-type pre-commit --overwrite  
 ```
 
-If you want to install also the `pre-commit-msg` git hook for the DCO you have to type the following command, but be sure to have configured all you need as said in the [dedicated section]((#add-dco-signed-off-to-your-commits))
+If you want to install also the `pre-commit-msg` git hook for the DCO you have to type the following command, but be sure to have configured all you need as said in the [dedicated section](#add-dco-signed-off-to-your-commits)
 
 ```bash
 pre-commit install --install-hooks --hook-type prepare-commit-msg --overwrite 
@@ -81,7 +81,7 @@ To install `cmake-format` you can follow the official documentation [here](https
 
 ##### Step 2
 
-Once you have installed the __right__ versions of the 2 tools, you can simply type `make format-all` from the root directory of the project (`/libs`) to format all your code according to the coding style.
+Once you have installed the __right__ versions of the 2 tools, you can simply type `make format-all` from the root directory of the project to format all your code according to the coding style.
 
 Remember to do that before submitting a new patch upstream! 😁
 
@@ -93,7 +93,7 @@ Obviously, you can also install the 2 tools locally and enable some extension of
 
 ### Introduction
 
-Another requirement for contributing to the `libs` repository, is applying the [DCO](https://cert-manager.io/docs/contributing/sign-off/) to every commit you want to push upstream.
+Another requirement for contributing to the `falco` repository, is applying the [DCO](https://cert-manager.io/docs/contributing/sign-off/) to every commit you want to push upstream.
 Before doing this you have to configure your git user `name` and `email` if you haven't already done it. To check your actual `name` and `email` type:
 
 ```bash
