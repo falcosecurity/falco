@@ -17,18 +17,12 @@ limitations under the License.
 
 #include "actions.h"
 #include "helpers.h"
+#include "event_formatter.h"
 #include "../app.h"
 #include "../../versions_info.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
-
-struct event_entry {
-	bool is_enter;
-	bool available;
-	std::string name;
-	const ppm_event_info* info;
-};
 
 struct events_by_category {
 	std::vector<event_entry> syscalls;
@@ -69,6 +63,32 @@ struct events_by_category {
 			return;
 		}
 	}
+
+	void print_all(EventFormatter& formatter) {
+		formatter.begin_category("Syscall events");
+		for(const auto& e : syscalls) {
+			formatter.print_event(e);
+		}
+		formatter.end_category();
+
+		formatter.begin_category("Tracepoint events");
+		for(const auto& e : tracepoints) {
+			formatter.print_event(e);
+		}
+		formatter.end_category();
+
+		formatter.begin_category("Plugin events");
+		for(const auto& e : pluginevents) {
+			formatter.print_event(e);
+		}
+		formatter.end_category();
+
+		formatter.begin_category("Metaevents");
+		for(const auto& e : metaevents) {
+			formatter.print_event(e);
+		}
+		formatter.end_category();
+	}
 };
 
 static struct events_by_category get_event_entries_by_category(
@@ -100,86 +120,21 @@ static struct events_by_category get_event_entries_by_category(
 	return result;
 }
 
-static bool is_flag_type(ppm_param_type type) {
-	return (type == PT_FLAGS8 || type == PT_FLAGS16 || type == PT_FLAGS32 ||
-	        type == PT_ENUMFLAGS8 || type == PT_ENUMFLAGS16 || type == PT_ENUMFLAGS32);
-}
-
-static void print_param(const struct ppm_param_info* param, bool markdown) {
-	printf("%s **%s**", param_type_to_string(param->type), param->name);
-
-	if(is_flag_type(param->type) && param->info) {
-		auto flag_info = static_cast<const ppm_name_value*>(param->info);
-
-		printf(": ");
-		for(size_t i = 0; flag_info[i].name != NULL; i++) {
-			if(i != 0) {
-				printf(", ");
-			}
-
-			if(markdown) {
-				printf("*%s*", flag_info[i].name);
-			} else {
-				printf("%s", flag_info[i].name);
-			}
-		}
-	}
-}
-
-static void print_events(const std::vector<event_entry>& events, bool markdown) {
-	if(markdown) {
-		printf("Default | Dir | Name | Params \n");
-		printf(":-------|:----|:-----|:-----\n");
-	}
-
-	for(const auto& e : events) {
-		char dir = e.is_enter ? '>' : '<';
-		if(markdown) {
-			printf(e.available ? "Yes" : "No");
-			printf(" | `%c` | `%s` | ", dir, e.name.c_str());
-		} else {
-			printf("%c %s(", dir, e.name.c_str());
-		}
-
-		for(uint32_t k = 0; k < e.info->nparams; k++) {
-			if(k != 0) {
-				printf(", ");
-			}
-
-			print_param(&e.info->params[k], markdown);
-		}
-		if(markdown) {
-			printf("\n");
-		} else {
-			printf(")\n");
-		}
-	}
-}
-
 falco::app::run_result falco::app::actions::print_syscall_events(falco::app::state& s) {
 	if(!s.options.list_syscall_events) {
 		return run_result::ok();
 	}
 
 	const falco::versions_info info(s.offline_inspector);
-	printf("The events below are valid for Falco *Schema Version*: %s\n",
-	       info.driver_schema_version.c_str());
-
 	const libsinsp::events::set<ppm_event_code> available = libsinsp::events::all_event_set().diff(
 	        sc_set_to_event_set(falco::app::ignored_sc_set()));
-	const struct events_by_category events_bc = get_event_entries_by_category(true, available);
+	struct events_by_category events_bc = get_event_entries_by_category(true, available);
 
-	printf("## Syscall events\n\n");
-	print_events(events_bc.syscalls, s.options.markdown);
-
-	printf("\n\n## Tracepoint events\n\n");
-	print_events(events_bc.tracepoints, s.options.markdown);
-
-	printf("\n\n## Plugin events\n\n");
-	print_events(events_bc.pluginevents, s.options.markdown);
-
-	printf("\n\n## Metaevents\n\n");
-	print_events(events_bc.metaevents, s.options.markdown);
+	// Create the appropriate formatter and use it
+	auto formatter = EventFormatter::create(s.options.output_fmt);
+	formatter->begin(info.driver_schema_version);
+	events_bc.print_all(*formatter);
+	formatter->end();
 
 	return run_result::exit();
 }

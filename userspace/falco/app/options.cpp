@@ -25,9 +25,32 @@ limitations under the License.
 #include <cxxopts.hpp>
 
 #include <fstream>
+#include <algorithm>
 
 namespace falco {
 namespace app {
+
+static bool parse_output_format(const std::string& format_str, output_format& out, std::string& errstr) {
+	if(format_str.empty()) {
+		return true;
+	}
+
+	std::string lower_format = format_str;
+	std::transform(lower_format.begin(), lower_format.end(), lower_format.begin(), ::tolower);
+
+	if(lower_format == "text") {
+		out = output_format::TEXT;
+	} else if(lower_format == "markdown") {
+		out = output_format::MARKDOWN;
+	} else if(lower_format == "json") {
+		out = output_format::JSON;
+	} else {
+		errstr = "Invalid format '" + format_str + "'. Valid values are: text, markdown, json";
+		return false;
+	}
+
+	return true;
+}
 
 bool options::parse(int argc, char **argv, std::string &errstr) {
 	cxxopts::Options opts("falco", "Falco - Cloud Native Runtime Security");
@@ -81,6 +104,22 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 
 	list_fields = m_cmdline_parsed.count("list") > 0;
 
+	// Validate that both markdown and format are not specified together
+	if(m_cmdline_parsed.count("markdown") > 0 && m_cmdline_parsed.count("format") > 0) {
+		errstr = "Cannot specify both --markdown and --format options together";
+		return false;
+	}
+
+	// Parse and validate the format option
+	if(!format.empty()) {
+		if(!parse_output_format(format, output_fmt, errstr)) {
+			return false;
+		}
+	} else if(markdown) {
+		// If markdown flag is set and format is not specified, use MARKDOWN format
+		output_fmt = output_format::MARKDOWN;
+	}
+
 	return true;
 }
 
@@ -110,7 +149,8 @@ void options::define(cxxopts::Options& opts)
 		("list-events",              "List all defined syscall events, metaevents, tracepoint events and exit.", cxxopts::value<bool>(list_syscall_events))
 		("list-plugins",             "Print info on all loaded plugins and exit.", cxxopts::value(list_plugins)->default_value("false"))
 		("M",                        "Stop Falco execution after <num_seconds> are passed.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
-		("markdown",                 "Print output in Markdown format when used in conjunction with --list or --list-events options. It has no effect when used with other options.", cxxopts::value<bool>(markdown))
+		("markdown",                 "DEPRECATED: use --format markdown instead. Print output in Markdown format when used in conjunction with --list or --list-events options. It has no effect when used with other options.", cxxopts::value<bool>(markdown))
+		("format",                   "Print output in the specified <format> when used in conjunction with --list or --list-events options. Valid values are 'text', 'markdown', or 'json'. It has no effect when used with other options. Cannot be used together with --markdown.", cxxopts::value(format), "<format>")
 		("N",                        "Only print field names when used in conjunction with the --list option. It has no effect when used with other options.", cxxopts::value(names_only)->default_value("false"))
 		("o,option",                 "Set the value of option <opt> to <val>. Overrides values in the configuration file. <opt> can be identified using its location in the configuration file using dot notation. Elements of list entries can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",              "Print info for the plugin specified by <plugin_name> and exit.\nThis includes all descriptive information like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the plugin's name or its configured 'library_path'.", cxxopts::value(print_plugin_info), "<plugin_name>")

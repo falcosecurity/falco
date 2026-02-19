@@ -42,6 +42,7 @@ limitations under the License.
 #include "falco_engine_version.h"
 
 #include "formats.h"
+#include "field_formatter.h"
 
 #include "evttype_index_ruleset.h"
 
@@ -117,7 +118,7 @@ static std::string fieldclass_key(const sinsp_filter_factory::filter_fieldclass_
 void falco_engine::list_fields(const std::string &source,
                                bool verbose,
                                bool names_only,
-                               bool markdown) const {
+                               output_format format) const {
 	// Maps from field class name + short desc to list of event
 	// sources for which this field class can be used.
 	std::map<std::string, std::set<std::string>> fieldclass_event_sources;
@@ -137,6 +138,10 @@ void falco_engine::list_fields(const std::string &source,
 	// The set of field classes already printed. Used to avoid
 	// printing field classes multiple times for different sources
 	std::set<std::string> seen_fieldclasses;
+
+	// Create the appropriate formatter and use it
+	auto formatter = FieldFormatter::create(format, verbose);
+	formatter->begin();
 
 	// In the second pass, actually print info, skipping duplicate
 	// field classes and also printing info on supported sources.
@@ -160,21 +165,15 @@ void falco_engine::list_fields(const std::string &source,
 						continue;
 					}
 
-					printf("%s\n", field.name.c_str());
+					formatter->print_field_name(field.name);
 				}
-			} else if(markdown) {
-				printf("%s\n",
-				       fld_class.as_markdown(fieldclass_event_sources[fieldclass_key(fld_class)])
-				               .c_str());
 			} else {
-				printf("%s\n",
-				       fld_class
-				               .as_string(verbose,
-				                          fieldclass_event_sources[fieldclass_key(fld_class)])
-				               .c_str());
+				formatter->print_fieldclass(fld_class, fieldclass_event_sources[key]);
 			}
 		}
 	}
+
+	formatter->end();
 }
 
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content,

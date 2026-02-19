@@ -34,6 +34,7 @@ limitations under the License.
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "filter_details_resolver.h"
+#include "../falco/output_format.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -62,7 +63,7 @@ public:
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.
-	void list_fields(const std::string &source, bool verbose, bool names_only, bool markdown) const;
+	void list_fields(const std::string &source, bool verbose, bool names_only, output_format format) const;
 
 	// Provide an alternate rule reader, collector, and compiler
 	// to compile any rules provided via load_rules*
