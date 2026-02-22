@@ -121,6 +121,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "json_output": {
                     "type": "boolean"
                 },
+                "json_container": {
+                    "type": "string"
+                },
                 "json_include_output_property": {
                     "type": "boolean"
                 },
@@ -513,6 +516,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "max_consecutive_timeouts": {
                     "type": "integer"
+                },
+                "authorization": {
+                    "type": "string"
                 }
             },
             "minProperties": 1,

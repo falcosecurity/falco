@@ -55,6 +55,11 @@ bool falco::outputs::output_http::init(const config &oc,
 	} else {
 		m_http_headers = curl_slist_append(m_http_headers, "Content-Type: text/plain");
 	}
+	if(!m_oc.options["authorization"].empty()) {
+		m_http_headers =
+		        curl_slist_append(m_http_headers,
+		                          ("Authorization: " + m_oc.options["authorization"]).c_str());
+	}
 	res = curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_http_headers);
 
 	// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
