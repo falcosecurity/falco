@@ -27,7 +27,7 @@ The `pre-commit` framework allows you to automatically install different `git-ho
 
 1. The `clang-format` hook: this is a `pre-commit` git hook that runs `clang-format` on your staged changes.
 2. The `cmake-format` hook: this is a `pre-commit` git hook that runs `cmake-format` on your staged changes.
-3. The `DCO signed-off` hook: this is a `pre-commit-msg` git hook that adds the `DCO` on your commit if not present. This hook is not strictly related to the coding style so we will talk about it in a separate section: [Add DCO signed-off to your commits](#add-dco-signed-off-to-your-commits).
+3. The `DCO signed-off` hook: this is a `pre-commit-msg` git hook that adds the `DCO` on your commit if not present. This hook is not strictly related to the coding style so we will talk about it in a separate section: [Add DCO signed-off to your commits](#add-dco-signed-off-to-your-commits-).
 
 Now let's see what we need to use `pre-commit` framework.
 
@@ -47,7 +47,7 @@ This simple command allows you to install the two `pre-commit` git hooks, `clang
 pre-commit install --install-hooks --hook-type pre-commit --overwrite  
 ```
 
-If you want to install also the `pre-commit-msg` git hook for the DCO you have to type the following command, but be sure to have configured all you need as said in the [dedicated section](#add-dco-signed-off-to-your-commits)
+If you want to install also the `pre-commit-msg` git hook for the DCO you have to type the following command, but be sure to have configured all you need as said in the [dedicated section](#add-dco-signed-off-to-your-commits-)
 
 ```bash
 pre-commit install --install-hooks --hook-type prepare-commit-msg --overwrite 
