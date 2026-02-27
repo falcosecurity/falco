@@ -49,6 +49,7 @@ func TestServiceAccount(t *testing.T) {
 			output, err := helm.RenderTemplateE(t, options, helmChartPath, unit.ReleaseName, []string{"templates/serviceaccount.yaml"})
 			if err != nil {
 				require.True(t, strings.Contains(err.Error(), "Error: could not find template templates/serviceaccount.yaml in chart"))
+				return
 			}
 
 			var sa corev1.ServiceAccount
