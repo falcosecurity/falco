@@ -36,11 +36,12 @@ spec:
   jobLabel: "{{ .Release.Name }}"
   selector:
     matchLabels:
-      {{- include "falco.selectorLabels" . | nindent 6 }}
+      {{- $selectorLabels := include "falco.selectorLabels" . | fromYaml }}
+      {{- $_ := set $selectorLabels "type" "falco-metrics" }}
       {{- with .Values.serviceMonitor.selector }}
-      {{- toYaml . | nindent 6 }}
+      {{- $selectorLabels = mustMergeOverwrite $selectorLabels . }}
       {{- end }}
-      type: "falco-metrics"
+      {{- toYaml $selectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
       - {{ include "falco.namespace" . }}
