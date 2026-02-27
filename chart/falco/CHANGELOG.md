@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v8.0.1
+
+* Fix serviceMonitor template to properly merge custom selector labels with defaults using mustMergeOverwrite, avoiding duplicate YAML keys
+* Fix serviceAccount unit test to handle empty template output with newer terratest versions
+
 ## v8.0.0
 
 * Upgrade Falco to v0.43.0
