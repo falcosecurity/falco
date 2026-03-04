@@ -68,6 +68,7 @@ private:
 		void visit(libsinsp::filter::ast::identifier_expr* e) override;
 		void visit(libsinsp::filter::ast::value_expr* e) override;
 		void visit(libsinsp::filter::ast::list_expr* e) override;
+		void visit(libsinsp::filter::ast::transformer_list_expr* e) override;
 		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::field_expr* e) override;

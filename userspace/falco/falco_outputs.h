@@ -78,6 +78,19 @@ public:
 	                nlohmann::json &output_fields);
 
 	/*!
+	    \brief Push a pre-formatted event message to the output queue.
+	    Used by multi-threaded workers that format events with their own
+	    per-worker falco_formats/engine instances.
+	*/
+	void handle_event_formatted(uint64_t ts,
+	                            falco_common::priority_type priority,
+	                            const std::string &msg,
+	                            const std::string &rule,
+	                            const std::string &source,
+	                            const nlohmann::json &fields,
+	                            const std::set<std::string> &tags);
+
+	/*!
 	    \brief Sends a cleanup message to all outputs.
 	    Each output can have an implementation-specific behavior.
 	    In general, this is used to flush or clean output buffers.
