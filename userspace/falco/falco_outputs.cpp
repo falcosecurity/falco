@@ -156,6 +156,25 @@ void falco_outputs::handle_event(sinsp_evt *evt,
 	this->push(cmsg);
 }
 
+void falco_outputs::handle_event_formatted(uint64_t ts,
+                                           falco_common::priority_type priority,
+                                           const std::string &msg,
+                                           const std::string &rule,
+                                           const std::string &source,
+                                           const nlohmann::json &fields,
+                                           const std::set<std::string> &tags) {
+	falco_outputs::ctrl_msg cmsg = {};
+	cmsg.ts = ts;
+	cmsg.priority = priority;
+	cmsg.msg = msg;
+	cmsg.rule = rule;
+	cmsg.source = source;
+	cmsg.fields = fields;
+	cmsg.tags = tags;
+	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
+	this->push(cmsg);
+}
+
 void falco_outputs::handle_msg(uint64_t ts,
                                falco_common::priority_type priority,
                                const std::string &msg,

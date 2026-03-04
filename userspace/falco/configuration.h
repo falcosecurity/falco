@@ -70,6 +70,7 @@ public:
 		uint16_t m_cpus_for_each_buffer;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
+		uint16_t m_num_worker_threads;
 	};
 
 	struct replay_config {

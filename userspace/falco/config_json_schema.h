@@ -399,6 +399,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "drop_failed_exit": {
                     "type": "boolean"
+                },
+                "num_worker_threads": {
+                    "type": "integer"
                 }
             },
             "title": "ModernEbpf"

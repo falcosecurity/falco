@@ -264,6 +264,8 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		m_modern_ebpf.m_drop_failed_exit =
 		        m_config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit",
 		                                  DEFAULT_DROP_FAILED_EXIT);
+		m_modern_ebpf.m_num_worker_threads =
+		        m_config.get_scalar<uint16_t>("engine.modern_ebpf.num_worker_threads", 0);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file =
