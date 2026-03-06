@@ -68,6 +68,11 @@ if(NOT MSVC)
 		endif()
 	endif()
 
+	if(USE_TSAN)
+		set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fsanitize=thread")
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
+	endif()
+
 	if(USE_FRAME_POINTER)
 		set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fno-omit-frame-pointer")
 	endif()
