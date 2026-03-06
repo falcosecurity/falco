@@ -24,7 +24,7 @@ if(CXXOPTS_INCLUDE_DIR)
 elseif(NOT USE_BUNDLED_CXXOPTS)
 	find_package(cxxopts CONFIG REQUIRED)
 	get_target_property(CXXOPTS_INCLUDE_DIR cxxopts::cxxopts INTERFACE_INCLUDE_DIRECTORIES)
-else()
+elseif(NOT TARGET cxxopts)
 	set(CXXOPTS_SRC "${PROJECT_BINARY_DIR}/cxxopts-prefix/src/cxxopts/")
 	set(CXXOPTS_INCLUDE_DIR "${CXXOPTS_SRC}/include")
 
