@@ -28,7 +28,12 @@ option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 option(USE_ASAN "Build with AddressSanitizer" OFF)
 option(USE_UBSAN "Build with UndefinedBehaviorSanitizer" OFF)
+option(USE_TSAN "Build with ThreadSanitizer" OFF)
 option(UBSAN_HALT_ON_ERROR "Halt on error when building with UBSan" ON)
+
+if(USE_ASAN AND USE_TSAN)
+	message(FATAL_ERROR "USE_ASAN and USE_TSAN cannot be enabled together")
+endif()
 option(USE_GPERFTOOLS "Build with gperftools CPU profiler support" OFF)
 option(USE_FRAME_POINTER "Build with frame pointers for accurate profiling" OFF)
 
