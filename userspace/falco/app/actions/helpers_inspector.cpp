@@ -18,11 +18,13 @@ limitations under the License.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/utsname.h>
 
 #include <libsinsp/plugin_manager.h>
 #include <configuration.h>
 
 #include "helpers.h"
+#include "../../kernel_compat.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -99,6 +101,23 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 			inspector->open_nodriver();
 		} else if(s.is_modern_ebpf()) /* modern BPF engine. */
 		{
+			// Check kernel compatibility before attempting to open modern eBPF
+			struct utsname uts;
+			if(uname(&uts) == 0) {
+				std::string kernel_release(uts.release);
+				auto [major, minor, patch] = falco::kernel_compat::parse_kernel_version(kernel_release);
+				
+				if(!falco::kernel_compat::is_modern_ebpf_compatible(major, minor, patch)) {
+					std::string compat_msg = falco::kernel_compat::get_compatibility_message(major, minor, patch);
+					falco_logger::log(falco_logger::level::WARNING, compat_msg);
+					throw sinsp_exception("Modern eBPF driver is not compatible with kernel " + kernel_release + 
+					                      ". Please use kernel module driver (remove -o engine.kind=modern_ebpf) or upgrade falcosecurity-libs.");
+				}
+				
+				falco_logger::log(falco_logger::level::INFO,
+				                  "Kernel " + kernel_release + " is compatible with modern eBPF");
+			}
+			
 			falco_logger::log(falco_logger::level::INFO,
 			                  "Opening '" + source + "' source with modern BPF probe.");
 			falco_logger::log(

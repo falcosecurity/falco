@@ -32,5 +32,5 @@ bool is_modern_ebpf_compatible(int major, int minor, int patch);
 // Get detailed compatibility message for logging
 std::string get_compatibility_message(int major, int minor, int patch);
 
-}  // namespace kernel_compat
-}  // namespace falco
+}  
+}  

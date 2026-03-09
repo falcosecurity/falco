@@ -57,6 +57,7 @@ add_library(
 	event_drops.cpp
 	stats_writer.cpp
 	versions_info.cpp
+	kernel_compat.cpp
 )
 
 set(FALCO_INCLUDE_DIRECTORIES
