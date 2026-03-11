@@ -35,7 +35,7 @@ public:
 			const auto no_deadline = time_point{};
 			timeout_data curr;
 			while(m_is_running.load(std::memory_order_acquire)) {
-				auto t = m_timeout.exchange(nullptr, std::memory_order_release);
+				auto t = m_timeout.exchange(nullptr, std::memory_order_acq_rel);
 				if(t) {
 					curr = *t;
 					delete t;
@@ -56,7 +56,7 @@ public:
 			if(m_thread.joinable()) {
 				m_thread.join();
 			}
-			delete m_timeout.exchange(nullptr, std::memory_order_release);
+			delete m_timeout.exchange(nullptr, std::memory_order_acq_rel);
 		}
 	}
 
