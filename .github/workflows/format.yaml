@@ -6,6 +6,9 @@ on:
       - master
       - "release/**"
 
+permissions:
+  contents: read
+
 jobs:
   format:
     name: format code 🐲

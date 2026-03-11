@@ -3,6 +3,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 # Checks if any concurrent jobs is running for release CI and eventually cancel it.
 concurrency:
   group: ci-release
