@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '30 6 * * 1' # on each monday 6:30
 
+permissions:
+  contents: read
+
 # Checks if any concurrent jobs is running for kernels CI and eventually cancel it.
 concurrency:
   group: bump-libs-ci
