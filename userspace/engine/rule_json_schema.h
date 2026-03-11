@@ -97,6 +97,9 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                     "items": {
                         "type": "string"
                     }
+                },
+                "skip-if-unknown-filter": {
+                    "type": "boolean"
                 }
             },
             "required": [],

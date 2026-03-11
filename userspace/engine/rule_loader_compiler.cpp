@@ -346,7 +346,8 @@ void rule_loader::compiler::compile_macros_infos(const configuration& cfg,
 static bool err_is_unknown_type_or_field(const std::string& err) {
 	return err.find("nonexistent field") != std::string::npos ||
 	       err.find("invalid formatting token") != std::string::npos ||
-	       err.find("unknown event type") != std::string::npos;
+	       err.find("unknown event type") != std::string::npos ||
+	       err.find("unknown filter:") != std::string::npos;
 }
 
 bool rule_loader::compiler::compile_condition(const configuration& cfg,
