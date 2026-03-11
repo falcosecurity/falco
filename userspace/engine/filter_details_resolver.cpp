@@ -123,12 +123,6 @@ void filter_details_resolver::visitor::visit(ast::field_expr* e) {
 	m_details.fields.insert(m_last_node_field_name);
 }
 
-void filter_details_resolver::visitor::visit(ast::transformer_list_expr* e) {
-	for(auto& c : e->children) {
-		c->accept(this);
-	}
-}
-
 void filter_details_resolver::visitor::visit(ast::field_transformer_expr* e) {
 	m_details.transformers.insert(e->transformer);
 	for(auto& value : e->values) {
