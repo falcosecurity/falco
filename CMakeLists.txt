@@ -144,6 +144,8 @@ set(CMD_MAKE make)
 
 include(ExternalProject)
 
+include(cxxopts)
+
 # libs
 include(falcosecurity-libs)
 
@@ -187,8 +189,6 @@ if(NOT WIN32
 	# todo(jasondellaluce,rohith-raju): support webserver for non-linux builds too cpp-httlib
 	include(cpp-httplib)
 endif()
-
-include(cxxopts)
 
 # One TBB
 if(NOT EMSCRIPTEN)
