@@ -57,7 +57,7 @@ public:
 
 	void begin() override;
 	void print_fieldclass(const sinsp_filter_factory::filter_fieldclass_info& fld_class,
-	                     const std::set<std::string>& event_sources) override;
+	                      const std::set<std::string>& event_sources) override;
 	void print_field_name(const std::string& name) override;
 	void end() override;
 
@@ -72,7 +72,7 @@ public:
 
 	void begin() override;
 	void print_fieldclass(const sinsp_filter_factory::filter_fieldclass_info& fld_class,
-	                     const std::set<std::string>& event_sources) override;
+	                      const std::set<std::string>& event_sources) override;
 	void print_field_name(const std::string& name) override;
 	void end() override;
 
@@ -87,7 +87,7 @@ public:
 
 	void begin() override;
 	void print_fieldclass(const sinsp_filter_factory::filter_fieldclass_info& fld_class,
-	                     const std::set<std::string>& event_sources) override;
+	                      const std::set<std::string>& event_sources) override;
 	void print_field_name(const std::string& name) override;
 	void end() override;
 

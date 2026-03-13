@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /*
 Copyright (C) 2026 The Falco Authors.
 
@@ -16,8 +17,4 @@ limitations under the License.
 
 #pragma once
 
-enum class output_format {
-	TEXT,
-	MARKDOWN,
-	JSON
-};
+enum class output_format { TEXT, MARKDOWN, JSON };

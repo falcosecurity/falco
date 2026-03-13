@@ -23,7 +23,7 @@ limitations under the License.
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#include "../../output_format.h"
+#include "../../../engine/output_format.h"
 
 struct ppm_param_info;
 struct ppm_event_info;
@@ -87,7 +87,6 @@ public:
 
 private:
 	void print_param(const struct ppm_param_info* param);
-	bool m_first_event_in_category{true};
 };
 
 // JSON formatter

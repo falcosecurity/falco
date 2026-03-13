@@ -30,7 +30,9 @@ limitations under the License.
 namespace falco {
 namespace app {
 
-static bool parse_output_format(const std::string& format_str, output_format& out, std::string& errstr) {
+static bool parse_output_format(const std::string &format_str,
+                                output_format &out,
+                                std::string &errstr) {
 	if(format_str.empty()) {
 		return true;
 	}
@@ -117,6 +119,7 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 		}
 	} else if(markdown) {
 		// If markdown flag is set and format is not specified, use MARKDOWN format
+		fprintf(stderr, "WARNING: --markdown is deprecated, use --format markdown instead.\n");
 		output_fmt = output_format::MARKDOWN;
 	}
 
