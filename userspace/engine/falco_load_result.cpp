@@ -73,12 +73,12 @@ static const std::string warning_codes[] = {"LOAD_UNKNOWN_SOURCE",
                                             "LOAD_EXCEPTION_NAME_NOT_UNIQUE",
                                             "LOAD_INVALID_MACRO_NAME",
                                             "LOAD_INVALID_LIST_NAME",
-                                            "LOAD_COMPILE_CONDITION"};
+                                            "LOAD_COMPILE_CONDITION",
+                                            "LOAD_UNKNOWN_KEY"};
 
 // Compile-time check to ensure warning_codes array has the correct size
 static_assert(std::size(warning_codes) ==
-                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
-                              1,
+                      static_cast<int>(falco::load_result::warning_code::LOAD_UNKNOWN_KEY) + 1,
               "warning_codes array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_code_str(warning_code wc) {
@@ -98,12 +98,12 @@ static const std::string warning_strings[] = {"Unknown event source",
                                               "Multiple exceptions defined with the same name",
                                               "Invalid macro name",
                                               "Invalid list name",
-                                              "Warning in rule condition"};
+                                              "Warning in rule condition",
+                                              "Unknown key in item definition"};
 
 // Compile-time check to ensure warning_strings array has the correct size
 static_assert(std::size(warning_strings) ==
-                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
-                              1,
+                      static_cast<int>(falco::load_result::warning_code::LOAD_UNKNOWN_KEY) + 1,
               "warning_strings array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_str(warning_code wc) {
@@ -131,12 +131,13 @@ static const std::string warning_descs[] = {
         "A rule is defining multiple exceptions with the same name",
         "A macro is defined with an invalid name",
         "A list is defined with an invalid name",
-        "A rule condition or output have been parsed with a warning"};
+        "A rule condition or output have been parsed with a warning",
+        "An item in the rules content contains an unrecognized key. The key will be ignored. "
+        "This may indicate a typo or a property placed on the wrong item type."};
 
 // Compile-time check to ensure warning_descs array has the correct size
 static_assert(std::size(warning_descs) ==
-                      static_cast<int>(falco::load_result::warning_code::LOAD_COMPILE_CONDITION) +
-                              1,
+                      static_cast<int>(falco::load_result::warning_code::LOAD_UNKNOWN_KEY) + 1,
               "warning_descs array size must match the last warning_code enum value + 1");
 
 const std::string& falco::load_result::warning_desc(warning_code wc) {
