@@ -102,7 +102,6 @@ void MarkdownFormatter::begin_category(const std::string& category) {
 	printf("## %s\n\n", category.c_str());
 	printf("Default | Dir | Name | Params \n");
 	printf(":-------|:----|:-----|:-----\n");
-	m_first_event_in_category = true;
 }
 
 void MarkdownFormatter::print_event(const event_entry& e) {

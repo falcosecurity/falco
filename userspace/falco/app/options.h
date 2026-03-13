@@ -18,7 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <libsinsp/event.h>
-#include "../output_format.h"
+#include "../../engine/output_format.h"
 
 #include <string>
 #include <vector>
