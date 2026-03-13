@@ -291,7 +291,7 @@ if(NOT WIN32
 
 	# Generate a binary_dir/falco.yaml that automatically enables the plugin to be used for local
 	# testing.
-	configure_file(${CMAKE_SOURCE_DIR}/falco.yaml ${CMAKE_BINARY_DIR} COPYONLY)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/falco.yaml ${CMAKE_BINARY_DIR} COPYONLY)
 	# The custom target configures the plugin and set its path
 	add_custom_target(
 		container
