@@ -21,6 +21,7 @@ add_library(
 	filter_ruleset.cpp
 	evttype_index_ruleset.cpp
 	formats.cpp
+	field_formatter.cpp
 	filter_details_resolver.cpp
 	filter_macro_resolver.cpp
 	filter_warning_resolver.cpp
