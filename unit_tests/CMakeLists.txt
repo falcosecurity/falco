@@ -51,6 +51,7 @@ add_executable(
 	falco/test_configuration_env_vars.cpp
 	falco/test_configuration_output_options.cpp
 	falco/test_configuration_schema.cpp
+	falco/test_kernel_compat.cpp
 	falco/app/actions/test_select_event_sources.cpp
 	falco/app/actions/test_load_config.cpp
 )
