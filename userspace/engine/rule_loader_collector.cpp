@@ -321,6 +321,14 @@ void rule_loader::collector::selective_replace(configuration& cfg, rule_update_i
 		prev->capture_duration = *info.capture_duration;
 	}
 
+	if(info.capture_events.has_value()) {
+		prev->capture_events = *info.capture_events;
+	}
+
+	if(info.capture_filesize.has_value()) {
+		prev->capture_filesize = *info.capture_filesize;
+	}
+
 	if(info.enabled.has_value()) {
 		prev->enabled = *info.enabled;
 	}

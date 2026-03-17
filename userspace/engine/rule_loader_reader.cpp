@@ -683,6 +683,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 		                                          "priority",
 		                                          "capture",
 		                                          "capture_duration",
+		                                          "capture_events",
+		                                          "capture_filesize",
 		                                          "tags",
 		                                          "exceptions",
 		                                          "enabled",
@@ -824,6 +826,22 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				if(check_update_expected(expected_keys,
 				                         override_replace,
 				                         "replace",
+				                         "capture_events",
+				                         ctx)) {
+					decode_val(item, "capture_events", v.capture_events, ctx);
+				}
+
+				if(check_update_expected(expected_keys,
+				                         override_replace,
+				                         "replace",
+				                         "capture_filesize",
+				                         ctx)) {
+					decode_val(item, "capture_filesize", v.capture_filesize, ctx);
+				}
+
+				if(check_update_expected(expected_keys,
+				                         override_replace,
+				                         "replace",
 				                         "enabled",
 				                         ctx)) {
 					decode_val(item, "enabled", v.enabled, ctx);
@@ -885,6 +903,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 			v.enabled = true;
 			v.capture = false;
 			v.capture_duration = 0;
+			v.capture_events = 0;
+			v.capture_filesize = 0;
 			v.warn_evttypes = true;
 			v.skip_if_unknown_filter = false;
 
@@ -932,6 +952,8 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				decode_optional_val(item, "enabled", v.enabled, ctx);
 				decode_optional_val(item, "capture", v.capture, ctx);
 				decode_optional_val(item, "capture_duration", v.capture_duration, ctx);
+				decode_optional_val(item, "capture_events", v.capture_events, ctx);
+				decode_optional_val(item, "capture_filesize", v.capture_filesize, ctx);
 				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);

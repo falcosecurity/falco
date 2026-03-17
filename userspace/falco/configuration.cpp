@@ -100,7 +100,9 @@ falco_configuration::falco_configuration():
         m_capture_enabled(false),
         m_capture_path_prefix("/tmp/falco"),
         m_capture_mode(capture_mode_t::RULES),
-        m_capture_default_duration_ns(5000 * 1000000LL) {
+        m_capture_default_duration_ns(5000 * 1000000LL),
+        m_capture_default_events(0),
+        m_capture_default_filesize_kb(0) {
 	m_config_schema = nlohmann::json::parse(config_schema_string);
 }
 
@@ -618,6 +620,8 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	// Convert to nanoseconds
 	m_capture_default_duration_ns =
 	        m_config.get_scalar<uint32_t>("capture.default_duration", 5000) * 1000000LL;
+	m_capture_default_events = m_config.get_scalar<uint64_t>("capture.default_events", 0);
+	m_capture_default_filesize_kb = m_config.get_scalar<uint64_t>("capture.default_filesize", 0);
 
 	m_plugins_hostinfo = m_config.get_scalar<bool>("plugins_hostinfo", true);
 

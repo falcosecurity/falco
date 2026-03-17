@@ -544,6 +544,8 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 		rule.priority = r.priority;
 		rule.capture = r.capture;
 		rule.capture_duration = r.capture_duration;
+		rule.capture_events = r.capture_events;
+		rule.capture_filesize = r.capture_filesize;
 		rule.tags = r.tags;
 		auto rule_id = out.insert(rule, rule.name);
 		out.at(rule_id)->id = rule_id;

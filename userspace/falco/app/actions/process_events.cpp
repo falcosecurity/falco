@@ -149,6 +149,8 @@ static falco::app::run_result do_inspect(
 	auto dumper = std::make_unique<sinsp_dumper>();
 	uint64_t dump_started_ts = 0;
 	uint64_t dump_deadline_ts = 0;
+	uint64_t dump_max_events = 0;
+	uint64_t dump_max_filesize_kb = 0;
 
 	//
 	// Start capture
@@ -178,6 +180,8 @@ static falco::app::run_result do_inspect(
 				if(dump_started_ts != 0) {
 					dump_started_ts = 0;
 					dump_deadline_ts = 0;
+					dump_max_events = 0;
+					dump_max_filesize_kb = 0;
 					dumper->close();
 				}
 			});
@@ -188,6 +192,8 @@ static falco::app::run_result do_inspect(
 				if(dump_started_ts != 0) {
 					dump_started_ts = 0;
 					dump_deadline_ts = 0;
+					dump_max_events = 0;
+					dump_max_filesize_kb = 0;
 					dumper->close();
 				}
 				s.restart.store(true);
@@ -331,6 +337,20 @@ static falco::app::run_result do_inspect(
 					if(evt_deadline_ts > dump_deadline_ts) {
 						dump_deadline_ts = evt_deadline_ts;
 					}
+					// Compute event count limit
+					auto evt_max_events = rule_res.capture_events > 0
+					                              ? rule_res.capture_events
+					                              : s.config->m_capture_default_events;
+					if(evt_max_events > dump_max_events) {
+						dump_max_events = evt_max_events;
+					}
+					// Compute file size limit
+					auto evt_max_filesize = rule_res.capture_filesize_kb > 0
+					                                ? rule_res.capture_filesize_kb
+					                                : s.config->m_capture_default_filesize_kb;
+					if(evt_max_filesize > dump_max_filesize_kb) {
+						dump_max_filesize_kb = evt_max_filesize;
+					}
 				}
 			}
 
@@ -347,14 +367,20 @@ static falco::app::run_result do_inspect(
 		}
 
 		// Save events when a dump is in progress.
-		// If the deadline is reached, close the dump.
+		// If any stop condition is reached, close the dump.
 		if(dump_started_ts != 0) {
 			dumper->dump(ev);
-			if(ev->get_ts() > dump_deadline_ts) {
+			bool stop = ev->get_ts() > dump_deadline_ts;
+			stop = stop || (dump_max_events > 0 && dumper->written_events() >= dump_max_events);
+			stop = stop || (dump_max_filesize_kb > 0 &&
+			                dumper->written_bytes() >= dump_max_filesize_kb * 1024);
+			if(stop) {
 				dumper->flush();
 				dumper->close();
 				dump_started_ts = 0;
 				dump_deadline_ts = 0;
+				dump_max_events = 0;
+				dump_max_filesize_kb = 0;
 			}
 		}
 

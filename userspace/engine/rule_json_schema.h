@@ -80,6 +80,12 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                 "capture_duration": {
                     "type": "integer"
                 },
+                "capture_events": {
+                    "type": "integer"
+                },
+                "capture_filesize": {
+                    "type": "integer"
+                },
                 "source": {
 	                "type": "string"
                 },
@@ -187,6 +193,12 @@ const char rule_schema_string[] = LONG_STRING_CONST(
                     "$ref": "#/definitions/OverriddenItem"
                 },
                 "capture_duration": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "capture_events": {
+                    "$ref": "#/definitions/OverriddenItem"
+                },
+                "capture_filesize": {
                     "$ref": "#/definitions/OverriddenItem"
                 },
                 "tags": {
