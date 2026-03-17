@@ -79,6 +79,8 @@ plugins:
 	EXPECT_EQ(config.m_capture_path_prefix, "/tmp/falco");
 	EXPECT_EQ(config.m_capture_mode, capture_mode_t::RULES);
 	EXPECT_EQ(config.m_capture_default_duration_ns, 5000 * 1000000LL);  // 5 seconds in ns
+	EXPECT_EQ(config.m_capture_default_events, 0u);
+	EXPECT_EQ(config.m_capture_default_filesize_kb, 0u);
 }
 
 TEST(Capture, capture_config_enabled_rules_mode) {
@@ -131,4 +133,52 @@ capture:
 
 	// Should throw an exception for invalid mode
 	EXPECT_THROW(res = config.init_from_content(config_content, {}), std::logic_error);
+}
+
+TEST(Capture, capture_config_with_events_limit) {
+	std::string config_content = R"(
+capture:
+  enabled: true
+  default_events: 50000
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+
+	EXPECT_EQ(config.m_capture_default_events, 50000u);
+	EXPECT_EQ(config.m_capture_default_filesize_kb, 0u);
+}
+
+TEST(Capture, capture_config_with_filesize_limit) {
+	std::string config_content = R"(
+capture:
+  enabled: true
+  default_filesize: 10240
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+
+	EXPECT_EQ(config.m_capture_default_events, 0u);
+	EXPECT_EQ(config.m_capture_default_filesize_kb, 10240u);
+}
+
+TEST(Capture, capture_config_with_all_limits) {
+	std::string config_content = R"(
+capture:
+  enabled: true
+  default_duration: 15000
+  default_events: 25000
+  default_filesize: 80000
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+
+	EXPECT_EQ(config.m_capture_default_duration_ns, 15000 * 1000000LL);
+	EXPECT_EQ(config.m_capture_default_events, 25000u);
+	EXPECT_EQ(config.m_capture_default_filesize_kb, 80000u);
 }

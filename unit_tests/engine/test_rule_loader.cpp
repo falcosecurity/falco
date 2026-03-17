@@ -1516,3 +1516,282 @@ TEST_F(test_falco_engine, no_deprecated_field_warning_in_output) {
 	ASSERT_FALSE(check_warning_message("evt.dir")) << m_load_result_string;
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
+
+// Capture field tests
+
+TEST_F(test_falco_engine, rule_capture_enabled) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), true);
+}
+
+TEST_F(test_falco_engine, rule_capture_disabled_by_default) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), false);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          0u);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_events"].template get<uint32_t>(), 0u);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_filesize"].template get<uint32_t>(),
+	          0u);
+}
+
+TEST_F(test_falco_engine, rule_capture_duration) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_duration: 10000
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          10000u);
+}
+
+TEST_F(test_falco_engine, rule_capture_events) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_events: 25000
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_events"].template get<uint32_t>(),
+	          25000u);
+}
+
+TEST_F(test_falco_engine, rule_capture_filesize) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_filesize: 80000
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_filesize"].template get<uint32_t>(),
+	          80000u);
+}
+
+TEST_F(test_falco_engine, rule_capture_all_fields) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_duration: 5000
+  capture_events: 10000
+  capture_filesize: 2048
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), true);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          5000u);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_events"].template get<uint32_t>(),
+	          10000u);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_filesize"].template get<uint32_t>(),
+	          2048u);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+
+- rule: test_rule
+  capture: false
+  override:
+    capture: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), false);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_duration_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_duration: 5000
+
+- rule: test_rule
+  capture_duration: 15000
+  override:
+    capture_duration: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          15000u);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_events_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture_events: 1000
+
+- rule: test_rule
+  capture_events: 5000
+  override:
+    capture_events: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_events"].template get<uint32_t>(),
+	          5000u);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_filesize_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture_filesize: 1024
+
+- rule: test_rule
+  capture_filesize: 4096
+  override:
+    capture_filesize: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_filesize"].template get<uint32_t>(),
+	          4096u);
+}
+
+TEST_F(test_falco_engine, rule_capture_events_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture_events: "not_a_number"
+)END";
+
+	// String value for an integer field causes a load error
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+}
+
+TEST_F(test_falco_engine, rule_capture_filesize_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture_filesize: "not_a_number"
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+}
+
+TEST_F(test_falco_engine, rule_capture_duration_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture_duration: "not_a_number"
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+}
+
+TEST_F(test_falco_engine, rule_capture_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture: "yes"
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_failed) << m_load_result->schema_validation();
+}
