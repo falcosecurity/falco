@@ -233,6 +233,8 @@ public:
 		extra_output_field_t extra_output_fields;
 		bool capture;
 		uint64_t capture_duration_ns;
+		uint64_t capture_events;
+		uint64_t capture_filesize_kb;
 	};
 
 	//

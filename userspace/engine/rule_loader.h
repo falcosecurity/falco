@@ -503,6 +503,8 @@ struct rule_info {
 	falco_common::priority_type priority;
 	bool capture;
 	uint32_t capture_duration;
+	uint32_t capture_events;
+	uint32_t capture_filesize;
 	bool enabled;
 	bool warn_evttypes;
 	bool skip_if_unknown_filter;
@@ -523,7 +525,8 @@ struct rule_update_info {
 	bool has_any_value() {
 		return cond.has_value() || output.has_value() || desc.has_value() || tags.has_value() ||
 		       exceptions.has_value() || priority.has_value() || enabled.has_value() ||
-		       capture.has_value() || capture_duration.has_value() || warn_evttypes.has_value() ||
+		       capture.has_value() || capture_duration.has_value() || capture_events.has_value() ||
+		       capture_filesize.has_value() || warn_evttypes.has_value() ||
 		       skip_if_unknown_filter.has_value();
 	}
 
@@ -539,6 +542,8 @@ struct rule_update_info {
 	std::optional<falco_common::priority_type> priority;
 	std::optional<bool> capture;
 	std::optional<uint32_t> capture_duration;
+	std::optional<uint32_t> capture_events;
+	std::optional<uint32_t> capture_filesize;
 	std::optional<bool> enabled;
 	std::optional<bool> warn_evttypes;
 	std::optional<bool> skip_if_unknown_filter;

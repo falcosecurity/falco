@@ -327,6 +327,12 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "default_duration": {
                     "type": "integer"
+                },
+                "default_events": {
+                    "type": "integer"
+                },
+                "default_filesize": {
+                    "type": "integer"
                 }
             },
             "title": "Capture"

@@ -461,11 +461,19 @@ engine:
 # 2. `all_rules`: Captures events when any enabled rule is triggered.
 #
 # When a capture starts, Falco records events from the moment the triggering rule
-# fires until the deadline is reached. The deadline is determined by the rule's
-# `capture_duration` if specified, otherwise the `default_duration` is used.
-# If additional rules trigger during an active capture, the deadline is extended
-# accordingly. Once the deadline expires, the capture stops and data is written
-# to a file. Subsequent captures create new files with unique names.
+# fires until a stop condition is reached. The stop conditions are:
+# - Duration: determined by the rule's `capture_duration` if specified, otherwise
+#   the `default_duration` is used.
+# - Event count: determined by the rule's `capture_events` if specified, otherwise
+#   the `default_events` is used.
+# - File size: determined by the rule's `capture_filesize` if specified, otherwise
+#   the `default_filesize` is used.
+#
+# When multiple stop conditions are configured, the first one reached wins (OR
+# semantics). If additional rules trigger during an active capture, the limits
+# are extended accordingly. Once a stop condition is met, the capture stops and
+# data is written to a file. Subsequent captures create new files with unique
+# names.
 #
 # Captured data is stored in files with a `.scap` extension, which can be
 # analyzed later using:
@@ -483,12 +491,15 @@ engine:
 # Use `capture.mode` to choose between `rules` and `all_rules` modes.
 #
 # Set `capture.default_duration` to define the default capture duration
-# in milliseconds.
+# in milliseconds. Optionally, set `capture.default_events` to limit the
+# number of captured events, and `capture.default_filesize` to limit the
+# capture file size in kB.
 #
 # --- [Suggestions]
 #
 # When using `mode: rules`, configure individual rules to enable capture by
-# adding `capture: true` and optionally `capture_duration` to specific rules.
+# adding `capture: true` and optionally `capture_duration`, `capture_events`,
+# and/or `capture_filesize` to specific rules.
 # For example:
 #
 # - rule: Suspicious File Access
@@ -512,6 +523,10 @@ capture:
   mode: rules
   # -- Default capture duration in milliseconds if not specified in the rule.
   default_duration: 5000
+  # -- Default maximum number of captured events (0 = unlimited).
+  # default_events: 0
+  # -- Default maximum capture file size in kB (0 = unlimited).
+  # default_filesize: 0
 
 #################
 # Falco plugins #

@@ -81,7 +81,9 @@ struct falco_rule {
 	        id(0),
 	        priority(falco_common::PRIORITY_DEBUG),
 	        capture(false),
-	        capture_duration(0) {}
+	        capture_duration(0),
+	        capture_events(0),
+	        capture_filesize(0) {}
 	falco_rule(falco_rule&&) = default;
 	falco_rule& operator=(falco_rule&&) = default;
 	falco_rule(const falco_rule&) = default;
@@ -112,6 +114,8 @@ struct falco_rule {
 	falco_common::priority_type priority;
 	bool capture;
 	uint32_t capture_duration;
+	uint32_t capture_events;
+	uint32_t capture_filesize;
 	std::shared_ptr<libsinsp::filter::ast::expr> condition;
 	std::shared_ptr<sinsp_filter> filter;
 };
