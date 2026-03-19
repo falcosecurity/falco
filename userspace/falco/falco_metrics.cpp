@@ -115,7 +115,7 @@ std::string falco_metrics::falco_to_text_prometheus(
 	        "falco",
 	        {{"version", FALCO_VERSION}});
 
-#if defined(__linux__) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	// Note that the rule counter metrics are retrieved from the state, not from any inspector
 	// Distinguish between config and rules files using labels, following Prometheus best
 	// practices: https://prometheus.io/docs/practices/naming/#labels

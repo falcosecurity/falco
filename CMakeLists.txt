@@ -175,18 +175,14 @@ include(njson)
 # yaml-cpp
 include(yaml-cpp)
 
-if(NOT WIN32
-   AND NOT APPLE
-   AND NOT MINIMAL_BUILD
-   AND NOT EMSCRIPTEN
-)
+if(NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
 	# OpenSSL
 	include(openssl)
 
 	# libcurl
 	include(curl)
 
-	# todo(jasondellaluce,rohith-raju): support webserver for non-linux builds too cpp-httlib
+	# cpp-httplib
 	include(cpp-httplib)
 endif()
 
@@ -201,14 +197,6 @@ include(valijson)
 # CPU Profiling with gperftools
 if(USE_GPERFTOOLS)
 	include(gperftools)
-endif()
-if(NOT MINIMAL_BUILD)
-	if(NOT WIN32
-	   AND NOT APPLE
-	   AND NOT EMSCRIPTEN
-	)
-		include(cares)
-	endif()
 endif()
 
 # Installation
