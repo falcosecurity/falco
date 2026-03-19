@@ -83,22 +83,19 @@ if(NOT WIN32)
 	target_sources(falco_application PRIVATE outputs_program.cpp outputs_syslog.cpp)
 endif()
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
+if(NOT WIN32
+   AND NOT EMSCRIPTEN
+   AND NOT MINIMAL_BUILD
+)
 	target_sources(falco_application PRIVATE outputs_http.cpp falco_metrics.cpp webserver.cpp)
 
-	list(APPEND FALCO_INCLUDE_DIRECTORIES FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}"
-		 "${CARES_INCLUDE}"
-	)
+	list(APPEND FALCO_INCLUDE_DIRECTORIES FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
 
-	if(TARGET c-ares)
-		list(APPEND FALCO_DEPENDENCIES c-ares)
-	endif()
-
-	if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND USE_BUNDLED_CURL)
+	if(USE_BUNDLED_CURL)
 		list(APPEND FALCO_DEPENDENCIES curl)
 	endif()
 
-	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}" "${CARES_LIB}")
+	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}")
 endif()
 
 if(EMSCRIPTEN)
