@@ -26,7 +26,7 @@ limitations under the License.
 namespace falco::utils {
 uint64_t parse_prometheus_interval(std::string interval_str);
 
-#if !defined(_WIN32) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 std::string calculate_file_sha256sum(const std::string& filename);
 #endif
 

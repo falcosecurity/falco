@@ -82,7 +82,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		if(res->has_warnings()) {
 			falco_logger::log(falco_logger::level::WARNING, res->as_string(true, rc) + "\n");
 		}
-#if !defined(_WIN32) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 		s.config->m_loaded_rules_filenames_sha256sum.insert(
 		        {filename, falco::utils::calculate_file_sha256sum(filename)});
 #endif

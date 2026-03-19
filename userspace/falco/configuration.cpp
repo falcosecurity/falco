@@ -211,7 +211,7 @@ void falco_configuration::merge_config_files(const std::string &config_name,
 		}
 	}
 
-#if !defined(_WIN32) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	for(auto &filename : m_loaded_configs_filenames) {
 		m_loaded_configs_filenames_sha256sum.insert(
 		        {filename, falco::utils::calculate_file_sha256sum(filename)});
