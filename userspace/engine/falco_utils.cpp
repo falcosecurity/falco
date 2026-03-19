@@ -22,7 +22,7 @@ limitations under the License.
 #include <libsinsp/utils.h>
 
 #include <re2/re2.h>
-#if !defined(_WIN32) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 #include <openssl/evp.h>
 #endif
 #include <cstring>
@@ -136,7 +136,7 @@ uint64_t parse_prometheus_interval(std::string interval_str) {
 	return interval;
 }
 
-#if !defined(_WIN32) and !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 std::string calculate_file_sha256sum(const std::string& filename) {
 	std::ifstream file(filename, std::ios::binary);
 	if(!file.is_open()) {

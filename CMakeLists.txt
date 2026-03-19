@@ -175,10 +175,7 @@ include(njson)
 # yaml-cpp
 include(yaml-cpp)
 
-if(NOT WIN32
-   AND NOT MINIMAL_BUILD
-   AND NOT EMSCRIPTEN
-)
+if(NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
 	# OpenSSL
 	include(openssl)
 
