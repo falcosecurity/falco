@@ -70,7 +70,10 @@ falco::app::run_result falco::app::actions::load_config(const falco::app::state&
 	                                      std::chrono::system_clock::now().time_since_epoch())
 	                                      .count();
 
-	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;
+	// -U/--unbuffered CLI flag overrides the YAML config value
+	if(s.options.unbuffered_outputs) {
+		s.config->m_buffered_outputs = false;
+	}
 
 	return apply_deprecated_options(s);
 }
