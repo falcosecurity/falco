@@ -94,7 +94,14 @@ if(NOT WIN32 AND NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)
 		list(APPEND FALCO_DEPENDENCIES curl)
 	endif()
 
-	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}" "${CARES_LIB}")
+	if(USE_BUNDLED_OPENSSL)
+		list(APPEND FALCO_DEPENDENCIES openssl)
+	endif()
+
+	# libcurl (static) and cpp-httplib SSL pull in OpenSSL; falco_engine only links it on Linux.
+	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}" "${OPENSSL_LIBRARIES}"
+		 "${CARES_LIB}"
+	)
 
 	target_compile_definitions(falco_application PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 endif()
