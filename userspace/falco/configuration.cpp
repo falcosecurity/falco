@@ -34,10 +34,35 @@ limitations under the License.
 #include "logger.h"
 
 #include "config_json_schema.h"
+#include "config_maturity.h"
 
 #include <re2/re2.h>
 
 namespace fs = std::filesystem;
+
+// Iterate the generated config maturity table and emit notices/warnings
+// for sandbox or deprecated config keys that are active in the user config.
+// - SANDBOX: notice if the node holds a truthy/non-empty value.
+// - DEPRECATED: warning if the key is defined at all.
+static void check_config_maturity(const yaml_helper &config) {
+	for(const auto &entry : config_maturity_table) {
+		std::string key(entry.key);
+		switch(entry.level) {
+		case maturity_level::SANDBOX:
+			if(config.is_node_truthy(key)) {
+				log_maturity_notice(key, entry.level);
+			}
+			break;
+		case maturity_level::DEPRECATED:
+			if(config.is_defined(key)) {
+				log_maturity_notice(key, entry.level);
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
 
 // Reference: https://digitalfortress.tech/tips/top-15-commonly-used-regex/
 static re2::RE2 ip_address_re(
@@ -691,6 +716,9 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 
 	m_watch_config_files = m_config.get_scalar<bool>("watch_config_files", true);
+
+	// Emit notices/warnings for sandbox and deprecated config keys.
+	check_config_maturity(m_config);
 }
 
 void falco_configuration::read_rules_file_directory(const std::string &path,

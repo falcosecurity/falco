@@ -257,6 +257,28 @@ public:
 		return node.IsDefined();
 	}
 
+	/**
+	 * Return true if the node identified by key holds an "active" value:
+	 * - Scalars: true if the value is a truthy boolean or non-empty string.
+	 * - Sequences/Maps: true if non-empty.
+	 * - Undefined/Null: false.
+	 */
+	bool is_node_truthy(const std::string& key) const {
+		YAML::Node node;
+		get_node(node, key);
+		if(!node.IsDefined() || node.IsNull()) {
+			return false;
+		}
+		if(node.IsScalar()) {
+			try {
+				return node.as<bool>();
+			} catch(...) {
+			}
+			return !node.Scalar().empty();
+		}
+		return node.size() > 0;
+	}
+
 	std::string dump() const {
 		YAML::Emitter emitter;
 		emitter << YAML::DoubleQuoted << YAML::Flow << YAML::LowerNull << YAML::BeginSeq << m_root;
