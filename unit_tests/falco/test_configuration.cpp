@@ -102,6 +102,62 @@ TEST(Configuration, modify_yaml_fields) {
 	ASSERT_EQ(conf.get_scalar<bool>(key, false), true);
 }
 
+static std::string escaped_keys_yaml =
+        "annotations:\n"
+        "  kubernetes.io/role: master\n"
+        "  example[0]: bracket_val\n"
+        "nested:\n"
+        "  level1.with.dots:\n"
+        "    inner: value\n"
+        "escape_test:\n"
+        "  back\\slash: bslash_val\n";
+
+TEST(Configuration, escaped_keys_read) {
+	yaml_helper conf;
+	conf.load_from_string(escaped_keys_yaml);
+
+	/* Key containing literal dots */
+	ASSERT_STREQ(conf.get_scalar<std::string>("annotations.kubernetes\\.io/role", "none").c_str(),
+	             "master");
+
+	/* Key containing literal bracket */
+	ASSERT_STREQ(conf.get_scalar<std::string>("annotations.example\\[0]", "none").c_str(),
+	             "bracket_val");
+
+	/* Closing bracket may also be escaped (no-op outside bracket sections) */
+	ASSERT_STREQ(conf.get_scalar<std::string>("annotations.example\\[0\\]", "none").c_str(),
+	             "bracket_val");
+
+	/* Multiple escaped dots */
+	ASSERT_STREQ(conf.get_scalar<std::string>("nested.level1\\.with\\.dots.inner", "none").c_str(),
+	             "value");
+
+	/* Key containing literal backslash */
+	ASSERT_STREQ(conf.get_scalar<std::string>("escape_test.back\\\\slash", "none").c_str(),
+	             "bslash_val");
+}
+
+TEST(Configuration, escaped_keys_write) {
+	yaml_helper conf;
+	conf.load_from_string(escaped_keys_yaml);
+
+	/* Modify a value accessed via escaped key */
+	conf.set_scalar<std::string>("annotations.kubernetes\\.io/role", "worker");
+	ASSERT_STREQ(conf.get_scalar<std::string>("annotations.kubernetes\\.io/role", "none").c_str(),
+	             "worker");
+}
+
+TEST(Configuration, escaped_keys_errors) {
+	yaml_helper conf;
+	conf.load_from_string(escaped_keys_yaml);
+
+	/* Trailing backslash */
+	EXPECT_ANY_THROW(conf.get_scalar<std::string>("annotations\\", "none"));
+
+	/* Invalid escape sequence */
+	EXPECT_ANY_THROW(conf.get_scalar<std::string>("annotations\\x", "none"));
+}
+
 TEST(Configuration, configuration_webserver_ip) {
 	falco_configuration falco_config;
 

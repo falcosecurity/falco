@@ -369,17 +369,24 @@ private:
 	 * nested nodes, with arbitrary depth. The key string follows
 	 * this regular language:
 	 *
-	 * Key 		:= NodeKey ('.' NodeKey)*
-	 * NodeKey	:= (any)+ ('[' (integer)+? ']')*
+	 * Key      := NodeKey ('.' NodeKey)*
+	 * NodeKey  := (Char | EscSeq)+ ('[' (integer)+? ']')*
+	 * Char     := any character except '\', '.', '['
+	 * EscSeq   := '\' ('.' | '[' | ']' | '\')
 	 *
 	 * If can_append is true, an empty NodeKey will append a new entry
 	 * to the sequence, it is rejected otherwise.
+	 *
+	 * Backslash escaping allows literal dots, brackets, and backslashes
+	 * in key names, following the Helm --set conventions, e.g.:
+	 *   falco -o 'annotations.kubernetes\.io/role=master'
 	 *
 	 * Some examples of accepted key strings:
 	 * - NodeName
 	 * - ListValue[3].subvalue
 	 * - MatrixValue[1][3]
 	 * - value1.subvalue2.subvalue3
+	 * - annotations.kubernetes\.io/role
 	 */
 	void get_node(YAML::Node& ret, const std::string& key, bool can_append = false) const {
 		try {
@@ -387,6 +394,29 @@ private:
 			ret.reset(m_root);
 			for(std::string::size_type i = 0; i < key.size(); ++i) {
 				char c = key[i];
+
+				// Handle backslash escaping
+				if(c == '\\') {
+					if(i + 1 >= key.size()) {
+						throw std::runtime_error("Parsing error: trailing backslash at pos " +
+						                         std::to_string(i));
+					}
+					char next = key[i + 1];
+					if(next != '.' && next != '[' && next != ']' && next != '\\') {
+						throw std::runtime_error("Parsing error: invalid escape sequence '\\" +
+						                         std::string(1, next) + "' at pos " +
+						                         std::to_string(i));
+					}
+					nodeKey += next;
+					++i;
+					// If this escaped char is the last in the key, shift now
+					if(i == key.size() - 1) {
+						ret.reset(ret[nodeKey]);
+						nodeKey.clear();
+					}
+					continue;
+				}
+
 				bool should_shift = c == '.' || c == '[' || i == key.size() - 1;
 
 				if(c != '.' && c != '[') {
