@@ -81,7 +81,10 @@ if(NOT WIN32)
 	target_sources(falco_application PRIVATE outputs_program.cpp outputs_syslog.cpp)
 endif()
 
-if(NOT WIN32 AND NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)
+if(NOT WIN32
+   AND NOT EMSCRIPTEN
+   AND NOT MINIMAL_BUILD
+)
 	target_sources(falco_application PRIVATE outputs_http.cpp falco_metrics.cpp webserver.cpp)
 
 	list(APPEND FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}" "${CARES_INCLUDE}")
