@@ -102,6 +102,70 @@ TEST(Configuration, modify_yaml_fields) {
 	ASSERT_EQ(conf.get_scalar<bool>(key, false), true);
 }
 
+TEST(Configuration, is_node_truthy) {
+	yaml_helper conf;
+
+	/* undefined key */
+	conf.load_from_string("key: true\n");
+	ASSERT_FALSE(conf.is_node_truthy("nonexistent"));
+
+	/* null value */
+	conf.load_from_string("key: null\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* boolean scalars */
+	conf.load_from_string("key: true\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	conf.load_from_string("key: false\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* YAML boolean aliases */
+	conf.load_from_string("key: yes\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	conf.load_from_string("key: no\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* non-boolean string */
+	conf.load_from_string("key: hello\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	/* empty string */
+	conf.load_from_string("key: ''\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* numeric scalars are truthy (non-empty strings, not YAML booleans) */
+	conf.load_from_string("key: 0\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	conf.load_from_string("key: 42\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	/* empty sequence */
+	conf.load_from_string("key: []\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* non-empty sequence */
+	conf.load_from_string("key:\n  - item\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	/* empty map */
+	conf.load_from_string("key: {}\n");
+	ASSERT_FALSE(conf.is_node_truthy("key"));
+
+	/* non-empty map */
+	conf.load_from_string("key:\n  sub: val\n");
+	ASSERT_TRUE(conf.is_node_truthy("key"));
+
+	/* nested key */
+	conf.load_from_string("parent:\n  child: true\n");
+	ASSERT_TRUE(conf.is_node_truthy("parent.child"));
+
+	conf.load_from_string("parent:\n  child: false\n");
+	ASSERT_FALSE(conf.is_node_truthy("parent.child"));
+}
+
 TEST(Configuration, configuration_webserver_ip) {
 	falco_configuration falco_config;
 
