@@ -25,7 +25,7 @@ services:
     container_name: falco-webui
     image: falcosecurity/falcosidekick-ui:2.2.0
     ports:
-      - 2802:2802
+      - 127.0.0.1:2802:2802
     depends_on:
       - redis
     command: ['-r', 'redis:6379', '-d']
