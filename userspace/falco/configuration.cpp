@@ -96,6 +96,7 @@ falco_configuration::falco_configuration():
         m_metrics_flags(0),
         m_metrics_convert_memory_to_mb(true),
         m_metrics_include_empty_values(false),
+        m_include_k8s_metadata(false),
         m_plugins_hostinfo(true),
         m_capture_enabled(false),
         m_capture_path_prefix("/tmp/falco"),
@@ -563,6 +564,7 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	m_base_syscalls_all = m_config.get_scalar<bool>("base_syscalls.all", false);
 
 	m_metrics_enabled = m_config.get_scalar<bool>("metrics.enabled", false);
+	m_include_k8s_metadata = m_config.get_scalar<bool>("metrics.include_k8s_metadata", false);
 	m_metrics_interval_str = m_config.get_scalar<std::string>("metrics.interval", "5000");
 	m_metrics_interval = falco::utils::parse_prometheus_interval(m_metrics_interval_str);
 	m_metrics_stats_rule_enabled = m_config.get_scalar<bool>("metrics.output_rule", false);
