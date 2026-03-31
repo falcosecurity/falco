@@ -590,6 +590,9 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	if(m_config.get_scalar<bool>("metrics.plugins_metrics_enabled", true)) {
 		m_metrics_flags |= METRICS_V2_PLUGINS;
 	}
+	if(m_config.get_scalar<bool>("metrics.kernel_iter_event_counters_enabled", true)) {
+		m_metrics_flags |= METRICS_V2_KERNEL_ITER_COUNTERS;
+	}
 	if(m_config.get_scalar<bool>("metrics.jemalloc_stats_enabled", true)) {
 		m_metrics_flags |= METRICS_V2_JEMALLOC_STATS;
 	}

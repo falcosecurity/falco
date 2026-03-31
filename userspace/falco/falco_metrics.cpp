@@ -59,6 +59,8 @@ namespace fs = std::filesystem;
     - `libbpf_stats_enabled` -> Resides in libs; must be retrieved by the syscalls inspector;
       not available for other inspectors.
     - `plugins_metrics_enabled` -> Must be retrieved for each inspector.
+    - `kernel_iter_event_counters_enabled` -> Resides in libs; must be retrieved by the syscalls
+      inspector; not available for other inspectors.
     - `jemalloc_stats_enabled` -> Agnostic; resides in falco; inspector is irrelevant;
       only performed once.
 */
@@ -308,6 +310,7 @@ std::string falco_metrics::sources_to_text_prometheus(
 		// kernel_event_counters_enabled
 		// kernel_event_counters_per_cpu_enabled
 		// libbpf_stats_enabled
+		// kernel_iter_event_counters_enabled
 		auto metrics_collector =
 		        libs::metrics::libs_metrics_collector(source_inspector.get(),
 		                                              state.config->m_metrics_flags);

@@ -1180,7 +1180,7 @@ metrics:
   # (a.k.a. the threadtable).
   state_counters_enabled: true
   # -- Add kernel side event and drop counters to metrics output.
-  # This isan alternative to `syscall_event_drops`, but with some differences.
+  # This is an alternative to `syscall_event_drops`, but with some differences.
   # These counters reflect monotonic values since Falco's start and are exported at a
   # constant stats interval.
   kernel_event_counters_enabled: true
@@ -1200,6 +1200,10 @@ metrics:
   # Please note that if the respective plugin has no metrics implemented,
   # there will be no metrics available.
   plugins_metrics_enabled: true
+  # -- Add kernel side iterator event and drop counters to metrics output.
+  # These counters reflect monotonic values since Falco's start and are exported at a
+  # constant stats interval.
+  kernel_iter_event_counters_enabled: true
   # -- Add jemalloc stats to metrics output.
   # This option requires that Falco is built with jemalloc support, otherwise
   # it will have no effect.
