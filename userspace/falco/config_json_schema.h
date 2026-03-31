@@ -569,6 +569,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "plugins_metrics_enabled": {
                     "type": "boolean"
                 },
+            	"kernel_iter_event_counters_enabled": {
+					"type": "boolean"
+				},
                 "convert_memory_to_mb": {
                     "type": "boolean"
                 },
