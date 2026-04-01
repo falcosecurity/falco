@@ -96,6 +96,9 @@ jobs:
 
   publish-packages:
     needs: [release-settings, test-packages, test-packages-arm64]
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable_publish_packages.yaml
     with:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
@@ -125,6 +128,10 @@ jobs:
 
   publish-docker:
     needs: [release-settings, build-docker, build-docker-arm64]
+    permissions:
+      attestations: write
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable_publish_docker.yaml
     secrets: inherit
     with:
