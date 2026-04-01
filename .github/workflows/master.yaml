@@ -56,6 +56,9 @@ jobs:
 
   publish-dev-packages:
     needs: [fetch-version, test-dev-packages, test-dev-packages-arm64]
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable_publish_packages.yaml
     with:
       bucket_suffix: '-dev'
@@ -84,6 +87,10 @@ jobs:
     
   publish-dev-docker:
     needs: [fetch-version, build-dev-docker, build-dev-docker-arm64]
+    permissions:
+      attestations: write
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable_publish_docker.yaml
     with:
       tag: master
