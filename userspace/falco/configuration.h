@@ -31,6 +31,7 @@ limitations under the License.
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include "config_falco.h"
 #include "yaml_helper.h"
@@ -403,6 +404,22 @@ struct convert<falco_configuration::plugin_config> {
 		if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/') {
 			// prepend share dir if path is not absolute
 			rhs.m_library_path = std::string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
+			// Canonicalize to resolve ".." components and verify
+			// the resulting path stays within the plugins directory.
+			auto canonical_str = std::filesystem::weakly_canonical(rhs.m_library_path).string();
+			auto plugins_dir_str =
+			        std::filesystem::weakly_canonical(FALCO_ENGINE_PLUGINS_DIR).string();
+			if(!plugins_dir_str.empty() && plugins_dir_str.back() != '/') {
+				plugins_dir_str += '/';
+			}
+			if(canonical_str.compare(0, plugins_dir_str.size(), plugins_dir_str) != 0) {
+				throw YAML::Exception(node["library_path"].Mark(),
+				                      "plugin library_path '" +
+				                              node["library_path"].as<std::string>() +
+				                              "' resolves outside the plugins directory (" +
+				                              std::string(FALCO_ENGINE_PLUGINS_DIR) + ")");
+			}
+			rhs.m_library_path = canonical_str;
 		}
 
 		if(node["init_config"] && !node["init_config"].IsNull()) {
