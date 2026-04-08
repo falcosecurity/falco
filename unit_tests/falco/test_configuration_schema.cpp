@@ -146,6 +146,41 @@ plugins:
 	EXPECT_EQ(falco_config.m_plugins[0].m_init_config, "");
 }
 
+TEST(Configuration, plugin_library_path_traversal) {
+	falco_configuration falco_config;
+	config_loaded_res res;
+
+	// A relative path that stays within the plugins dir should succeed.
+	std::string config = R"(
+plugins:
+  - name: myplugin
+    library_path: libmyplugin.so
+)";
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	// The resolved path must start with the plugins dir.
+	EXPECT_TRUE(sinsp_utils::startswith(falco_config.m_plugins[0].m_library_path,
+	                                    FALCO_ENGINE_PLUGINS_DIR));
+
+	// A relative path with ".." that escapes the plugins dir must be rejected.
+	config = R"(
+plugins:
+  - name: evil
+    library_path: ../../tmp/evil.so
+)";
+	EXPECT_THROW(falco_config.init_from_content(config, {}), std::exception);
+
+	// Absolute paths bypass the prefix logic and are allowed as-is.
+	config = R"(
+plugins:
+  - name: myplugin
+    library_path: /opt/falco/plugins/libmyplugin.so
+)";
+	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
+	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
+	EXPECT_EQ(falco_config.m_plugins[0].m_library_path, "/opt/falco/plugins/libmyplugin.so");
+}
+
 TEST(Configuration, schema_yaml_helper_validator) {
 	yaml_helper conf;
 	falco_configuration falco_config;
