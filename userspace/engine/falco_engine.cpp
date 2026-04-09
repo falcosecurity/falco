@@ -15,15 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <cstdlib>
 #ifndef _WIN32
 #include <unistd.h>
 #else
-#include <stdlib.h>
 #include <io.h>
-#define srandom srand
-#define random rand
 #endif
+#include <random>
 #include <string>
 #include <fstream>
 #include <functional>
@@ -52,7 +49,7 @@ const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace falco;
 
-falco_engine::falco_engine(bool seed_rng):
+falco_engine::falco_engine(bool /* seed_rng */):
         m_syscall_source(NULL),
         m_syscall_source_idx(SIZE_MAX),
         m_rule_reader(std::make_shared<rule_loader::reader>()),
@@ -62,10 +59,6 @@ falco_engine::falco_engine(bool seed_rng):
         m_min_priority(falco_common::PRIORITY_DEBUG),
         m_sampling_ratio(1),
         m_sampling_multiplier(0) {
-	if(seed_rng) {
-		srandom((unsigned)getpid());
-	}
-
 	m_default_ruleset_id = find_ruleset_id(s_default_ruleset);
 
 	fill_engine_state_funcs(m_engine_state);
@@ -1007,6 +1000,8 @@ inline bool falco_engine::should_drop_evt() const {
 		return false;
 	}
 
-	double coin = (random() * (1.0 / RAND_MAX));
+	thread_local std::mt19937 rng(std::random_device{}());
+	std::uniform_real_distribution<double> dist(0.0, 1.0);
+	double coin = dist(rng);
 	return (coin >= (1.0 / (m_sampling_multiplier * m_sampling_ratio)));
 }
