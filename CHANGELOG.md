@@ -1,5 +1,26 @@
 # Change Log
 
+## v0.43.1
+
+Released on 2026-04-09
+
+
+
+### Minor Changes
+
+* build: bump libs version to 0.23.2 and container plugin version to 0.6.4 [[#3851](https://github.com/falcosecurity/falco/pull/3851)] - [@leogr](https://github.com/leogr)
+
+
+
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      1 |
+| Total           |      1 |
+
 ## v0.43.0
 
 Released on 2026-01-28
