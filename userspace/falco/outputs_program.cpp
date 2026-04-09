@@ -26,9 +26,11 @@ void falco::outputs::output_program::open_pfile() {
 		m_pfile = popen(m_oc.options["program"].c_str(), "w");
 
 		if(m_pfile == nullptr) {
+			char errbuf[256];
+			const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
 			falco_logger::log(falco_logger::level::ERR,
 			                  "Failed to open program output: " + m_oc.options["program"] +
-			                          " (error: " + std::string(std::strerror(errno)) + ")");
+			                          " (error: " + errstr + ")");
 			return;
 		}
 
@@ -38,7 +40,7 @@ void falco::outputs::output_program::open_pfile() {
 	}
 }
 
-void falco::outputs::output_program::output(const message *msg) {
+void falco::outputs::output_program::output(const message* msg) {
 	open_pfile();
 
 	if(m_pfile != nullptr) {

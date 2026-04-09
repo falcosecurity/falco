@@ -36,10 +36,13 @@ falco::app::run_result falco::app::actions::print_kernel_version(const falco::ap
 	std::ifstream input_file("/proc/version");
 	if(!input_file.is_open()) {
 		// We don't want to fail, we just need to log something
-		falco_logger::log(
-		        falco_logger::level::INFO,
-		        "Cannot read under '/proc/version' (err_message: '" + std::string(strerror(errno)) +
-		                "', err_code: " + std::to_string(errno) + "). No info provided, go on.");
+		int saved_errno = errno;
+		char errbuf[256];
+		const char* errstr = strerror_r(saved_errno, errbuf, sizeof(errbuf));
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Cannot read under '/proc/version' (err_message: '" +
+		                          std::string(errstr) + "', err_code: " +
+		                          std::to_string(saved_errno) + "). No info provided, go on.");
 		return run_result::ok();
 	}
 

@@ -71,7 +71,9 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string& err) {
 	memset(&handler, 0, sizeof(handler));
 	handler.sa_handler = &timer_handler;
 	if(sigaction(SIGALRM, &handler, NULL) == -1) {
-		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		err = std::string("Could not set up signal handler for periodic timer: ") + errstr;
 		return false;
 	}
 
@@ -93,7 +95,9 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string& err) {
 	memset(&handler, 0, sizeof(handler));
 	handler.sa_handler = &timer_handler;
 	if(sigaction(SIGALRM, &handler, NULL) == -1) {
-		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		err = std::string("Could not set up signal handler for periodic timer: ") + errstr;
 		return false;
 	}
 
@@ -119,7 +123,9 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string& err) {
 	memset(&handler, 0, sizeof(handler));
 	handler.sa_handler = &timer_handler;
 	if(sigaction(SIGALRM, &handler, NULL) == -1) {
-		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		err = std::string("Could not set up signal handler for periodic timer: ") + errstr;
 		return false;
 	}
 
@@ -131,14 +137,18 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string& err) {
 	// delete any previously set timer
 	if(s_timerid_exists) {
 		if(timer_delete(s_timerid) == -1) {
-			err = std::string("Could not delete previous timer: ") + strerror(errno);
+			char errbuf[256];
+			const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+			err = std::string("Could not delete previous timer: ") + errstr;
 			return false;
 		}
 		s_timerid_exists = false;
 	}
 
 	if(timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) {
-		err = std::string("Could not create periodic timer: ") + strerror(errno);
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		err = std::string("Could not create periodic timer: ") + errstr;
 		return false;
 	}
 	s_timerid_exists = true;
@@ -148,7 +158,9 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string& err) {
 	timer.it_interval = timer.it_value;
 
 	if(timer_settime(s_timerid, 0, &timer, NULL) == -1) {
-		err = std::string("Could not set up periodic timer: ") + strerror(errno);
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		err = std::string("Could not set up periodic timer: ") + errstr;
 		return false;
 	}
 
