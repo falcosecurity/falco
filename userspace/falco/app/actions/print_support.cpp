@@ -20,6 +20,7 @@ limitations under the License.
 #else
 #include <windows.h>
 #endif
+#include "compat.h"
 #include <iostream>
 
 #include "actions.h"
@@ -96,7 +97,7 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s) 
 
 	if(get_sysinfo(support) != 0) {
 		char errbuf[256];
-		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		const char* errstr = falco_strerror_r(errno, errbuf, sizeof(errbuf));
 		return run_result::fatal(std::string("Could not get system info: ") + errstr);
 	}
 

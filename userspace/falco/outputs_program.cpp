@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include "outputs_program.h"
+#include "compat.h"
 #include "logger.h"
 #include <stdio.h>
 #include <cerrno>
@@ -27,7 +28,7 @@ void falco::outputs::output_program::open_pfile() {
 
 		if(m_pfile == nullptr) {
 			char errbuf[256];
-			const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+			const char* errstr = falco_strerror_r(errno, errbuf, sizeof(errbuf));
 			falco_logger::log(falco_logger::level::ERR,
 			                  "Failed to open program output: " + m_oc.options["program"] +
 			                          " (error: " + errstr + ")");

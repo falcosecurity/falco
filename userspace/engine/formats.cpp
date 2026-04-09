@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
+#include "compat.h"
 #include "formats.h"
 #include "falco_engine.h"
 
@@ -99,7 +100,7 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 		std::string iso8601evttime;
 
 		struct tm tm_buf;
-		gmtime_r(&evttime, &tm_buf);
+		falco_gmtime_r(&evttime, &tm_buf);
 		strftime(time_sec, sizeof(time_sec), "%FT%T", &tm_buf);
 		snprintf(time_ns, sizeof(time_ns), ".%09luZ", evt->get_ts() % 1000000000);
 		iso8601evttime = time_sec;
