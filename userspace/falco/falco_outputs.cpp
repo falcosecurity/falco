@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include "falco_outputs.h"
+#include "compat.h"
 #include "config_falco.h"
 
 #include "formats.h"
@@ -182,7 +183,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		std::string iso8601evttime;
 
 		struct tm tm_buf;
-		gmtime_r(&evttime, &tm_buf);
+		falco_gmtime_r(&evttime, &tm_buf);
 		strftime(time_sec, sizeof(time_sec), "%FT%T", &tm_buf);
 		snprintf(time_ns, sizeof(time_ns), ".%09luZ", ts % 1000000000);
 		iso8601evttime = time_sec;

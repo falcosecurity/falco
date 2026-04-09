@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include <ctime>
+#include "compat.h"
 #include "logger.h"
 
 #include "falco_common.h"
@@ -123,13 +124,13 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg) {
 		if(falco_logger::time_format_iso_8601) {
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
 			struct tm gtm;
-			if(gmtime_r(&result, &gtm) != NULL &&
+			if(falco_gmtime_r(&result, &gtm) != NULL &&
 			   (strftime(buf, sizeof(buf), "%FT%T%z", &gtm) != 0)) {
 				fprintf(stderr, "%s: %s", buf, copy.c_str());
 			}
 		} else {
 			struct tm ltm;
-			localtime_r(&result, &ltm);
+			falco_localtime_r(&result, &ltm);
 			char tstr[std::size("WWW MMM DD HH:mm:ss YYYY")];
 			std::strftime(std::data(tstr), std::size(tstr), "%a %b %d %H:%M:%S %Y", &ltm);
 			fprintf(stderr, "%s: %s", tstr, copy.c_str());

@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "compat.h"
 #include "helpers.h"
 #include "../app.h"
 #include <fstream>
@@ -38,7 +39,7 @@ falco::app::run_result falco::app::actions::print_kernel_version(const falco::ap
 		// We don't want to fail, we just need to log something
 		int saved_errno = errno;
 		char errbuf[256];
-		const char* errstr = strerror_r(saved_errno, errbuf, sizeof(errbuf));
+		const char* errstr = falco_strerror_r(saved_errno, errbuf, sizeof(errbuf));
 		falco_logger::log(falco_logger::level::INFO,
 		                  "Cannot read under '/proc/version' (err_message: '" +
 		                          std::string(errstr) + "', err_code: " +

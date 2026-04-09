@@ -18,6 +18,7 @@ limitations under the License.
 #include <functional>
 
 #include "actions.h"
+#include "compat.h"
 #include "../app.h"
 #include "../signals.h"
 
@@ -49,12 +50,10 @@ bool create_handler(int sig, void (*func)(int), run_result& ret) {
 #ifdef __linux__
 	if(signal(sig, func) == SIG_ERR) {
 		char errbuf[1024];
-		if(strerror_r(errno, errbuf, sizeof(errbuf)) != 0) {
-			snprintf(errbuf, sizeof(errbuf) - 1, "Errno %d", errno);
-		}
+		const char* errstr = falco_strerror_r(errno, errbuf, sizeof(errbuf));
 
 		ret = run_result::fatal(std::string("Could not create signal handler for ") +
-		                        strsignal(sig) + ": " + errbuf);
+		                        strsignal(sig) + ": " + errstr);
 	}
 #endif
 	return ret.success;
