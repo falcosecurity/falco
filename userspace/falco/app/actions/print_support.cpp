@@ -95,7 +95,9 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s) 
 	nlohmann::json support;
 
 	if(get_sysinfo(support) != 0) {
-		return run_result::fatal(std::string("Could not get system info: ") + strerror(errno));
+		char errbuf[256];
+		const char* errstr = strerror_r(errno, errbuf, sizeof(errbuf));
+		return run_result::fatal(std::string("Could not get system info: ") + errstr);
 	}
 
 	const falco::versions_info infos(s.offline_inspector);
