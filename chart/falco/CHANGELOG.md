@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v8.0.2
+
+* Upgrade Falco to v0.43.1
+* Upgrade container plugin to v0.6.3
+
 ## v8.0.1
 
 * Fix serviceMonitor template to properly merge custom selector labels with defaults using mustMergeOverwrite, avoiding duplicate YAML keys
