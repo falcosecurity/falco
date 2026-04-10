@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2026 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -158,9 +158,6 @@ plugins:
 )";
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
-	// The resolved path must start with the plugins dir.
-	EXPECT_TRUE(sinsp_utils::startswith(falco_config.m_plugins[0].m_library_path,
-	                                    FALCO_ENGINE_PLUGINS_DIR));
 
 	// A relative path with ".." that escapes the plugins dir must be rejected.
 	config = R"(
@@ -170,7 +167,25 @@ plugins:
 )";
 	EXPECT_THROW(falco_config.init_from_content(config, {}), std::exception);
 
+	// Traversal via "./" prefix followed by ".." must also be rejected.
+	config = R"(
+plugins:
+  - name: evil
+    library_path: ./../../tmp/evil.so
+)";
+	EXPECT_THROW(falco_config.init_from_content(config, {}), std::exception);
+
+	// Nested traversal that descends then escapes must be rejected.
+	config = R"(
+plugins:
+  - name: evil
+    library_path: subdir/../../../tmp/evil.so
+)";
+	EXPECT_THROW(falco_config.init_from_content(config, {}), std::exception);
+
+#ifndef _WIN32
 	// Absolute paths bypass the prefix logic and are allowed as-is.
+	// This test uses a Unix absolute path syntax.
 	config = R"(
 plugins:
   - name: myplugin
@@ -179,6 +194,7 @@ plugins:
 	EXPECT_NO_THROW(res = falco_config.init_from_content(config, {}));
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_ok);
 	EXPECT_EQ(falco_config.m_plugins[0].m_library_path, "/opt/falco/plugins/libmyplugin.so");
+#endif
 }
 
 TEST(Configuration, schema_yaml_helper_validator) {

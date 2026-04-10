@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -134,10 +134,17 @@ if(NOT DEFINED FALCO_COMPONENT_NAME)
 endif()
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set(CMAKE_INSTALL_PREFIX
-		/usr
-		CACHE PATH "Default install path" FORCE
-	)
+	if(WIN32)
+		set(CMAKE_INSTALL_PREFIX
+			"C:/Program Files/${CMAKE_PROJECT_NAME}"
+			CACHE PATH "Default install path" FORCE
+		)
+	else()
+		set(CMAKE_INSTALL_PREFIX
+			/usr
+			CACHE PATH "Default install path" FORCE
+		)
+	endif()
 endif()
 
 set(CMD_MAKE make)
