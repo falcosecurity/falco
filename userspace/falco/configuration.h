@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2025 The Falco Authors.
+Copyright (C) 2026 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -401,25 +401,35 @@ struct convert<falco_configuration::plugin_config> {
 			return false;
 		}
 		rhs.m_library_path = node["library_path"].as<std::string>();
-		if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/') {
-			// prepend share dir if path is not absolute
-			rhs.m_library_path = std::string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
-			// Canonicalize to resolve ".." components and verify
-			// the resulting path stays within the plugins directory.
-			auto canonical_str = std::filesystem::weakly_canonical(rhs.m_library_path).string();
-			auto plugins_dir_str =
-			        std::filesystem::weakly_canonical(FALCO_ENGINE_PLUGINS_DIR).string();
-			if(!plugins_dir_str.empty() && plugins_dir_str.back() != '/') {
-				plugins_dir_str += '/';
-			}
-			if(canonical_str.compare(0, plugins_dir_str.size(), plugins_dir_str) != 0) {
+		if(!rhs.m_library_path.empty() &&
+		   !std::filesystem::path(rhs.m_library_path).is_absolute() &&
+		   rhs.m_library_path.at(0) != '/') {
+			// Relative path: resolve against the plugins directory
+			// and verify the result stays within it.
+			auto full_path = std::filesystem::path(FALCO_ENGINE_PLUGINS_DIR) / rhs.m_library_path;
+			// lexically_normal resolves . and .. purely lexically,
+			// without filesystem access (unlike weakly_canonical which
+			// leaves .. unresolved for non-existent path components).
+			auto normalized = full_path.lexically_normal();
+			auto plugins_dir = std::filesystem::path(FALCO_ENGINE_PLUGINS_DIR).lexically_normal();
+			auto rel = normalized.lexically_relative(plugins_dir);
+			if(rel.empty()) {
 				throw YAML::Exception(node["library_path"].Mark(),
 				                      "plugin library_path '" +
 				                              node["library_path"].as<std::string>() +
 				                              "' resolves outside the plugins directory (" +
 				                              std::string(FALCO_ENGINE_PLUGINS_DIR) + ")");
 			}
-			rhs.m_library_path = canonical_str;
+			for(const auto& component : rel) {
+				if(component == "..") {
+					throw YAML::Exception(node["library_path"].Mark(),
+					                      "plugin library_path '" +
+					                              node["library_path"].as<std::string>() +
+					                              "' resolves outside the plugins directory (" +
+					                              std::string(FALCO_ENGINE_PLUGINS_DIR) + ")");
+				}
+			}
+			rhs.m_library_path = normalized.string();
 		}
 
 		if(node["init_config"] && !node["init_config"].IsNull()) {
