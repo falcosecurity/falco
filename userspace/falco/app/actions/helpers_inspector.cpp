@@ -103,11 +103,12 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 			                  "Opening '" + source + "' source with modern BPF probe.");
 			auto num_workers = s.config->m_modern_ebpf.m_num_worker_threads;
 			if(num_workers > 1) {
-				falco_logger::log(falco_logger::level::INFO,
-				                  "[EXPERIMENTAL] Multi-threaded mode: " +
-				                          std::to_string(num_workers) +
-				                          " worker threads with TGID-partitioned ring buffers.");
+				falco_logger::log(
+				        falco_logger::level::INFO,
+				        "[EXPERIMENTAL] Multi-threaded mode: " + std::to_string(num_workers) +
+				                " worker threads with TGID-partitioned ring buffers.");
 				inspector->open_modern_bpf(s.syscall_buffer_bytes_size,
+				                           num_workers,
 				                           num_workers,
 				                           true,
 				                           s.selected_sc_set);
@@ -115,11 +116,11 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 				falco_logger::log(
 				        falco_logger::level::INFO,
 				        "One ring buffer every '" +
-				                std::to_string(
-				                        s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
+				                std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
 				                "' CPUs.");
 				inspector->open_modern_bpf(s.syscall_buffer_bytes_size,
 				                           s.config->m_modern_ebpf.m_cpus_for_each_buffer,
+				                           DEFAULT_ITERS_NUM,
 				                           true,
 				                           s.selected_sc_set);
 			}
