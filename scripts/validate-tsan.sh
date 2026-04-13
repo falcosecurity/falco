@@ -35,11 +35,7 @@ RUN_DURATION_SEC="${RUN_DURATION_SEC:-600}"
 RULES_URL="${FALCO_RULES_URL:-https://raw.githubusercontent.com/falcosecurity/rules/main/rules/falco_rules.yaml}"
 
 LIBS_SUPPRESSIONS="${LIBS_SUPPRESSIONS:-/workspaces/libs/userspace/libsinsp/test/tsan_suppressions.txt}"
-if [[ -f "$LIBS_SUPPRESSIONS" ]]; then
-  echo "Using libs suppressions: $LIBS_SUPPRESSIONS (embedded in $SUPPRESSIONS)"
-else
-  echo "Note: libs suppressions path not found ($LIBS_SUPPRESSIONS); using $SUPPRESSIONS only"
-fi
+FALCO_TSAN_EXTRA="${FALCO_ROOT}/scripts/tsan_suppressions_falco.txt"
 
 if [[ ! -x "$FALCO_BIN" ]]; then
   echo "Falco TSAN binary not found. Build with:"
@@ -47,10 +43,16 @@ if [[ ! -x "$FALCO_BIN" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$SUPPRESSIONS" ]]; then
-  echo "Suppressions file not found: $SUPPRESSIONS"
+mkdir -p "$BUILD_TSAN"
+{
+  [[ -f "$FALCO_TSAN_EXTRA" ]] && cat "$FALCO_TSAN_EXTRA"
+  [[ -f "$LIBS_SUPPRESSIONS" ]] && cat "$LIBS_SUPPRESSIONS"
+} > "$SUPPRESSIONS"
+if [[ ! -s "$SUPPRESSIONS" ]]; then
+  echo "No TSAN suppressions assembled. Add $FALCO_TSAN_EXTRA and/or point LIBS_SUPPRESSIONS at an existing file."
   exit 1
 fi
+echo "TSAN suppressions: $SUPPRESSIONS (Falco: ${FALCO_TSAN_EXTRA}, libs: ${LIBS_SUPPRESSIONS})"
 
 if [[ ! -f "$CONFIG" ]]; then
   echo "Config not found: $CONFIG"
@@ -132,8 +134,10 @@ END {
 rm -f "${RULES_NO_CONTAINER}.tmp" "${RULES_NO_CONTAINER}.tmp2"
 echo "Rules written to $RULES_NO_CONTAINER (container-field macros adapted to never_true, container-dependent rules commented out)"
 
-# TSAN: suppressions + fail-fast on first data race
-export TSAN_OPTIONS="suppressions=${SUPPRESSIONS} halt_on_error=1"
+# TSAN: suppressions + fail-fast on first data race.
+# report_atomic_races=0: Folly hazptr / thread-local StaticMeta can report atomic-vs-mutex-init
+# races where one stack is only pthread_mutex_lock; our race: suppressions cannot match both sides.
+export TSAN_OPTIONS="suppressions=${SUPPRESSIONS} halt_on_error=1 report_atomic_races=0"
 echo "TSAN_OPTIONS=$TSAN_OPTIONS"
 echo "Starting Falco under TSAN with 8 workers, Prometheus /metrics, no plugins (log: $TSAN_LOG) ..."
 
