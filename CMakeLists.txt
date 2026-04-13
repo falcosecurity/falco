@@ -36,6 +36,10 @@ if(USE_ASAN AND USE_TSAN)
 endif()
 option(USE_GPERFTOOLS "Build with gperftools CPU profiler support" OFF)
 option(USE_FRAME_POINTER "Build with frame pointers for accurate profiling" OFF)
+option(FALCO_MULTI_THREAD "Enable multi-threaded event processing (requires modern eBPF)" OFF)
+if(FALCO_MULTI_THREAD)
+	add_definitions(-DFALCO_MULTI_THREAD)
+endif()
 
 # Enable frame pointers by default when using gperftools for accurate stack traces
 if(USE_GPERFTOOLS AND NOT USE_FRAME_POINTER)
