@@ -157,6 +157,13 @@ else()
 	message(STATUS "No strlcpy and strlcat found, will use local definition")
 endif()
 
+if(FALCO_MULTI_THREAD)
+	set(ENABLE_MULTI_THREAD
+		ON
+		CACHE BOOL ""
+	)
+endif()
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	include(driver)
 endif()

@@ -366,6 +366,8 @@ static falco::app::run_result do_inspect(
 	return run_result::ok();
 }
 
+#ifdef FALCO_MULTI_THREAD
+
 struct worker_context {
 	std::shared_ptr<falco_engine> engine;
 	std::unique_ptr<falco_formats> formats;
@@ -454,8 +456,14 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 	}
 
 	for(uint16_t i = 0; i < num_workers; i++) {
-		threads.emplace_back([&s, &inspector, &worker_ctxs, &worker_results, &worker_evt_counts,
-		                      &hostname, i, duration_to_tot_ns]() {
+		threads.emplace_back([&s,
+		                      &inspector,
+		                      &worker_ctxs,
+		                      &worker_results,
+		                      &worker_evt_counts,
+		                      &hostname,
+		                      i,
+		                      duration_to_tot_ns]() {
 			auto& wctx = worker_ctxs[i];
 			auto& result = worker_results[i];
 			auto& num_evts = worker_evt_counts[i];
@@ -465,8 +473,8 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 				sinsp_buffer_t buffer_h = inspector->reserve_buffer_handle();
 				falco_logger::log(falco_logger::level::DEBUG,
 				                  "[EXPERIMENTAL] Worker " + std::to_string(i) +
-				                          " reserved buffer handle " +
-				                          std::to_string(buffer_h) + "\n");
+				                          " reserved buffer handle " + std::to_string(buffer_h) +
+				                          "\n");
 
 				sinsp_evt* ev = nullptr;
 				uint64_t duration_start = 0;
@@ -488,8 +496,8 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 						break;
 					}
 					if(rc != SCAP_SUCCESS) {
-						result = run_result::fatal("Worker " + std::to_string(i) +
-						                           ": " + inspector->getlasterr());
+						result = run_result::fatal("Worker " + std::to_string(i) + ": " +
+						                           inspector->getlasterr());
 						break;
 					}
 
@@ -517,10 +525,9 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 							        hostname,
 							        rule_res.extra_output_fields);
 
-							auto fields = wctx.formats->get_field_values(
-							        rule_res.evt,
-							        rule_res.source,
-							        rule_res.format);
+							auto fields = wctx.formats->get_field_values(rule_res.evt,
+							                                             rule_res.source,
+							                                             rule_res.format);
 							for(auto const& ef : rule_res.extra_output_fields) {
 								std::string fformat = ef.second.first;
 								if(fformat.empty()) {
@@ -529,10 +536,9 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 								if(fformat[0] != '*') {
 									fformat = "*" + fformat;
 								}
-								fields[ef.first] = wctx.formats->format_string(
-								        rule_res.evt,
-								        fformat,
-								        rule_res.source);
+								fields[ef.first] = wctx.formats->format_string(rule_res.evt,
+								                                               fformat,
+								                                               rule_res.source);
 							}
 
 							nlohmann::json json_fields;
@@ -540,14 +546,13 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 								json_fields[f.first] = f.second;
 							}
 
-							s.outputs->handle_event_formatted(
-							        rule_res.evt->get_ts(),
-							        rule_res.priority_num,
-							        formatted_msg,
-							        rule_res.rule,
-							        rule_res.source,
-							        json_fields,
-							        rule_res.tags);
+							s.outputs->handle_event_formatted(rule_res.evt->get_ts(),
+							                                  rule_res.priority_num,
+							                                  formatted_msg,
+							                                  rule_res.rule,
+							                                  rule_res.source,
+							                                  json_fields,
+							                                  rule_res.tags);
 						}
 					}
 
@@ -579,6 +584,8 @@ static falco::app::run_result do_inspect_multi_thread(falco::app::state& s,
 	                          std::to_string(total_evts) + "\n");
 	return merged;
 }
+
+#endif  // FALCO_MULTI_THREAD
 
 static void process_inspector_events(
         falco::app::state& s,
@@ -782,10 +789,10 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 						s.on_inspectors_opened();
 					}
 
-					bool use_multi_thread =
-					        s.is_modern_ebpf() &&
-					        s.config->m_modern_ebpf.m_num_worker_threads > 1 &&
-					        source == falco_common::syscall_source;
+#ifdef FALCO_MULTI_THREAD
+					bool use_multi_thread = s.is_modern_ebpf() &&
+					                        s.config->m_modern_ebpf.m_num_worker_threads > 1 &&
+					                        source == falco_common::syscall_source;
 
 					if(use_multi_thread) {
 						ctx.res = do_inspect_multi_thread(
@@ -794,7 +801,9 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 						        source,
 						        uint64_t(s.options.duration_to_tot * ONE_SECOND_IN_NS));
 						ctx.sync->finish();
-					} else {
+					} else
+#endif  // FALCO_MULTI_THREAD
+					{
 						process_inspector_events(s,
 						                         src_info->inspector,
 						                         statsw,
