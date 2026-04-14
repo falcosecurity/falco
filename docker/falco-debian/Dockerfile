@@ -23,13 +23,14 @@ ENV FALCO_VERSION="${FALCO_VERSION}" \
     HOST_ROOT="${HOST_ROOT}" \
     HOME="${HOME}"
 
-RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg2 \
+RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
-RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
-	&& echo "deb https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
+RUN curl -fsSL https://falco.org/repo/falcosecurity-packages.asc \
+	| gpg --dearmor -o /usr/share/keyrings/falcosecurity.gpg \
+	&& echo "deb [signed-by=/usr/share/keyrings/falcosecurity.gpg] https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
 	&& apt-get update -y \
 	&& if [ "$FALCO_VERSION" = "latest" ]; then FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco; else FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
 	&& apt-get clean \
