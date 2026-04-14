@@ -32,7 +32,7 @@ RUN apt-get update \
 	flex \
 	gcc \
 	gcc-11 \
-	gnupg2 \
+	gnupg \
 	jq \
 	libc6-dev \
 	libssl-dev \
