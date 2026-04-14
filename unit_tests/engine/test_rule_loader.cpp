@@ -1516,3 +1516,28 @@ TEST_F(test_falco_engine, no_deprecated_field_warning_in_output) {
 	ASSERT_FALSE(check_warning_message("evt.dir")) << m_load_result_string;
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
+
+TEST_F(test_falco_engine, deprecated_evt_dir_folded_scalar_condition_snippet) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: >
+    evt.type = close and evt.dir = <
+  output: user=%user.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_TRUE(has_warnings());
+	ASSERT_TRUE(check_warning_message("evt.dir")) << m_load_result_string;
+
+	for(const auto& warn : m_load_result_json["warnings"]) {
+		std::string snippet = warn["context"]["snippet"];
+		if(snippet.find("evt.dir") != std::string::npos) {
+			ASSERT_EQ(snippet.find("condition: >"), std::string::npos) << snippet;
+			return;
+		}
+	}
+	FAIL() << "no warning snippet containing 'evt.dir': " << m_load_result_string;
+}

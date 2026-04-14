@@ -374,7 +374,10 @@ bool rule_loader::compiler::compile_condition(const configuration& cfg,
 	               parent_ctx);
 
 	// check for warnings in the filtering condition
-	warn_resolver.run(cond_ctx, *cfg.res, *ast_out.get());
+	// use a condition expression context so the snippet shows the actual condition text
+	// (avoids showing just "condition: >" when YAML folded scalars are used)
+	libsinsp::filter::ast::pos_info pos(0, 0, 0);
+	warn_resolver.run(rule_loader::context(pos, condition, cond_ctx), *cfg.res, *ast_out.get());
 
 	// validate the rule's condition: we compile it into a sinsp filter
 	// on-the-fly and we throw an exception with details on failure
