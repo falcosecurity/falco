@@ -3,6 +3,7 @@ kind: RoleBinding
 apiVersion: {{ include "rbac.apiVersion" . }}
 metadata:
   name: {{ include "falco.fullname" . }}
+  namespace: {{ include "falco.namespace" . }}
   labels:
     {{- include "falco.labels" . | nindent 4 }}
 subjects:
