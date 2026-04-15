@@ -44,7 +44,7 @@ limitations under the License.
 
 class falco_engine {
 public:
-	explicit falco_engine(bool seed_rng = true);
+	explicit falco_engine();
 	virtual ~falco_engine();
 
 	// A given engine has a version which identifies the fields

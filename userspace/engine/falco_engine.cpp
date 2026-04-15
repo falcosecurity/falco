@@ -49,7 +49,7 @@ const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace falco;
 
-falco_engine::falco_engine(bool /* seed_rng */):
+falco_engine::falco_engine():
         m_syscall_source(NULL),
         m_syscall_source_idx(SIZE_MAX),
         m_rule_reader(std::make_shared<rule_loader::reader>()),
