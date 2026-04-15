@@ -304,3 +304,82 @@ TEST(MacroResolver, should_clone_macro_AST) {
 	macro->left = filter_ast::field_expr::create("another.field", "");
 	ASSERT_FALSE(filter->is_equal(macro.get()));
 }
+
+// Tests for multi-value transformer support
+
+TEST(MacroResolver, should_not_resolve_macro_inside_field_transformer) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: tolower(some.field) = value AND test_macro
+	// The transformer wraps a field, not a macro -- no resolution inside it.
+	ast::pos_info macro_pos(1, 0, 10);
+
+	std::shared_ptr<ast::expr> macro =
+	        ast::unary_check_expr::create(ast::field_expr::create("resolved.field", ""), "exists");
+
+	std::vector<std::unique_ptr<ast::expr>> filter_and;
+	filter_and.push_back(ast::binary_check_expr::create(
+	        ast::field_transformer_expr::create("tolower",
+	                                            ast::field_expr::create("some.field", "")),
+	        "=",
+	        ast::value_expr::create("value")));
+	filter_and.push_back(ast::identifier_expr::create(MACRO_NAME, macro_pos));
+	std::shared_ptr<ast::expr> filter = ast::and_expr::create(filter_and);
+
+	filter_macro_resolver resolver;
+	resolver.set_macro(MACRO_NAME, macro);
+
+	ASSERT_TRUE(resolver.run(filter));
+	ASSERT_EQ(resolver.get_resolved_macros().size(), 1);
+	ASSERT_STREQ(resolver.get_resolved_macros().begin()->first.c_str(), MACRO_NAME);
+	ASSERT_TRUE(resolver.get_unknown_macros().empty());
+}
+
+TEST(MacroResolver, should_not_resolve_macro_inside_multi_value_transformer) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: join(",", field1, field2) = value
+	// Multi-value transformer with 3 args -- no macro resolution inside.
+	std::vector<std::unique_ptr<ast::expr>> args;
+	args.push_back(ast::value_expr::create(","));
+	args.push_back(ast::field_expr::create("proc.name", ""));
+	args.push_back(ast::field_expr::create("proc.pname", ""));
+
+	std::shared_ptr<ast::expr> filter =
+	        ast::binary_check_expr::create(ast::field_transformer_expr::create("join", args),
+	                                       "=",
+	                                       ast::value_expr::create("value"));
+
+	filter_macro_resolver resolver;
+	resolver.set_macro(MACRO_NAME, ast::field_expr::create("x", ""));
+
+	ASSERT_FALSE(resolver.run(filter));
+	ASSERT_TRUE(resolver.get_resolved_macros().empty());
+	ASSERT_TRUE(resolver.get_unknown_macros().empty());
+}
+
+TEST(MacroResolver, should_not_resolve_macro_inside_transformer_list) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: join(",", (field1, field2)) = value
+	// transformer_list_expr wraps multiple fields -- no macro resolution inside.
+	std::vector<std::unique_ptr<ast::expr>> list_children;
+	list_children.push_back(ast::field_expr::create("proc.name", ""));
+	list_children.push_back(ast::field_expr::create("proc.pname", ""));
+
+	std::vector<std::unique_ptr<ast::expr>> transformer_args;
+	transformer_args.push_back(ast::value_expr::create(","));
+	transformer_args.push_back(ast::transformer_list_expr::create(list_children));
+
+	std::shared_ptr<ast::expr> filter = ast::binary_check_expr::create(
+	        ast::field_transformer_expr::create("join", transformer_args),
+	        "=",
+	        ast::value_expr::create("value"));
+
+	filter_macro_resolver resolver;
+	resolver.set_macro(MACRO_NAME, ast::field_expr::create("x", ""));
+
+	ASSERT_FALSE(resolver.run(filter));
+	ASSERT_TRUE(resolver.get_resolved_macros().empty());
+	ASSERT_TRUE(resolver.get_unknown_macros().empty());
+}
