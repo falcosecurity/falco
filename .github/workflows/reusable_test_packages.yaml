@@ -28,11 +28,18 @@ jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
+    env:
+      ARTIFACT_SUFFIX: >-
+        ${{ format('{0}{1}-{2}{3}',
+        inputs.version,
+        inputs.static == true && '-static' || '',
+        inputs.arch,
+        inputs.sanitizers == true && '-sanitizers' || '') }}
     steps:
       - name: Download binary
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          name: falco-${{ inputs.version }}${{ inputs.static && '-static' || '' }}-${{ inputs.arch }}${{ inputs.sanitizers == true && '-sanitizers' || '' }}.tar.gz
+          name: falco-${{ env.ARTIFACT_SUFFIX }}.tar.gz
       
       - name: Install Falco package
         run: |
@@ -53,6 +60,11 @@ jobs:
           sudo apt update -y
           sudo apt install -y libasan5 libubsan1
           
+      - name: Enable core dumps
+        run: |
+          sudo sysctl -w kernel.core_pattern=/tmp/core.%e.%p
+          sudo prlimit --pid "$PPID" --core=unlimited:unlimited
+
       - name: Run tests
         env:
           LSAN_OPTIONS: "intercept_tls_get_addr=0"
@@ -65,4 +77,12 @@ jobs:
           static: ${{ inputs.static && 'true' || 'false' }}
           test-drivers: 'true'
           show-all: 'true'
-          report-name-suffix: ${{ inputs.static && '-static' || '' }}${{ inputs.sanitizers && '-sanitizers' || '' }}
+          report-name-suffix: ${{ env.ARTIFACT_SUFFIX }}
+
+      - name: Upload core dumps on failure
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: testing-core-dumps-${{ env.ARTIFACT_SUFFIX }}
+          path: /tmp/core.*
+          if-no-files-found: ignore
