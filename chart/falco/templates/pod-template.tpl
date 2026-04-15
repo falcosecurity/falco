@@ -82,10 +82,24 @@ spec:
       env:
         - name: HOST_ROOT
           value: /host
+        {{- /*
+          Detect a user-provided FALCO_HOSTNAME in extra.env. If present, suppress the
+          chart-default below to avoid a Kubernetes strategic-merge-patch collision on
+          UPDATE (env[].name is the merge key; duplicate entries collapse server-side
+          into a single invalid EnvVar with both `value` and `valueFrom` set).
+        */}}
+        {{- $userHostnameOverride := false }}
+        {{- range .Values.extra.env }}
+          {{- if eq .name "FALCO_HOSTNAME" }}
+            {{- $userHostnameOverride = true }}
+          {{- end }}
+        {{- end }}
+        {{- if and .Values.falcoHostnameEnv (not $userHostnameOverride) }}
         - name: FALCO_HOSTNAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- end }}
         - name: FALCO_K8S_NODE_NAME
           valueFrom:
             fieldRef:

@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v8.0.4
+
+* Make chart-injected `FALCO_HOSTNAME` overridable via `extra.env` and suppressible via `falcoHostnameEnv=false`; default behavior is unchanged.
+
 ## v8.0.3
 
 * Add missing `metadata.namespace` for `Role` and `RoleBinding`

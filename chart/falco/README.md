@@ -592,7 +592,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v8.0.3 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v8.0.4 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
@@ -754,6 +754,7 @@ The following table lists the main configurable parameters of the falco chart v8
 | falco.webserver.ssl_certificate | string | `"/etc/falco/falco.pem"` | Path to the combined SSL certificate and key file. You can generate a key/cert as follows: ``` $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem ``` |
 | falco.webserver.ssl_enabled | bool | `false` | Enable SSL. |
 | falco.webserver.threadiness | int | `0` | When the `threadiness` value is set to 0, Falco will automatically determine the appropriate number of threads based on the number of online cores in the system. |
+| falcoHostnameEnv | bool | `true` | Inject the chart-default `FALCO_HOSTNAME` env var. If `extra.env` contains `FALCO_HOSTNAME`, the user-provided value wins. |
 | falcoctl.artifact.follow | object | `{"args":["--log-format=json"],"enabled":true,"env":[],"envFrom":[],"mounts":{"volumeMounts":[]},"resources":{},"securityContext":{}}` | Runs "falcoctl artifact follow" command as a sidecar container. It is used to automatically check for updates given a list of artifacts. If an update is found it downloads and installs it in a shared folder (emptyDir) that is accessible by Falco. Rulesfiles are automatically detected and loaded by Falco once they are installed in the correct folder by falcoctl. To prevent new versions of artifacts from breaking Falco, the tool checks if it is compatible with the running version of Falco before installing it. |
 | falcoctl.artifact.follow.args | list | `["--log-format=json"]` | Arguments to pass to the falcoctl-artifact-follow sidecar container. |
 | falcoctl.artifact.follow.env | list | `[]` | Extra environment variables that will be pass onto falcoctl-artifact-follow sidecar container. |
