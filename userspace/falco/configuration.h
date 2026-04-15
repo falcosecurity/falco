@@ -402,8 +402,7 @@ struct convert<falco_configuration::plugin_config> {
 		}
 		rhs.m_library_path = node["library_path"].as<std::string>();
 		if(!rhs.m_library_path.empty() &&
-		   !std::filesystem::path(rhs.m_library_path).is_absolute() &&
-		   rhs.m_library_path.at(0) != '/') {
+		   !std::filesystem::path(rhs.m_library_path).has_root_path()) {
 			// Relative path: resolve against the plugins directory
 			// and verify the result stays within it.
 			auto full_path = std::filesystem::path(FALCO_ENGINE_PLUGINS_DIR) / rhs.m_library_path;
