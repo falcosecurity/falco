@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 The Falco Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+# Update the version and recompute the SHA256 checksum in the cmake module for falcosecurity/libs or the driver.
+#
+# Usage:
+#   ./update-deps-version driver <version>
+#   ./update-deps-version libs   <version>
+#
+# <version> can be a commit hash, tag, or branch name.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+usage() {
+	echo "Usage: $(basename "$0") {driver|libs} <version>" >&2
+	exit 1
+}
+
+# Stream a URL directly into sha256sum and print the hash.
+sha256_of_url() {
+	local url="$1"
+	echo "Computing SHA256 for ${url} ..." >&2
+	if command -v curl &>/dev/null; then
+		curl -fsSL --retry 3 "${url}" | sha256sum | awk '{print $1}'
+	elif command -v wget &>/dev/null; then
+		wget -q --tries=3 -O - "${url}" | sha256sum | awk '{print $1}'
+	else
+		echo "Error: neither curl nor wget found" >&2
+		exit 1
+	fi
+}
+
+[[ $# -ne 2 ]] && usage
+SUBCMD="$1"
+VERSION="$2"
+
+case "${SUBCMD}" in
+driver)
+	CMAKE_FILE="${REPO_ROOT}/cmake/modules/driver.cmake"
+	REPO="$(grep -oP 'set\(DRIVER_REPO\s+"\K[^"]+' "${CMAKE_FILE}")"
+	VERSION_VAR="DRIVER_VERSION"
+	CHECKSUM_VAR="DRIVER_CHECKSUM"
+	;;
+libs)
+	CMAKE_FILE="${REPO_ROOT}/cmake/modules/falcosecurity-libs.cmake"
+	REPO="$(grep -oP 'set\(FALCOSECURITY_LIBS_REPO\s+"\K[^"]+' "${CMAKE_FILE}")"
+	VERSION_VAR="FALCOSECURITY_LIBS_VERSION"
+	CHECKSUM_VAR="FALCOSECURITY_LIBS_CHECKSUM"
+	;;
+*)
+	usage
+	;;
+esac
+
+echo "Repo: ${REPO}, Version: ${VERSION}"
+
+SHA256="$(sha256_of_url "https://github.com/${REPO}/archive/${VERSION}.tar.gz")"
+echo "  SHA256: ${SHA256}"
+
+# note: in the following `sed` expressions, `-z` is required in order for `[[:space:]]+` to span across newlines.
+
+# Update the version string in the cmake file, skipping the "0.0.0-local" one by temporarily swapping it with a
+# placeholder and restoring it at the end (note: this is required because `sed` has no negative lookahead`).
+sed -z -i -E \
+	-e 's/"0\.0\.0-local"/PLACEHOLDER/g' \
+	-e "s/(set\(${VERSION_VAR}[[:space:]]+\")[^\"]+(\")/\\1${VERSION}\\2/" \
+	-e 's/PLACEHOLDER/"0.0.0-local"/g' \
+	"${CMAKE_FILE}"
+
+# Update the SHA256 checksum string in the cmake file.
+sed -z -i -E "s/(set\(${CHECKSUM_VAR}[[:space:]]+\"SHA256=)[a-fA-F0-9]+(\")/\\1${SHA256}\\2/" "${CMAKE_FILE}"
+
+echo "Updated ${CMAKE_FILE}"
