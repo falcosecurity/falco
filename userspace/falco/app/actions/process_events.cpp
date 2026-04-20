@@ -149,6 +149,8 @@ static falco::app::run_result do_inspect(
 	auto dumper = std::make_unique<sinsp_dumper>();
 	uint64_t dump_started_ts = 0;
 	uint64_t dump_deadline_ts = 0;
+	// Global hard cap on capture file size (MB). 0 means unlimited.
+	const uint64_t dump_max_file_size_mb = s.config->m_capture_max_file_size_mb;
 
 	//
 	// Start capture
@@ -347,14 +349,39 @@ static falco::app::run_result do_inspect(
 		}
 
 		// Save events when a dump is in progress.
-		// If the deadline is reached, close the dump.
+		// If any stop condition is reached, close the dump.
+		// Stop conditions (first one met wins):
+		//   - per-rule time deadline (soft, extended by matching rules)
+		//   - global size cap (hard, applies to any capture)
 		if(dump_started_ts != 0) {
 			dumper->dump(ev);
-			if(ev->get_ts() > dump_deadline_ts) {
+			auto reason = check_capture_stop(ev->get_ts(),
+			                                 dump_deadline_ts,
+			                                 dumper->written_bytes(),
+			                                 dump_max_file_size_mb);
+			if(reason != capture_stop_reason::NONE) {
 				dumper->flush();
+				uint64_t written = dumper->written_bytes();
 				dumper->close();
 				dump_started_ts = 0;
 				dump_deadline_ts = 0;
+				if(reason == capture_stop_reason::SIZE_LIMIT) {
+					static std::string rule = "Falco internal: capture size limit reached";
+					std::string msg =
+					        rule + ". Configured limit: " + std::to_string(dump_max_file_size_mb) +
+					        " MB.";
+					nlohmann::json fields;
+					fields["max_file_size_mb"] = dump_max_file_size_mb;
+					fields["written_bytes"] = written;
+					auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
+					                   std::chrono::system_clock::now().time_since_epoch())
+					                   .count();
+					s.outputs->handle_msg(now,
+					                      falco_common::PRIORITY_INFORMATIONAL,
+					                      msg,
+					                      rule,
+					                      fields);
+				}
 			}
 		}
 

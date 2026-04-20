@@ -35,6 +35,33 @@ void check_for_ignored_events(falco::app::state& s);
 void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os);
 void format_described_rules_as_text(const nlohmann::json& v, std::ostream& os);
 
+enum class capture_stop_reason {
+	NONE,
+	TIME_DEADLINE,
+	SIZE_LIMIT,
+};
+
+// Returns the reason why an active capture should stop, given the current
+// event timestamp, the dump deadline, and the number of bytes written so far.
+// Stop conditions combine with OR semantics (first met wins); time is checked
+// before size, so when both trip on the same event, TIME_DEADLINE is reported.
+// `max_file_size_mb == 0` means "unlimited".
+// Note: `written_bytes` is the dumper's on-disk counter (compressed, buffered
+// by zlib), so the check is approximate — the effective file size may overshoot
+// by up to one flush window.
+inline capture_stop_reason check_capture_stop(uint64_t evt_ts,
+                                              uint64_t dump_deadline_ts,
+                                              uint64_t written_bytes,
+                                              uint64_t max_file_size_mb) {
+	if(evt_ts >= dump_deadline_ts) {
+		return capture_stop_reason::TIME_DEADLINE;
+	}
+	if(max_file_size_mb > 0 && written_bytes >= max_file_size_mb * 1024 * 1024) {
+		return capture_stop_reason::SIZE_LIMIT;
+	}
+	return capture_stop_reason::NONE;
+}
+
 inline std::string generate_scap_file_path(const std::string& prefix,
                                            uint64_t timestamp,
                                            uint64_t evt_num) {

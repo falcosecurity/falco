@@ -326,7 +326,13 @@ const char config_schema_string[] = LONG_STRING_CONST(
                     ]
                 },
                 "default_duration": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "max_file_size_mb": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1048576
                 }
             },
             "title": "Capture"
