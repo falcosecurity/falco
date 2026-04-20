@@ -1571,3 +1571,137 @@ TEST_F(test_falco_engine, deprecated_evt_dir_via_macro_folded_scalar_condition_s
 	}
 	FAIL() << "no LOAD_DEPRECATED_ITEM warning found: " << m_load_result_string;
 }
+
+// Capture field tests
+
+TEST_F(test_falco_engine, rule_capture_enabled) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), true);
+}
+
+TEST_F(test_falco_engine, rule_capture_disabled_by_default) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), false);
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          0u);
+}
+
+TEST_F(test_falco_engine, rule_capture_duration) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_duration: 10000
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          10000u);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+
+- rule: test_rule
+  capture: false
+  override:
+    capture: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture"].template get<bool>(), false);
+}
+
+TEST_F(test_falco_engine, rule_override_capture_duration_replace) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: WARNING
+  capture: true
+  capture_duration: 5000
+
+- rule: test_rule
+  capture_duration: 15000
+  override:
+    capture_duration: replace
+)END";
+
+	std::string rule_name = "test_rule";
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["info"]["capture_duration"].template get<uint32_t>(),
+	          15000u);
+}
+
+TEST_F(test_falco_engine, rule_capture_duration_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture_duration: "not_a_number"
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+}
+
+TEST_F(test_falco_engine, rule_capture_wrong_type) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = close
+  output: user=%user.name
+  priority: INFO
+  capture: "yes"
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_failed) << m_load_result->schema_validation();
+}

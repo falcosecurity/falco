@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <falco/app/actions/helpers.h>
 #include <falco/configuration.h>
+#include <libsinsp/utils.h>
 #include <gtest/gtest.h>
 
 TEST(Capture, generate_scap_file_path_realistic_scenario) {
@@ -79,6 +80,7 @@ plugins:
 	EXPECT_EQ(config.m_capture_path_prefix, "/tmp/falco");
 	EXPECT_EQ(config.m_capture_mode, capture_mode_t::RULES);
 	EXPECT_EQ(config.m_capture_default_duration_ns, 5000 * 1000000LL);  // 5 seconds in ns
+	EXPECT_EQ(config.m_capture_max_file_size_mb, 0u);
 }
 
 TEST(Capture, capture_config_enabled_rules_mode) {
@@ -131,4 +133,93 @@ capture:
 
 	// Should throw an exception for invalid mode
 	EXPECT_THROW(res = config.init_from_content(config_content, {}), std::logic_error);
+}
+
+TEST(Capture, capture_config_with_max_file_size_mb) {
+	std::string config_content = R"(
+capture:
+  enabled: true
+  max_file_size_mb: 100
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+
+	EXPECT_EQ(config.m_capture_max_file_size_mb, 100u);
+}
+
+TEST(Capture, capture_config_with_all_limits) {
+	std::string config_content = R"(
+capture:
+  enabled: true
+  default_duration: 15000
+  max_file_size_mb: 500
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+
+	EXPECT_EQ(config.m_capture_default_duration_ns, 15000 * 1000000LL);
+	EXPECT_EQ(config.m_capture_max_file_size_mb, 500u);
+}
+
+TEST(Capture, capture_config_rejects_out_of_range_max_file_size_mb) {
+	// Exceeds the schema maximum (1 TB in MB)
+	std::string config_content = R"(
+capture:
+  enabled: true
+  max_file_size_mb: 99999999999
+)";
+
+	falco_configuration config;
+	config_loaded_res res;
+	ASSERT_NO_THROW(res = config.init_from_content(config_content, {}));
+	for(const auto& pair : res) {
+		EXPECT_TRUE(sinsp_utils::startswith(pair.second, yaml_helper::validation_failed))
+		        << pair.second;
+	}
+}
+
+TEST(Capture, check_capture_stop_no_stop) {
+	// Deadline in the future, no size cap
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, 0, 0),
+	          falco::app::actions::capture_stop_reason::NONE);
+	// Deadline in the future, size under cap
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, 1024, 1),
+	          falco::app::actions::capture_stop_reason::NONE);
+}
+
+TEST(Capture, check_capture_stop_time_deadline) {
+	// Exactly at deadline stops (>=)
+	EXPECT_EQ(falco::app::actions::check_capture_stop(200, 200, 0, 0),
+	          falco::app::actions::capture_stop_reason::TIME_DEADLINE);
+	// Past deadline
+	EXPECT_EQ(falco::app::actions::check_capture_stop(201, 200, 0, 0),
+	          falco::app::actions::capture_stop_reason::TIME_DEADLINE);
+}
+
+TEST(Capture, check_capture_stop_size_limit) {
+	// 1 MB cap, written exactly 1 MB -> stops
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, 1024 * 1024, 1),
+	          falco::app::actions::capture_stop_reason::SIZE_LIMIT);
+	// 1 MB cap, written over
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, 2 * 1024 * 1024, 1),
+	          falco::app::actions::capture_stop_reason::SIZE_LIMIT);
+	// 1 MB cap, written just under -> no stop
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, 1024 * 1024 - 1, 1),
+	          falco::app::actions::capture_stop_reason::NONE);
+}
+
+TEST(Capture, check_capture_stop_zero_means_unlimited) {
+	// 0 MB cap means unlimited, even with huge written_bytes
+	EXPECT_EQ(falco::app::actions::check_capture_stop(100, 200, UINT64_MAX, 0),
+	          falco::app::actions::capture_stop_reason::NONE);
+}
+
+TEST(Capture, check_capture_stop_time_wins_when_both_tripped) {
+	// Both conditions met: time is reported first (matches check order)
+	EXPECT_EQ(falco::app::actions::check_capture_stop(200, 200, 10 * 1024 * 1024, 1),
+	          falco::app::actions::capture_stop_reason::TIME_DEADLINE);
 }
