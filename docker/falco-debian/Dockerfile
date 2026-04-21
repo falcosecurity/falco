@@ -29,8 +29,8 @@ RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg \
 WORKDIR /
 
 RUN curl -fsSL https://falco.org/repo/falcosecurity-packages.asc \
-	| gpg --dearmor -o /usr/share/keyrings/falcosecurity.gpg \
-	&& echo "deb [signed-by=/usr/share/keyrings/falcosecurity.gpg] https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
+	| gpg --dearmor -o /usr/share/keyrings/falco-archive-keyring.gpg \
+	&& echo "deb [signed-by=/usr/share/keyrings/falco-archive-keyring.gpg] https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
 	&& apt-get update -y \
 	&& if [ "$FALCO_VERSION" = "latest" ]; then FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco; else FALCO_DRIVER_CHOICE=none apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
 	&& apt-get clean \
