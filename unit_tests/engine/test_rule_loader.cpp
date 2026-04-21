@@ -1541,3 +1541,33 @@ TEST_F(test_falco_engine, deprecated_evt_dir_folded_scalar_condition_snippet) {
 	}
 	FAIL() << "no warning snippet containing 'evt.dir': " << m_load_result_string;
 }
+
+TEST_F(test_falco_engine, deprecated_evt_dir_via_macro_folded_scalar_condition_snippet) {
+	std::string rules_content = R"END(
+- macro: spawned_process
+  condition: evt.type in (execve, execveat) and evt.dir = <
+
+- rule: test_rule
+  desc: test rule
+  condition: >
+    spawned_process and proc.name = bash
+  output: command=%proc.cmdline
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_TRUE(has_warnings());
+	ASSERT_TRUE(check_warning_message("evt.dir")) << m_load_result_string;
+
+	for(const auto& warn : m_load_result_json["warnings"]) {
+		if(warn["code"] != "LOAD_DEPRECATED_ITEM") {
+			continue;
+		}
+		std::string snippet = warn["context"]["snippet"];
+		ASSERT_EQ(snippet.find("condition: >"), std::string::npos) << snippet;
+		ASSERT_NE(snippet.find("spawned_process"), std::string::npos) << snippet;
+		return;
+	}
+	FAIL() << "no LOAD_DEPRECATED_ITEM warning found: " << m_load_result_string;
+}
