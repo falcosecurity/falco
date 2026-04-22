@@ -201,8 +201,6 @@ void falco_outputs::handle_msg(uint64_t ts,
 		char time_ns[12];   // sizeof ".sssssssssZ"
 		std::string iso8601evttime;
 		struct tm tm_buf;
-
-		struct tm tm_buf;
 		falco_gmtime_r(&evttime, &tm_buf);
 		strftime(time_sec, sizeof(time_sec), "%FT%T", &tm_buf);
 		snprintf(time_ns, sizeof(time_ns), ".%09luZ", ts % 1000000000);
