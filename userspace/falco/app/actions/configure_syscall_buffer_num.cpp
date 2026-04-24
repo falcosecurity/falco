@@ -32,14 +32,30 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_num(
 		return run_result::fatal("cannot get the number of online CPUs from the system\n");
 	}
 
-	if(s.config->m_modern_ebpf.m_cpus_for_each_buffer > online_cpus) {
-		falco_logger::log(falco_logger::level::WARNING,
-		                  "you required a buffer every '" +
-		                          std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
-		                          "' CPUs but there are only '" + std::to_string(online_cpus) +
-		                          "' online CPUs. Falco changed the config to: one buffer every '" +
-		                          std::to_string(online_cpus) + "' CPUs\n");
-		s.config->m_modern_ebpf.m_cpus_for_each_buffer = online_cpus;
+	auto num_workers = s.config->m_modern_ebpf.m_num_worker_threads;
+	if(num_workers > 1) {
+		if(num_workers > online_cpus) {
+			falco_logger::log(falco_logger::level::WARNING,
+			                  "[EXPERIMENTAL] Requested " + std::to_string(num_workers) +
+			                          " worker threads but only " +
+			                          std::to_string(online_cpus) +
+			                          " CPUs are online. Performance may degrade.\n");
+		}
+		falco_logger::log(falco_logger::level::INFO,
+		                  "[EXPERIMENTAL] Multi-threaded mode with " +
+		                          std::to_string(num_workers) +
+		                          " worker threads (TGID-partitioned ring buffers).\n");
+	} else {
+		if(s.config->m_modern_ebpf.m_cpus_for_each_buffer > online_cpus) {
+			falco_logger::log(
+			        falco_logger::level::WARNING,
+			        "you required a buffer every '" +
+			                std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
+			                "' CPUs but there are only '" + std::to_string(online_cpus) +
+			                "' online CPUs. Falco changed the config to: one buffer every '" +
+			                std::to_string(online_cpus) + "' CPUs\n");
+			s.config->m_modern_ebpf.m_cpus_for_each_buffer = online_cpus;
+		}
 	}
 #endif
 	return run_result::ok();

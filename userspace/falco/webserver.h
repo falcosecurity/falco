@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <httplib.h>
 
+#include <atomic>
 #include <memory>
 #include <thread>
 
@@ -47,4 +48,7 @@ private:
 	std::unique_ptr<httplib::Server> m_server = nullptr;
 	std::thread m_server_thread;
 	std::atomic<bool> m_failed;
+	/// Set after inspectors are open; /metrics is registered before listen() to avoid racing
+	/// httplib route registration with worker threads handling other endpoints.
+	std::atomic<bool> m_prometheus_metrics_ready{false};
 };

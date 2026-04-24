@@ -58,6 +58,23 @@ void falco_webserver::start(const falco::app::state &state,
 		              res.set_content(versions_json_str, "application/json");
 	              });
 
+	// Register /metrics before listen(): dynamic Get() after listen() races with httplib workers
+	// serving concurrent requests (TSAN). Handlers stay gated until inspectors are open.
+	if(state.config->m_metrics_enabled &&
+	   state.config->m_webserver_config.m_prometheus_metrics_enabled) {
+		m_prometheus_metrics_ready.store(false, std::memory_order_release);
+		m_server->Get("/metrics", [this, &state](const httplib::Request &, httplib::Response &res) {
+			if(!m_prometheus_metrics_ready.load(std::memory_order_acquire)) {
+				res.status = 503;
+				res.set_content("# Falco metrics not ready (inspectors not open yet)\n",
+				                falco_metrics::content_type_prometheus);
+				return;
+			}
+			res.set_content(falco_metrics::to_text_prometheus(state),
+			                falco_metrics::content_type_prometheus);
+		});
+	}
+
 	// run server in a separate thread
 	if(!m_server->is_valid()) {
 		m_server = nullptr;
@@ -104,9 +121,6 @@ void falco_webserver::stop() {
 void falco_webserver::enable_prometheus_metrics(const falco::app::state &state) {
 	if(state.config->m_metrics_enabled &&
 	   state.config->m_webserver_config.m_prometheus_metrics_enabled) {
-		m_server->Get("/metrics", [&state](const httplib::Request &, httplib::Response &res) {
-			res.set_content(falco_metrics::to_text_prometheus(state),
-			                falco_metrics::content_type_prometheus);
-		});
+		m_prometheus_metrics_ready.store(true, std::memory_order_release);
 	}
 }

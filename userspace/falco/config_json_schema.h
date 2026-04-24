@@ -17,7 +17,21 @@ limitations under the License.
 
 #pragma once
 
-#define LONG_STRING_CONST(...) #__VA_ARGS__
+/* Omitted from config JSON schema when libsinsp is built without ENABLE_MULTI_THREAD. */
+#if defined(ENABLE_MULTI_THREAD)
+#define FALCO_CONFIG_SCHEMA_MODERN_EBPF_EXTRA_PROPS \
+	, \
+	"num_worker_threads": { \
+		"type": "integer" \
+	}
+#else
+#define FALCO_CONFIG_SCHEMA_MODERN_EBPF_EXTRA_PROPS
+#endif
+
+/* Two-step stringify so nested macros (e.g. FALCO_CONFIG_SCHEMA_MODERN_EBPF_EXTRA_PROPS) expand
+ * before #; a single #__VA_ARGS__ can stringify the macro name instead of its replacement. */
+#define CONFIG_SCHEMA_STR_HELPER(...) #__VA_ARGS__
+#define LONG_STRING_CONST(...) CONFIG_SCHEMA_STR_HELPER(__VA_ARGS__)
 
 const char config_schema_string[] = LONG_STRING_CONST(
 
@@ -400,6 +414,7 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "drop_failed_exit": {
                     "type": "boolean"
                 }
+                FALCO_CONFIG_SCHEMA_MODERN_EBPF_EXTRA_PROPS
             },
             "title": "ModernEbpf"
         },

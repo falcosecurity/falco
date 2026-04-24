@@ -264,6 +264,26 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		m_modern_ebpf.m_drop_failed_exit =
 		        m_config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit",
 		                                  DEFAULT_DROP_FAILED_EXIT);
+#if defined(ENABLE_MULTI_THREAD)
+		m_modern_ebpf.m_num_worker_threads =
+		        m_config.get_scalar<uint16_t>("engine.modern_ebpf.num_worker_threads", 0);
+#else
+		{
+			/* Schema may warn (not fail) on unknown keys; accept 0 as the default from stock
+			 * falco.yaml but reject a non-zero request. */
+			uint16_t requested =
+			        m_config.get_scalar<uint16_t>("engine.modern_ebpf.num_worker_threads", 0);
+			if(requested != 0) {
+				throw std::logic_error(
+				        "Error reading config file (" + config_name +
+				        "): engine.modern_ebpf.num_worker_threads=" + std::to_string(requested) +
+				        " is set, but falcosecurity/libs was built without multi-thread support "
+				        "(ENABLE_MULTI_THREAD is off). Remove this setting or rebuild libs with "
+				        "-DENABLE_MULTI_THREAD=ON.");
+			}
+			m_modern_ebpf.m_num_worker_threads = 0;
+		}
+#endif
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file =

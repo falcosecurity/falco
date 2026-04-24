@@ -98,7 +98,6 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 		char time_sec[20];  // sizeof "YYYY-MM-DDTHH:MM:SS"
 		char time_ns[12];   // sizeof ".sssssssssZ"
 		std::string iso8601evttime;
-
 		struct tm tm_buf;
 		falco_gmtime_r(&evttime, &tm_buf);
 		strftime(time_sec, sizeof(time_sec), "%FT%T", &tm_buf);
