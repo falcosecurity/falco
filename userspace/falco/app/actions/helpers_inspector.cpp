@@ -113,13 +113,13 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 				                           true,
 				                           s.selected_sc_set);
 			} else {
+				auto cpus_for_each_buf = s.config->m_modern_ebpf.m_cpus_for_each_buffer;
+				double buffers_num = cpus_for_each_buf == 0 ? 0.0 : 1.0 / cpus_for_each_buf;
 				falco_logger::log(
 				        falco_logger::level::INFO,
-				        "One ring buffer every '" +
-				                std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +
-				                "' CPUs.");
+				        "One ring buffer every '" + std::to_string(cpus_for_each_buf) + "' CPUs.");
 				inspector->open_modern_bpf(s.syscall_buffer_bytes_size,
-				                           s.config->m_modern_ebpf.m_cpus_for_each_buffer,
+				                           buffers_num,
 				                           DEFAULT_ITERS_NUM,
 				                           true,
 				                           s.selected_sc_set);
