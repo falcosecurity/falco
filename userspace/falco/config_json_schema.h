@@ -580,6 +580,10 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "jemalloc_stats_enabled": {
                     "type": "boolean"
+                },
+                "include_k8s_metadata": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "minProperties": 1,
