@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2026 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,9 +21,12 @@ limitations under the License.
 #include "../../engine/output_format.h"
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <set>
 #include <list>
+
+#include "../maturity.h"
 
 namespace cxxopts {
 class Options;
@@ -82,6 +85,18 @@ public:
 private:
 	void define(cxxopts::Options& opts);
 	std::string m_usage_str;
+};
+
+// CLI flag maturity table. Add entries here for sandbox or deprecated flags.
+// Stable/incubating flags do not need to be listed.
+struct flag_maturity_entry {
+	std::string_view flag;
+	maturity_level level;
+};
+
+inline constexpr flag_maturity_entry flag_maturity_table[] = {
+        {"markdown", maturity_level::DEPRECATED},
+        {"p", maturity_level::DEPRECATED},
 };
 
 };  // namespace app

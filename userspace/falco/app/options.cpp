@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2026 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -118,9 +118,20 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 			return false;
 		}
 	} else if(markdown) {
-		// If markdown flag is set and format is not specified, use MARKDOWN format
-		fprintf(stderr, "WARNING: --markdown is deprecated, use --format markdown instead.\n");
 		output_fmt = output_format::MARKDOWN;
+	}
+
+	// Emit maturity notices for any flagged CLI options that were used.
+	// The logger is not initialized yet, so use stderr directly.
+	for(const auto &entry : flag_maturity_table) {
+		if(m_cmdline_parsed.count(std::string(entry.flag)) > 0) {
+			fprintf(stderr,
+			        "%s: --%s is %s.\n",
+			        entry.level == maturity_level::DEPRECATED ? "WARNING" : "NOTICE",
+			        std::string(entry.flag).c_str(),
+			        entry.level == maturity_level::DEPRECATED ? "deprecated"
+			                                                  : "experimental (sandbox)");
+		}
 	}
 
 	return true;

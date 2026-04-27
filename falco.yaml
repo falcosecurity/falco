@@ -47,10 +47,11 @@
 # Falco engine
 #     engine [Stable]
 # Falco captures
-#     capture [Sandbox]
+#     capture [Incubating]
 # Falco plugins
 #     load_plugins [Stable]
 #     plugins [Stable]
+#     plugins_hostinfo [Sandbox]
 # Falco outputs settings
 #     time_format_iso_8601 [Stable]
 #     buffer_format_base64 [Stable]
@@ -63,7 +64,8 @@
 #     buffered_outputs [Stable]
 #     rule_matching [Incubating]
 #     outputs_queue [Stable]
-#     append_output [Stable]
+#     append_output [Incubating]
+#     static_fields [Sandbox]
 # Falco outputs channels
 #     stdout_output [Stable]
 #     syslog_output [Stable]
@@ -72,6 +74,7 @@
 #     program_output [Stable]
 # Falco exposed services
 #     webserver [Stable]
+#     webserver.prometheus_metrics_enabled [Incubating]
 # Falco logging / alerting / metrics related to software functioning (basic)
 #     log_stderr [Stable]
 #     log_syslog [Stable]
@@ -80,7 +83,7 @@
 # Falco logging / alerting / metrics related to software functioning (advanced)
 #     output_timeout [Stable]
 #     syscall_event_timeouts [Stable]
-#     syscall_event_drops [Stable] -> [CHANGE NOTICE] Automatic notifications will be simplified in Falco 0.38! If you depend on the detailed drop counters payload, use 'metrics.output_rule' along with 'metrics.kernel_event_counters_enabled' instead
+#     syscall_event_drops [Stable]
 #     metrics [Stable]
 # Falco performance tuning (advanced)
 #     base_syscalls [Stable]
@@ -447,7 +450,7 @@ engine:
 # Falco captures #
 ##################
 
-# [Sandbox] `capture`
+# [Incubating] `capture`
 #
 # -- Falco captures allow you to record events and their associated data for
 # later analysis. This feature is particularly useful for debugging and
@@ -596,7 +599,7 @@ plugins_hostinfo: true
 # the /etc/localtime configuration.
 time_format_iso_8601: false
 
-# [Incubating] `buffer_format_base64`
+# [Stable] `buffer_format_base64`
 #
 # -- When enabled, Falco will output data buffer with base64 encoding. This is useful
 # for encoding binary data that needs to be used over media designed to consume
@@ -629,7 +632,7 @@ json_output: false
 # case.
 json_include_output_property: true
 
-# [Incubating] `json_include_message_property`
+# [Stable] `json_include_message_property`
 #
 # -- When using JSON output in Falco, you have the option to include the formatted
 # rule output without timestamp or priority. For instance, if a rule specifies
@@ -638,7 +641,7 @@ json_include_output_property: true
 # information.
 json_include_message_property: false
 
-# [Incubating] `json_include_output_fields_property`
+# [Stable] `json_include_output_fields_property`
 #
 # -- When using JSON output in Falco, you have the option to include the individual
 # output fields for easier access. To reduce the logging volume, it is recommended
@@ -711,7 +714,7 @@ outputs_queue:
   # effectively set to the largest possible long value, disabling this setting.
   capacity: 0
 
-# [Sandbox] `append_output`
+# [Incubating] `append_output`
 #
 # -- Add information to the Falco output.
 # With this setting you can add more information to the Falco output message, customizable by
@@ -1108,9 +1111,7 @@ syscall_event_drops:
 # before events are sent to userspace, but can include scap userspace stats as
 # well.
 #
-# It's important to note that the output fields and their names can be subject
-# to change until the metrics feature reaches a stable release.
-# In addition, the majority of fields represent an instant snapshot, with the
+# The majority of fields represent an instant snapshot, with the
 # exception of event rates per second and drop percentage stats. These values
 # are computed based on the delta between two snapshots.
 #
