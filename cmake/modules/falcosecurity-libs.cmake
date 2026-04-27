@@ -42,9 +42,9 @@ else()
 	# version (or branch, or commit) just pass the variable - ie., `cmake
 	# -DFALCOSECURITY_LIBS_VERSION=dev ..`
 	if(NOT FALCOSECURITY_LIBS_VERSION)
-		set(FALCOSECURITY_LIBS_VERSION "0.24.0-rc1")
+		set(FALCOSECURITY_LIBS_VERSION "3b9f6039e182ce0538e7beea9c5bd39dd3608ece")
 		set(FALCOSECURITY_LIBS_CHECKSUM
-			"SHA256=76527b9a15988bf1b4b3b56a40603008d436ba6dae0cff7e70fad9931b233bd0"
+			"SHA256=d6fa8a713a1ee64b4de8e03ec6d990ae04d4a0db5a97c02e5c5783ac094407cf"
 		)
 	endif()
 
