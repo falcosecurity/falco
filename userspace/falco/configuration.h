@@ -199,6 +199,7 @@ public:
 	std::string m_capture_path_prefix;
 	capture_mode_t m_capture_mode = capture_mode_t::RULES;
 	uint64_t m_capture_default_duration_ns;
+	uint64_t m_capture_max_file_size_mb;
 
 	// Falco engine
 	engine_kind_t m_engine_mode = engine_kind_t::KMOD;

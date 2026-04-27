@@ -461,11 +461,29 @@ engine:
 # 2. `all_rules`: Captures events when any enabled rule is triggered.
 #
 # When a capture starts, Falco records events from the moment the triggering rule
-# fires until the deadline is reached. The deadline is determined by the rule's
-# `capture_duration` if specified, otherwise the `default_duration` is used.
-# If additional rules trigger during an active capture, the deadline is extended
-# accordingly. Once the deadline expires, the capture stops and data is written
-# to a file. Subsequent captures create new files with unique names.
+# fires until a stop condition is reached. Two stop conditions are available:
+#
+# - Time (per-rule, soft): determined by the rule's `capture_duration` if
+#   specified, otherwise `default_duration` is used. If additional rules trigger
+#   during an active capture, the deadline is extended accordingly (the longest
+#   deadline wins). For this reason, the time limit has "at least" semantics:
+#   the capture is guaranteed to last at least that long, but can last longer if
+#   other rules keep matching.
+#
+# - File size (global, hard): `max_file_size_mb` applies to any capture,
+#   regardless of which rule triggered it. Unlike the time limit, it cannot be
+#   overridden or extended by rules: if a capture reaches this size, it stops.
+#   N.B. The size check uses the dumper's compressed on-disk counter, which is
+#   updated in chunks as zlib flushes its internal buffers. The effective file
+#   size is therefore approximate and may overshoot the configured value by up
+#   to one flush window. For this reason, avoid very small values (under a few
+#   MB), which may be inaccurate, and consider tuning with a healthy margin.
+#
+# The first stop condition met wins (OR semantics). Once a stop condition is
+# met, the capture stops and data is written to a file. Subsequent captures
+# create new files with unique names. When a capture stops because of
+# `max_file_size_mb`, Falco emits an internal INFO message so the truncation
+# is visible in the configured outputs.
 #
 # Captured data is stored in files with a `.scap` extension, which can be
 # analyzed later using:
@@ -483,7 +501,8 @@ engine:
 # Use `capture.mode` to choose between `rules` and `all_rules` modes.
 #
 # Set `capture.default_duration` to define the default capture duration
-# in milliseconds.
+# in milliseconds. Optionally, set `capture.max_file_size_mb` to enforce a
+# hard upper bound on the capture file size in MB (applies to any capture).
 #
 # --- [Suggestions]
 #
@@ -512,6 +531,10 @@ capture:
   mode: rules
   # -- Default capture duration in milliseconds if not specified in the rule.
   default_duration: 5000
+  # -- Global hard cap on capture file size in MB (0 = unlimited).
+  # This limit applies to any capture and cannot be overridden or extended by rules.
+  # The check is approximate (see the section above): prefer values of at least a few MB.
+  # max_file_size_mb: 100
 
 #################
 # Falco plugins #
