@@ -18,6 +18,8 @@
 
 option(USE_BUNDLED_GPERFTOOLS "Build gperftools from source" ${USE_BUNDLED_DEPS})
 
+include(ExternalProjectToolchain)
+
 if(GPERFTOOLS_INCLUDE_DIR)
 	# Already have gperftools configured
 elseif(NOT USE_BUNDLED_GPERFTOOLS)
@@ -77,6 +79,9 @@ else()
 	set(GPERFTOOLS_CONFIGURE_ARGS --enable-cpu-profiler --disable-heap-profiler
 								  --disable-heap-checker --disable-debugalloc
 	)
+	if(NOT BUILD_SHARED_LIBS)
+		list(APPEND GPERFTOOLS_CONFIGURE_ARGS --disable-shared)
+	endif()
 
 	# Check if libunwind is available for better stack traces
 	find_library(LIBUNWIND_LIBRARY NAMES unwind)
@@ -88,13 +93,15 @@ else()
 		message(STATUS "gperftools: libunwind not found, using frame pointers for stack traces")
 	endif()
 
+	falcosecurity_external_project_env(GPERFTOOLS_EXTERNAL_PROJECT_ENV)
 	ExternalProject_Add(
 		gperftools
 		PREFIX "${PROJECT_BINARY_DIR}/gperftools-prefix"
 		URL "${GPERFTOOLS_URL}"
 		URL_HASH "${GPERFTOOLS_URL_HASH}"
-		CONFIGURE_COMMAND <SOURCE_DIR>/configure ${GPERFTOOLS_CONFIGURE_ARGS}
-		BUILD_COMMAND ${CMD_MAKE} ${PROCESSOUR_COUNT_MAKE_FLAG}
+		CONFIGURE_COMMAND ${GPERFTOOLS_EXTERNAL_PROJECT_ENV} <SOURCE_DIR>/configure
+						  ${FALCOSECURITY_AUTOTOOLS_HOST_FLAG} ${GPERFTOOLS_CONFIGURE_ARGS}
+		BUILD_COMMAND ${GPERFTOOLS_EXTERNAL_PROJECT_ENV} ${CMD_MAKE} ${PROCESSOUR_COUNT_MAKE_FLAG}
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND ""
 		UPDATE_COMMAND ""

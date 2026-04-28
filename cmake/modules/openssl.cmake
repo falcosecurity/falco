@@ -15,6 +15,8 @@
 
 option(USE_BUNDLED_OPENSSL "Enable building of the bundled OpenSSL" ${USE_BUNDLED_DEPS})
 
+include(ExternalProjectToolchain)
+
 if(OPENSSL_INCLUDE_DIR)
 	# we already have openssl
 elseif(NOT USE_BUNDLED_OPENSSL)
@@ -44,17 +46,31 @@ else()
 
 		message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
+		falcosecurity_external_project_env(OPENSSL_EXTERNAL_PROJECT_ENV)
+		set(OPENSSL_TARGET_FLAG "")
+		if(CMAKE_C_COMPILER_TARGET)
+			set(OPENSSL_TARGET_FLAG "--target=${CMAKE_C_COMPILER_TARGET}")
+		endif()
+		# ./config auto-detects the host platform via uname, which is wrong when cross-compiling.
+		# Use ./Configure with an explicit target instead.
+		if(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_PROCESSOR)
+			set(OPENSSL_CONFIGURE_CMD ./Configure linux-${CMAKE_SYSTEM_PROCESSOR})
+		else()
+			set(OPENSSL_CONFIGURE_CMD ./config)
+		endif()
 		ExternalProject_Add(
 			openssl
 			PREFIX "${PROJECT_BINARY_DIR}/openssl-prefix"
 			URL "https://github.com/openssl/openssl/releases/download/openssl-3.1.4/openssl-3.1.4.tar.gz"
 			URL_HASH "SHA256=840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3"
-			CONFIGURE_COMMAND ./config ${OPENSSL_SHARED_OPTION} ${OPENSSL_PIC_OPTION}
-							  --prefix=${OPENSSL_INSTALL_DIR} --libdir=lib
-			BUILD_COMMAND make
+			CONFIGURE_COMMAND
+				${OPENSSL_EXTERNAL_PROJECT_ENV} ${OPENSSL_CONFIGURE_CMD} ${OPENSSL_SHARED_OPTION}
+				${OPENSSL_PIC_OPTION} --prefix=${OPENSSL_INSTALL_DIR} --libdir=lib
+				${OPENSSL_TARGET_FLAG}
+			BUILD_COMMAND ${OPENSSL_EXTERNAL_PROJECT_ENV} make
 			BUILD_IN_SOURCE 1
 			BUILD_BYPRODUCTS ${OPENSSL_LIBRARY_SSL} ${OPENSSL_LIBRARY_CRYPTO}
-			INSTALL_COMMAND make install_sw
+			INSTALL_COMMAND ${OPENSSL_EXTERNAL_PROJECT_ENV} make install_sw
 		)
 		install(
 			FILES "${OPENSSL_LIBRARY_SSL}"
