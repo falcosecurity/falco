@@ -92,6 +92,7 @@ jobs:
       - name: Prepare project
         run: |
           cmake -B build -S . \
+              ${ZIG_TOOLCHAIN_FILE:+-DCMAKE_TOOLCHAIN_FILE=$ZIG_TOOLCHAIN_FILE} \
               -DCMAKE_BUILD_TYPE=RelWithDebInfo \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
@@ -164,6 +165,7 @@ jobs:
       - name: Prepare project
         run: |
           cmake -B build -S . \
+              ${ZIG_TOOLCHAIN_FILE:+-DCMAKE_TOOLCHAIN_FILE=$ZIG_TOOLCHAIN_FILE} \
               -DCMAKE_BUILD_TYPE=Debug \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \

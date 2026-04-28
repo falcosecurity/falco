@@ -15,6 +15,8 @@
 
 option(USE_BUNDLED_JEMALLOC "Use bundled jemalloc allocator" ${USE_BUNDLED_DEPS})
 
+include(ExternalProjectToolchain)
+
 if(JEMALLOC_INCLUDE)
 	# we already have JEMALLOC
 elseif(NOT USE_BUNDLED_JEMALLOC)
@@ -45,15 +47,17 @@ else()
 	else()
 		set(JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS "")
 	endif()
+	falcosecurity_external_project_env(JEMALLOC_EXTERNAL_PROJECT_ENV)
 	ExternalProject_Add(
 		malloc
 		PREFIX "${PROJECT_BINARY_DIR}/jemalloc-prefix"
 		URL "https://github.com/jemalloc/jemalloc/archive/refs/tags/5.3.0.tar.gz"
 		URL_HASH "SHA256=ef6f74fd45e95ee4ef7f9e19ebe5b075ca6b7fbe0140612b2a161abafb7ee179"
-		CONFIGURE_COMMAND ./autogen.sh --enable-prof --disable-libdl
-						  ${JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS}
+		CONFIGURE_COMMAND
+			${JEMALLOC_EXTERNAL_PROJECT_ENV} ./autogen.sh --enable-prof --disable-libdl
+			${FALCOSECURITY_AUTOTOOLS_HOST_FLAG} ${JEMALLOC_ARCH_SPECIFIC_CONFIGURE_ARGS}
 		BUILD_IN_SOURCE 1
-		BUILD_COMMAND make build_lib_static
+		BUILD_COMMAND ${JEMALLOC_EXTERNAL_PROJECT_ENV} make build_lib_static
 		INSTALL_COMMAND ""
 		UPDATE_COMMAND ""
 		BUILD_BYPRODUCTS ${MALLOC_LIB}
