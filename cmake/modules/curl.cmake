@@ -15,6 +15,7 @@
 
 option(USE_BUNDLED_CURL "Enable building of the bundled curl" ${USE_BUNDLED_DEPS})
 
+include(ExternalProjectToolchain)
 include(openssl)
 include(zlib)
 
@@ -57,6 +58,7 @@ else()
 	endif()
 
 	if(NOT TARGET curl)
+		falcosecurity_external_project_env(CURL_EXTERNAL_PROJECT_ENV)
 		ExternalProject_Add(
 			curl
 			PREFIX "${PROJECT_BINARY_DIR}/curl-prefix"
@@ -64,16 +66,17 @@ else()
 			URL "https://github.com/curl/curl/releases/download/curl-8_7_1/curl-8.7.1.tar.bz2"
 			URL_HASH "SHA256=05bbd2b698e9cfbab477c33aa5e99b4975501835a41b7ca6ca71de03d8849e76"
 			CONFIGURE_COMMAND
-				./configure ${CURL_SSL_OPTION} ${CURL_ZLIB_OPTION} ${CURL_STATIC_OPTION}
-				${CURL_PIC_OPTION} --enable-optimize --disable-curldebug --disable-rt --enable-http
-				--disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp
-				--disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb
-				--disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp
-				--without-winssl --without-polarssl --without-cyassl --without-nss --without-axtls
-				--without-librtmp --without-winidn --without-libidn2 --without-libpsl
-				--without-nghttp2 --without-libssh2 --with-ca-path=/etc/ssl/certs/
-				--disable-threaded-resolver --without-brotli --without-zstd
-			BUILD_COMMAND make
+				${CURL_EXTERNAL_PROJECT_ENV} ./configure ${FALCOSECURITY_AUTOTOOLS_HOST_FLAG}
+				${CURL_SSL_OPTION} ${CURL_ZLIB_OPTION} ${CURL_STATIC_OPTION} ${CURL_PIC_OPTION}
+				--enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp
+				--disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet
+				--disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp
+				--disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl
+				--without-polarssl --without-cyassl --without-nss --without-axtls --without-librtmp
+				--without-winidn --without-libidn2 --without-libpsl --without-nghttp2
+				--without-libssh2 --with-ca-path=/etc/ssl/certs/ --disable-threaded-resolver
+				--without-brotli --without-zstd
+			BUILD_COMMAND ${CURL_EXTERNAL_PROJECT_ENV} make
 			BUILD_IN_SOURCE 1
 			BUILD_BYPRODUCTS ${CURL_LIBRARIES}
 			INSTALL_COMMAND ""
