@@ -154,7 +154,7 @@ void falco_outputs::handle_event(sinsp_evt *evt,
 	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
 void falco_outputs::handle_event_formatted(uint64_t ts,
@@ -173,7 +173,7 @@ void falco_outputs::handle_event_formatted(uint64_t ts,
 	cmsg.fields = fields;
 	cmsg.tags = tags;
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
 void falco_outputs::handle_msg(uint64_t ts,
@@ -237,7 +237,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 	}
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
 void falco_outputs::cleanup_outputs() {
@@ -273,10 +273,10 @@ void falco_outputs::stop_worker() {
 inline void falco_outputs::push_ctrl(ctrl_msg_type cmt) {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.type = cmt;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
-inline void falco_outputs::push(const ctrl_msg &cmsg) {
+inline void falco_outputs::push(ctrl_msg cmsg) {
 #ifndef __EMSCRIPTEN__
 	{
 		std::lock_guard<std::mutex> lock(m_queue_mutex);
@@ -288,7 +288,7 @@ inline void falco_outputs::push(const ctrl_msg &cmsg) {
 			m_outputs_queue_num_drops++;
 			return;
 		}
-		m_queue.push(cmsg);
+		m_queue.push(std::move(cmsg));
 	}
 	m_queue_cv.notify_one();
 #else
