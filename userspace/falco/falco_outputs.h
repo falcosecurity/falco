@@ -17,17 +17,17 @@ limitations under the License.
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
 #include <map>
+#include <mutex>
+#include <queue>
 #include <thread>
 
 #include "falco_common.h"
 #include "falco_engine.h"
 #include "outputs.h"
 #include "formats.h"
-#ifndef __EMSCRIPTEN__
-#include "tbb/concurrent_queue.h"
-#endif
 
 /*!
     \brief This class acts as the primary interface between a program and the
@@ -132,8 +132,10 @@ private:
 	};
 
 #ifndef __EMSCRIPTEN__
-	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
-	falco_outputs_cbq m_queue;
+	std::queue<ctrl_msg> m_queue;
+	std::mutex m_queue_mutex;
+	std::condition_variable m_queue_cv;
+	size_t m_queue_capacity;
 #endif
 
 	std::atomic<uint64_t> m_outputs_queue_num_drops = 0;
