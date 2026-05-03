@@ -386,6 +386,10 @@ static falco::app::run_result do_inspect(
 		}
 
 		num_evts++;
+		// Mirror the per-source counter into the shared state so the
+		// Prometheus output sink can publish a global `num_evts` metric
+		// alongside the JSON / text sinks. See issue #3584.
+		s.num_evts.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	return run_result::ok();
