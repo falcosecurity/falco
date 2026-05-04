@@ -17,14 +17,15 @@ limitations under the License.
 
 #include "filter_details_resolver.h"
 
+#include <optional>
 #include <stdexcept>
 
 using namespace libsinsp::filter;
 
-static inline std::string get_field_name(const std::string& name, const std::string& arg) {
+static std::string get_field_name(const std::string& name, const std::optional<std::string>& arg) {
 	std::string fld = name;
-	if(!arg.empty()) {
-		fld += "[" + arg + "]";
+	if(arg && !arg->empty()) {
+		fld += "[" + *arg + "]";
 	}
 	return fld;
 }
