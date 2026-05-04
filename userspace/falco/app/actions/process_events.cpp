@@ -398,6 +398,7 @@ static falco::app::run_result do_inspect(
 struct worker_context {
 	std::shared_ptr<falco_engine> engine;
 	std::unique_ptr<falco_formats> formats;
+	std::unique_ptr<filter_check_list> filterchecks;
 	size_t source_engine_idx;
 };
 
@@ -406,12 +407,13 @@ static worker_context create_worker_context(falco::app::state& s,
                                             const std::string& source) {
 	worker_context ctx;
 	auto src_info = s.source_infos.at(source);
-	auto& filterchecks = *src_info->filterchecks;
+	ctx.filterchecks = src_info->filterchecks->clone();
 
 	ctx.engine = std::make_shared<falco_engine>();
-	auto filter_factory = std::make_shared<sinsp_filter_factory>(inspector.get(), filterchecks);
+	auto filter_factory =
+	        std::make_shared<sinsp_filter_factory>(inspector.get(), *ctx.filterchecks);
 	auto formatter_factory =
-	        std::make_shared<sinsp_evt_formatter_factory>(inspector.get(), filterchecks);
+	        std::make_shared<sinsp_evt_formatter_factory>(inspector.get(), *ctx.filterchecks);
 	if(s.config->m_json_output) {
 		formatter_factory->set_output_format(sinsp_evt_formatter::OF_JSON);
 	}

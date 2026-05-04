@@ -1,0 +1,13 @@
+# Falco-only ThreadSanitizer suppressions for scripts/validate-tsan.sh.
+# Libs test suppressions are appended from LIBS_SUPPRESSIONS (see validate-tsan.sh).
+#
+# Keep this file MINIMAL. Only suppress confirmed false positives from
+# third-party library internals. Application-level races should be fixed,
+# not suppressed.
+
+# --- oneTBB internal allocator bookkeeping ---
+# TBB's cache-aligned allocator uses lock-free freelists that TSAN cannot model.
+race:tbb::detail::r1::std_cache_aligned_allocate
+race:tbb::detail::r1::std_cache_aligned_deallocate
+race:tbb::detail::r1::cache_aligned_allocate
+race:tbb::detail::r1::cache_aligned_deallocate
