@@ -98,6 +98,11 @@ struct live_context {
 	std::unique_ptr<source_sync_context> sync;
 };
 
+// Batch size used to publish the per-source event count into the global
+// state.num_evts counter (see #3584). Must be a power of two so the
+// hot-path predicate compiles to a single AND.
+static constexpr uint64_t NUM_EVTS_PUBLISH_BATCH = 1024;
+
 //
 // Event processing loop
 //
@@ -386,10 +391,17 @@ static falco::app::run_result do_inspect(
 		}
 
 		num_evts++;
-		// Mirror the per-source counter into the shared state so the
-		// Prometheus output sink can publish a global `num_evts` metric
-		// alongside the JSON / text sinks. See issue #3584.
-		s.num_evts.fetch_add(1, std::memory_order_relaxed);
+		// Publish to the global Prometheus counter in batches so the
+		// per-event hot path stays free of `lock`-prefixed atomic ops.
+		// One fetch_add every 1024 events bounds the per-event amortised
+		// cost to a few cycles on x86 even at multi-MHz event rates,
+		// while keeping the counter visible to /metrics within the same
+		// order of magnitude as a typical Prometheus scrape interval.
+		// The residual (num_evts & 1023) is flushed by the caller once
+		// the loop exits. See issue #3584.
+		if((num_evts & (NUM_EVTS_PUBLISH_BATCH - 1)) == 0) {
+			s.num_evts.fetch_add(NUM_EVTS_PUBLISH_BATCH, std::memory_order_relaxed);
+		}
 	}
 
 	return run_result::ok();
@@ -422,6 +434,12 @@ static void process_inspector_events(
 		                    check_drops_timeouts,
 		                    uint64_t(s.options.duration_to_tot * ONE_SECOND_IN_NS),
 		                    num_evts);
+
+		// Flush any unpublished tail (events processed since the last
+		// NUM_EVTS_PUBLISH_BATCH boundary inside do_inspect). See #3584.
+		if(uint64_t residual = num_evts & (NUM_EVTS_PUBLISH_BATCH - 1)) {
+			s.num_evts.fetch_add(residual, std::memory_order_relaxed);
+		}
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
