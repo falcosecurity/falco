@@ -39,7 +39,7 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 
 > /area proposals
 
-> /area CI
+> /area automation
 
 <!--
 Please remove the leading whitespace before the `/area <>` you uncommented.
