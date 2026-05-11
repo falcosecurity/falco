@@ -443,6 +443,17 @@ false
 {{- end -}}
 {{- end -}}
 
+{{/*
+Return "true" if proc-fs should be mounted in the Falco pod.
+*/}}
+{{- define "falco.procfsMount.enabled" -}}
+{{- if or .Values.driver.enabled .Values.falco.plugins_hostinfo -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
 
 {{/*
 Based on the user input it populates the metrics configuration in the falco config map.
