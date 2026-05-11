@@ -20,7 +20,7 @@ limitations under the License.
 
 // The version of this Falco engine
 #define FALCO_ENGINE_VERSION_MAJOR 0
-#define FALCO_ENGINE_VERSION_MINOR 61
+#define FALCO_ENGINE_VERSION_MINOR 62
 #define FALCO_ENGINE_VERSION_PATCH 0
 
 #define FALCO_ENGINE_VERSION                                                               \
@@ -36,4 +36,4 @@ limitations under the License.
 // It represents the fields supported by this version of Falco,
 // the event types, and the underlying driverevent schema. It's used to
 // detetect changes in engine version in our CI jobs.
-#define FALCO_ENGINE_CHECKSUM "cff88efbc5ebf54d4a0763342ac480da48880d9c6edf9f65c65cda5c1b1fdc7c"
+#define FALCO_ENGINE_CHECKSUM "ba6f1ac74018c623135c49f7da1cca6243c99a58d53f4dec983ddf3919304518"
