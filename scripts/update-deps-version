@@ -13,20 +13,22 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 #
-# Update the version and recompute the SHA256 checksum in the cmake module for falcosecurity/libs or the driver.
+# Update the version and recompute the SHA256 checksum in the cmake module for libs, drivers and container plugin.
 #
 # Usage:
-#   ./update-deps-version driver <version>
-#   ./update-deps-version libs   <version>
+#   ./update-deps-version libs      <version>
+#   ./update-deps-version drivers   <version>
+#   ./update-deps-version container <version>
 #
-# <version> can be a commit hash, tag, or branch name.
+# <version> can be a commit hash, tag, or branch name for libs/drivers, and a release tag (e.g. "0.7.0") for container
+# plugin.
 
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 usage() {
-	echo "Usage: $(basename "$0") {driver|libs} <version>" >&2
+	echo "Usage: $(basename "$0") {libs|drivers|container} <version>" >&2
 	exit 1
 }
 
@@ -44,44 +46,105 @@ sha256_of_url() {
 	fi
 }
 
+# Update the version and SHA256 checksum for libs or drivers. The repo name (<org>/<name>) is read from <cmake_file> by
+# matching `set(<repo_var> "...")` and used to compose the download URL.
+#
+# Usage: update_libs_or_drivers_dep <cmake_file> <version> <repo_var> <version_var> <checksum_var>
+update_libs_or_drivers_dep() {
+	local CMAKE_FILE="$1"
+	local VERSION="$2"
+	local REPO_VAR="$3"
+	local VERSION_VAR="$4"
+	local CHECKSUM_VAR="$5"
+
+	local REPO
+	REPO="$(grep -oP "set\(${REPO_VAR}\s+\"\K[^\"]+" "${CMAKE_FILE}")"
+	echo "Repo: ${REPO}, Version: ${VERSION}"
+
+	local SHA256
+	SHA256="$(sha256_of_url "https://github.com/${REPO}/archive/${VERSION}.tar.gz")"
+	echo "  SHA256: ${SHA256}"
+
+	# note: in the following `sed` expressions, `-z` is required in order for `[[:space:]]+` to span across newlines.
+
+	# Update the version string in the cmake file, skipping the "0.0.0-local" one by temporarily swapping it with a
+	# placeholder and restoring it at the end (note: this is required because `sed` has no negative lookahead`).
+	sed -z -i -E \
+		-e 's/"0\.0\.0-local"/PLACEHOLDER/g' \
+		-e "s/(set\(${VERSION_VAR}[[:space:]]+\")[^\"]+(\")/\\1${VERSION}\\2/" \
+		-e 's/PLACEHOLDER/"0.0.0-local"/g' \
+		"${CMAKE_FILE}"
+
+	# Update the SHA256 checksum string in the cmake file.
+	sed -z -i -E \
+		"s/(set\(${CHECKSUM_VAR}[[:space:]]+\"SHA256=)[a-fA-F0-9]+(\")/\\1${SHA256}\\2/" \
+		"${CMAKE_FILE}"
+
+	echo "Updated ${CMAKE_FILE}"
+}
+
+# Update the container plugin version and per-architecture SHA256 hashes.
+#
+# Usage: update_container_plugin_dep <version>
+update_container_plugin_dep() {
+	local VERSION="$1"
+	local CMAKE_FILE="${REPO_ROOT}/CMakeLists.txt"
+	local BASE_URL="https://download.falco.org/plugins/stable"
+
+	echo "Container plugin version: ${VERSION}"
+
+	local SHA256_X86_64
+	SHA256_X86_64="$(sha256_of_url "${BASE_URL}/container-${VERSION}-linux-x86_64.tar.gz")"
+	echo "  SHA256 (x86_64):  ${SHA256_X86_64}"
+	local SHA256_AARCH64
+	SHA256_AARCH64="$(sha256_of_url "${BASE_URL}/container-${VERSION}-linux-aarch64.tar.gz")"
+	echo "  SHA256 (aarch64): ${SHA256_AARCH64}"
+
+	# note: in the following `sed` expressions, `-z` is required in order for `[[:space:]]+` to span across newlines.
+
+	# Update `CONTAINER_VERSION`.
+	sed -z -i -E \
+		"s/(set\(CONTAINER_VERSION[[:space:]]+\")[^\"]+(\")/\\1${VERSION}\\2/" \
+		"${CMAKE_FILE}"
+
+	# Update the `x86_64` `CONTAINER_HASH` (the one right after `STREQUAL "x86_64"`).
+	sed -z -i -E \
+		"s/(STREQUAL \"x86_64\"\)[[:space:]]+set\(CONTAINER_HASH[[:space:]]+\")[a-fA-F0-9]+(\")/\\1${SHA256_X86_64}\\2/" \
+		"${CMAKE_FILE}"
+
+	# Update the `arm64` `CONTAINER_HASH` (the one right after `else() # arm64`).
+	sed -z -i -E \
+		"s/(else\(\)[[:space:]]+# arm64[[:space:]]+set\(CONTAINER_HASH[[:space:]]+\")[a-fA-F0-9]+(\")/\\1${SHA256_AARCH64}\\2/" \
+		"${CMAKE_FILE}"
+
+	echo "Updated ${CMAKE_FILE}"
+}
+
 [[ $# -ne 2 ]] && usage
 SUBCMD="$1"
 VERSION="$2"
 
 case "${SUBCMD}" in
-driver)
-	CMAKE_FILE="${REPO_ROOT}/cmake/modules/driver.cmake"
-	REPO="$(grep -oP 'set\(DRIVER_REPO\s+"\K[^"]+' "${CMAKE_FILE}")"
-	VERSION_VAR="DRIVER_VERSION"
-	CHECKSUM_VAR="DRIVER_CHECKSUM"
+drivers)
+	update_libs_or_drivers_dep \
+		"${REPO_ROOT}/cmake/modules/driver.cmake" \
+		"${VERSION}" \
+		"DRIVER_REPO" \
+		"DRIVER_VERSION" \
+		"DRIVER_CHECKSUM"
 	;;
 libs)
-	CMAKE_FILE="${REPO_ROOT}/cmake/modules/falcosecurity-libs.cmake"
-	REPO="$(grep -oP 'set\(FALCOSECURITY_LIBS_REPO\s+"\K[^"]+' "${CMAKE_FILE}")"
-	VERSION_VAR="FALCOSECURITY_LIBS_VERSION"
-	CHECKSUM_VAR="FALCOSECURITY_LIBS_CHECKSUM"
+	update_libs_or_drivers_dep \
+		"${REPO_ROOT}/cmake/modules/falcosecurity-libs.cmake" \
+		"${VERSION}" \
+		"FALCOSECURITY_LIBS_REPO" \
+		"FALCOSECURITY_LIBS_VERSION" \
+		"FALCOSECURITY_LIBS_CHECKSUM"
+	;;
+container)
+	update_container_plugin_dep "${VERSION}"
 	;;
 *)
 	usage
 	;;
 esac
-
-echo "Repo: ${REPO}, Version: ${VERSION}"
-
-SHA256="$(sha256_of_url "https://github.com/${REPO}/archive/${VERSION}.tar.gz")"
-echo "  SHA256: ${SHA256}"
-
-# note: in the following `sed` expressions, `-z` is required in order for `[[:space:]]+` to span across newlines.
-
-# Update the version string in the cmake file, skipping the "0.0.0-local" one by temporarily swapping it with a
-# placeholder and restoring it at the end (note: this is required because `sed` has no negative lookahead`).
-sed -z -i -E \
-	-e 's/"0\.0\.0-local"/PLACEHOLDER/g' \
-	-e "s/(set\(${VERSION_VAR}[[:space:]]+\")[^\"]+(\")/\\1${VERSION}\\2/" \
-	-e 's/PLACEHOLDER/"0.0.0-local"/g' \
-	"${CMAKE_FILE}"
-
-# Update the SHA256 checksum string in the cmake file.
-sed -z -i -E "s/(set\(${CHECKSUM_VAR}[[:space:]]+\"SHA256=)[a-fA-F0-9]+(\")/\\1${SHA256}\\2/" "${CMAKE_FILE}"
-
-echo "Updated ${CMAKE_FILE}"
