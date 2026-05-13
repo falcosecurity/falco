@@ -127,9 +127,8 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& sta
 	                       nullptr);
 	if(h == INVALID_HANDLE_VALUE) {
 		falco_logger::log(falco_logger::level::ERR,
-		                  "Could not open pidfile " + state.options.pidfilename +
-		                          " (error: " + win32_error_string(GetLastError()) +
-		                          "). Exiting.\n");
+		                  "Could not open pidfile " + state.options.pidfilename + " (error: " +
+		                          win32_error_string(GetLastError()) + "). Exiting.\n");
 		exit(-1);
 	}
 
@@ -146,8 +145,7 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& sta
 	char buf[32];
 	int len = std::snprintf(buf, sizeof(buf), "%lld\n", (long long)_getpid());
 	DWORD written = 0;
-	if(len < 0 || !WriteFile(h, buf, (DWORD)len, &written, nullptr) ||
-	   written != (DWORD)len) {
+	if(len < 0 || !WriteFile(h, buf, (DWORD)len, &written, nullptr) || written != (DWORD)len) {
 		DWORD err = GetLastError();
 		CloseHandle(h);
 		falco_logger::log(falco_logger::level::ERR,
