@@ -201,7 +201,6 @@ spec:
           name: client-certs-volume
           readOnly: true
         {{- end }}
-        {{- include "falco.unixSocketVolumeMount"  . | nindent 8 -}}
         {{- with .Values.mounts.volumeMounts }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -301,7 +300,6 @@ spec:
         secretName: {{ include "falco.fullname" . }}-client-certs
         {{- end }}
     {{- end }}
-    {{- include "falco.unixSocketVolume" . | nindent 4 -}}
     {{- with .Values.mounts.volumes }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -389,20 +387,4 @@ spec:
 {{- else -}}
   {{- toYaml $securityContext }}
 {{- end -}}
-{{- end -}}
-
-
-{{- define "falco.unixSocketVolumeMount" -}}
-{{- if and .Values.falco.grpc.enabled .Values.falco.grpc.bind_address (hasPrefix "unix://" .Values.falco.grpc.bind_address) }}
-- mountPath: {{ include "falco.unixSocketDir" . }}
-  name: grpc-socket-dir
-{{- end }}
-{{- end -}}
-
-{{- define "falco.unixSocketVolume" -}}
-{{- if and .Values.falco.grpc.enabled .Values.falco.grpc.bind_address (hasPrefix "unix://" .Values.falco.grpc.bind_address) }}
-- name: grpc-socket-dir
-  hostPath:
-    path: {{ include "falco.unixSocketDir" . }}
-{{- end }}
 {{- end -}}
