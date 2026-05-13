@@ -302,6 +302,33 @@ we just disable the sycall source.
 {{- end -}}
 
 {{/*
+Fail the rendering if the user provides chart configuration that has been removed.
+This should be updated at each new Chart major version release.
+*/}}
+{{- define "falco.removedConfigGuard" -}}
+{{- $removedDriverKinds := list "ebpf" "gvisor" -}}
+{{- $removedDriverKeys  := list "ebpf" "gvisor" -}}
+{{- $removedFalcoKeys   := list "grpc" "grpc_output" -}}
+{{- $found := list -}}
+{{- if has .Values.driver.kind $removedDriverKinds -}}
+  {{- $found = append $found (printf "driver.kind=%s" .Values.driver.kind) -}}
+{{- end -}}
+{{- range $key := $removedDriverKeys -}}
+  {{- if hasKey $.Values.driver $key -}}
+    {{- $found = append $found (printf "driver.%s" $key) -}}
+  {{- end -}}
+{{- end -}}
+{{- range $key := $removedFalcoKeys -}}
+  {{- if hasKey $.Values.falco $key -}}
+    {{- $found = append $found (printf "falco.%s" $key) -}}
+  {{- end -}}
+{{- end -}}
+{{- if gt (len $found) 0 -}}
+{{- fail (printf "The following chart configuration is no longer supported: %s. See BREAKING-CHANGES.md for migration guidance." (join ", " $found)) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Based on the user input it populates the driver configuration in the falco config map.
 */}}
 {{- define "falco.engineConfiguration" -}}
