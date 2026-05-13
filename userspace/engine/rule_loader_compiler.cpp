@@ -20,6 +20,8 @@ limitations under the License.
 #include <set>
 #include <vector>
 
+#include "rule_loader_cmpop.h"
+
 #include "rule_loader_compiler.h"
 #include "filter_warning_resolver.h"
 
@@ -58,7 +60,12 @@ static void paren_item(std::string& e) {
 
 static inline bool is_operator_for_list(const std::string& op) {
 	auto ops = libsinsp::filter::parser::supported_operators(true);
-	return find(ops.begin(), ops.end(), op) != ops.end();
+	if(find(ops.begin(), ops.end(), op) != ops.end()) {
+		return true;
+	}
+	// Compound operators (e.g. "startswith oneof", "contains allof") take a
+	// parenthesised list as RHS, just like the built-in list operators.
+	return is_str_operator_with_modifier(op);
 }
 
 static bool is_format_valid(const falco_source& source, std::string fmt, std::string& err) {

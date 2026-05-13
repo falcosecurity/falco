@@ -18,6 +18,8 @@ limitations under the License.
 #include <string>
 #include <libsinsp/version.h>
 
+#include "rule_loader_cmpop.h"
+
 #include "falco_engine.h"
 #include "rule_loader_collector.h"
 #include "rule_loading_messages.h"
@@ -34,6 +36,22 @@ limitations under the License.
 static inline bool is_operator_defined(const std::string& op) {
 	auto ops = libsinsp::filter::parser::supported_operators();
 	return find(ops.begin(), ops.end(), op) != ops.end();
+}
+
+// Strips leading and trailing ASCII whitespace from a comp string so that
+// validation and downstream assembly always see canonical operator tokens.
+static inline void normalize_comp(std::string& s) {
+	const char* ws = " \t\r\n";
+	const auto z = s.find_last_not_of(ws);
+	if(z == std::string::npos) {
+		s.clear();
+		return;
+	}
+	s.erase(z + 1);
+	const auto a = s.find_first_not_of(ws);
+	if(a != 0) {
+		s.erase(0, a);
+	}
 }
 
 template<typename T>
@@ -72,8 +90,9 @@ static void validate_exception_info(const falco_source* source,
 		THROW(ex.fields.items.size() != ex.comps.items.size(),
 		      "Fields and comps lists must have equal length",
 		      ex.ctx);
-		for(const auto& v : ex.comps.items) {
-			THROW(!is_operator_defined(v.item),
+		for(auto& v : ex.comps.items) {
+			normalize_comp(v.item);
+			THROW(!is_operator_defined(v.item) && !is_str_operator_with_modifier(v.item),
 			      std::string("'") + v.item + "' is not a supported comparison operator",
 			      ex.ctx);
 		}
@@ -90,8 +109,11 @@ static void validate_exception_info(const falco_source* source,
 			ex.comps.item = "in";
 		}
 		THROW(ex.comps.is_list, "Fields and comps must both be strings", ex.ctx);
-		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" && ex.comps.item != "intersects"),
-		      "When fields is a single value, comps must be one of (in, pmatch, intersects)",
+		normalize_comp(ex.comps.item);
+		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" &&
+		       ex.comps.item != "intersects" && !is_str_operator_with_modifier(ex.comps.item)),
+		      "When fields is a single value, comps must be one of "
+		      "(in, pmatch, intersects) or a modifier operator (e.g. startswith oneof)",
 		      ex.ctx);
 		if(source) {
 			THROW(!source->is_valid_lhs_field(ex.fields.item),
