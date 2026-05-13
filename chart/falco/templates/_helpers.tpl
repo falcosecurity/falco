@@ -111,15 +111,6 @@ Return the proper Falcoctl image name
 {{- end -}}
 
 {{/*
-Extract the unixSocket's directory path
-*/}}
-{{- define "falco.unixSocketDir" -}}
-{{- if and .Values.falco.grpc.enabled .Values.falco.grpc.bind_address (hasPrefix "unix://" .Values.falco.grpc.bind_address) -}}
-{{- .Values.falco.grpc.bind_address | trimPrefix "unix://" | dir -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the appropriate apiVersion for rbac.
 */}}
 {{- define "rbac.apiVersion" -}}
@@ -157,23 +148,6 @@ Set appropriate falco configuration if falcosidekick has been configured.
     {{- $_ := set .Values.falco "json_include_output_property" true -}}
     {{- $_ := set .Values.falco.http_output "enabled" true -}}
     {{- $_ := set .Values.falco.http_output "url" (include "falcosidekick.url" .) -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Get port from .Values.falco.grpc.bind_addres.
-*/}}
-{{- define "grpc.port" -}}
-{{- $error := "unable to extract listenPort from .Values.falco.grpc.bind_address. Make sure it is in the correct format" -}}
-{{- if and .Values.falco.grpc.enabled .Values.falco.grpc.bind_address (not (hasPrefix "unix://" .Values.falco.grpc.bind_address)) -}}
-    {{- $tokens := split ":" .Values.falco.grpc.bind_address -}}
-    {{- if $tokens._1 -}}
-        {{- $tokens._1 -}}
-    {{- else -}}
-        {{- fail $error -}}
-    {{- end -}}
-{{- else -}}
-    {{- fail $error -}}
 {{- end -}}
 {{- end -}}
 
