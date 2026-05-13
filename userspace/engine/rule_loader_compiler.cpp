@@ -58,7 +58,19 @@ static void paren_item(std::string& e) {
 
 static inline bool is_operator_for_list(const std::string& op) {
 	auto ops = libsinsp::filter::parser::supported_operators(true);
-	return find(ops.begin(), ops.end(), op) != ops.end();
+	if(find(ops.begin(), ops.end(), op) != ops.end()) {
+		return true;
+	}
+	// Compound operators (e.g. "startswith oneof", "contains allof") take a
+	// parenthesised list as RHS, just like the built-in list operators.
+	static const std::string s_mods[] = {" oneof", " anyof", " allof"};
+	for(const auto& mod : s_mods) {
+		auto pos = op.rfind(mod);
+		if(pos != std::string::npos && pos + mod.size() == op.size()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 static bool is_format_valid(const falco_source& source, std::string fmt, std::string& err) {

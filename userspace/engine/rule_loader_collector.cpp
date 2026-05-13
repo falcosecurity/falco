@@ -36,6 +36,37 @@ static inline bool is_operator_defined(const std::string& op) {
 	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
+// Strips leading and trailing ASCII whitespace from a comp string so that
+// validation and downstream assembly always see canonical operator tokens.
+static inline void normalize_comp(std::string& s) {
+	const char* ws = " \t\r\n";
+	const auto z = s.find_last_not_of(ws);
+	if(z == std::string::npos) {
+		s.clear();
+		return;
+	}
+	s.erase(z + 1);
+	const auto a = s.find_first_not_of(ws);
+	if(a != 0) {
+		s.erase(0, a);
+	}
+}
+
+// Returns true when `op` is a string operator combined with a list modifier,
+// e.g. "startswith oneof", "contains allof", "glob anyof".  These are valid
+// in condition expressions (libs#2983) but are not returned by
+// supported_operators(), so they need a separate check in exception validation.
+static inline bool is_operator_with_modifier(const std::string& op) {
+	static const std::string s_mods[] = {" oneof", " anyof", " allof"};
+	for(const auto& mod : s_mods) {
+		auto pos = op.rfind(mod);
+		if(pos != std::string::npos && pos + mod.size() == op.size()) {
+			return is_operator_defined(op.substr(0, pos));
+		}
+	}
+	return false;
+}
+
 template<typename T>
 static inline void define_info(indexed_vector<T>& infos, T& info, uint32_t id) {
 	auto prev = infos.at(info.name);
@@ -72,8 +103,9 @@ static void validate_exception_info(const falco_source* source,
 		THROW(ex.fields.items.size() != ex.comps.items.size(),
 		      "Fields and comps lists must have equal length",
 		      ex.ctx);
-		for(const auto& v : ex.comps.items) {
-			THROW(!is_operator_defined(v.item),
+		for(auto& v : ex.comps.items) {
+			normalize_comp(v.item);
+			THROW(!is_operator_defined(v.item) && !is_operator_with_modifier(v.item),
 			      std::string("'") + v.item + "' is not a supported comparison operator",
 			      ex.ctx);
 		}
@@ -90,8 +122,11 @@ static void validate_exception_info(const falco_source* source,
 			ex.comps.item = "in";
 		}
 		THROW(ex.comps.is_list, "Fields and comps must both be strings", ex.ctx);
-		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" && ex.comps.item != "intersects"),
-		      "When fields is a single value, comps must be one of (in, pmatch, intersects)",
+		normalize_comp(ex.comps.item);
+		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" &&
+		       ex.comps.item != "intersects" && !is_operator_with_modifier(ex.comps.item)),
+		      "When fields is a single value, comps must be one of "
+		      "(in, pmatch, intersects) or a modifier operator (e.g. startswith oneof)",
 		      ex.ctx);
 		if(source) {
 			THROW(!source->is_valid_lhs_field(ex.fields.item),
