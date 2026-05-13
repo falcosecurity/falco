@@ -7,6 +7,7 @@ metadata:
     {{- include "falco.labels" . | nindent 4 }}
 data:
   falco.yaml: |-
+    {{- include "falco.removedConfigGuard" . -}}
     {{- include "falco.falcosidekickConfig" . }}
     {{- include "k8smeta.configuration" . -}}
     {{- include "falco.engineConfiguration" . -}}
