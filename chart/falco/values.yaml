@@ -60,9 +60,22 @@ podSecurityContext: {}
 # 1) driver.enabled = false:
 #    securityContext: {}
 #
-# 2) driver.enabled = true and (driver.kind = kmod || driver.kind = modern_ebpf):
+# 2) driver.enabled = true and driver.kind in (kmod, auto):
 #    securityContext:
 #     privileged: true
+#
+# 3) driver.enabled = true and driver.kind = modern_ebpf and driver.modernEbpf.leastPrivileged = false:
+#    securityContext:
+#     privileged: true
+#
+# 4) driver.enabled = true and driver.kind = modern_ebpf and driver.modernEbpf.leastPrivileged = true:
+#    securityContext:
+#     capabilities:
+#      add:
+#      - BPF
+#      - SYS_RESOURCE
+#      - PERFMON
+#      - SYS_PTRACE
 #
 # -- Set securityContext for the Falco container.For more info see the "falco.securityContext" helper in "pod-template.tpl"
 containerSecurityContext: {}
