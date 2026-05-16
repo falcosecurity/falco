@@ -48,3 +48,101 @@ TEST(DetailsResolver, resolve_ast) {
 	ASSERT_EQ(details.lists.size(), 1);
 	ASSERT_NE(details.lists.find("known_procs"), details.lists.end());
 }
+
+// Tests for multi-value transformer support
+
+TEST(DetailsResolver, resolve_single_value_transformer) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: tolower(proc.name) = nginx
+	auto filter = ast::binary_check_expr::create(
+	        ast::field_transformer_expr::create("tolower",
+	                                            ast::field_expr::create("proc.name", "")),
+	        "=",
+	        ast::value_expr::create("nginx"));
+
+	filter_details details;
+	filter_details_resolver resolver;
+	resolver.run(filter.get(), details);
+
+	ASSERT_EQ(details.fields.size(), 1);
+	ASSERT_NE(details.fields.find("proc.name"), details.fields.end());
+	ASSERT_EQ(details.transformers.size(), 1);
+	ASSERT_NE(details.transformers.find("tolower"), details.transformers.end());
+	ASSERT_EQ(details.operators.size(), 1);
+	ASSERT_NE(details.operators.find("="), details.operators.end());
+}
+
+TEST(DetailsResolver, resolve_multi_value_transformer) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: concat(proc.name, proc.pname) = value
+	std::vector<std::unique_ptr<ast::expr>> args;
+	args.push_back(ast::field_expr::create("proc.name", ""));
+	args.push_back(ast::field_expr::create("proc.pname", ""));
+	auto filter =
+	        ast::binary_check_expr::create(ast::field_transformer_expr::create("concat", args),
+	                                       "=",
+	                                       ast::value_expr::create("value"));
+
+	filter_details details;
+	filter_details_resolver resolver;
+	resolver.run(filter.get(), details);
+
+	ASSERT_EQ(details.fields.size(), 2);
+	ASSERT_NE(details.fields.find("proc.name"), details.fields.end());
+	ASSERT_NE(details.fields.find("proc.pname"), details.fields.end());
+	ASSERT_EQ(details.transformers.size(), 1);
+	ASSERT_NE(details.transformers.find("concat"), details.transformers.end());
+}
+
+TEST(DetailsResolver, resolve_transformer_with_list) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: join(",", (proc.name, proc.pid)) = value
+	std::vector<std::unique_ptr<ast::expr>> list_children;
+	list_children.push_back(ast::field_expr::create("proc.name", ""));
+	list_children.push_back(ast::field_expr::create("proc.pid", ""));
+
+	std::vector<std::unique_ptr<ast::expr>> transformer_args;
+	transformer_args.push_back(ast::value_expr::create(","));
+	transformer_args.push_back(ast::transformer_list_expr::create(list_children));
+
+	auto filter = ast::binary_check_expr::create(
+	        ast::field_transformer_expr::create("join", transformer_args),
+	        "=",
+	        ast::value_expr::create("value"));
+
+	filter_details details;
+	filter_details_resolver resolver;
+	resolver.run(filter.get(), details);
+
+	ASSERT_EQ(details.fields.size(), 2);
+	ASSERT_NE(details.fields.find("proc.name"), details.fields.end());
+	ASSERT_NE(details.fields.find("proc.pid"), details.fields.end());
+	ASSERT_EQ(details.transformers.size(), 1);
+	ASSERT_NE(details.transformers.find("join"), details.transformers.end());
+}
+
+TEST(DetailsResolver, resolve_nested_transformers) {
+	namespace ast = libsinsp::filter::ast;
+
+	// Build: toupper(tolower(proc.name)) = value
+	auto filter = ast::binary_check_expr::create(
+	        ast::field_transformer_expr::create(
+	                "toupper",
+	                ast::field_transformer_expr::create("tolower",
+	                                                    ast::field_expr::create("proc.name", ""))),
+	        "=",
+	        ast::value_expr::create("value"));
+
+	filter_details details;
+	filter_details_resolver resolver;
+	resolver.run(filter.get(), details);
+
+	ASSERT_EQ(details.fields.size(), 1);
+	ASSERT_NE(details.fields.find("proc.name"), details.fields.end());
+	ASSERT_EQ(details.transformers.size(), 2);
+	ASSERT_NE(details.transformers.find("toupper"), details.transformers.end());
+	ASSERT_NE(details.transformers.find("tolower"), details.transformers.end());
+}
