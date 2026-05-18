@@ -29,8 +29,9 @@ limitations under the License.
 #include "outputs_program.h"
 #include "outputs_syslog.h"
 #endif
-#if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(HAS_HTTP_OUTPUT)
 #include "outputs_http.h"
+#include <curl/curl.h>
 #endif
 
 static const char *s_internal_source = "internal";
@@ -58,6 +59,12 @@ falco_outputs::falco_outputs(std::shared_ptr<falco_engine> engine,
         m_time_format_iso_8601(time_format_iso_8601),
         m_timeout(std::chrono::milliseconds(timeout)),
         m_hostname(hostname) {
+#if defined(HAS_HTTP_OUTPUT)
+	// libcurl requires a one-time global init on the main thread before any
+	// easy/multi handle is used; we own the only http_output instances here,
+	// so doing it once per outputs lifetime is sufficient.
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
 	for(const auto &output : outputs) {
 		add_output(output);
 	}
@@ -71,6 +78,9 @@ falco_outputs::falco_outputs(std::shared_ptr<falco_engine> engine,
 falco_outputs::~falco_outputs() {
 #ifndef __EMSCRIPTEN__
 	this->stop_worker();
+#endif
+#if defined(HAS_HTTP_OUTPUT)
+	curl_global_cleanup();
 #endif
 }
 
@@ -94,7 +104,7 @@ void falco_outputs::add_output(const falco::outputs::config &oc) {
 		oo = std::make_unique<falco::outputs::output_syslog>();
 	}
 #endif
-#if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
+#if defined(HAS_HTTP_OUTPUT)
 	else if(oc.name == "http") {
 		oo = std::make_unique<falco::outputs::output_http>();
 	}
