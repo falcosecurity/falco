@@ -18,7 +18,11 @@ limitations under the License.
 #include "outputs_http.h"
 #include "logger.h"
 
-#define CHECK_RES(fn) res = res == CURLE_OK ? fn : res
+// Set a libcurl option, sticky-recording the first real error.
+// CURLE_NOT_BUILT_IN is tolerated: libcurl may return it for any option when
+// the underlying feature is compiled out (e.g. the SChannel TLS backend on
+// Windows does not implement CURLOPT_CAINFO / CURLOPT_CAPATH).
+#define CHECK_RES(fn) res = (res == CURLE_OK || res == CURLE_NOT_BUILT_IN) ? (fn) : res
 
 static size_t noop_write_callback(void * /*contents*/,
                                   size_t size,
@@ -99,7 +103,7 @@ bool falco::outputs::output_http::init(const config &oc,
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPALIVE, 1L));
 	}
 
-	if(res != CURLE_OK) {
+	if(res != CURLE_OK && res != CURLE_NOT_BUILT_IN) {
 		err = "libcurl error: " + std::string(curl_easy_strerror(res));
 		return false;
 	}
