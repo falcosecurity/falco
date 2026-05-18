@@ -48,10 +48,23 @@ else()
 		)
 	endif()
 
+	# Forward the parent generator/platform/toolset so the nested configure picks the same Visual
+	# Studio setup on multi-config hosts (e.g. ARM64 Windows). CMAKE_GENERATOR_PLATFORM/TOOLSET are
+	# empty for non-VS generators, so pass them only when set to avoid `-A ""` errors on
+	# Ninja/Make/Xcode.
+	set(_falco_libs_nested_args "")
+	if(CMAKE_GENERATOR_PLATFORM)
+		list(APPEND _falco_libs_nested_args "-A" "${CMAKE_GENERATOR_PLATFORM}")
+	endif()
+	if(CMAKE_GENERATOR_TOOLSET)
+		list(APPEND _falco_libs_nested_args "-T" "${CMAKE_GENERATOR_TOOLSET}")
+	endif()
+
 	# cd /path/to/build && cmake /path/to/source
 	execute_process(
 		COMMAND
-			"${CMAKE_COMMAND}" -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+			"${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" ${_falco_libs_nested_args}
+			-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
 			-DFALCOSECURITY_LIBS_REPO=${FALCOSECURITY_LIBS_REPO}
 			-DFALCOSECURITY_LIBS_VERSION=${FALCOSECURITY_LIBS_VERSION}
 			-DFALCOSECURITY_LIBS_CHECKSUM=${FALCOSECURITY_LIBS_CHECKSUM}
