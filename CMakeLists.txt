@@ -187,12 +187,25 @@ include(njson)
 # yaml-cpp
 include(yaml-cpp)
 
-if(NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
-	# OpenSSL
-	include(openssl)
+# Http output defaults on for non-minimal/non-emscripten builds, and can be opted into explicitly in
+# MINIMAL_BUILD configurations (e.g. for size-sensitive embedders that only need http output and not
+# the webserver/metrics stack).
+if(MINIMAL_BUILD OR EMSCRIPTEN)
+	set(_falco_build_http_output_default OFF)
+else()
+	set(_falco_build_http_output_default ON)
+endif()
+option(BUILD_HTTP_OUTPUT "Build the http output channel" ${_falco_build_http_output_default})
+unset(_falco_build_http_output_default)
 
-	# libcurl
+if(BUILD_HTTP_OUTPUT)
+	# libcurl (transitively pulls OpenSSL/zlib when the bundled build is used).
 	include(curl)
+endif()
+
+if(NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
+	# OpenSSL (needed by cpp-httplib's TLS support and by the engine on Linux).
+	include(openssl)
 
 	# cpp-httplib
 	include(cpp-httplib)

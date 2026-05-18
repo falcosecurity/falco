@@ -83,18 +83,25 @@ if(NOT WIN32)
 	target_sources(falco_application PRIVATE outputs_program.cpp outputs_syslog.cpp)
 endif()
 
-if(NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)
-	target_sources(falco_application PRIVATE outputs_http.cpp falco_metrics.cpp webserver.cpp)
-
-	if(OPENSSL_INCLUDE_DIR)
-		list(APPEND FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
-	endif()
+if(BUILD_HTTP_OUTPUT)
+	target_sources(falco_application PRIVATE outputs_http.cpp)
+	target_compile_definitions(falco_application PRIVATE HAS_HTTP_OUTPUT)
 
 	if(USE_BUNDLED_CURL)
 		list(APPEND FALCO_DEPENDENCIES curl)
 	endif()
 
-	list(APPEND FALCO_LIBRARIES httplib::httplib "${CURL_LIBRARIES}")
+	list(APPEND FALCO_LIBRARIES "${CURL_LIBRARIES}")
+endif()
+
+if(NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)
+	target_sources(falco_application PRIVATE falco_metrics.cpp webserver.cpp)
+
+	if(OPENSSL_INCLUDE_DIR)
+		list(APPEND FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
+	endif()
+
+	list(APPEND FALCO_LIBRARIES httplib::httplib)
 endif()
 
 if(EMSCRIPTEN)
