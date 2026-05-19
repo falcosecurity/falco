@@ -1705,3 +1705,413 @@ TEST_F(test_falco_engine, rule_capture_wrong_type) {
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_VALIDATION_STATUS(yaml_helper::validation_failed) << m_load_result->schema_validation();
 }
+
+// ---------------------------------------------------------------------------
+// Tests for compound modifier operators in exception comps.
+//
+// libs 0.25.0 (falcosecurity/libs#2983) introduced oneof/anyof/allof as
+// modifiers for string operators in condition expressions, e.g.:
+//   proc.name startswith oneof (sshd, sudo)
+//
+// rule_loader_collector.cpp and rule_loader_compiler.cpp were patched to
+// accept the same compound forms in exception comps.
+//
+// Value format for compound comps uses the list-fields form:
+//   fields: [field]
+//   comps:  [startswith oneof]
+//   values: - [[val1, val2, val3]]   <- inner list is the RHS list for oneof
+// ---------------------------------------------------------------------------
+
+// ----- single-field exceptions with compound comps -----
+
+TEST_F(test_falco_engine, exceptions_modifier_op_startswith_oneof) {
+	// Verify: single-field exception with "startswith oneof" loads successfully
+	// and produces the correct compiled condition.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [startswith oneof]
+      values:
+        - [[sshd, sudo, systemd]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not proc.name startswith oneof (sshd, sudo, systemd))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_contains_allof) {
+	// Verify: "contains allof" in exception comps.
+	// For a single-value field, allof expands to a logical AND: the exception
+	// fires when proc.cmdline contains every listed token simultaneously.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = execve
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.cmdline]
+      comps: [contains allof]
+      values:
+        - [[curl, bash]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = execve and not proc.cmdline contains allof (curl, bash))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_endswith_anyof) {
+	// Verify: "endswith anyof" is accepted (anyof = at least one match).
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [fd.name]
+      comps: [endswith anyof]
+      values:
+        - [[.sh, .py, .pl]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not fd.name endswith anyof (.sh, .py, .pl))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_glob_oneof) {
+	// Verify: "glob oneof" is accepted.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [fd.name]
+      comps: [glob oneof]
+      values:
+        - [["/tmp/*.sh", "/tmp/*.py", "/dev/shm/*.sh"]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_icontains_oneof) {
+	// Verify: "icontains oneof" is accepted (case-insensitive substring match).
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = execve
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.cmdline]
+      comps: [icontains oneof]
+      values:
+        - [[MONITOR, HEALTHCHECK, PROBE]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+// ----- multi-field exceptions with compound comps -----
+
+TEST_F(test_falco_engine, exceptions_modifier_op_multi_field_mixed) {
+	// Verify: multi-field exception where the first comp is a compound operator
+	// and the second is a plain operator.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name, fd.name]
+      comps: [startswith oneof, startswith]
+      values:
+        - [[sshd, sudo], /etc/]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not (proc.name startswith oneof (sshd, sudo) and "
+	          "fd.name startswith /etc/))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_multi_field_both_compound) {
+	// Verify: multi-field exception where both comps are compound operators.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.exepath, fd.name]
+      comps: [endswith anyof, glob oneof]
+      values:
+        - [[/dpkg, /rpm, /pip], ["/tmp/*.deb", "/tmp/*.rpm"]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+// ----- rejection of invalid compound comps -----
+
+TEST_F(test_falco_engine, exceptions_modifier_op_invalid_base_operator) {
+	// Verify: a compound comp with an invalid base operator is rejected.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [frobulate oneof]
+      values:
+        - [[bash]]
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("'frobulate oneof' is not a supported comparison operator"));
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_modifier_alone) {
+	// Verify: a bare modifier keyword without a base operator is rejected.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [oneof]
+      values:
+        - [[bash]]
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("'oneof' is not a supported comparison operator"));
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_list_op_unchanged) {
+	// Regression: plain list operators (in, pmatch, intersects) in single-field
+	// exceptions must still work exactly as before.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex_in
+      fields: proc.name
+      comps: in
+      values:
+        - cat
+        - grep
+    - name: ex_pmatch
+      fields: proc.exepath
+      comps: pmatch
+      values:
+        - /usr/bin/
+        - /usr/local/bin/
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_eq_oneof) {
+	// Verify: "= oneof" is accepted.  The equality operator is a single character;
+	// is_operator_with_modifier must split "= oneof" correctly into base "=" and
+	// modifier "oneof".
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = execve
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [= oneof]
+      values:
+        - [[nmap, masscan, nikto]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = execve and not proc.name = oneof (nmap, masscan, nikto))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_regex_oneof) {
+	// Verify: "regex oneof" is accepted with patterns that genuinely require
+	// regex (character classes, quantifiers).
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = execve
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [regex oneof]
+      values:
+        - [["research[0-9]+", "pentest-[0-9]{2,4}"]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_scalar_value_parenthesised) {
+	// Exercises the is_operator_for_list fix in rule_loader_compiler.cpp.
+	// When a single scalar value (not a nested list) is paired with a compound
+	// comp, the compiler must parenthesise it:
+	//   proc.name startswith oneof (sshd)    <- correct
+	//   proc.name startswith oneof sshd      <- invalid — no parens
+	// Without the fix, is_operator_for_list("startswith oneof") returned false
+	// and the value would be left unparenthesised, causing a parse error.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name]
+      comps: [startswith oneof]
+      values:
+        - [sshd]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not proc.name startswith oneof (sshd))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_all_three_modifiers) {
+	// Verify: oneof, anyof, and allof all parse correctly for the same base
+	// operator in three separate exceptions on the same rule.
+	// For single-value fields the three modifiers produce distinct semantics
+	// (oneof=exactly-one, anyof=at-least-one, allof=logical-AND across RHS),
+	// but all three must be accepted by the validator and compiler.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = execve
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex_oneof
+      fields: [proc.name]
+      comps: [startswith oneof]
+      values:
+        - [[ssh, su]]
+    - name: ex_anyof
+      fields: [proc.name]
+      comps: [startswith anyof]
+      values:
+        - [[ssh, su]]
+    - name: ex_allof
+      fields: [proc.cmdline]
+      comps: [contains allof]
+      values:
+        - [[curl, ci.internal]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = execve and not proc.name startswith oneof (ssh, su) and not "
+	          "proc.name startswith anyof (ssh, su) and not proc.cmdline contains allof "
+	          "(curl, ci.internal))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_comp_whitespace_normalized) {
+	// Comp strings with surrounding whitespace must be accepted: normalize_comp()
+	// in validate_exception_info strips them before the strict operator check,
+	// so the stored value is always canonical and the check itself stays exact.
+	// YAML quoted scalars are used below so the parser preserves the spaces.
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex_single
+      fields: [proc.name]
+      comps: ["  startswith oneof  "]
+      values:
+        - [[sshd, sudo]]
+    - name: ex_multi
+      fields: [proc.name, fd.name]
+      comps: ["  contains  ", "  startswith anyof  "]
+      values:
+        - [agent, [/etc/, /var/]]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not proc.name startswith oneof (sshd, sudo) and not "
+	          "(proc.name contains agent and fd.name startswith anyof (/etc/, /var/)))");
+}
+
+TEST_F(test_falco_engine, exceptions_modifier_op_str_op_multi_field_regression) {
+	// Regression: plain string operators in multi-field exceptions must still
+	// work after the is_operator_defined change (now uses && with
+	// is_operator_with_modifier instead of plain !is_operator_defined).
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule
+  condition: evt.type = open
+  output: command=%proc.cmdline
+  priority: INFO
+  exceptions:
+    - name: ex
+      fields: [proc.name, fd.name, proc.exepath]
+      comps: [contains, startswith, =]
+      values:
+        - [agent, /var/log/, /usr/bin/prometheus]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml")) << m_load_result_string;
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),
+	          "(evt.type = open and not (proc.name contains agent and fd.name startswith "
+	          "/var/log/ and proc.exepath = /usr/bin/prometheus))");
+}
