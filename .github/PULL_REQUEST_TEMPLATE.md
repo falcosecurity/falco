@@ -23,6 +23,8 @@
 
 > /kind release
 
+> /kind chart-release
+
 <!--
 Please remove the leading whitespace before the `/kind <>` you uncommented.
 -->
@@ -40,6 +42,8 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 > /area proposals
 
 > /area automation
+
+> /area chart
 
 <!--
 Please remove the leading whitespace before the `/area <>` you uncommented.

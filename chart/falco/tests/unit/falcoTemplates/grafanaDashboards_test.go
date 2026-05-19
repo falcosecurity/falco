@@ -17,7 +17,7 @@ package falcoTemplates
 
 import (
 	"fmt"
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"io"
 	"os"
 	"path/filepath"
@@ -93,7 +93,7 @@ func (g *grafanaDashboardsTemplateTest) TestConfig() {
 		},
 		{"folder",
 			map[string]string{
-				"grafana.dashboards.enabled":          	                "true",
+				"grafana.dashboards.enabled":                           "true",
 				"grafana.dashboards.configMaps.falco.folder":           "custom-folder",
 				"grafana.dashboards.configMaps.falco.folderAnnotation": "grafana_folder",
 			},

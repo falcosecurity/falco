@@ -1,6 +1,8 @@
 name: Codespell
 on:
   pull_request:
+    paths-ignore:
+      - "chart/falco/**"
     
 permissions:  
   contents: read

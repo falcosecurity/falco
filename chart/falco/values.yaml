@@ -48,7 +48,7 @@ podLabels: {}
 podPriorityClassName:
 
 # -- Set securityContext for the pods
-# These security settings are overriden by the ones specified for the specific
+# These security settings are overridden by the ones specified for the specific
 # containers when there is overlap.
 podSecurityContext: {}
 
@@ -957,7 +957,7 @@ falco:
   #
   # -- List of plugins to load.
   # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
-  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
+  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integration.
   # To use these plugins with this chart, please refer to `collectors` settings.
   load_plugins: []
 
@@ -967,7 +967,7 @@ falco:
   # applied when the corresponding plugin is enabled using the `load_plugins`
   # option.
   # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
-  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integreation.
+  # For `container` and `k8saudit` plugins, this Helm chart provides a managed integration.
   # To use these plugins with this chart, please refer to `collectors` settings.
   plugins: []
 

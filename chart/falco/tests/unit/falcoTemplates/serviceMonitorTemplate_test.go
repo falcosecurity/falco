@@ -17,7 +17,7 @@ package falcoTemplates
 
 import (
 	"encoding/json"
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"path/filepath"
 	"reflect"
 	"testing"

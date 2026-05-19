@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"

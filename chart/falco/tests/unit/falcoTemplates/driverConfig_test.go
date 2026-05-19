@@ -17,7 +17,7 @@ package falcoTemplates
 
 import (
 	"fmt"
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"path/filepath"
 	"strings"
 	"testing"
