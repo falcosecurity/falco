@@ -73,8 +73,9 @@ jobs:
 
       - name: Install systemd rpm macros
         run: |
-          wget https://www.rpmfind.net/linux/centos-stream/9-stream/BaseOS/${{ inputs.arch }}/os/Packages/systemd-rpm-macros-252-59.el9.noarch.rpm
-          sudo alien -d -i systemd-rpm-macros-252-59.el9.noarch.rpm
+          version=252-70
+          wget https://www.rpmfind.net/linux/centos-stream/9-stream/BaseOS/${{ inputs.arch }}/os/Packages/systemd-rpm-macros-${version}.el9.noarch.rpm
+          sudo alien -d -i systemd-rpm-macros-${version}.el9.noarch.rpm
 
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
