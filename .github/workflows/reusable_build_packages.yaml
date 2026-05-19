@@ -86,7 +86,7 @@ jobs:
           path: /tmp
 
       - name: Install zig
-        if: inputs.sanitizers == false
+        if: ${{ !inputs.enable_sanitizers }}
         uses: falcosecurity/libs/.github/actions/install-zig@master
 
       - name: Prepare project
@@ -159,7 +159,7 @@ jobs:
           path: /tmp
 
       - name: Install zig
-        if: inputs.sanitizers == false
+        if: ${{ !inputs.enable_sanitizers }}
         uses: falcosecurity/libs/.github/actions/install-zig@master
 
       - name: Prepare project
