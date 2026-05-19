@@ -1,7 +1,7 @@
 package falcoTemplates
 
 import (
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

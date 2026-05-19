@@ -141,6 +141,24 @@ pre-commit install --install-hooks --hook-type prepare-commit-msg --overwrite
 
 And you have done! Now you don't have to remember the `-s` option every time you commit something, the DCO hook will automatically add the DCO if you forget it! 😄
 
+## Helm Chart Contributions
+
+The Falco chart source lives in this repository under [`chart/falco`](chart/falco). This repository is the source of truth for chart changes, chart version bumps, changelog entries, and generated chart docs.
+
+Published Falco charts live in [`falcosecurity/charts`](https://github.com/falcosecurity/charts). After chart changes are merged here, Falco infrastructure opens or updates the matching chart release PR in `falcosecurity/charts`.
+
+PRs that change chart templates, values, release metadata, or the application version rendered by the chart must update [`chart/falco/Chart.yaml`](chart/falco/Chart.yaml) and [`chart/falco/CHANGELOG.md`](chart/falco/CHANGELOG.md) in this repository.
+
+Use SemVer for the chart `version`: major for breaking changes to values, rendered resources, or upgrade behavior; minor for backward-compatible chart features; patch for backward-compatible fixes or metadata changes. Set `appVersion` to the Falco version rendered by the chart.
+
+If chart values or chart documentation change, update [`chart/falco/README.gotmpl`](chart/falco/README.gotmpl) and regenerate [`chart/falco/README.md`](chart/falco/README.md).
+
+Before opening a chart PR, run:
+
+```bash
+make chart-check
+```
+
 ## Some best practices 📏
 
 ### Class variables

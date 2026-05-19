@@ -352,7 +352,7 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
  * The falcoctl configuration is updated to allow  plugin artifacts to be installed. The refs in the install
    section are updated by adding the reference for the k8s meta plugin that needs to be installed.
  NOTE: It seems that the named templates run during the validation process. And then again during the
- render fase. In our case we are setting global variable that persist during the various phases.
+ render phase. In our case we are setting global variable that persist during the various phases.
  We need to make the helper idempotent.
 */}}
 {{- define "k8smeta.configuration" -}}

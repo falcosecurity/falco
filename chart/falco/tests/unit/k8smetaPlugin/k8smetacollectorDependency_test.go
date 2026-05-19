@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/falcosecurity/charts/charts/falco/tests/unit"
+	"github.com/falcosecurity/falco/chart/falco/tests/unit"
 
 	"slices"
 

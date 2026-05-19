@@ -126,7 +126,7 @@ This way you will upgrade Falco to `v0.34.0`.
 
 ### Falcoctl support
 
-[Falcoctl](https://github.com/falcosecurity/falcoctl) is a new tool born to automatize operations when deploying Falco.
+[Falcoctl](https://github.com/falcosecurity/falcoctl) is a new tool born to automate operations when deploying Falco.
 
 Before the `v3.0.0` of the charts _rulesfiles_ and _plugins_ were shipped bundled in the Falco docker image. It precluded the possibility to update the _rulesfiles_ and _plugins_ until a new version of Falco was released. Operators had to manually update the _rulesfiles_ or add new _plugins_ to Falco. The process was cumbersome and error-prone. Operators had to create their own Falco docker images with the new plugins baked into it or wait for a new Falco release.
 
@@ -227,11 +227,11 @@ Based on your deployment scenario:
          artifact:
 
            # -- List of artifact types that falcoctl will handle. If the configured refs resolves to an artifact whose type is not contained
-           # in the list it will refuse to downloade and install that artifact.
+           # in the list it will refuse to download and install that artifact.
            allowedTypes:
              - rulesfile
            install:
-             # -- Do not resolve the depenencies for artifacts. By default is true, but for our use carse we disable it.
+             # -- Do not resolve the dependencies for artifacts. By default is true, but for our use case we disable it.
              resolveDeps: false
              # -- List of artifacts to be installed by the falcoctl init container.
              refs: [k8saudit-rules:0.5]

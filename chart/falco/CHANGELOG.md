@@ -373,7 +373,7 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## v4.5.2
 
-* reording scc configuration, making it more robust to plain yaml comparison
+* reordering scc configuration, making it more robust to plain yaml comparison
 
 ## v4.5.1
 
@@ -1358,7 +1358,7 @@ Remove whitespace around `falco.httpOutput.url` to fix the error `libcurl error:
 * Enable eBPF by default on Falco
 * Allow to download Falco images from different registries than `docker.io`
 * Use rollingUpdate strategy by default
-* Provide sane defauls for falco resource management
+* Provide sane defaults for falco resource management
 
 ## v0.5.6
 
