@@ -1,7 +1,7 @@
 apiVersion: v2
 name: falco
-version: 8.0.5
-appVersion: "0.43.1"
+version: 9.0.0
+appVersion: "0.44.0"
 description: Falco
 keywords:
   - monitoring
