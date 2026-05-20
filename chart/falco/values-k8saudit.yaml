@@ -1,0 +1,58 @@
+# -- Disable the drivers since we want to deploy only the k8saudit plugin.
+driver:
+  enabled: false
+
+# -- Disable the collectors, no syscall events to enrich with metadata.
+collectors:
+  enabled: false
+
+# -- Deploy Falco as a deployment. One instance of Falco is enough. Anyway the number of replicas is configurabale.
+controller:
+  kind: deployment
+  deployment:
+    # -- Number of replicas when installing Falco using a deployment. Change it if you really know what you are doing.
+    # For more info check the section on Plugins in the README.md file.
+    replicas: 1
+
+falcoctl:
+  artifact:
+    install:
+      # -- Enable the init container.
+      enabled: true
+    follow:
+      # -- Enable the sidecar container.
+      enabled: true
+  config:
+    artifact:
+      install:
+        # -- List of artifacts to be installed by the falcoctl init container.
+        refs: [k8saudit-rules:0.16, k8saudit:0.16]
+      follow:
+        # -- List of artifacts to be followed by the falcoctl sidecar container.
+        refs: [k8saudit-rules:0.16]
+
+services:
+  - name: k8saudit-webhook
+    type: NodePort
+    ports:
+      - port: 9765 # See plugin open_params
+        nodePort: 30007
+        protocol: TCP
+
+falco:
+  rules_files:
+    - /etc/falco/k8s_audit_rules.yaml
+    - /etc/falco/rules.d
+  plugins:
+    - name: k8saudit
+      library_path: libk8saudit.so
+      init_config:
+        ""
+        # maxEventBytes: 1048576
+        # sslCertificate: /etc/falco/falco.pem
+      open_params: "http://:9765/k8s-audit"
+    - name: json
+      library_path: libjson.so
+      init_config: ""
+  # Plugins that Falco will load. Note: the same plugins are installed by the falcoctl-artifact-install init container.
+  load_plugins: [k8saudit, json]

@@ -5,6 +5,8 @@ on:
       - master
       - 'release/**'
       - 'maintainers/**'
+    paths-ignore:
+      - "chart/falco/**"
 
 permissions:  
   contents: read

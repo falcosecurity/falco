@@ -16,21 +16,24 @@
 
 # mofidy the following variables to match your paths
 CLANG_FORMAT_EXE ?= clang-format
-CLANG_FORMAT_VERSION = "$(shell ${CLANG_FORMAT_EXE} --version | grep -o '[0-9]*\.[0-9]*\.[0-9]*')"
+CLANG_FORMAT_VERSION = "$(shell ${CLANG_FORMAT_EXE} --version 2>/dev/null | grep -o '[0-9]*\.[0-9]*\.[0-9]*')"
 CLANG_FORMAT_DESIRED_VERSION ="18.1.8"
 
 CMAKE_FORMAT_EXE ?= cmake-format
-CMAKE_FORMAT_VERSION = "$(shell ${CMAKE_FORMAT_EXE} --version | grep -o '[0-9]*\.[0-9]*\.[0-9]*')"
+CMAKE_FORMAT_VERSION = "$(shell ${CMAKE_FORMAT_EXE} --version 2>/dev/null | grep -o '[0-9]*\.[0-9]*\.[0-9]*')"
 CMAKE_FORMAT_DESIRED_VERSION = "0.6.13"
 
 PROJECT_ROOT_DIR = $(shell git rev-parse --show-toplevel)
+HELM ?= helm
+HELM_DOCS ?= helm-docs
+chart ?= chart/falco
 
 ######################
 #    Clang-format    #
 ######################
 .PHONY: clang-format-install
 clang-format-install:
-ifeq (, $(shell ${CLANG_FORMAT_EXE} --version))
+ifeq (, $(shell ${CLANG_FORMAT_EXE} --version 2>/dev/null))
 	@echo "${CLANG_FORMAT_EXE} is not installed. Please read the 'coding style' doc to get more info."
 	@exit 1
 endif
@@ -53,7 +56,7 @@ check-clang: clang-format-install
 ######################
 .PHONY: cmake-format-install
 cmake-format-install:
-ifeq (, $(shell ${CMAKE_FORMAT_EXE} --version))
+ifeq (, $(shell ${CMAKE_FORMAT_EXE} --version 2>/dev/null))
 	@echo "${CMAKE_FORMAT_EXE} is not installed. Please read the 'coding style' doc to get more info."
 	@exit 1
 endif
@@ -79,3 +82,32 @@ format-all: format-clang format-cmake
 .PHONY: check-all
 check-all: check-clang check-cmake
 
+######################
+#     Helm chart     #
+######################
+.PHONY: chart-deps
+chart-deps:
+	$(HELM) dependency update ${chart}
+
+.PHONY: chart-lint
+chart-lint: chart-deps
+	$(HELM) lint ${chart}
+
+.PHONY: chart-template
+chart-template: chart-deps
+	$(HELM) template falco ${chart} --namespace falco
+
+.PHONY: chart-docs
+chart-docs:
+	$(HELM_DOCS) -c ./${chart} -t ./README.gotmpl -o ./README.md
+
+.PHONY: chart-docs-check
+chart-docs-check: chart-docs
+	git diff --exit-code -- ${chart}/README.md
+
+.PHONY: chart-unit-test
+chart-unit-test: chart-deps
+	cd ${chart}/tests && go test ./unit/...
+
+.PHONY: chart-check
+chart-check: chart-lint chart-template chart-docs-check chart-unit-test

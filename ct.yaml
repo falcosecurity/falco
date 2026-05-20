@@ -1,0 +1,8 @@
+remote: origin
+validate-maintainers: false
+target-branch: master
+chart-repos:
+  - falcosecurity=https://falcosecurity.github.io/charts
+helm-extra-args: --timeout 800s
+chart-dirs:
+  - chart

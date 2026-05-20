@@ -1,0 +1,18 @@
+{{- with $dot := . }}
+{{- range $service := $dot.Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "falco.fullname" $dot }}-{{ $service.name }}
+  namespace: {{ include "falco.namespace" $dot }}
+  labels:
+    {{- include "falco.labels" $dot | nindent 4 }}
+spec:
+  {{- with $service }}
+    {{- omit . "name" "selector" | toYaml | nindent 2 }}
+  {{- end}}
+  selector:
+    {{- include "falco.selectorLabels" $dot | nindent 4 }}
+{{- end }}
+{{- end }}

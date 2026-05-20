@@ -1,0 +1,14 @@
+{{- if .Values.customRules }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "falco.fullname" . }}-rules
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+data:
+{{- range $file, $content :=  .Values.customRules }}
+  {{ $file }}: |-
+{{ $content | indent 4}}
+{{- end }}
+{{- end }}
