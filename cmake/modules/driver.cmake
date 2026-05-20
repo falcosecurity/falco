@@ -41,10 +41,21 @@ else()
 		)
 	endif()
 
+	# Forward the parent generator/platform/toolset (see falcosecurity-libs.cmake for the
+	# rationale).
+	set(_driver_nested_args "")
+	if(CMAKE_GENERATOR_PLATFORM)
+		list(APPEND _driver_nested_args "-A" "${CMAKE_GENERATOR_PLATFORM}")
+	endif()
+	if(CMAKE_GENERATOR_TOOLSET)
+		list(APPEND _driver_nested_args "-T" "${CMAKE_GENERATOR_TOOLSET}")
+	endif()
+
 	# cd /path/to/build && cmake /path/to/source
 	execute_process(
 		COMMAND
-			"${CMAKE_COMMAND}" -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" -DDRIVER_REPO=${DRIVER_REPO}
+			"${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" ${_driver_nested_args}
+			-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" -DDRIVER_REPO=${DRIVER_REPO}
 			-DDRIVER_VERSION=${DRIVER_VERSION} -DDRIVER_CHECKSUM=${DRIVER_CHECKSUM}
 			${DRIVER_CMAKE_SOURCE_DIR}
 		WORKING_DIRECTORY ${DRIVER_CMAKE_WORKING_DIR}

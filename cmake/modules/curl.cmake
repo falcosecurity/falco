@@ -16,8 +16,16 @@
 option(USE_BUNDLED_CURL "Enable building of the bundled curl" ${USE_BUNDLED_DEPS})
 
 include(ExternalProjectToolchain)
-include(openssl)
-include(zlib)
+
+# The bundled curl build is autotools-based and not supported on Windows; force the
+# system/find_package path there so non-bundled callers (e.g. vcpkg curl with the SChannel TLS
+# backend) are not blocked by an OpenSSL dependency.
+if(WIN32)
+	set(USE_BUNDLED_CURL
+		OFF
+		CACHE BOOL "Bundled curl is not supported on Windows" FORCE
+	)
+endif()
 
 if(CURL_INCLUDE_DIRS)
 	# we already have curl
@@ -25,6 +33,10 @@ elseif(NOT USE_BUNDLED_CURL)
 	find_package(CURL REQUIRED)
 	message(STATUS "Found CURL: include: ${CURL_INCLUDE_DIRS}, lib: ${CURL_LIBRARIES}")
 else()
+	# The bundled curl ExternalProject depends on bundled OpenSSL and zlib; pull them in here so
+	# non-bundled curl callers do not pay for OpenSSL.
+	include(openssl)
+	include(zlib)
 	if(BUILD_SHARED_LIBS)
 		set(CURL_LIB_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 		set(CURL_STATIC_OPTION)
