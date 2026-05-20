@@ -13,22 +13,24 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 #
-# Update the version and recompute the SHA256 checksum in the cmake module for libs, drivers and container plugin.
+# Update the version and recompute the SHA256 checksum in the cmake module for libs, drivers, container plugin and
+# rules.
 #
 # Usage:
 #   ./update-deps-version libs      <version>
 #   ./update-deps-version drivers   <version>
 #   ./update-deps-version container <version>
+#   ./update-deps-version rules     <version>
 #
-# <version> can be a commit hash, tag, or branch name for libs/drivers, and a release tag (e.g. "0.7.0") for container
-# plugin.
+# <version> can be a commit hash, tag, or branch name for libs/drivers, a release tag (e.g. "0.7.0") for container
+# plugin and rules.
 
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 usage() {
-	echo "Usage: $(basename "$0") {libs|drivers|container} <version>" >&2
+	echo "Usage: $(basename "$0") {libs|drivers|container|rules} <version>" >&2
 	exit 1
 }
 
@@ -120,6 +122,35 @@ update_container_plugin_dep() {
 	echo "Updated ${CMAKE_FILE}"
 }
 
+# Update the rules version and SHA256 checksum.
+#
+# Usage: update_rules_dep <version>
+update_rules_dep() {
+	local VERSION="$1"
+	local CMAKE_FILE="${REPO_ROOT}/cmake/modules/rules.cmake"
+	local TAG="falco-rules-${VERSION}"
+
+	echo "Rules version: ${TAG}"
+
+	local SHA256
+	SHA256="$(sha256_of_url "https://download.falco.org/rules/${TAG}.tar.gz")"
+	echo "  SHA256: ${SHA256}"
+
+	# note: in the following `sed` expressions, `-z` is required in order for `[[:space:]]+` to span across newlines.
+
+	# Update `FALCOSECURITY_RULES_FALCO_VERSION`.
+	sed -z -i -E \
+		"s/(set\(FALCOSECURITY_RULES_FALCO_VERSION[[:space:]]+\")[^\"]+(\")/\\1${TAG}\\2/" \
+		"${CMAKE_FILE}"
+
+	# Update `FALCOSECURITY_RULES_FALCO_CHECKSUM`.
+	sed -z -i -E \
+		"s/(set\(FALCOSECURITY_RULES_FALCO_CHECKSUM[[:space:]]+\"SHA256=)[a-fA-F0-9]+(\")/\\1${SHA256}\\2/" \
+		"${CMAKE_FILE}"
+
+	echo "Updated ${CMAKE_FILE}"
+}
+
 [[ $# -ne 2 ]] && usage
 SUBCMD="$1"
 VERSION="$2"
@@ -143,6 +174,9 @@ libs)
 	;;
 container)
 	update_container_plugin_dep "${VERSION}"
+	;;
+rules)
+	update_rules_dep "${VERSION}"
 	;;
 *)
 	usage
