@@ -5,6 +5,12 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+## v9.0.0
+
+* Drop gRPC output and server support
+* Drop support for legacy eBPF probe
+* Drop support for gVisor engine
+
 ## v8.0.5
 
 * Honor `falco.plugins_hostinfo` for `proc-fs` mount and volume generation in plugin-only deployments, while keeping existing behavior when `driver.enabled=true`
