@@ -63,7 +63,7 @@ falco_outputs::falco_outputs(std::shared_ptr<falco_engine> engine,
 	}
 
 #ifndef __EMSCRIPTEN__
-	m_queue.set_capacity(outputs_queue_capacity);
+	m_queue_capacity = outputs_queue_capacity;
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
 #endif
 }
@@ -154,7 +154,26 @@ void falco_outputs::handle_event(sinsp_evt *evt,
 	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
+}
+
+void falco_outputs::handle_event_formatted(uint64_t ts,
+                                           falco_common::priority_type priority,
+                                           const std::string &msg,
+                                           const std::string &rule,
+                                           const std::string &source,
+                                           const nlohmann::json &fields,
+                                           const std::set<std::string> &tags) {
+	falco_outputs::ctrl_msg cmsg = {};
+	cmsg.ts = ts;
+	cmsg.priority = priority;
+	cmsg.msg = msg;
+	cmsg.rule = rule;
+	cmsg.source = source;
+	cmsg.fields = fields;
+	cmsg.tags = tags;
+	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
+	this->push(std::move(cmsg));
 }
 
 void falco_outputs::handle_msg(uint64_t ts,
@@ -181,7 +200,6 @@ void falco_outputs::handle_msg(uint64_t ts,
 		char time_sec[20];  // sizeof "YYYY-MM-DDTHH:MM:SS"
 		char time_ns[12];   // sizeof ".sssssssssZ"
 		std::string iso8601evttime;
-
 		struct tm tm_buf;
 		falco_gmtime_r(&evttime, &tm_buf);
 		strftime(time_sec, sizeof(time_sec), "%FT%T", &tm_buf);
@@ -219,7 +237,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 	}
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
 void falco_outputs::cleanup_outputs() {
@@ -237,7 +255,10 @@ void falco_outputs::stop_worker() {
 		        falco_logger::level::NOTICE,
 		        "output channels still blocked, discarding all remaining notifications\n");
 #ifndef __EMSCRIPTEN__
-		m_queue.clear();
+		{
+			std::lock_guard<std::mutex> lock(m_queue_mutex);
+			std::queue<ctrl_msg>().swap(m_queue);
+		}
 #endif
 		this->push_ctrl(falco_outputs::ctrl_msg_type::CTRL_MSG_STOP);
 	});
@@ -252,18 +273,24 @@ void falco_outputs::stop_worker() {
 inline void falco_outputs::push_ctrl(ctrl_msg_type cmt) {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.type = cmt;
-	this->push(cmsg);
+	this->push(std::move(cmsg));
 }
 
-inline void falco_outputs::push(const ctrl_msg &cmsg) {
+inline void falco_outputs::push(ctrl_msg cmsg) {
 #ifndef __EMSCRIPTEN__
-	if(!m_queue.try_push(cmsg)) {
-		if(m_outputs_queue_num_drops.load() == 0) {
-			falco_logger::log(falco_logger::level::ERR,
-			                  "Outputs queue out of memory. Drop event and continue on ...");
+	{
+		std::lock_guard<std::mutex> lock(m_queue_mutex);
+		if(m_queue.size() >= m_queue_capacity) {
+			if(m_outputs_queue_num_drops.load() == 0) {
+				falco_logger::log(falco_logger::level::ERR,
+				                  "Outputs queue out of memory. Drop event and continue on ...");
+			}
+			m_outputs_queue_num_drops++;
+			return;
 		}
-		m_outputs_queue_num_drops++;
+		m_queue.push(std::move(cmsg));
 	}
+	m_queue_cv.notify_one();
 #else
 	for(const auto &o : m_outputs) {
 		process_msg(o.get(), cmsg);
@@ -285,9 +312,13 @@ void falco_outputs::worker() noexcept {
 
 	falco_outputs::ctrl_msg cmsg;
 	do {
-		// Block until a message becomes available.
 #ifndef __EMSCRIPTEN__
-		m_queue.pop(cmsg);
+		{
+			std::unique_lock<std::mutex> lock(m_queue_mutex);
+			m_queue_cv.wait(lock, [this] { return !m_queue.empty(); });
+			cmsg = std::move(m_queue.front());
+			m_queue.pop();
+		}
 #endif
 
 		for(const auto &o : m_outputs) {

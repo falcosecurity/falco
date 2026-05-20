@@ -157,6 +157,20 @@ else()
 	message(STATUS "No strlcpy and strlcat found, will use local definition")
 endif()
 
+# Keep libs in sync with Falco's multi-thread option. Use FORCE so toggling FALCO_MULTI_THREAD
+# updates a previously cached ENABLE_MULTI_THREAD value.
+if(FALCO_MULTI_THREAD)
+	set(ENABLE_MULTI_THREAD
+		ON
+		CACHE BOOL "Multi-threaded libsinsp (from FALCO_MULTI_THREAD)" FORCE
+	)
+else()
+	set(ENABLE_MULTI_THREAD
+		OFF
+		CACHE BOOL "Multi-threaded libsinsp (from FALCO_MULTI_THREAD)" FORCE
+	)
+endif()
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	include(driver)
 endif()

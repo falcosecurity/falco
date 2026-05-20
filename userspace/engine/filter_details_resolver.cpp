@@ -22,10 +22,11 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
-static std::string get_field_name(const std::string& name, const std::optional<std::string>& arg) {
+static inline std::string get_field_name(const std::string& name,
+                                         const std::optional<std::string>& arg) {
 	std::string fld = name;
-	if(arg && !arg->empty()) {
-		fld += "[" + *arg + "]";
+	if(arg.has_value() && !arg->empty()) {
+		fld += "[" + arg.value() + "]";
 	}
 	return fld;
 }

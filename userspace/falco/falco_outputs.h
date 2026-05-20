@@ -17,17 +17,17 @@ limitations under the License.
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
 #include <map>
+#include <mutex>
+#include <queue>
 #include <thread>
 
 #include "falco_common.h"
 #include "falco_engine.h"
 #include "outputs.h"
 #include "formats.h"
-#ifndef __EMSCRIPTEN__
-#include "tbb/concurrent_queue.h"
-#endif
 
 /*!
     \brief This class acts as the primary interface between a program and the
@@ -78,6 +78,19 @@ public:
 	                nlohmann::json &output_fields);
 
 	/*!
+	    \brief Push a pre-formatted event message to the output queue.
+	    Used by multi-threaded workers that format events with their own
+	    per-worker falco_formats/engine instances.
+	*/
+	void handle_event_formatted(uint64_t ts,
+	                            falco_common::priority_type priority,
+	                            const std::string &msg,
+	                            const std::string &rule,
+	                            const std::string &source,
+	                            const nlohmann::json &fields,
+	                            const std::set<std::string> &tags);
+
+	/*!
 	    \brief Sends a cleanup message to all outputs.
 	    Each output can have an implementation-specific behavior.
 	    In general, this is used to flush or clean output buffers.
@@ -119,13 +132,15 @@ private:
 	};
 
 #ifndef __EMSCRIPTEN__
-	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
-	falco_outputs_cbq m_queue;
+	std::queue<ctrl_msg> m_queue;
+	std::mutex m_queue_mutex;
+	std::condition_variable m_queue_cv;
+	size_t m_queue_capacity;
 #endif
 
 	std::atomic<uint64_t> m_outputs_queue_num_drops = 0;
 	std::thread m_worker_thread;
-	inline void push(const ctrl_msg &cmsg);
+	inline void push(ctrl_msg cmsg);
 	inline void push_ctrl(ctrl_msg_type cmt);
 	void worker() noexcept;
 	void stop_worker();
