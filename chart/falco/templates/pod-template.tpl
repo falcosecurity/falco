@@ -310,12 +310,14 @@ spec:
     - name: falco-gvisor-config
       emptyDir: {}
     {{- end }}
+    {{- if or .Values.falcoctl.artifact.install.enabled .Values.falcoctl.artifact.follow.enabled }}
     - name: falcoctl-config-volume
-      configMap: 
+      configMap:
         name: {{ include "falco.fullname" . }}-falcoctl
         items:
           - key: falcoctl.yaml
             path: falcoctl.yaml
+    {{- end }}
     - name: falco-yaml
       configMap:
         name: {{ include "falco.fullname" . }}

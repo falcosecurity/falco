@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v8.0.6
+
+* Do not render the `falcoctl-config-volume` pod volume when both falcoctl artifact install and follow containers are disabled
+
 ## v8.0.5
 
 * Honor `falco.plugins_hostinfo` for `proc-fs` mount and volume generation in plugin-only deployments, while keeping existing behavior when `driver.enabled=true`
