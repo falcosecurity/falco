@@ -1,5 +1,91 @@
 # Change Log
 
+## v0.44.0
+
+Released on 2026-05-26
+
+### Breaking Changes :warning:
+
+* new!: add backslash escaping support to `-o` key-path parser for literal dots and brackets in YAML key names (e.g., -o 'my\.dotted\.key=val') [[#3835](https://github.com/falcosecurity/falco/pull/3835)] - [@leogr](https://github.com/leogr)
+* chore!: drop gRPC output and server support [[#3798](https://github.com/falcosecurity/falco/pull/3798)] - [@ekoops](https://github.com/ekoops)
+* chore!: drop gVisor engine support [[#3797](https://github.com/falcosecurity/falco/pull/3797)] - [@ekoops](https://github.com/ekoops)
+* chore!: drop legacy BPF probe [[#3796](https://github.com/falcosecurity/falco/pull/3796)] - [@ekoops](https://github.com/ekoops)
+
+
+### Major Changes
+
+* feat(engine): support string comparator modifiers (oneof/allof/anyof) [[#3878](https://github.com/falcosecurity/falco/pull/3878)] - [@therealbobo](https://github.com/therealbobo)
+* new(config,rules): add `capture_events` and `capture_filesize` stop conditions for capture files [[#3824](https://github.com/falcosecurity/falco/pull/3824)] - [@leogr](https://github.com/leogr)
+* feat: validation for unknown-key in rules [[#3805](https://github.com/falcosecurity/falco/pull/3805)] - [@leogr](https://github.com/leogr)
+* feat(userspace/engine): add support for list transformer exception [[#3799](https://github.com/falcosecurity/falco/pull/3799)] - [@irozzo-1A](https://github.com/irozzo-1A)
+
+
+### Minor Changes
+
+* chore(build): Add USE_TSAN option to enable Thread Sanitizer. [[#3856](https://github.com/falcosecurity/falco/pull/3856)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* build: enable http_output, webserver, and metrics on macOS and Win [[#3827](https://github.com/falcosecurity/falco/pull/3827)] - [@leogr](https://github.com/leogr)
+
+
+### Bug Fixes
+
+* fix(docker): Restrict falco-webui service to local access only [[#3838](https://github.com/falcosecurity/falco/pull/3838)] - [@qux-bbb](https://github.com/qux-bbb)
+* fix: show condition text in warning snippet for folded scalar conditions [[#3858](https://github.com/falcosecurity/falco/pull/3858)] - [@ssam18](https://github.com/ssam18)
+* fix: respect buffered_outputs YAML config value [[#3830](https://github.com/falcosecurity/falco/pull/3830)] - [@leogr](https://github.com/leogr)
+* fix(userspace/falco): fix race condition in watchdog [[#3820](https://github.com/falcosecurity/falco/pull/3820)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* fix(scripts): update RPM repository metadata before signing when re-signing all packages [[#3774](https://github.com/falcosecurity/falco/pull/3774)] - [@c2ndev](https://github.com/c2ndev)
+
+
+
+### Non user-facing changes
+
+* chore(cmake): bump libs to `0.25.2` [[#3900](https://github.com/falcosecurity/falco/pull/3900)] - [@ekoops](https://github.com/ekoops)
+* chore: update falco rules to version `5.1.0` and add `rules` sub-command to `scripts/update-deps-version` [[#3890](https://github.com/falcosecurity/falco/pull/3890)] - [@ekoops](https://github.com/ekoops)
+* chore(chart): move Falco chart source to falco (1/5) [[#3889](https://github.com/falcosecurity/falco/pull/3889)] - [@c2ndev](https://github.com/c2ndev)
+* chore(chart): move Falco chart source to falco [[#3884](https://github.com/falcosecurity/falco/pull/3884)] - [@c2ndev](https://github.com/c2ndev)
+* chore(cmake): bump libs to `0.25.1` and drivers to `10.2.0+driver` [[#3888](https://github.com/falcosecurity/falco/pull/3888)] - [@ekoops](https://github.com/ekoops)
+* upstream multiple http_output fixes for Win/macOS (from prempti) [[#3882](https://github.com/falcosecurity/falco/pull/3882)] - [@leogr](https://github.com/leogr)
+* chore: bump container plugin version to `0.7.1` [[#3886](https://github.com/falcosecurity/falco/pull/3886)] - [@ekoops](https://github.com/ekoops)
+* fix(ci): reference correct input name for sanitizers flag and update systemd-rpm-macros [[#3885](https://github.com/falcosecurity/falco/pull/3885)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* fix(build): use Zig cross-compilation toolchain for external dependencies [[#3881](https://github.com/falcosecurity/falco/pull/3881)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* chore(cmake/modules): bump libs version to `0.25.0-rc2` [[#3876](https://github.com/falcosecurity/falco/pull/3876)] - [@ekoops](https://github.com/ekoops)
+* chore: bump container plugin version to `0.7.0` [[#3877](https://github.com/falcosecurity/falco/pull/3877)] - [@ekoops](https://github.com/ekoops)
+* ci(.github): replace `/area CI` with `/area automation` in PR template [[#3870](https://github.com/falcosecurity/falco/pull/3870)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest release candidates [[#3873](https://github.com/falcosecurity/falco/pull/3873)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* update(cmake): update libs and driver to latest master [[#3868](https://github.com/falcosecurity/falco/pull/3868)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(cmake): bump falcoctl dependency version to 0.13.0 [[#3869](https://github.com/falcosecurity/falco/pull/3869)] - [@c2ndev](https://github.com/c2ndev)
+* fix(userspace/engine): replace invalid chars while JSON-encoding [[#3866](https://github.com/falcosecurity/falco/pull/3866)] - [@ekoops](https://github.com/ekoops)
+* update(cmake): update libs and driver to latest master [[#3864](https://github.com/falcosecurity/falco/pull/3864)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* build(docker): replace apt-key with keyring; use gnupg instead of gnupg2 [[#3844](https://github.com/falcosecurity/falco/pull/3844)] - [@parisnakitakejser](https://github.com/parisnakitakejser)
+* chore(cmake): bump drivers to `10.0.0-rc2+driver` [[#3863](https://github.com/falcosecurity/falco/pull/3863)] - [@ekoops](https://github.com/ekoops)
+* chore(scripts): add script updating libs/drivers cmake module versions [[#3862](https://github.com/falcosecurity/falco/pull/3862)] - [@ekoops](https://github.com/ekoops)
+* chore(cmake): bump libs/drivers to `0.24.0-rc1`/`10.0.0-rc1+driver` [[#3861](https://github.com/falcosecurity/falco/pull/3861)] - [@ekoops](https://github.com/ekoops)
+* ci(reusable_test_packages): produce core dumps when falco crashes [[#3859](https://github.com/falcosecurity/falco/pull/3859)] - [@ekoops](https://github.com/ekoops)
+* fix(config): prevent plugin library path traversal via relative paths [[#3850](https://github.com/falcosecurity/falco/pull/3850)] - [@leogr](https://github.com/leogr)
+* fix: multi thread safety issues [[#3852](https://github.com/falcosecurity/falco/pull/3852)] - [@leogr](https://github.com/leogr)
+* update(cmake): update libs and driver to latest master [[#3823](https://github.com/falcosecurity/falco/pull/3823)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* ci: restore minimum set of required permissions [[#3841](https://github.com/falcosecurity/falco/pull/3841)] - [@ekoops](https://github.com/ekoops)
+* sync: docs(CHANGELOG.md): 0.43.1 [[#3854](https://github.com/falcosecurity/falco/pull/3854)] - [@leogr](https://github.com/leogr)
+* feat(userspace/falco): add support for kernel iterator metrics [[#3840](https://github.com/falcosecurity/falco/pull/3840)] - [@ekoops](https://github.com/ekoops)
+* docs: multi-thread falco high-level design proposal [[#3751](https://github.com/falcosecurity/falco/pull/3751)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* fix(cmake): configure falco.yaml from current src dir [[#3821](https://github.com/falcosecurity/falco/pull/3821)] - [@therealbobo](https://github.com/therealbobo)
+* fix(metrics): Prevent race condition crash during metrics collection on shutdown [[#3741](https://github.com/falcosecurity/falco/pull/3741)] - [@adduali1310](https://github.com/adduali1310)
+* update(cmake): update libs and driver to latest master [[#3765](https://github.com/falcosecurity/falco/pull/3765)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(falco): fix warning in webserver.h [[#3816](https://github.com/falcosecurity/falco/pull/3816)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* docs: fix Contributing.md outdated references [[#3807](https://github.com/falcosecurity/falco/pull/3807)] - [@cluster2600](https://github.com/cluster2600)
+* fix(webserver): fix inconsistent include directives trying to compile the webserver on Apple [[#3802](https://github.com/falcosecurity/falco/pull/3802)] - [@legobrick](https://github.com/legobrick)
+* chore(build): add support for gperftools CPU profiler [[#3771](https://github.com/falcosecurity/falco/pull/3771)] - [@irozzo-1A](https://github.com/irozzo-1A)
+* revert: "chore(.github): put back temporary action for GPG key rotation" [[#3776](https://github.com/falcosecurity/falco/pull/3776)] - [@leogr](https://github.com/leogr)
+* docs(proposals): specify version enforcing the deprecation [[#3762](https://github.com/falcosecurity/falco/pull/3762)] - [@ekoops](https://github.com/ekoops)
+* docs(OWNERS): add irozzo-1A(Iacopo Rozzo) as reviewer [[#3773](https://github.com/falcosecurity/falco/pull/3773)] - [@irozzo-1A](https://github.com/irozzo-1A)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |     39 |
+| Release note    |     22 |
+| Total           |     61 |
+
 ## v0.43.1
 
 Released on 2026-04-09
