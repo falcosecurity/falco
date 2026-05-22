@@ -23,6 +23,8 @@
 
 > /kind release
 
+> If this PR prepares a chart release, uncomment:
+
 > /kind chart-release
 
 <!--
