@@ -370,8 +370,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.6.3". Or just name + tag: container:0.6.3.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.6.3"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.7.1". Or just name + tag: container:0.7.1.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.7.1"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
@@ -527,7 +527,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.12.2"
+    tag: "0.13.0"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artifacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
