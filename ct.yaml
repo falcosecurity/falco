@@ -1,5 +1,6 @@
 remote: origin
 validate-maintainers: false
+check-version-increment: false
 target-branch: master
 chart-repos:
   - falcosecurity=https://falcosecurity.github.io/charts

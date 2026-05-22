@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - "release/**"
     paths:
       - "chart/falco/**"
       - ".github/workflows/helm-check.yaml"
@@ -13,6 +14,7 @@ on:
   pull_request:
     branches:
       - master
+      - "release/**"
     paths:
       - "chart/falco/**"
       - ".github/workflows/helm-check.yaml"
