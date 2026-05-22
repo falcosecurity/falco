@@ -143,13 +143,15 @@ And you have done! Now you don't have to remember the `-s` option every time you
 
 ## Helm Chart Contributions
 
-The Falco chart source lives in this repository under [`chart/falco`](chart/falco). This repository is the source of truth for chart changes, chart version bumps, changelog entries, and generated chart docs.
+The Falco chart source lives in [`chart/falco`](chart/falco). Published Falco charts live in [`falcosecurity/charts`](https://github.com/falcosecurity/charts), and Falco infrastructure syncs this chart there only when the chart version is bumped.
 
-Published Falco charts live in [`falcosecurity/charts`](https://github.com/falcosecurity/charts). After chart changes are merged here, Falco infrastructure opens or updates the matching chart release PR in `falcosecurity/charts`.
+Open Falco chart issues and PRs in this repository; `falcosecurity/charts` receives the generated sync PR.
 
-PRs that change chart templates, values, release metadata, or the application version rendered by the chart must update [`chart/falco/Chart.yaml`](chart/falco/Chart.yaml) and [`chart/falco/CHANGELOG.md`](chart/falco/CHANGELOG.md) in this repository.
+- Regular chart PRs target `master`: do not bump [`chart/falco/Chart.yaml`](chart/falco/Chart.yaml); add the change under `## Unreleased` in [`chart/falco/CHANGELOG.md`](chart/falco/CHANGELOG.md).
+- If a chart change must be released for the current Falco stable line, maintainers may redirect it to the active `release/*` branch.
+- Chart release PRs are prepared on the active `release/*` branch: maintainers cherry-pick the selected chart changes, use `/kind chart-release`, bump [`chart/falco/Chart.yaml`](chart/falco/Chart.yaml), and move the selected `## Unreleased` entries into the new version section. Entries not included in that release can stay under `## Unreleased`.
 
-Use SemVer for the chart `version`: major for breaking changes to values, rendered resources, or upgrade behavior; minor for backward-compatible chart features; patch for backward-compatible fixes or metadata changes. Set `appVersion` to the Falco version rendered by the chart.
+Use SemVer for the chart `version`: major for breaking changes, minor for backward-compatible chart features, patch for fixes or metadata changes. Set `appVersion` to the Falco version rendered by the chart when preparing a chart release.
 
 If chart values or chart documentation change, update [`chart/falco/README.gotmpl`](chart/falco/README.gotmpl) and regenerate [`chart/falco/README.md`](chart/falco/README.md).
 
