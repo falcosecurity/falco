@@ -210,10 +210,11 @@ void falco_outputs::handle_msg(uint64_t ts,
 		cmsg.msg = jmsg.dump();
 	} else {
 		std::string timestr;
+		std::string escaped_msg = falco_formats::escape_text_output(msg);
 		bool first = true;
 
 		sinsp_utils::ts_to_string(ts, &timestr, false, true);
-		cmsg.msg = timestr + ": " + falco_common::format_priority(priority) + " " + msg + " (";
+		cmsg.msg = timestr + ": " + falco_common::format_priority(priority) + " " + escaped_msg + " (";
 		for(auto &pair : output_fields.items()) {
 			if(first) {
 				first = false;

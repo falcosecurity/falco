@@ -36,6 +36,38 @@ falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
 
 falco_formats::~falco_formats() {}
 
+std::string falco_formats::escape_text_output(const std::string &output) {
+	static const char hex[] = "0123456789abcdef";
+
+	std::string escaped;
+	escaped.reserve(output.size());
+
+	for(unsigned char c : output) {
+		switch(c) {
+		case '\n':
+			escaped += "\\n";
+			break;
+		case '\r':
+			escaped += "\\r";
+			break;
+		case '\t':
+			escaped += "\\t";
+			break;
+		default:
+			if(c < 0x20 || c == 0x7f) {
+				escaped += "\\u00";
+				escaped += hex[c >> 4];
+				escaped += hex[c & 0x0f];
+			} else {
+				escaped += static_cast<char>(c);
+			}
+			break;
+		}
+	}
+
+	return escaped;
+}
+
 std::string falco_formats::format_event(sinsp_evt *evt,
                                         const std::string &rule,
                                         const std::string &source,
@@ -74,7 +106,7 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 	std::string output = prefix + " " + message;
 
 	if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_NORMAL) {
-		return output;
+		return escape_text_output(output);
 	} else if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_JSON) {
 		std::string json_fields_message;
 		std::string json_fields_prefix;

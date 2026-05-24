@@ -40,6 +40,8 @@ public:
 	                         const std::string &hostname,
 	                         const extra_output_field_t &extra_fields) const;
 
+	static std::string escape_text_output(const std::string &output);
+
 	std::string format_string(sinsp_evt *evt,
 	                          const std::string &format,
 	                          const std::string &source) const;
