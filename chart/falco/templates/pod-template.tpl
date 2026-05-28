@@ -147,6 +147,7 @@ spec:
         - mountPath: /etc/ssl/certs
           name: {{ include "falco.fullname" . }}-falcoctl-registry-cacert-volume
       {{- end }}
+      {{- end }}
       {{- if eq (include "driverLoader.enabled" .) "true" }}
         - mountPath: /etc/falco/config.d
           name: specialized-falco-configs
