@@ -453,6 +453,11 @@ extra:
   args: []
   # -- Additional initContainers for Falco pods.
   initContainers: []
+  # -- Extra customCaCert section to create and mount custom/corporate CA Certificate used
+  # by registry server
+  registryCustomCaCert:
+    enabled: false
+    cacert: ""
 
 # -- Override hostname in falco pod
 podHostname:
