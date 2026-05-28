@@ -143,10 +143,6 @@ spec:
         - mountPath: /usr/share/falco/plugins
           name: plugins-install-dir
       {{- end }}
-      {{- if .Values.extra.registryCustomCaCert.enabled }}
-        - mountPath: /etc/ssl/certs
-          name: {{ include "falco.fullname" . }}-falcoctl-registry-cacert-volume
-      {{- end }}
       {{- end }}
       {{- if eq (include "driverLoader.enabled" .) "true" }}
         - mountPath: /etc/falco/config.d
