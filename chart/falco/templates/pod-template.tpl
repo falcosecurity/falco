@@ -237,7 +237,7 @@ spec:
         defaultMode: 420
         items:
           - key: registry-cacert.pem
-          path: registry-cacert.pem
+            path: registry-cacert.pem
     {{- end }}
     {{- end }}
     - name: root-falco-fs
