@@ -566,7 +566,7 @@ falcoctl:
       # -- A list of volume mounts you want to add to the falcoctl-artifact-follow sidecar container.
       mounts:
         volumeMounts: []
-  # -- Configuration file of the falcoctl tool. It is saved in a configmap and mounted on the falcotl containers.
+  # -- Configuration file of the falcoctl tool. It is saved in a secret and mounted on the falcotl containers.
   config:
     # -- List of indexes that falcoctl downloads and uses to locate and download artiafcts. For more info see:
     # https://github.com/falcosecurity/falcoctl/blob/main/proposals/20220916-rules-and-plugin-distribution.md#index-file-overview
