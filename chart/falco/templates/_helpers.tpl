@@ -342,10 +342,10 @@ Based on the user input it populates the driver configuration in the falco confi
 {{- $kmodConfig := dict "kind" "kmod" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) -}}
 {{- $_ := set .Values.falco "engine" $kmodConfig -}}
 {{- else if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") -}}
-{{- $ebpfConfig := dict "kind" "modern_ebpf" "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
+{{- $ebpfConfig := dict "kind" "modern_ebpf" "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer "disable_iterators" .Values.driver.modernEbpf.disableIterators) -}}
 {{- $_ := set .Values.falco "engine" $ebpfConfig -}}
 {{- else if eq .Values.driver.kind "auto" -}}
-{{- $engineConfig := dict "kind" "modern_ebpf" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
+{{- $engineConfig := dict "kind" "modern_ebpf" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer "disable_iterators" .Values.driver.modernEbpf.disableIterators) -}}
 {{- $_ := set .Values.falco "engine" $engineConfig -}}
 {{- end -}}
 {{- end -}}
@@ -408,6 +408,7 @@ Based on the user input it populates the metrics configuration in the falco conf
 {{- $_ = set .Values.falco.metrics "kernel_event_counters_per_cpu_enabled" .Values.metrics.kernelEventCountersPerCPUEnabled -}}
 {{- $_ = set .Values.falco.metrics "libbpf_stats_enabled" .Values.metrics.libbpfStatsEnabled -}}
 {{- $_ = set .Values.falco.metrics "plugins_metrics_enabled" .Values.metrics.pluginsMetricsEnabled -}}
+{{- $_ = set .Values.falco.metrics "kernel_iter_event_counters_enabled" .Values.metrics.kernelIterEventCountersEnabled -}}
 {{- $_ = set .Values.falco.metrics "jemalloc_stats_enabled" .Values.metrics.jemallocStatsEnabled -}}
 {{- $_ = set .Values.falco.metrics "convert_memory_to_mb" .Values.metrics.convertMemoryToMB -}}
 {{- $_ = set .Values.falco.metrics "include_empty_values" .Values.metrics.includeEmptyValues -}}

@@ -101,12 +101,13 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 			},
 			func(t *testing.T, config any) {
 				require.Len(t, config, 2, "should have only two items")
-				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, err := getModernEbpfConfig(config)
+				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, disableIterators, err := getModernEbpfConfig(config)
 				require.NoError(t, err)
 				require.Equal(t, "modern_ebpf", kind)
 				require.Equal(t, float64(4), bufSizePreset)
 				require.Equal(t, float64(2), cpusForEachBuffer)
 				require.False(t, dropFailedExit)
+				require.False(t, disableIterators)
 			},
 		},
 		{
@@ -116,12 +117,13 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 			},
 			func(t *testing.T, config any) {
 				require.Len(t, config, 2, "should have only two items")
-				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, err := getModernEbpfConfig(config)
+				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, disableIterators, err := getModernEbpfConfig(config)
 				require.NoError(t, err)
 				require.Equal(t, "modern_ebpf", kind)
 				require.Equal(t, float64(4), bufSizePreset)
 				require.Equal(t, float64(2), cpusForEachBuffer)
 				require.False(t, dropFailedExit)
+				require.False(t, disableIterators)
 			},
 		},
 		{
@@ -131,15 +133,17 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 				"driver.modernEbpf.bufSizePreset":     "6",
 				"driver.modernEbpf.dropFailedExit":    "true",
 				"driver.modernEbpf.cpusForEachBuffer": "8",
+				"driver.modernEbpf.disableIterators":  "true",
 			},
 			func(t *testing.T, config any) {
 				require.Len(t, config, 2, "should have only two items")
-				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, err := getModernEbpfConfig(config)
+				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, disableIterators, err := getModernEbpfConfig(config)
 				require.NoError(t, err)
 				require.Equal(t, "modern_ebpf", kind)
 				require.Equal(t, float64(6), bufSizePreset)
 				require.Equal(t, float64(8), cpusForEachBuffer)
 				require.True(t, dropFailedExit)
+				require.True(t, disableIterators)
 			},
 		},
 		{
@@ -156,12 +160,13 @@ func TestDriverConfigInFalcoConfig(t *testing.T) {
 				require.Equal(t, float64(4), bufSizePreset)
 				require.False(t, dropFailedExit)
 				// Check that configuration for modern_ebpf has been set.
-				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, err := getModernEbpfConfig(config)
+				kind, bufSizePreset, cpusForEachBuffer, dropFailedExit, disableIterators, err := getModernEbpfConfig(config)
 				require.NoError(t, err)
 				require.Equal(t, "modern_ebpf", kind)
 				require.Equal(t, float64(4), bufSizePreset)
 				require.Equal(t, float64(2), cpusForEachBuffer)
 				require.False(t, dropFailedExit)
+				require.False(t, disableIterators)
 			},
 		},
 	}
@@ -217,7 +222,7 @@ func getKmodConfig(config interface{}) (kind string, bufSizePreset float64, drop
 	return
 }
 
-func getModernEbpfConfig(config interface{}) (kind string, bufSizePreset, cpusForEachBuffer float64, dropFailedExit bool, err error) {
+func getModernEbpfConfig(config interface{}) (kind string, bufSizePreset, cpusForEachBuffer float64, dropFailedExit, disableIterators bool, err error) {
 	configMap, ok := config.(map[string]interface{})
 	if !ok {
 		err = fmt.Errorf("can't assert type of config")
@@ -229,6 +234,7 @@ func getModernEbpfConfig(config interface{}) (kind string, bufSizePreset, cpusFo
 	bufSizePreset = modernEbpf["buf_size_preset"].(float64)
 	dropFailedExit = modernEbpf["drop_failed_exit"].(bool)
 	cpusForEachBuffer = modernEbpf["cpus_for_each_buffer"].(float64)
+	disableIterators = modernEbpf["disable_iterators"].(bool)
 
 	return
 }

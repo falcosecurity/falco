@@ -37,6 +37,7 @@ type metricsConfig struct {
 	RulesCountersEnabled             bool   `yaml:"rules_counters_enabled"`
 	LibbpfStatsEnabled               bool   `yaml:"libbpf_stats_enabled"`
 	PluginsMetricsEnabled            bool   `yaml:"plugins_metrics_enabled"`
+	KernelIterEventCountersEnabled   bool   `yaml:"kernel_iter_event_counters_enabled"`
 	JemallocStatsEnabled             bool   `yaml:"jemalloc_stats_enabled"`
 	OutputRule                       bool   `yaml:"output_rule"`
 	StateCountersEnabled             bool   `yaml:"state_counters_enabled"`
@@ -85,7 +86,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				"falco.metrics.enabled": "false",
 			},
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 13, "should have thirteen items")
+				require.Len(t, metricsConfig, 14, "should have thirteen items")
 
 				metrics, err := getMetricsConfig(metricsConfig)
 				require.NoError(t, err)
@@ -100,6 +101,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				require.True(t, metrics.LibbpfStatsEnabled)
 				require.False(t, metrics.OutputRule)
 				require.True(t, metrics.PluginsMetricsEnabled)
+				require.True(t, metrics.KernelIterEventCountersEnabled)
 				require.False(t, metrics.JemallocStatsEnabled)
 
 				require.True(t, metrics.StateCountersEnabled)
@@ -123,13 +125,14 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				"metrics.resourceUtilizationEnabled":       "false",
 				"metrics.rulesCountersEnabled":             "false",
 				"metrics.libbpfStatsEnabled":               "false",
+				"metrics.kernelIterEventCountersEnabled":   "false",
 				"metrics.outputRule":                       "false",
 				"metrics.stateCountersEnabled":             "false",
 				"metrics.interval":                         "1s",
 				"metrics.kernelEventCountersPerCPUEnabled": "true",
 			},
 			func(t *testing.T, metricsConfig, webServerConfig any) {
-				require.Len(t, metricsConfig, 13, "should have thirteen items")
+				require.Len(t, metricsConfig, 14, "should have thirteen items")
 
 				metrics, err := getMetricsConfig(metricsConfig)
 				require.NoError(t, err)
@@ -141,6 +144,7 @@ func TestMetricsConfigInFalcoConfig(t *testing.T) {
 				require.False(t, metrics.ResourceUtilizationEnabled)
 				require.False(t, metrics.RulesCountersEnabled)
 				require.True(t, metrics.PluginsMetricsEnabled)
+				require.False(t, metrics.KernelIterEventCountersEnabled)
 				require.False(t, metrics.JemallocStatsEnabled)
 
 				require.Equal(t, "1s", metrics.Interval)
