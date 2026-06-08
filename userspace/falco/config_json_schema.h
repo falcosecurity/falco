@@ -405,6 +405,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "drop_failed_exit": {
                     "type": "boolean"
+                },
+                "disable_iterators": {
+                    "type": "boolean"
                 }
             },
             "title": "ModernEbpf"

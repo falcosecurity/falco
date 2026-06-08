@@ -426,6 +426,18 @@ rules_files:
 # If you have low event throughputs and minimal drops, reducing the number of
 # buffers (higher `cpus_for_each_buffer`) can lower the memory footprint.
 #
+################### `disable_iterators` (modern_ebpf only)
+#
+# By default, the modern_ebpf driver uses BPF iterators to synchronously fetch
+# state from the kernel to populate the initial process table at startup or
+# heal the state upon event drops, which is faster and more reliable than
+# walking procfs. Enabling this option disables the BPF iterators and makes
+# Falco fall back to procfs lookups instead.
+#
+# Note that BPF iterators are automatically disabled whenever Falco is not
+# running in the host (root) PID namespace, regardless of this setting, since
+# in that case they would not have full visibility into host processes.
+#
 engine:
   # -- The kind of engine to use.
   kind: modern_ebpf
@@ -438,6 +450,7 @@ engine:
     cpus_for_each_buffer: 2
     buf_size_preset: 4
     drop_failed_exit: false
+    disable_iterators: false
   # -- Engine-specific configuration for replay engine which replays a capture file.
   replay:
     # -- Path to the capture file to replay (eg: /path/to/file.scap)
@@ -1225,7 +1238,8 @@ metrics:
   plugins_metrics_enabled: true
   # -- Add kernel side iterator event and drop counters to metrics output.
   # These counters reflect monotonic values since Falco's start and are exported at a
-  # constant stats interval.
+  # constant stats interval. Regardless of this setting, counters are not exported if
+  # iterators are disabled by configuration or any other internal logic.
   kernel_iter_event_counters_enabled: true
   # -- Add jemalloc stats to metrics output.
   # This option requires that Falco is built with jemalloc support, otherwise

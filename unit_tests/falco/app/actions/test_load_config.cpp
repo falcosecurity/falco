@@ -34,6 +34,7 @@ TEST(ActionLoadConfig, check_kmod_engine_config) {
 	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 0);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
+	EXPECT_FALSE(s.config->m_modern_ebpf.m_disable_iterators);
 
 	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 }
@@ -50,6 +51,7 @@ TEST(ActionLoadConfig, check_modern_engine_config) {
 	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 1);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 4);
 	EXPECT_TRUE(s.config->m_modern_ebpf.m_drop_failed_exit);
+	EXPECT_TRUE(s.config->m_modern_ebpf.m_disable_iterators);
 
 	// Check that all other engine params are empty
 	EXPECT_EQ(s.config->m_kmod.m_buf_size_preset, 0);

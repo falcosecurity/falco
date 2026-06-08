@@ -60,6 +60,7 @@ static re2::RE2 ip_address_re(
 #define DEFAULT_BUF_SIZE_PRESET 4
 #define DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER 2
 #define DEFAULT_DROP_FAILED_EXIT false
+#define DEFAULT_DISABLE_ITERATORS false
 
 falco_configuration::falco_configuration():
         m_json_output(false),
@@ -265,6 +266,9 @@ void falco_configuration::load_engine_config(const std::string &config_name) {
 		m_modern_ebpf.m_drop_failed_exit =
 		        m_config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit",
 		                                  DEFAULT_DROP_FAILED_EXIT);
+		m_modern_ebpf.m_disable_iterators =
+		        m_config.get_scalar<bool>("engine.modern_ebpf.disable_iterators",
+		                                  DEFAULT_DISABLE_ITERATORS);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file =
