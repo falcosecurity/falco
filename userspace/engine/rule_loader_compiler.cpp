@@ -539,7 +539,10 @@ void rule_loader::compiler::compile_rule_infos(const configuration& cfg,
 		// populate set of event types and emit an special warning
 		if(r.source == falco_common::syscall_source) {
 			auto evttypes = libsinsp::filter::ast::ppm_event_codes(rule.condition.get());
-			if((evttypes.empty() || evttypes.size() > 100) && r.warn_evttypes) {
+			// note: an empty set means the condition is statically unsatisfiable
+			// (e.g. the `never_true` placeholder idiom), not that it matches too
+			// many event types, so it must not trigger this warning.
+			if(evttypes.size() > 100 && r.warn_evttypes) {
 				cfg.res->add_warning(falco::load_result::warning_code::LOAD_NO_EVTTYPE,
 				                     "Rule matches too many evt.type values. This has a "
 				                     "significant performance penalty.",
