@@ -5,6 +5,11 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+## v9.1.0
+
+* Upgrade Falco to v0.44.1
+* Add `driver.modernEbpf.disableIterators` and missing `metrics.kernelIterEventCountersEnabled` for disabling BPF iterators and corresponding metrics support
+
 ## v9.0.0
 
 * Drop gRPC output and server support
