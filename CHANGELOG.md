@@ -1,5 +1,25 @@
 # Change Log
 
+## v0.44.1
+
+Released on 2026-06-11
+
+### Major Changes
+
+* feat(userspace/falco): add support for disabling BPF iterators [[#3879](https://github.com/falcosecurity/falco/pull/3879)] - [@ekoops](https://github.com/ekoops)
+
+## Bug Fixes
+
+* fix: fix multiple issues related to BPF iterators (solved by bumping libs to `0.25.4`) [[#3879](https://github.com/falcosecurity/falco/pull/3879)] - [@ekoops](https://github.com/ekoops)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      0 |
+| Release note    |      1 |
+| Total           |      1 |
+
 ## v0.44.0
 
 Released on 2026-05-26
