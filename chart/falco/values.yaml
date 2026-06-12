@@ -467,6 +467,34 @@ extra:
   args: []
   # -- Additional initContainers for Falco pods.
   initContainers: []
+  # -- Extra customCaCert section to create and provide custom/corporate CA Certificate used
+  # by registry server as volume. 
+  registryCustomCaCert:
+    enabled: false
+    cacert: ""
+    # To be mounted by falcoctl containers, it should be used in conjunction with 
+    # artifact.install.mounts.volumeMounts  and/or artifact.follow.mounts.volumeMounts
+    #
+    # Example:
+    #
+    # falcoctl:
+    #   artifact:
+    #     install:
+    #       mounts:
+    #         volumeMounts:
+    #         - name: falco-falcoctl-registry-cacert-volume
+    #           mountPath: /etc/ssl/certs
+    #     follow:
+    #       mounts:
+    #         volumeMounts:
+    #         - name: falco-falcoctl-registry-cacert-volume
+    #           mountPath: /etc/ssl/certs
+    # [...]
+    #
+    # extra:
+    #   registryCustomCaCert:
+    #     enabled: true
+    #     cacert: __SOME__REDACTED__CACERT__
 
 # -- Override hostname in falco pod
 podHostname:
