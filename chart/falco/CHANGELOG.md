@@ -5,6 +5,8 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Changing "falcoctl" configmap to secret object for security reasons
+
 ## v9.0.0
 
 * Drop gRPC output and server support
