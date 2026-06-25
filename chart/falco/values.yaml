@@ -484,6 +484,19 @@ certs:
 
 # -- Third party rules enabled for Falco. More info on the dedicated section in README.md file.
 customRules: {}
+  # When activated, splitFiles mechanism allow to generate one configmap per rules files instead of concatenating it in a single configmap.
+  #splitFiles:
+  #  enabled: true
+  #  files:
+  #
+  # Example:
+  # splitFiles:
+  #   enabled: true
+  #   files:
+  #     rules-traefik.yaml: |-
+  #     #   [ rule body ]
+  #     rules-nginx.yaml: |-
+  #     #   [ rule body ]
   # Although Falco comes with a nice default rule set for detecting weird
   # behavior in containers, our users are going to customize the run-time
   # security rule sets or policies for the specific container images and

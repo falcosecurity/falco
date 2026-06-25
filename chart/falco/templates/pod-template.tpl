@@ -188,8 +188,18 @@ spec:
           name: falco-yaml
           subPath: falco.yaml
         {{- if .Values.customRules }}
+        {{- if .Values.customRules.splitFiles.enabled }}
+        {{- $root := . -}}
+        {{- range $file, $content :=  .Values.customRules.splitFiles.files }}
+        {{- $baseName := trimSuffix ".yaml" $file | replace "." "-" | replace "_" "-"}}
+        - mountPath: /etc/falco/rules.d/{{ $file }}
+          name: {{ include "falco.fullname" $root }}-{{ $baseName}}-rules-volume
+          subPath: {{ $file }}
+        {{- end }}
+        {{- else }}
         - mountPath: /etc/falco/rules.d
           name: rules-volume
+        {{- end }}
         {{- end }}
         {{- if or .Values.certs.existingSecret (and .Values.certs.server.key .Values.certs.server.crt .Values.certs.ca.crt) }}
         - mountPath: /etc/falco/certs
@@ -278,9 +288,19 @@ spec:
         - key: falco.yaml
           path: falco.yaml
     {{- if .Values.customRules }}
+    {{- if .Values.customRules.splitFiles.enabled }}
+    {{- $root := . -}}
+    {{- range $file, $content :=  .Values.customRules.splitFiles.files }}
+    {{- $baseName := trimSuffix ".yaml" $file | replace "." "-" | replace "_" "-"}}
+    - name: {{ include "falco.fullname" $root }}-{{ $baseName}}-rules-volume
+      configMap:
+        name: {{ include "falco.fullname" $root }}-{{ $baseName}}-rules
+    {{- end }}
+    {{- else }}
     - name: rules-volume
       configMap:
         name: {{ include "falco.fullname" . }}-rules
+    {{- end }}
     {{- end }}
     {{- if or .Values.certs.existingSecret (and .Values.certs.server.key .Values.certs.server.crt .Values.certs.ca.crt) }}
     - name: certs-volume
