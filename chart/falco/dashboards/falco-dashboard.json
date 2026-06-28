@@ -319,28 +319,28 @@
           "id": "renameByRegex",
           "options": {
             "regex": "0",
-            "renamePattern": "default"
+            "renamePattern": "emergency"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "1",
-            "renamePattern": "debug"
+            "renamePattern": "alert"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "2",
-            "renamePattern": "informational"
+            "renamePattern": "critical"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "3",
-            "renamePattern": "notice"
+            "renamePattern": "error"
           }
         },
         {
@@ -354,28 +354,21 @@
           "id": "renameByRegex",
           "options": {
             "regex": "5",
-            "renamePattern": "error"
+            "renamePattern": "notice"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "6",
-            "renamePattern": "critical"
+            "renamePattern": "informational"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "7",
-            "renamePattern": "alert"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "8",
-            "renamePattern": "emergency"
+            "renamePattern": "debug"
           }
         }
       ],
@@ -494,28 +487,28 @@
           "id": "renameByRegex",
           "options": {
             "regex": "0",
-            "renamePattern": "default"
+            "renamePattern": "emergency"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "1",
-            "renamePattern": "debug"
+            "renamePattern": "alert"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "2",
-            "renamePattern": "informational"
+            "renamePattern": "critical"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "3",
-            "renamePattern": "notice"
+            "renamePattern": "error"
           }
         },
         {
@@ -529,28 +522,21 @@
           "id": "renameByRegex",
           "options": {
             "regex": "5",
-            "renamePattern": "error"
+            "renamePattern": "notice"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "6",
-            "renamePattern": "critical"
+            "renamePattern": "informational"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "7",
-            "renamePattern": "alert"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "8",
-            "renamePattern": "emergency"
+            "renamePattern": "debug"
           }
         }
       ],
@@ -668,28 +654,28 @@
           "id": "renameByRegex",
           "options": {
             "regex": "0",
-            "renamePattern": "default"
+            "renamePattern": "emergency"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "1",
-            "renamePattern": "debug"
+            "renamePattern": "alert"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "2",
-            "renamePattern": "informational"
+            "renamePattern": "critical"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "3",
-            "renamePattern": "notice"
+            "renamePattern": "error"
           }
         },
         {
@@ -703,28 +689,21 @@
           "id": "renameByRegex",
           "options": {
             "regex": "5",
-            "renamePattern": "error"
+            "renamePattern": "notice"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "6",
-            "renamePattern": "critical"
+            "renamePattern": "informational"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "7",
-            "renamePattern": "alert"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "8",
-            "renamePattern": "emergency"
+            "renamePattern": "debug"
           }
         }
       ],
@@ -843,28 +822,28 @@
           "id": "renameByRegex",
           "options": {
             "regex": "0",
-            "renamePattern": "default"
+            "renamePattern": "emergency"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "1",
-            "renamePattern": "debug"
+            "renamePattern": "alert"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "2",
-            "renamePattern": "informational"
+            "renamePattern": "critical"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "3",
-            "renamePattern": "notice"
+            "renamePattern": "error"
           }
         },
         {
@@ -878,28 +857,21 @@
           "id": "renameByRegex",
           "options": {
             "regex": "5",
-            "renamePattern": "error"
+            "renamePattern": "notice"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "6",
-            "renamePattern": "critical"
+            "renamePattern": "informational"
           }
         },
         {
           "id": "renameByRegex",
           "options": {
             "regex": "7",
-            "renamePattern": "alert"
-          }
-        },
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": "8",
-            "renamePattern": "emergency"
+            "renamePattern": "debug"
           }
         }
       ],
