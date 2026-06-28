@@ -7,6 +7,7 @@ numbering uses [semantic versioning](http://semver.org).
 
 * Do not render the `falcoctl-config-volume` pod volume when both falcoctl artifact install and follow containers are disabled
 * Fix Grafana dashboard priority level mappings to match Falco's numeric encoding (0=emergency … 7=debug)
+* Add `revisionHistoryLimit` support to the DaemonSet controller, matching existing deployment behavior
 
 ## v9.0.0
 
