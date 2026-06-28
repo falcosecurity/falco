@@ -17,6 +17,9 @@ spec:
   selector:
     matchLabels:
       {{- include "falco.selectorLabels" . | nindent 6 }}
+  {{- if .Values.controller.daemonset.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.controller.daemonset.revisionHistoryLimit }}
+  {{- end }}
   template:
     {{- include "falco.podTemplate" . | nindent 4 }}
   {{- with .Values.controller.daemonset.updateStrategy }}
