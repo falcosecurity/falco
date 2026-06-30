@@ -12,7 +12,7 @@ They also kindly granted us an additional 5GB of free space.
 
 ## Goal
 
-Keep the storage space usage under 15GB by cleaning up the [Falco artifacts](./20200506-artifacts-scope-part-1.md) from the [storage](./20200818-artifacts-storage).
+Keep the storage space usage under 15GB by cleaning up the [Falco artifacts](./20200506-artifacts-scope-part-1.md) from the [storage](./20200818-artifacts-storage.md).
 
 ## Status
 
@@ -75,7 +75,7 @@ This job will be triggered after the `publish/packages-dev` completed successful
 
 ## Drivers
 
-As explained in the [Artifacts Storage](./20200818-artifacts-storage) proposal, we build the drivers for the **last two driver versions** associated with **latest Falco stable releases**.
+As explained in the [Artifacts Storage](./20200818-artifacts-storage.md) proposal, we build the drivers for the **last two driver versions** associated with **latest Falco stable releases**.
 Then, we store those drivers into a [generic bintray repository](https://bintray.com/falcosecurity/driver) from which the installation process automatically downloads them, if suitable.
 
 This document proposes to implement a cleanup mechanism that deletes all the other driver versions available.

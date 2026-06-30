@@ -189,75 +189,6 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 },
                 "falco_libs": {
                     "$ref": "#/definitions/FalcoLibs"
-                },
-                "container_engines": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "docker": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
-                        },
-                        "cri": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                },
-                                "sockets": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                "disable_async": {
-                                    "type": "boolean"
-                                }
-                            }
-                        },
-                        "podman": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
-                        },
-                        "lxc": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
-                        },
-                        "libvirt_lxc": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
-                        },
-                        "bpm": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
-                        }
-                    }
                 }
             },
             "title": "FalcoConfig"
@@ -404,6 +335,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                     "type": "integer"
                 },
                 "drop_failed_exit": {
+                    "type": "boolean"
+                },
+                "disable_iterators": {
                     "type": "boolean"
                 }
             },

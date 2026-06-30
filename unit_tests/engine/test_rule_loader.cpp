@@ -771,6 +771,107 @@ TEST_F(test_falco_engine, rule_enabled_warning) {
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
 
+#define WARNING_NO_EVTTYPE "Rule matches too many evt.type values"
+
+TEST_F(test_falco_engine, no_evttype_warning_for_narrow_condition) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule with an evt.type restriction
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+}
+
+TEST_F(test_falco_engine, evttype_warning_for_broad_condition) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule without any evt.type restriction
+  condition: proc.name = cat
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+}
+
+TEST_F(test_falco_engine, evttype_warning_disabled_by_warn_evttypes) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule without any evt.type restriction but with the warning disabled
+  condition: proc.name = cat
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  warn_evttypes: false
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+}
+
+// A statically unsatisfiable condition matches no event type at all: it must
+// not be reported as matching too many of them.
+// See https://github.com/falcosecurity/falco/issues/3883
+TEST_F(test_falco_engine, no_evttype_warning_for_unsatisfiable_condition) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule with a statically unsatisfiable condition
+  condition: evt.num = 0
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+	// The rule is still loaded and enabled, it just never matches at runtime.
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+}
+
+TEST_F(test_falco_engine, no_evttype_warning_for_evt_type_contradiction) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule with contradicting evt.type checks
+  condition: evt.type = open and evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+}
+
+// The canonical `never_true` placeholder idiom used by the default ruleset
+// for tuning purposes must not trigger the warning, in any usage pattern.
+TEST_F(test_falco_engine, no_evttype_warning_for_never_true_macro) {
+	std::string rules_content = R"END(
+- macro: never_true
+  condition: (evt.num=0)
+
+- macro: user_known_activity
+  condition: (never_true)
+
+- rule: anchored_rule_with_placeholder
+  desc: anchored rule negating a never_true placeholder
+  condition: evt.type = open and not user_known_activity
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: placeholder_only_rule
+  desc: rule whose condition reduces entirely to never_true
+  condition: never_true
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(check_warning_message(WARNING_NO_EVTTYPE)) << m_load_result_string;
+	EXPECT_EQ(num_rules_for_ruleset(), 2);
+}
+
 // todo!: Probably we shouldn't allow this syntax
 TEST_F(test_falco_engine, rule_enabled_is_ignored_by_append) {
 	std::string rules_content = R"END(
