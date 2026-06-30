@@ -47,6 +47,8 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [Pocteo](https://pocteo.co) - Pocteo helps with Kubernetes adoption in enterprises by providing a variety of services such as training, consulting, auditing and mentoring. We build CI/CD pipelines the GitOps way, as well as design and run k8s clusters. Pocteo uses Falco as a runtime monitoring system to secure clients' workloads against suspicious behavior and ensure k8s pods immutability. We also use Falco to collect, process and act on security events through a response engine and serverless functions.
 
+* [Pollinate](https://www.pollinate.global) - Pollinate is a fintech company that enables banks to deliver modern digital merchant services and experiences for small and medium-sized businesses (SMBs). Pollinate uses Falco in production to enhance runtime security across its Kubernetes platforms. Falco provides visibility into container activity, public outbound network connections, Kubernetes API access, and other runtime security events, with alerts integrated into Elastic and Kibana for monitoring and investigation.
+
 * [Preferral](https://www.preferral.com) - Preferral is a HIPAA-compliant platform for Referral Management and Online Referral Forms. Preferral streamlines the referral process for patients, specialists and their referral partners. By automating the referral process, referring practices spend less time on the phone, manual efforts are eliminated, and patients get the right care from the right specialist. Preferral leverages Falco to provide a Host Intrusion Detection System to meet their HIPAA compliance requirements.
   * https://hipaa.preferral.com/01-preferral_hipaa_compliance/
 
