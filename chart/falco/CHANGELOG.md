@@ -16,6 +16,7 @@ numbering uses [semantic versioning](http://semver.org).
 - Add `revisionHistoryLimit` support to the DaemonSet controller and honor an explicit zero for both DaemonSet and Deployment controllers
 * Add `serviceAccount.labels` to set custom labels on the ServiceAccount
 * Mount the host directory that holds each container engine socket instead of the socket file, so Falco keeps working after a container runtime restart (regression of falcosecurity/charts#632, originally fixed by falcosecurity/charts#633). With the default values the pod now mounts `/var/run`, `/run/podman`, `/run/host-containerd`, `/run/containerd`, `/run/crio`, and `/run/k3s/containerd` instead of the six socket files
+* Add defaultNetworkPolicies feature to deploy a standard default networkPolicy (ingress allow kube-apiserver, egress allow core-dns resolution and falco-sidekick events forwarding)
 
 ## v9.1.0
 
