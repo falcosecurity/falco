@@ -20,7 +20,7 @@ limitations under the License.
 
 // The version of this Falco engine
 #define FALCO_ENGINE_VERSION_MAJOR 0
-#define FALCO_ENGINE_VERSION_MINOR 62
+#define FALCO_ENGINE_VERSION_MINOR 63
 #define FALCO_ENGINE_VERSION_PATCH 0
 
 #define FALCO_ENGINE_VERSION                                                               \
@@ -33,7 +33,6 @@ limitations under the License.
 //   echo $($FALCO --version | grep 'Engine:' | awk '{print $2}') $(echo $($FALCO --version | grep
 //   'Schema version:' | awk '{print $3}') $($FALCO --list --markdown | grep '^`' | sort) $($FALCO
 //   --list-events | sort) | sha256sum)
-// It represents the fields supported by this version of Falco,
-// the event types, and the underlying driverevent schema. It's used to
-// detetect changes in engine version in our CI jobs.
+// It represents the fields supported by this version of Falco, the event types, and the underlying
+// driver event schema. It's used to detect changes in engine version in our CI jobs.
 #define FALCO_ENGINE_CHECKSUM "ba6f1ac74018c623135c49f7da1cca6243c99a58d53f4dec983ddf3919304518"

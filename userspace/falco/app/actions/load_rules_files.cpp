@@ -158,7 +158,8 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		if(!s.config->m_json_output) {
 			format_described_rules_as_text(out, std::cout);
 		} else {
-			std::cout << out.dump() << std::endl;
+			auto dumped_out = out.dump(-1, ' ', false, nlohmann::detail::error_handler_t::replace);
+			std::cout << dumped_out << std::endl;
 		}
 
 		return run_result::exit();

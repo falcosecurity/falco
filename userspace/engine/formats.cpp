@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include <nlohmann/json.hpp>
+#include <libsinsp/utils.h>
 
 #include "compat.h"
 #include "formats.h"
@@ -74,18 +75,15 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 	std::string output = prefix + " " + message;
 
 	if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_NORMAL) {
-		return output;
+		// Use JSON encoder to escape control characters and replace any invalid UTF-8 sequence with
+		// `U+FFFD`, making it consistent with JSON-encoded output.
+		const auto encoded_output =
+		        nlohmann::json(output).dump(-1,
+		                                    ' ',
+		                                    false,
+		                                    nlohmann::detail::error_handler_t::replace);
+		return encoded_output.substr(1, encoded_output.size() - 2);  // Remove double-quotes.
 	} else if(message_formatter->get_output_format() == sinsp_evt_formatter::OF_JSON) {
-		std::string json_fields_message;
-		std::string json_fields_prefix;
-
-		// Resolve message fields
-		if(m_json_include_output_fields_property) {
-			message_formatter->tostring(evt, json_fields_message);
-		}
-		// Resolve prefix (e.g. time) fields
-		prefix_formatter->tostring(evt, json_fields_prefix);
-
 		// For JSON output, the formatter returned a json-as-text
 		// object containing all the fields in the original format
 		// message as well as the event time in ns. Use this to build
@@ -124,9 +122,22 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 		}
 
 		if(m_json_include_output_fields_property) {
-			event["output_fields"] = nlohmann::json::parse(json_fields_message);
+			std::string sanitized_str_storage;
 
-			auto prefix_fields = nlohmann::json::parse(json_fields_prefix);
+			// Resolve message fields.
+			std::string json_fields_message;
+			message_formatter->tostring(evt, json_fields_message);
+			const auto sanitized_message =
+			        utf8::sanitize(json_fields_message, sanitized_str_storage);
+			event["output_fields"] =
+			        nlohmann::json::parse(sanitized_message.cbegin(), sanitized_message.cend());
+
+			// Resolve prefix (e.g. time) fields.
+			std::string json_fields_prefix;
+			prefix_formatter->tostring(evt, json_fields_prefix);
+			const auto sanitized_prefix = utf8::sanitize(json_fields_prefix, sanitized_str_storage);
+			auto prefix_fields =
+			        nlohmann::json::parse(sanitized_prefix.cbegin(), sanitized_prefix.cend());
 			if(prefix_fields.is_object()) {
 				for(auto const &el : prefix_fields.items()) {
 					event["output_fields"][el.key()] = el.value();
@@ -150,7 +161,10 @@ std::string falco_formats::format_event(sinsp_evt *evt,
 					field_formatter->tostring_withformat(evt,
 					                                     json_field_map,
 					                                     sinsp_evt_formatter::OF_JSON);
-					auto json_obj = nlohmann::json::parse(json_field_map);
+					const auto sanitized_field =
+					        utf8::sanitize(json_field_map, sanitized_str_storage);
+					auto json_obj =
+					        nlohmann::json::parse(sanitized_field.cbegin(), sanitized_field.cend());
 					event["output_fields"][ef.first] = json_obj[ef.first];
 				} else {
 					event["output_fields"][ef.first] = format_string(evt, fformat, source);
