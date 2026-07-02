@@ -895,6 +895,23 @@ TEST_F(test_falco_engine, rule_enabled_is_ignored_by_append) {
 	EXPECT_EQ(num_rules_for_ruleset(), 0);
 }
 
+TEST_F(test_falco_engine, empty_append_rule_is_rejected) {
+	std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: test_rule
+  append: true
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_VALIDATION_STATUS(yaml_helper::validation_ok) << m_load_result->schema_validation();
+	ASSERT_TRUE(check_error_message("Appended rule must have exceptions or condition property"));
+}
+
 // todo!: Probably we shouldn't allow this syntax
 TEST_F(test_falco_engine, rewrite_rule) {
 	std::string rules_content = R"END(
