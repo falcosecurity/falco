@@ -113,7 +113,8 @@ void falco_engine::list_fields(const std::string &source,
                                bool names_only,
                                output_format format) const {
 	// Maps from field class name + short desc to list of event
-	// sources for which this field class can be used.
+	// sources for which this field class can be used. Generic field
+	// classes are mapped to an empty set (see below).
 	std::map<std::string, std::set<std::string>> fieldclass_event_sources;
 
 	// Do a first pass to group together classes that are
@@ -124,7 +125,15 @@ void falco_engine::list_fields(const std::string &source,
 		}
 
 		for(const auto &fld_class : it.filter_factory->get_fields()) {
-			fieldclass_event_sources[fieldclass_key(fld_class)].insert(it.name);
+			// Generic field classes (e.g. evt.*) apply to every event
+			// source, so they must not be labeled with the specific
+			// sources they happen to be registered in. The map entry is
+			// created anyway, but its set is left empty: the formatters
+			// omit the "Event Sources" line when the set is empty.
+			auto &srcs = fieldclass_event_sources[fieldclass_key(fld_class)];
+			if(!fld_class.is_generic) {
+				srcs.insert(it.name);
+			}
 		}
 	}
 
