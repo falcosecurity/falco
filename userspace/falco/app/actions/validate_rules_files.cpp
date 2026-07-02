@@ -122,7 +122,8 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		if(!describe_res.empty() && successful) {
 			res["falco_describe_results"] = std::move(describe_res);
 		}
-		std::cout << res.dump() << std::endl;
+		auto dumped_res = res.dump(-1, ' ', false, nlohmann::detail::error_handler_t::replace);
+		std::cout << dumped_res << std::endl;
 	} else {
 		std::cout << summary << std::endl;
 		if(!describe_res.empty() && successful) {

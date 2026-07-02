@@ -207,7 +207,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		jmsg["hostname"] = m_hostname;
 		jmsg["source"] = s_internal_source;
 
-		cmsg.msg = jmsg.dump();
+		cmsg.msg = jmsg.dump(-1, ' ', false, nlohmann::detail::error_handler_t::replace);
 	} else {
 		std::string timestr;
 		bool first = true;
@@ -223,7 +223,9 @@ void falco_outputs::handle_msg(uint64_t ts,
 			if(!pair.value().is_primitive()) {
 				throw falco_exception("falco_outputs: output fields must be key-value maps");
 			}
-			cmsg.msg += pair.key() + "=" + pair.value().dump();
+			cmsg.msg +=
+			        pair.key() + "=" +
+			        pair.value().dump(-1, ' ', false, nlohmann::detail::error_handler_t::replace);
 		}
 		cmsg.msg += ")";
 	}
