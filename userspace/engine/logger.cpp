@@ -106,7 +106,7 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg) {
 #ifndef _WIN32
 	if(falco_logger::log_syslog) {
 		// Syslog output should not have any trailing newline
-		if(copy.back() == '\n') {
+		if(!copy.empty() && copy.back() == '\n') {
 			copy.pop_back();
 		}
 
@@ -116,7 +116,7 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg) {
 
 	if(falco_logger::log_stderr) {
 		// log output should always have a trailing newline
-		if(copy.back() != '\n') {
+		if(copy.empty() || copy.back() != '\n') {
 			copy.push_back('\n');
 		}
 
