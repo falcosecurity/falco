@@ -58,7 +58,7 @@ add_executable(
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	target_sources(
 		falco_unit_tests
-		PRIVATE falco/test_atomic_signal_handler.cpp
+		PRIVATE falco/test_atomic_signal_handler.cpp falco/test_restart_handler.cpp
 				falco/app/actions/test_configure_interesting_sets.cpp
 				falco/app/actions/test_configure_syscall_buffer_num.cpp
 	)
