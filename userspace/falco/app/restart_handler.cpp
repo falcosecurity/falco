@@ -20,6 +20,7 @@ limitations under the License.
 #include "logger.h"
 
 #include <string.h>
+#include <errno.h>
 #include <fcntl.h>
 #ifdef _WIN32
 #include <io.h>
@@ -29,6 +30,7 @@ limitations under the License.
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <sys/select.h>
+#include <sys/eventfd.h>
 #endif
 
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
@@ -38,48 +40,77 @@ limitations under the License.
 
 falco::app::restart_handler::~restart_handler() {
 	stop();
+	close_fds();
+}
+
+void falco::app::restart_handler::close_fds() {
 	if(m_inotify_fd != -1) {
 		close(m_inotify_fd);
+		m_inotify_fd = -1;
 	}
-	m_inotify_fd = -1;
+	if(m_event_fd != -1) {
+		close(m_event_fd);
+		m_event_fd = -1;
+	}
 }
 
 void falco::app::restart_handler::trigger() {
 	m_forced.store(true, std::memory_order_release);
+#ifdef __linux__
+	// eventfd write is async-signal-safe, so this is safe from the SIGHUP handler
+	if(m_event_fd != -1) {
+		uint64_t v = 1;
+		auto ret = write(m_event_fd, &v, sizeof(v));
+		(void)ret;
+	}
+#endif
 }
 
 bool falco::app::restart_handler::start(std::string& err) {
 #ifdef __linux__
-	if(m_watched_files.empty() && m_watched_dirs.empty()) {
-		falco_logger::log(falco_logger::level::DEBUG,
-		                  "Refusing to start restart handler due to nothing to watch\n");
-		return true;
+	// Create the inotify handler only when there is something to watch, so we don't consume an
+	// inotify instance; the watcher thread is always started, as it also serves forced restart
+	// requests (e.g. SIGHUP).
+	if(!m_watched_files.empty() || !m_watched_dirs.empty()) {
+		m_inotify_fd = inotify_init();
+		if(m_inotify_fd < 0) {
+			err = "could not initialize inotify handler";
+			close_fds();
+			return false;
+		}
+
+		for(const auto& f : m_watched_files) {
+			auto wd = inotify_add_watch(m_inotify_fd,
+			                            f.c_str(),
+			                            IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF);
+			if(wd < 0) {
+				err = "could not watch file: " + f;
+				close_fds();
+				return false;
+			}
+			falco_logger::log(falco_logger::level::DEBUG, "Watching file '" + f + "'\n");
+		}
+
+		for(const auto& f : m_watched_dirs) {
+			auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CREATE | IN_DELETE | IN_MOVE);
+			if(wd < 0) {
+				err = "could not watch directory: " + f;
+				close_fds();
+				return false;
+			}
+			falco_logger::log(falco_logger::level::DEBUG, "Watching directory '" + f + "'\n");
+		}
+	} else {
+		falco_logger::log(
+		        falco_logger::level::DEBUG,
+		        "Nothing to watch, restart handler will only serve forced restart requests\n");
 	}
 
-	m_inotify_fd = inotify_init();
-	if(m_inotify_fd < 0) {
-		err = "could not initialize inotify handler";
+	m_event_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+	if(m_event_fd < 0) {
+		err = "could not initialize eventfd handler";
+		close_fds();
 		return false;
-	}
-
-	for(const auto& f : m_watched_files) {
-		auto wd = inotify_add_watch(m_inotify_fd,
-		                            f.c_str(),
-		                            IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF);
-		if(wd < 0) {
-			err = "could not watch file: " + f;
-			return false;
-		}
-		falco_logger::log(falco_logger::level::DEBUG, "Watching file '" + f + "'\n");
-	}
-
-	for(const auto& f : m_watched_dirs) {
-		auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CREATE | IN_DELETE | IN_MOVE);
-		if(wd < 0) {
-			err = "could not watch directory: " + f;
-			return false;
-		}
-		falco_logger::log(falco_logger::level::DEBUG, "Watching directory '" + f + "'\n");
 	}
 
 	// launch the watcher thread
@@ -91,6 +122,12 @@ bool falco::app::restart_handler::start(std::string& err) {
 void falco::app::restart_handler::stop() {
 #ifdef __linux__
 	m_stop.store(true, std::memory_order_release);
+	// wake the watcher in case it is blocked in select() without a timeout
+	if(m_event_fd != -1) {
+		uint64_t v = 1;
+		auto ret = write(m_event_fd, &v, sizeof(v));
+		(void)ret;
+	}
 	if(m_watcher.joinable()) {
 		m_watcher.join();
 	}
@@ -99,7 +136,7 @@ void falco::app::restart_handler::stop() {
 
 void falco::app::restart_handler::watcher_loop() noexcept {
 #ifdef __linux__
-	if(fcntl(m_inotify_fd, F_SETOWN, gettid()) < 0) {
+	if(m_inotify_fd >= 0 && fcntl(m_inotify_fd, F_SETOWN, gettid()) < 0) {
 		// an error occurred, we can't recover
 		// todo(jasondellaluce): should we terminate the process?
 		falco_logger::log(falco_logger::level::ERR,
@@ -112,17 +149,25 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 	bool should_restart = false;
 	struct timeval timeout;
 	uint8_t buf[(10 * (sizeof(struct inotify_event) + NAME_MAX + 1))];
+	int nfds = (m_inotify_fd > m_event_fd ? m_inotify_fd : m_event_fd) + 1;
 	while(!m_stop.load(std::memory_order_acquire)) {
-		// wait for inotify events with a certain timeout.
-		// Note, we'll run through select even before performing a dry-run,
-		// so that we can dismiss in case we have to debounce rapid
-		// subsequent events.
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 100000;
 		FD_ZERO(&set);
-		FD_SET(m_inotify_fd, &set);
-		auto rv = select(m_inotify_fd + 1, &set, NULL, NULL, &timeout);
+		if(m_inotify_fd >= 0) {
+			FD_SET(m_inotify_fd, &set);
+		}
+		FD_SET(m_event_fd, &set);
+
+		struct timeval* to = NULL;
+		if(should_check || should_restart) {
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 100000;
+			to = &timeout;
+		}
+		auto rv = select(nfds, &set, NULL, NULL, to);
 		if(rv < 0) {
+			if(errno == EINTR) {
+				continue;
+			}
 			// an error occurred, we can't recover
 			// todo(jasondellaluce): should we terminate the process?
 			falco_logger::log(falco_logger::level::ERR,
@@ -130,9 +175,14 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 			return;
 		}
 
-		// check if there's been a forced restart request
-		bool forced = m_forced.load(std::memory_order_acquire);
-		m_forced.store(false, std::memory_order_release);
+		if(rv > 0 && FD_ISSET(m_event_fd, &set)) {
+			uint64_t v = 0;
+			auto n = read(m_event_fd, &v, sizeof(v));
+			(void)n;
+		}
+
+		bool forced = m_forced.exchange(false, std::memory_order_acq_rel);
+		bool inotify_ready = m_inotify_fd >= 0 && rv > 0 && FD_ISSET(m_inotify_fd, &set);
 
 		// no new watch event is received during the timeout
 		if(rv == 0 && !forced) {
@@ -170,9 +220,9 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 		should_restart = false;
 		should_check = false;
 
-		// if there's date on the inotify fd, consume it
+		// if there's data on the inotify fd, consume it
 		// (even if there is a forced request too)
-		if(rv > 0) {
+		if(inotify_ready) {
 			// note: if available data is less than buffer size, this should
 			// return n > 0 but not filling the buffer. If available data is
 			// more than buffer size, we will loop back to select and behave
@@ -191,11 +241,8 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 			// there's data in the inotify fd but the first read
 			// returned no bytes. Likely we'll get back here at the
 			// next select call.
-			else if(n == 0) {
-				// we still proceed in case the request was forced
-				if(!forced) {
-					continue;
-				}
+			else if(n == 0 && !forced) {
+				continue;
 			}
 		}
 

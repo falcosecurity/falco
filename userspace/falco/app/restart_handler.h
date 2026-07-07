@@ -47,6 +47,7 @@ public:
 	                         const watch_list_t& watch_files = {},
 	                         const watch_list_t& watch_dirs = {}):
 	        m_inotify_fd(-1),
+	        m_event_fd(-1),
 	        m_stop(false),
 	        m_forced(false),
 	        m_on_check(on_check),
@@ -60,8 +61,10 @@ public:
 
 private:
 	void watcher_loop() noexcept;
+	void close_fds();
 
 	int m_inotify_fd = -1;
+	int m_event_fd = -1;
 	std::thread m_watcher;
 	std::atomic<bool> m_stop;
 	std::atomic<bool> m_forced;
