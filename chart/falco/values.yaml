@@ -37,6 +37,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+  labels: {}
+
 rbac:
   # Create and use rbac resources when set to true. Needed to list and update configmaps in Falco's namespace.
   create: true
