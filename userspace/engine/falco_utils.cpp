@@ -236,6 +236,11 @@ bool matches_wildcard(const std::string& pattern, const std::string& s) {
 		// one. For instance, `*ab` against `xabab`: matching the `ab` at
 		// index 1 leaves `ab` unmatched against the empty remaining pattern.
 		// Try each occurrence and backtrack on failure.
+		//
+		// Worst case this tries every occurrence of `to_find` in `s`, each
+		// paired with an O(|s|) substr/find, i.e. O(|s|^2) for a single `*`
+		// segment. This is fine for the short file/rule names this function
+		// is used on; do not turn this back into a single greedy `find`.
 		std::string::size_type search_from = 0;
 		while(true) {
 			std::string::size_type lit_pos = s.find(to_find, search_from);
