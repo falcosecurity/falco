@@ -111,6 +111,13 @@ TEST(FalcoUtils, matches_wildcard) {
 	ASSERT_TRUE(falco::utils::matches_wildcard("*ab*ab", "ababab"));
 	ASSERT_TRUE(falco::utils::matches_wildcard("hello*world", "hello world hello world"));
 
+	// Consecutive wildcards (`**`) collapse to a single `*` because the
+	// leading run of stars is consumed in one step by `find_first_not_of`,
+	// so backtracking behaves identically whether the pattern says `*` or `**`.
+	ASSERT_TRUE(falco::utils::matches_wildcard("**ab", "xabab"));
+	ASSERT_TRUE(falco::utils::matches_wildcard("**ab**ab", "ababab"));
+	ASSERT_FALSE(falco::utils::matches_wildcard("**ab", "xabcd"));
+
 	// Backtracking must still respect a non-matching suffix.
 	ASSERT_FALSE(falco::utils::matches_wildcard("*ab", "xabcd"));
 	ASSERT_FALSE(falco::utils::matches_wildcard("*foo*bar", "foofoobaz"));
