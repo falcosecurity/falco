@@ -23,6 +23,8 @@ limitations under the License.
 #include "app/app.h"
 #include "logger.h"
 
+/* Triggering CI */
+
 static void display_fatal_err(const std::string &&msg) {
 	/**
 	 * If stderr logging is not enabled, also log to stderr.
