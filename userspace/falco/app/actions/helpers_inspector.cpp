@@ -17,7 +17,12 @@ limitations under the License.
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <cerrno>
+#include <cstring>
+#include <array>
 
 #include <libsinsp/plugin_manager.h>
 #include <configuration.h>
@@ -26,6 +31,70 @@ limitations under the License.
 
 using namespace falco::app;
 using namespace falco::app::actions;
+
+namespace {
+
+// Loads the Falco kernel module by invoking modprobe through a fixed,
+// absolute path (instead of system("modprobe ...")). This avoids
+// resolving "modprobe" via the PATH environment variable, which is
+// attacker-controllable in some deployment scenarios (CWE-426: Untrusted
+// Search Path). No shell is involved, and no user-controlled input is
+// interpolated into the call.
+bool falco_modprobe(const char* module_name) {
+	static constexpr std::array<const char*, 2> modprobe_paths = {
+	        "/usr/sbin/modprobe",
+	        "/sbin/modprobe",
+	};
+
+	const char* modprobe_bin = nullptr;
+	for(const auto& path : modprobe_paths) {
+		if(access(path, X_OK) == 0) {
+			modprobe_bin = path;
+			break;
+		}
+	}
+
+	if(modprobe_bin == nullptr) {
+		falco_logger::log(falco_logger::level::ERR,
+		                  "Could not find modprobe binary in /usr/sbin or /sbin\n");
+		return false;
+	}
+
+	pid_t pid = fork();
+	if(pid < 0) {
+		falco_logger::log(falco_logger::level::ERR,
+		                  std::string("fork() failed while loading kernel module: ") +
+		                          strerror(errno) + "\n");
+		return false;
+	}
+
+	if(pid == 0) {
+		// Child process: redirect stdout/stderr to /dev/null (mirrors the
+		// original "> /dev/null 2> /dev/null" redirection), then exec the
+		// resolved absolute path directly. No shell is spawned.
+		int devnull = open("/dev/null", O_WRONLY);
+		if(devnull >= 0) {
+			dup2(devnull, STDOUT_FILENO);
+			dup2(devnull, STDERR_FILENO);
+			close(devnull);
+		}
+		execl(modprobe_bin, modprobe_bin, module_name, (char*)nullptr);
+		// execl only returns on failure.
+		_exit(127);
+	}
+
+	int status = 0;
+	if(waitpid(pid, &status, 0) < 0) {
+		falco_logger::log(falco_logger::level::ERR,
+		                  std::string("waitpid() failed while loading kernel module: ") +
+		                          strerror(errno) + "\n");
+		return false;
+	}
+
+	return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+}  // namespace
 
 falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::state& s) {
 	try {
@@ -122,7 +191,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 				falco_logger::log(
 				        falco_logger::level::INFO,
 				        "Trying to inject the Kernel module and opening the capture again...");
-				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null")) {
+				if(!falco_modprobe(DRIVER_NAME)) {
 					falco_logger::log(falco_logger::level::ERR, "Unable to load the driver\n");
 				}
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
