@@ -17,12 +17,15 @@ limitations under the License.
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <fcntl.h>
+
+#ifdef __linux__
+#include <sys/wait.h>
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
 #include <array>
+#endif
 
 #include <libsinsp/plugin_manager.h>
 #include <configuration.h>
@@ -32,6 +35,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
+#ifdef __linux__
 namespace {
 
 // Loads the Falco kernel module by invoking modprobe through a fixed,
@@ -40,6 +44,10 @@ namespace {
 // attacker-controllable in some deployment scenarios (CWE-426: Untrusted
 // Search Path). No shell is involved, and no user-controlled input is
 // interpolated into the call.
+//
+// POSIX-only (fork/waitpid/WIFEXITED aren't available on Windows), so
+// this is gated behind __linux__; non-Linux builds fall straight through
+// to open_kmod() at the call site, unchanged from prior behavior.
 bool falco_modprobe(const char* module_name) {
 	static constexpr std::array<const char*, 2> modprobe_paths = {
 	        "/usr/sbin/modprobe",
@@ -84,7 +92,16 @@ bool falco_modprobe(const char* module_name) {
 	}
 
 	int status = 0;
-	if(waitpid(pid, &status, 0) < 0) {
+	int wait_ret;
+	do {
+		// Retry on EINTR: a signal (e.g. the SIGALRM used by the metrics
+		// timer, installed without SA_RESTART) landing mid-wait would
+		// otherwise cause us to report a spurious failure even though the
+		// module loaded successfully.
+		wait_ret = waitpid(pid, &status, 0);
+	} while(wait_ret < 0 && errno == EINTR);
+
+	if(wait_ret < 0) {
 		falco_logger::log(falco_logger::level::ERR,
 		                  std::string("waitpid() failed while loading kernel module: ") +
 		                          strerror(errno) + "\n");
@@ -95,6 +112,7 @@ bool falco_modprobe(const char* module_name) {
 }
 
 }  // namespace
+#endif  // __linux__
 
 falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::state& s) {
 	try {
@@ -191,9 +209,11 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 				falco_logger::log(
 				        falco_logger::level::INFO,
 				        "Trying to inject the Kernel module and opening the capture again...");
+#ifdef __linux__
 				if(!falco_modprobe(DRIVER_NAME)) {
 					falco_logger::log(falco_logger::level::ERR, "Unable to load the driver\n");
 				}
+#endif
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
 			}
 		}
