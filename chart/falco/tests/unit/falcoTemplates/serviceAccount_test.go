@@ -37,6 +37,17 @@ func TestServiceAccount(t *testing.T) {
 				require.Equal(t, sa.Name, "")
 			},
 		},
+		{
+			"customLabels",
+			map[string]string{
+				"serviceAccount.labels.app\\.kubernetes\\.io/part-of": "my-app",
+				"serviceAccount.labels.team":                           "platform",
+			},
+			func(t *testing.T, sa *corev1.ServiceAccount) {
+				require.Equal(t, "my-app", sa.Labels["app.kubernetes.io/part-of"])
+				require.Equal(t, "platform", sa.Labels["team"])
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
