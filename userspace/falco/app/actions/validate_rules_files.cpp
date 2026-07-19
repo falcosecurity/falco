@@ -19,11 +19,27 @@ limitations under the License.
 #include "helpers.h"
 
 #include <plugin_manager.h>
+#include <yaml-cpp/yaml.h>
 
 #include <string>
 
 using namespace falco::app;
 using namespace falco::app::actions;
+
+namespace {
+bool has_yaml_mapping_root(const std::string& content) {
+	try {
+		for(const auto& document : YAML::LoadAll(content)) {
+			if(document.IsMap()) {
+				return true;
+			}
+		}
+	} catch(const YAML::Exception&) {
+		// The existing rules validation result already reports YAML parsing errors.
+	}
+	return false;
+}
+}  // namespace
 
 falco::app::run_result falco::app::actions::validate_rules_files(falco::app::state& s) {
 	if(s.options.validate_rules_filenames.size() == 0) {
@@ -105,6 +121,12 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 			// printing the warnings.
 			summary += filename + ": Ok, with warnings";
 			falco_logger::log(falco_logger::level::WARNING, res->as_string(true, rc) + "\n");
+		}
+
+		if(!res->successful() && has_yaml_mapping_root(rc.at(filename).get())) {
+			summary +=
+			        "\nHint: --validate accepts Falco rules files only. To validate a Falco "
+			        "configuration file and its configured rules, use --dry-run.";
 		}
 	}
 
