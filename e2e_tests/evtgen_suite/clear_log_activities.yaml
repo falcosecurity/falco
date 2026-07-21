@@ -1,0 +1,123 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: clear_log_activities_open
+    rule: "Clear Log Activities"
+    description: "open() with O_TRUNC of each log target fires the rule"
+    runner: HostRunner
+    resources:
+      - type: fd
+        name: target
+        subtype: file
+        filePath: "%{ item.target }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: open
+        args:
+          pathname: "%{ item.target }"
+          flags: O_WRONLY|O_CREAT|O_TRUNC
+          mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: warning
+      outputFields:
+        fd.name: "%{ item.target }"
+    cases:
+      - strategy: matrix
+        values:
+          target:
+            - /var/log/eg_clear_test
+            - /tmp/eg_clearlog/syslog
+            - /tmp/eg_clearlog/auth.log
+            - /tmp/eg_clearlog/secure
+            - /tmp/eg_clearlog/kern.log
+            - /tmp/eg_clearlog/cron
+            - /tmp/eg_clearlog/user.log
+            - /tmp/eg_clearlog/dpkg.log
+            - /tmp/eg_clearlog/last.log
+            - /tmp/eg_clearlog/yum.log
+            - /tmp/eg_clearlog/access_log
+            - /tmp/eg_clearlog/mysql.log
+            - /tmp/eg_clearlog/mysqld.log
+
+  - name: clear_log_activities_openat
+    rule: "Clear Log Activities"
+    description: "openat() with O_TRUNC of each log target fires the rule"
+    runner: HostRunner
+    resources:
+      - type: fd
+        name: target
+        subtype: file
+        filePath: "%{ item.target }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: openat
+        args:
+          pathname: "%{ item.target }"
+          flags: O_WRONLY|O_CREAT|O_TRUNC
+          mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: warning
+      outputFields:
+        fd.name: "%{ item.target }"
+    cases:
+      - strategy: matrix
+        values:
+          target:
+            - /var/log/eg_clear_test
+            - /tmp/eg_clearlog/syslog
+            - /tmp/eg_clearlog/auth.log
+            - /tmp/eg_clearlog/secure
+            - /tmp/eg_clearlog/kern.log
+            - /tmp/eg_clearlog/cron
+            - /tmp/eg_clearlog/user.log
+            - /tmp/eg_clearlog/dpkg.log
+            - /tmp/eg_clearlog/last.log
+            - /tmp/eg_clearlog/yum.log
+            - /tmp/eg_clearlog/access_log
+            - /tmp/eg_clearlog/mysql.log
+            - /tmp/eg_clearlog/mysqld.log
+
+  - name: clear_log_activities_openat2
+    rule: "Clear Log Activities"
+    description: "openat2() with O_TRUNC of each log target fires the rule"
+    runner: HostRunner
+    resources:
+      - type: fd
+        name: target
+        subtype: file
+        filePath: "%{ item.target }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: openat2
+        args:
+          pathname: "%{ item.target }"
+          how:
+            flags: O_WRONLY|O_CREAT|O_TRUNC
+            mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: warning
+      outputFields:
+        fd.name: "%{ item.target }"
+    cases:
+      - strategy: matrix
+        values:
+          target:
+            - /var/log/eg_clear_test
+            - /tmp/eg_clearlog/syslog
+            - /tmp/eg_clearlog/auth.log
+            - /tmp/eg_clearlog/secure
+            - /tmp/eg_clearlog/kern.log
+            - /tmp/eg_clearlog/cron
+            - /tmp/eg_clearlog/user.log
+            - /tmp/eg_clearlog/dpkg.log
+            - /tmp/eg_clearlog/last.log
+            - /tmp/eg_clearlog/yum.log
+            - /tmp/eg_clearlog/access_log
+            - /tmp/eg_clearlog/mysql.log
+            - /tmp/eg_clearlog/mysqld.log

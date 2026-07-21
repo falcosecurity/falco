@@ -1,0 +1,85 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: redirect_stdout_stdin_to_network_connection_in_container_dup2
+    rule: "Redirect STDOUT/STDIN to Network Connection in Container"
+    description: "dup2 of a connected IP socket onto a std fd inside a container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        - name: eg_redirect
+    resources:
+      - type: clientServer
+        name: cs
+        l4Proto: "%{ item.l4proto }"
+        address: "%{ item.addr }"
+    steps:
+      - type: syscall
+        name: d
+        syscall: dup2
+        args:
+          oldFd: "${ cs.client.fd }"
+          newFd: "%{ item.newfd }"
+    expectedOutcome:
+      source: syscall
+      priority: notice
+      outputFields:
+        proc.name: eg_redirect
+        fd.type: "%{ item.fdtype }"
+        fd.l4proto: tcp
+    cases:
+      - strategy: matrix
+        values:
+          l4proto: [tcp4]
+          addr: ["127.0.0.1:9999"]
+          fdtype: [ipv4]
+          newfd: [0, 1, 2]
+      - strategy: matrix
+        values:
+          l4proto: [tcp6]
+          addr: ["[::1]:9999"]
+          fdtype: [ipv6]
+          newfd: [0, 1, 2]
+
+  - name: redirect_stdout_stdin_to_network_connection_in_container_dup3
+    rule: "Redirect STDOUT/STDIN to Network Connection in Container"
+    description: "dup3 of a connected IP socket onto a std fd inside a container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        - name: eg_redirect
+    resources:
+      - type: clientServer
+        name: cs
+        l4Proto: "%{ item.l4proto }"
+        address: "%{ item.addr }"
+    steps:
+      - type: syscall
+        name: d
+        syscall: dup3
+        args:
+          oldFd: "${ cs.client.fd }"
+          newFd: "%{ item.newfd }"
+          flags: 0
+    expectedOutcome:
+      source: syscall
+      priority: notice
+      outputFields:
+        proc.name: eg_redirect
+        fd.type: "%{ item.fdtype }"
+        fd.l4proto: tcp
+    cases:
+      - strategy: matrix
+        values:
+          l4proto: [tcp4]
+          addr: ["127.0.0.1:9999"]
+          fdtype: [ipv4]
+          newfd: [0, 1, 2]
+      - strategy: matrix
+        values:
+          l4proto: [tcp6]
+          addr: ["[::1]:9999"]
+          fdtype: [ipv6]
+          newfd: [0, 1, 2]

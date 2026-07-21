@@ -1,0 +1,93 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: detect_release_agent_file_container_escapes_open
+    rule: "Detect release_agent File Container Escapes"
+    description: "open() write of a release_agent file in a privileged container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        - name: eg_release
+          user: "%{ item.user }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: open
+        args:
+          pathname: "%{ item.target }"
+          flags: O_WRONLY|O_CREAT
+          mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: critical
+      outputFields:
+        fd.name: "%{ item.target }"
+        proc.name: eg_release
+        user.name: "%{ item.user }"
+    cases:
+      - strategy: matrix
+        values:
+          user: [root, daemon]
+          target: [/tmp/release_agent, /root/release_agent]
+
+  - name: detect_release_agent_file_container_escapes_openat
+    rule: "Detect release_agent File Container Escapes"
+    description: "openat() write of a release_agent file in a privileged container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        - name: eg_release
+          user: "%{ item.user }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: openat
+        args:
+          pathname: "%{ item.target }"
+          flags: O_WRONLY|O_CREAT
+          mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: critical
+      outputFields:
+        fd.name: "%{ item.target }"
+        proc.name: eg_release
+        user.name: "%{ item.user }"
+    cases:
+      - strategy: matrix
+        values:
+          user: [root, daemon]
+          target: [/tmp/release_agent, /root/release_agent]
+
+  - name: detect_release_agent_file_container_escapes_openat2
+    rule: "Detect release_agent File Container Escapes"
+    description: "openat2() write of a release_agent file in a privileged container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        - name: eg_release
+          user: "%{ item.user }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: openat2
+        args:
+          pathname: "%{ item.target }"
+          how:
+            flags: O_WRONLY|O_CREAT
+            mode: 0644
+    expectedOutcome:
+      source: syscall
+      priority: critical
+      outputFields:
+        fd.name: "%{ item.target }"
+        proc.name: eg_release
+        user.name: "%{ item.user }"
+    cases:
+      - strategy: matrix
+        values:
+          user: [root, daemon]
+          target: [/tmp/release_agent, /root/release_agent]
