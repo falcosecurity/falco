@@ -1,0 +1,40 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: create_symlink_over_sensitive_files
+    rule: "Create Symlink Over Sensitive Files"
+    description: "symlink()/symlinkat() targeting each sensitive file and directory fires the rule"
+    runner: HostRunner
+    before: "rm -f /tmp/eg_symlink_sensitive"
+    # note: specifying both filePath and dirPath is a hack for letting both "file" and "directory" work with a single
+    # template.
+    resources:
+      - type: fd
+        name: target
+        subtype: "%{ item.subtype }"
+        filePath: "%{ item.target }"
+        dirPath: "%{ item.target }"
+    steps:
+      - type: syscall
+        name: sl
+        syscall: "%{ item.syscall }"
+        args:
+          target: "%{ item.target }"
+          linkPath: /tmp/eg_symlink_sensitive
+    expectedOutcome:
+      source: syscall
+      priority: warning
+      outputFields:
+        evt.arg.target: "%{ item.target }"
+        evt.arg.linkpath: /tmp/eg_symlink_sensitive
+    cases:
+      - strategy: matrix
+        values:
+          syscall: [symlink, symlinkat]
+          subtype: [file]
+          target: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+      - strategy: matrix
+        values:
+          syscall: [symlink, symlinkat]
+          subtype: [directory]
+          target: [/, /etc, /etc/, /root, /root/]

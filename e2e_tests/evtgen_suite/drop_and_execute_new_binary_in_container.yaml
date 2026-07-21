@@ -1,0 +1,25 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: drop_and_execute_new_binary_in_container
+    rule: "Drop and execute new binary in container"
+    description: "spawning a freshly-copied (upper-layer) binary in a container fires the rule"
+    runner: HostRunner
+    context:
+      container: {}
+      processes:
+        # user=daemon forces the builder to copy the real exe into the container (upper layer) instead of hard-linking
+        # the base-image binary.
+        - name: eg_dropped
+          exe: "%{ item.path }"
+          user: daemon
+    expectedOutcome:
+      source: syscall
+      priority: critical
+      outputFields:
+        proc.exe: "%{ item.path }"
+        proc.name: eg_dropped
+    cases:
+      - strategy: matrix
+        values:
+          path: [/tmp/eg_dropped, /usr/local/bin/eg_dropped, /root/eg_dropped]

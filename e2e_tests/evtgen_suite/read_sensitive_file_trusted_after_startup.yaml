@@ -1,0 +1,50 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: read_sensitive_file_trusted_after_startup
+    rule: "Read sensitive file trusted after startup"
+    description: "a trusted server binary reading /etc/shadow more than 5s after startup fires the rule"
+    runner: HostRunner
+    before: "sleep 6"
+    context:
+      processes:
+        - name: "%{ item.server }"
+    steps:
+      - type: syscall
+        name: op
+        syscall: open
+        args:
+          pathname: /etc/shadow
+          flags: O_RDONLY
+    expectedOutcome:
+      source: syscall
+      priority: warning
+      outputFields:
+        fd.name: /etc/shadow
+        proc.name: "%{ item.server }"
+    cases:
+      - strategy: matrix
+        values:
+          server:
+            # http_server_binaries
+            - nginx
+            - httpd
+            - httpd-foregroun
+            - lighttpd
+            - apache
+            - apache2
+            # db_server_binaries
+            - mysqld
+            - postgres
+            - sqlplus
+            # docker_binaries (excluding "runc:[1:CHILD]")
+            - docker
+            - dockerd
+            - containerd-shim
+            - pause
+            - exe
+            - docker-compose
+            - docker-entrypoi
+            - docker-runc-cur
+            - docker-current
+            - dockerd-current

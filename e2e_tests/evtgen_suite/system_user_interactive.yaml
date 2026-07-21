@@ -1,0 +1,45 @@
+# falco-rules-5.1.0
+
+tests:
+  - name: system_user_interactive_ssh_descendant
+    rule: "System user interactive"
+    description: "a system user running a command as an sshd descendant fires the rule"
+    runner: HostRunner
+    context:
+      processes:
+        # ancestor: sshd (satisfies proc.aname=sshd).
+        - name: sshd
+        # leaf: a command (proc.name != sshd) run as the system user.
+        - name: id
+          user: "%{ item.user }"
+    expectedOutcome:
+      source: syscall
+      priority: informational
+      outputFields:
+        user.name: "%{ item.user }"
+        proc.name: id
+        proc.pname: sshd
+    cases:
+      - strategy: matrix
+        values:
+          user: [bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data]
+
+  - name: system_user_interactive_login
+    rule: "System user interactive"
+    description: "a system user running login/systemd-logind fires the rule"
+    runner: HostRunner
+    context:
+      processes:
+        - name: "%{ item.iname }"
+          user: "%{ item.user }"
+    expectedOutcome:
+      source: syscall
+      priority: informational
+      outputFields:
+        user.name: "%{ item.user }"
+        proc.name: "%{ item.iname }"
+    cases:
+      - strategy: matrix
+        values:
+          user: [bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data]
+          iname: [login, systemd-logind]
