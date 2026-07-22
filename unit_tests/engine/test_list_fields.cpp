@@ -43,8 +43,7 @@ static std::string extract_section(const std::string& output, const std::string&
 class ListFields : public testing::Test {
 protected:
 	void SetUp() override {
-		auto filter_factory =
-		        std::make_shared<sinsp_filter_factory>(&m_inspector, m_filterchecks);
+		auto filter_factory = std::make_shared<sinsp_filter_factory>(&m_inspector, m_filterchecks);
 		auto formatter_factory =
 		        std::make_shared<sinsp_evt_formatter_factory>(&m_inspector, m_filterchecks);
 		m_engine.add_source("syscall", filter_factory, formatter_factory);
