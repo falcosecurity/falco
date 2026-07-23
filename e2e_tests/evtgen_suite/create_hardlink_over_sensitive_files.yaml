@@ -4,6 +4,7 @@ tests:
   - name: create_hardlink_over_sensitive_files
     rule: "Create Hardlink Over Sensitive Files"
     description: "link()/linkat() over each sensitive file fires the rule"
+    runIf: %{ item.runIf }
     runner: HostRunner
     before: "rm -f /root/eg_hardlink"
     resources:
@@ -27,5 +28,11 @@ tests:
     cases:
       - strategy: matrix
         values:
-          syscall: [link, linkat]
+          runIf: [{ arch: { op: ne, val: arm64 } }]
+          syscall: [link]
+          target: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+      - strategy: matrix
+        values:
+          runIf: [null]
+          syscall: [linkat]
           target: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]

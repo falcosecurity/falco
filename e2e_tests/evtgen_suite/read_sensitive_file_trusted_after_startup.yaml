@@ -12,7 +12,7 @@ tests:
     steps:
       - type: syscall
         name: op
-        syscall: open
+        syscall: openat
         args:
           pathname: /etc/shadow
           flags: O_RDONLY

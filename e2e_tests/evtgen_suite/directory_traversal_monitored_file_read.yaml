@@ -4,6 +4,7 @@ tests:
   - name: directory_traversal_monitored_file_read_open
     rule: "Directory traversal monitored file read"
     description: "open() of a monitored file via a two-segment '../' path fires the rule"
+    runIf: { arch: { op: ne, val: arm64 } }
     runner: HostRunner
     resources:
       - type: fd

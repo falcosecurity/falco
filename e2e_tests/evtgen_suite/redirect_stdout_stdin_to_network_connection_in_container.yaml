@@ -4,6 +4,7 @@ tests:
   - name: redirect_stdout_stdin_to_network_connection_in_container_dup2
     rule: "Redirect STDOUT/STDIN to Network Connection in Container"
     description: "dup2 of a connected IP socket onto a std fd inside a container fires the rule"
+    runIf: { arch: { op: ne, val: arm64 } }
     runner: HostRunner
     context:
       container: {}

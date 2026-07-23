@@ -4,6 +4,7 @@ tests:
   - name: read_sensitive_file_untrusted_open
     rule: "Read sensitive file untrusted"
     description: "open() read of each sensitive target fires the rule"
+    runIf: { arch: { op: ne, val: arm64 } }
     runner: HostRunner
     resources:
       - type: fd
