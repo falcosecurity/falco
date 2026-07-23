@@ -1,0 +1,74 @@
+# This is a reusable workflow used by master and release CI.
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: x86_64 or aarch64
+        required: true
+        type: string
+      static:
+        description: Falco packages use a static build
+        required: false
+        type: boolean
+        default: false
+      version:
+        description: The Falco version to use when testing packages
+        required: true
+        type: string
+      sanitizers:
+        description: Use sanitizer enabled build
+        required: false
+        default: false
+        type: boolean
+
+permissions:  
+  contents: read
+
+jobs:
+  test-packages-with-event-generator:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
+    # note: keep it in-sync with the definition in reusable_test_packages.yaml
+    env:
+      ARTIFACT_SUFFIX: >-
+        ${{ format('{0}{1}-{2}{3}',
+        inputs.version,
+        inputs.static == true && '-static' || '',
+        inputs.arch,
+        inputs.sanitizers == true && '-sanitizers' || '') }}
+    steps:
+      # Checkout required in order to use the .github/actions/event-generator-tests action.
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4
+        with:
+          repository: falcosecurity/falco
+          ref: ${{ github.job_workflow_sha }}
+          persist-credentials: false
+
+      - name: Download binary
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: falco-${{ env.ARTIFACT_SUFFIX }}.tar.gz
+
+      - name: Install Falco package
+        run: |
+          ls falco-*.tar.gz
+          tar -xvf $(ls falco-*.tar.gz)
+          cd falco-${{ inputs.version }}-${{ inputs.arch }}
+          sudo cp -r * /
+
+      - name: Install kernel headers for the kmod driver
+        run: |
+          sudo apt update -y
+          sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
+
+      - name: Test Falco (modern_ebpf) against the event-generator
+        uses: ./.github/actions/event-generator-tests
+        with:
+          driver: modern_ebpf
+
+      - name: Test Falco (kmod) against the event-generator
+        if: ${{ !cancelled() }} # Run regardless of the outcome for the modern_ebpf engine.
+        uses: ./.github/actions/event-generator-tests
+        with:
+          driver: kmod

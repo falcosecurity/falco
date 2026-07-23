@@ -94,6 +94,20 @@ jobs:
       arch: aarch64
       version: ${{ github.event.release.tag_name }}
 
+  test-packages-with-evtgen:
+    needs: [release-settings, build-packages]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: x86_64
+      version: ${{ github.event.release.tag_name }}
+
+  test-packages-with-evtgen-arm64:
+    needs: [release-settings, build-packages-arm64]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: aarch64
+      version: ${{ github.event.release.tag_name }}
+
   publish-packages:
     needs: [release-settings, test-packages, test-packages-arm64]
     permissions:

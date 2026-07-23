@@ -1,0 +1,121 @@
+name: "event-generator suite tests"
+description: "Start Falco with a driver, run the event-generator suite tests against it, and verify the report."
+
+inputs:
+  driver:
+    description: "Falco driver to run with: 'modern_ebpf' or 'kmod'."
+    required: false
+    default: "modern_ebpf"
+  http-address:
+    description: "host:port the event-generator retriever binds to and Falco posts alerts to."
+    required: false
+    default: "localhost:8080"
+  tests-dir:
+    description: "Folder of event-generator YAML test descriptions, relative to github.workspace (this repository's checkout)."
+    required: false
+    default: "e2e_tests/evtgen_suite"
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare Falco driver (${{ inputs.driver }})
+      if: ${{ inputs.driver != 'modern_ebpf' }}
+      shell: bash
+      env:
+        DRIVER: ${{ inputs.driver }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends dkms build-essential
+        sudo falcoctl driver config --type "$DRIVER"
+        sudo falcoctl driver install
+
+    # Falco is configured as described in
+    # https://github.com/falcosecurity/event-generator/blob/main/docs/event-generator_suite_test.md#falco-configuration
+    - name: Start Falco (${{ inputs.driver }})
+      shell: bash
+      env:
+        DRIVER: ${{ inputs.driver }}
+        HTTP_ADDRESS: ${{ inputs.http-address }}
+      run: |
+        LOG="${RUNNER_TEMP}/falco-${DRIVER}.log"
+        sudo falco -c /etc/falco/falco.yaml \
+          -o "engine.kind=${DRIVER}" \
+          -o json_output=true \
+          -o http_output.enabled=true \
+          -o "http_output.url=http://${HTTP_ADDRESS}" \
+          -o http_output.max_consecutive_timeouts=1000000 \
+          -o 'append_output[]={"extra_fields": ["proc.env"]}' \
+          -o webserver.enabled=true \
+          -o metrics.enabled=true \
+          -o webserver.prometheus_metrics_enabled=true \
+          >"$LOG" 2>&1 &
+        # Wait for Falco to become ready.
+        WAIT_SEC=10
+        for i in $(seq 1 "$WAIT_SEC"); do
+          if curl -sf -o /dev/null http://localhost:8765/healthz; then
+            echo "Falco (${DRIVER}) is ready"; exit 0
+          fi
+          sleep 1
+        done
+        echo "::error::[${DRIVER}] Falco did not become ready within ${WAIT_SEC}s"
+        cat "$LOG" || true
+        exit 1
+
+    - name: Test Falco (${{ inputs.driver }}) against the event-generator
+      id: event-generator
+      uses: falcosecurity/event-generator@2bfdbb7f7a98ad3d44b45e2230dc3f850dee65c9
+      with:
+        tests-dir: ${{ inputs.tests-dir }}
+        http-address: ${{ inputs.http-address }}
+
+    - name: Verify event-generator report
+      shell: bash
+      env:
+        DRIVER: ${{ inputs.driver }}
+        REPORT: ${{ steps.event-generator.outputs.report }}
+        EXPECTED: ${{ steps.event-generator.outputs.expected-tests }}
+      run: |
+        [ -s "$REPORT" ] || { echo "::error::[${DRIVER}] event-generator produced an empty report"; exit 1; }
+        # A test passes iff successfulMatches >= 1, or its only mismatches are fields Falco left unresolved ("<NA>" or
+        # "NULL").
+        read TOTAL FAILED TOLERATED < <(jq -rs '
+          def unresolved: . == "<NA>" or . == "NULL";
+          def unresolved_only:
+            (.generatedWarnings // [])
+            | any((.fieldWarnings | length) > 0 and (.fieldWarnings | all(.got | unresolved)));
+          [ .[] | (.testReports // [])[] ] as $r
+          | ($r | map(select((.successfulMatches // 0) < 1))) as $unmatched
+          | "\($r | length) \($unmatched | map(select(unresolved_only | not)) | length) \($unmatched | map(select(unresolved_only)) | length)"
+          ' "$REPORT")
+        echo "[${DRIVER}] total=${TOTAL} failed=${FAILED} tolerated=${TOLERATED} expected=${EXPECTED}"
+        [ "$TOTAL" -eq "$EXPECTED" ] || { echo "::error::[${DRIVER}] expected ${EXPECTED} tests, report has ${TOTAL}"; exit 1; }
+        [ "$FAILED" -eq 0 ]          || { echo "::error::[${DRIVER}] ${FAILED} of ${TOTAL} tests failed"; exit 1; }
+        [ "$TOLERATED" -eq 0 ]       || { echo "::warning::[${DRIVER}] ${TOLERATED} test(s) passed only because Falco left fields unresolved (<NA> or NULL)"; }
+        echo "PASS [${DRIVER}]: all ${TOTAL} tests passed"
+
+    - name: Report Falco (${{ inputs.driver }}) syscall drops on failure
+      if: failure()
+      shell: bash
+      env:
+        DRIVER: ${{ inputs.driver }}
+      run: |
+        METRICS="$(curl -sf http://localhost:8765/metrics || true)"
+        DROPS="$(printf '%s\n' "$METRICS" | awk '/^falcosecurity_scap_n_drops_total[ {]/{print $NF}')"
+        EVTS="$(printf '%s\n' "$METRICS" | awk '/^falcosecurity_scap_n_evts_total[ {]/{print $NF}')"
+        echo "[${DRIVER}] cumulative syscall drops=${DROPS:-<unavailable>} of evts=${EVTS:-<unavailable>}"
+        printf '%s\n' "$METRICS" | grep '^falcosecurity_scap_n_drops' || true
+
+    - name: Print Falco ${{ inputs.driver }} logs on failure
+      if: failure()
+      shell: bash
+      env:
+        DRIVER: ${{ inputs.driver }}
+      run: |
+        echo "::group::Falco (${DRIVER}) logs"
+        cat "${RUNNER_TEMP}/falco-${DRIVER}.log" 2>/dev/null || true
+        echo "::endgroup::"
+
+    - name: Stop Falco (${{ inputs.driver }})
+      if: always()
+      shell: bash
+      run: sudo pkill -TERM -x falco 2>/dev/null || true

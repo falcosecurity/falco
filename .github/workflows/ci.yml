@@ -63,6 +63,20 @@ jobs:
       arch: aarch64
       version: ${{ needs.fetch-version.outputs.version }}
 
+  test-dev-packages-with-evtgen:
+    needs: [fetch-version, build-dev-packages-x86_64]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: x86_64
+      version: ${{ needs.fetch-version.outputs.version }}
+
+  test-dev-packages-with-evtgen-arm64:
+    needs: [fetch-version, build-dev-packages-arm64]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: aarch64
+      version: ${{ needs.fetch-version.outputs.version }}
+
   build-dev-minimal:
     uses: ./.github/workflows/reusable_build_dev.yaml
     with:

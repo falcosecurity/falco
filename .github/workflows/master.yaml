@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   fetch-version:
-    uses: ./.github/workflows/reusable_fetch_version.yaml 
+    uses: ./.github/workflows/reusable_fetch_version.yaml
 
   build-dev-packages:
     needs: [fetch-version]
@@ -54,8 +54,23 @@ jobs:
       arch: aarch64
       version: ${{ needs.fetch-version.outputs.version }}
 
+  test-dev-packages-with-evtgen:
+    needs: [fetch-version, build-dev-packages]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: x86_64
+      version: ${{ needs.fetch-version.outputs.version }}
+
+  test-dev-packages-with-evtgen-arm64:
+    needs: [fetch-version, build-dev-packages-arm64]
+    uses: ./.github/workflows/reusable_test_packages_with_evtgen.yaml
+    with:
+      arch: aarch64
+      version: ${{ needs.fetch-version.outputs.version }}
+
   publish-dev-packages:
-    needs: [fetch-version, test-dev-packages, test-dev-packages-arm64]
+    needs: [fetch-version, test-dev-packages, test-dev-packages-arm64, test-dev-packages-with-evtgen,
+            test-dev-packages-with-evtgen-arm64]
     permissions:
       id-token: write
       contents: read
@@ -74,7 +89,7 @@ jobs:
       version: ${{ needs.fetch-version.outputs.version }}
       tag: master
     secrets: inherit
-    
+
   build-dev-docker-arm64:
     needs: [fetch-version, publish-dev-packages]
     uses: ./.github/workflows/reusable_build_docker.yaml
@@ -84,7 +99,7 @@ jobs:
       version: ${{ needs.fetch-version.outputs.version }}
       tag: master
     secrets: inherit
-    
+
   publish-dev-docker:
     needs: [fetch-version, build-dev-docker, build-dev-docker-arm64]
     permissions:
