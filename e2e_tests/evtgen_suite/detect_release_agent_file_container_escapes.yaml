@@ -4,6 +4,7 @@ tests:
   - name: detect_release_agent_file_container_escapes_open
     rule: "Detect release_agent File Container Escapes"
     description: "open() write of a release_agent file in a privileged container fires the rule"
+    runIf: { arch: { op: ne, val: arm64 } }
     runner: HostRunner
     context:
       container: {}

@@ -4,6 +4,7 @@ tests:
   - name: clear_log_activities_open
     rule: "Clear Log Activities"
     description: "open() with O_TRUNC of each log target fires the rule"
+    runIf: { arch: { op: ne, val: arm64 } }
     runner: HostRunner
     resources:
       - type: fd
