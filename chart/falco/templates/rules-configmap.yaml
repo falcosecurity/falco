@@ -1,4 +1,21 @@
 {{- if .Values.customRules }}
+{{- if .Values.customRules.splitFiles.enabled }}
+{{- $root := . -}}
+{{- range $file, $content := .Values.customRules.splitFiles.files }}
+{{- $baseName := trimSuffix ".yaml" $file | replace "." "-" | replace "_" "-"}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "falco.fullname" $root }}-{{ $baseName}}-rules
+  namespace: {{ include "falco.namespace" $root }}
+  labels:
+    {{- include "falco.labels" $root | nindent 4 }}
+data:
+  {{ $file }}: |-
+{{ $content | indent 4}}
+---
+{{- end }}
+{{- else }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,5 +27,6 @@ data:
 {{- range $file, $content :=  .Values.customRules }}
   {{ $file }}: |-
 {{ $content | indent 4}}
+{{- end }}
 {{- end }}
 {{- end }}
