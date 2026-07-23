@@ -386,6 +386,9 @@ static falco::app::run_result do_inspect(
 		}
 
 		num_evts++;
+		if(!is_capture_mode) {
+			s.source_infos.at(source)->num_evts.store(num_evts, std::memory_order_relaxed);
+		}
 	}
 
 	return run_result::ok();
