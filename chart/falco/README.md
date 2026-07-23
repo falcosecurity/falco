@@ -468,6 +468,21 @@ helm install falco falcosecurity/falco \
 
 Or instead of directly setting the files via `--set-file`, mounting an existing volume with the `certs.existingClientSecret` value.
 
+## Loading default networkPolicy
+
+Falco ships with a default networkPolicy. It is a good starting point before going further in hardening falco deployment.
+
+The default netwokPolicy, once activated, enables the following flows:
+* ingress flow from kube-apiserver on ports 8765 (Liveness, readyness and health probes) and 9765 (Webhook for k8saudit)
+* egress flow to core-dns PODs for kubernetes cluster internal resolution
+* egress flow to falcosidekick PODs if falcosidekick is enabled
+
+Additional flow such as on premise private registry, corporate proxy or even external syslog server are not covered by the default networkPolicy
+and should be configured aside of helm chart default netwokPolicy.
+
+Simply set  `defaultNetworkPolicy.enabled=true` to activate the default networkPolicy rendering.
+In addition, if `falcosidekick.enabled=true` is set, then default networkPolicy will embed the egress flow related to falcosidekick.
+
 ## Deploy Falcosidekick with Falco
 
 [`Falcosidekick`](https://github.com/falcosecurity/falcosidekick) can be installed with `Falco` by setting `--set falcosidekick.enabled=true`. This setting automatically configures all options of `Falco` for working with `Falcosidekick`.
@@ -512,6 +527,7 @@ The following table lists the main configurable parameters of the falco chart v9
 | controller.kind | string | `"daemonset"` |  |
 | controller.labels | object | `{}` | Extra labels to add to the daemonset or deployment |
 | customRules | object | `{}` | Third party rules enabled for Falco. More info on the dedicated section in README.md file. |
+| defaultNetworkPolicy | object | `{"enabled":false}` | Default networkPolicy that comes out of the box with falco if you don't have any specific needs. |
 | driver.enabled | bool | `true` | Set it to false if you want to deploy Falco without the drivers. Always set it to false when using Falco with plugins. |
 | driver.kind | string | `"auto"` | kind tells Falco which driver to use. Available options: kmod (kernel driver), modern_ebpf (modern eBPF probe). |
 | driver.kmod | object | `{"bufSizePreset":4,"dropFailedExit":false}` | kmod holds the configuration for the kernel module. |

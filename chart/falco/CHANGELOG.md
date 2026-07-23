@@ -5,6 +5,8 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Add defaultNetworkPolicies feature to deploy a standard default networkPolicy (ingress allow kube-apiserver, egress allow core-dns resolution and falco-sidekick events forwarding)
+
 ## v9.0.0
 
 * Drop gRPC output and server support

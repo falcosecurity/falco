@@ -472,6 +472,21 @@ helm install falco falcosecurity/falco \
 
 Or instead of directly setting the files via `--set-file`, mounting an existing volume with the `certs.existingClientSecret` value.
 
+## Loading default networkPolicy
+
+Falco ships with a default networkPolicy. It is a good starting point before going further in hardening falco deployment.
+
+The default netwokPolicy, once activated, enables the following flows:
+* ingress flow from kube-apiserver on ports 8765 (Liveness, readyness and health probes) and 9765 (Webhook for k8saudit)
+* egress flow to core-dns PODs for kubernetes cluster internal resolution
+* egress flow to falcosidekick PODs if falcosidekick is enabled
+
+Additional flow such as on premise private registry, corporate proxy or even external syslog server are not covered by the default networkPolicy
+and should be configured aside of helm chart default netwokPolicy.
+
+Simply set  `defaultNetworkPolicy.enabled=true` to activate the default networkPolicy rendering.
+In addition, if `falcosidekick.enabled=true` is set, then default networkPolicy will embed the egress flow related to falcosidekick.
+
 ## Deploy Falcosidekick with Falco
 
 [`Falcosidekick`](https://github.com/falcosecurity/falcosidekick) can be installed with `Falco` by setting `--set falcosidekick.enabled=true`. This setting automatically configures all options of `Falco` for working with `Falcosidekick`.
