@@ -13,4 +13,4 @@ tests:
       source: syscall
       priority: critical
       outputFields:
-        proc.exepath: "memfd:event-generator"
+        evt.arg.flags: "EXE_WRITABLE|EXE_FROM_MEMFD"

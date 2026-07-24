@@ -4,6 +4,7 @@ tests:
   - name: create_symlink_over_sensitive_files
     rule: "Create Symlink Over Sensitive Files"
     description: "symlink()/symlinkat() targeting each sensitive file and directory fires the rule"
+    runIf: %{ item.runIf }
     runner: HostRunner
     before: "rm -f /tmp/eg_symlink_sensitive"
     # note: specifying both filePath and dirPath is a hack for letting both "file" and "directory" work with a single
@@ -30,11 +31,25 @@ tests:
     cases:
       - strategy: matrix
         values:
-          syscall: [symlink, symlinkat]
+          runIf: [{ arch: { op: ne, val: arm64 } }]
+          syscall: [symlink]
           subtype: [file]
           target: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
       - strategy: matrix
         values:
-          syscall: [symlink, symlinkat]
+          runIf: [{ arch: { op: ne, val: arm64 } }]
+          syscall: [symlink]
+          subtype: [directory]
+          target: [/, /etc, /etc/, /root, /root/]
+      - strategy: matrix
+        values:
+          runIf: [null]
+          syscall: [symlinkat]
+          subtype: [file]
+          target: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+      - strategy: matrix
+        values:
+          runIf: [null]
+          syscall: [symlinkat]
           subtype: [directory]
           target: [/, /etc, /etc/, /root, /root/]

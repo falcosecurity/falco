@@ -23,11 +23,12 @@ on:
 
 permissions:  
   contents: read
-  
+
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
+    # note: keep it in-sync with the definition in reusable_test_packages_with_evtgen.yaml
     env:
       ARTIFACT_SUFFIX: >-
         ${{ format('{0}{1}-{2}{3}',
