@@ -206,10 +206,11 @@ falco::app::run_result falco::app::actions::open_live_inspector(falco::app::stat
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
 			} catch(sinsp_exception& e) {
 				// Try to insert the Falco kernel module
+#ifdef __linux__
 				falco_logger::log(
 				        falco_logger::level::INFO,
 				        "Trying to inject the Kernel module and opening the capture again...");
-#ifdef __linux__
+
 				if(!falco_modprobe(DRIVER_NAME)) {
 					falco_logger::log(falco_logger::level::ERR, "Unable to load the driver\n");
 				}
