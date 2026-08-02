@@ -230,6 +230,15 @@ spec:
       emptyDir: {}
     - name: artifact-state-dir
       emptyDir: {}
+    {{- if .Values.extra.registryCustomCaCert.enabled }}
+    - name: {{ include "falco.fullname" . }}-falcoctl-registry-cacert-volume
+      secret:
+        secretName: {{ include "falco.fullname" . }}-falcoctl-registry-cacert
+        defaultMode: 420
+        items:
+          - key: registry-cacert.pem
+            path: registry-cacert.pem
+    {{- end }}
     {{- end }}
     - name: root-falco-fs
       emptyDir: {}
