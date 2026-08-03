@@ -444,6 +444,24 @@ std::string falco_metrics::sources_to_text_prometheus(
 			}
 		}
 
+		// falcosecurity_falco_num_evts_total{evt_source="<source>"} — userspace event counter.
+		// Emitted once per source. Only available in live mode; zero in capture mode.
+		{
+			auto num_evts_metric = libs::metrics::libsinsp_metrics::new_metric(
+			        "num_evts",
+			        METRICS_V2_MISC,
+			        METRIC_VALUE_TYPE_U64,
+			        METRIC_VALUE_UNIT_COUNT,
+			        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+			        source_info->num_evts.load(std::memory_order_relaxed));
+			prometheus_metrics_converter.convert_metric_to_unit_convention(num_evts_metric);
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
+			        num_evts_metric,
+			        "falcosecurity",
+			        "falco",
+			        {{"evt_source", source}});
+		}
+
 		// Source wrapper metrics Part B: Agnostic, performed only once.
 		if(agent_info_written && machine_info_written) {
 			continue;
