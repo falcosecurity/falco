@@ -162,6 +162,21 @@ std::string falco_metrics::falco_to_text_prometheus(
 		        state.outputs->get_outputs_queue_num_drops()));
 	}
 
+	// # HELP falcosecurity_falco_num_evts_total https://falco.org/docs/metrics/
+	// # TYPE falcosecurity_falco_num_evts_total counter
+	// falcosecurity_falco_num_evts_total 12345
+	//
+	// Exposes the same `num_evts` counter that the JSON / text stats sinks
+	// already emit via stats_writer; aggregated across every event source.
+	// See issue #3584.
+	additional_wrapper_metrics.emplace_back(libs::metrics::libsinsp_metrics::new_metric(
+	        "num_evts",
+	        METRICS_V2_MISC,
+	        METRIC_VALUE_TYPE_U64,
+	        METRIC_VALUE_UNIT_COUNT,
+	        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+	        state.num_evts.load(std::memory_order_relaxed)));
+
 	// # HELP falcosecurity_falco_reload_timestamp_nanoseconds https://falco.org/docs/metrics/
 	// # TYPE falcosecurity_falco_reload_timestamp_nanoseconds gauge
 	// falcosecurity_falco_reload_timestamp_nanoseconds 1748338536592811359
