@@ -266,8 +266,8 @@ spec:
         path: /proc
     {{- end }}
     - name: falcoctl-config-volume
-      configMap: 
-        name: {{ include "falco.fullname" . }}-falcoctl
+      secret: 
+        secretName: {{ include "falco.fullname" . }}-falcoctl
         items:
           - key: falcoctl.yaml
             path: falcoctl.yaml
