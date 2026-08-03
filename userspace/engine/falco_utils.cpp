@@ -230,13 +230,28 @@ bool matches_wildcard(const std::string& pattern, const std::string& s) {
 
 		std::string next_pattern = pattern.substr(next_pattern_start);
 		std::string to_find = next_pattern.substr(0, next_pattern.find("*"));
-		std::string::size_type lit_pos = s.find(to_find);
-		if(lit_pos == std::string::npos) {
-			return false;
-		}
+		std::string remaining_pattern = next_pattern.substr(to_find.size());
 
-		return matches_wildcard(next_pattern.substr(to_find.size()),
-		                        s.substr(lit_pos + to_find.size()));
+		// The first occurrence of `to_find` in `s` is not always the right
+		// one. For instance, `*ab` against `xabab`: matching the `ab` at
+		// index 1 leaves `ab` unmatched against the empty remaining pattern.
+		// Try each occurrence and backtrack on failure.
+		//
+		// Worst case this tries every occurrence of `to_find` in `s`, each
+		// paired with an O(|s|) substr/find, i.e. O(|s|^2) for a single `*`
+		// segment. This is fine for the short file/rule names this function
+		// is used on; do not turn this back into a single greedy `find`.
+		std::string::size_type search_from = 0;
+		while(true) {
+			std::string::size_type lit_pos = s.find(to_find, search_from);
+			if(lit_pos == std::string::npos) {
+				return false;
+			}
+			if(matches_wildcard(remaining_pattern, s.substr(lit_pos + to_find.size()))) {
+				return true;
+			}
+			search_from = lit_pos + 1;
+		}
 	} else {
 		// wildcard at the end or in the middle "something*else*..."
 
