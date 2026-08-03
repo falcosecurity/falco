@@ -508,6 +508,11 @@ customRules: {}
   # rules-traefik.yaml: |-
   #   [ rule body ]
 
+# -- Default networkPolicy that comes out of the box with falco if you don't have any specific needs.
+defaultNetworkPolicy:
+  # Disabled by default to avoid being categorized as BREAKING CHANGES
+  enabled: false
+
 ########################
 # Falco integrations   #
 ########################
