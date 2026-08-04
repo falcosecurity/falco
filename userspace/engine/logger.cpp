@@ -101,6 +101,10 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg) {
 		return;
 	}
 
+	if(msg.find_first_not_of('\n') == std::string::npos) {
+		return;
+	}
+
 	std::string copy = msg;
 
 #ifndef _WIN32
