@@ -5,6 +5,8 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Fix Grafana dashboard priority level mappings to match Falco's numeric encoding (0=emergency … 7=debug)
+
 ## v9.0.0
 
 * Drop gRPC output and server support
