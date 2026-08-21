@@ -104,12 +104,13 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& sta
 
 	::close(fd);
 #else
-	// Windows analog of O_NOFOLLOW: refuse to write the pidfile if the path
-	// is a reparse point (symlink/junction). We pre-check with
-	// GetFileAttributesA so an existing reparse point produces a clear error,
-	// and we also pass FILE_FLAG_OPEN_REPARSE_POINT to CreateFile plus a
-	// post-open BY_HANDLE_FILE_INFORMATION check as defence-in-depth against
-	// the small TOCTOU window between the two calls.
+	// Windows analog of the O_NOFOLLOW check: refuse to write the pidfile if
+	// the path is a reparse point (symlink/junction). This is a pre-open check
+	// only: FILE_FLAG_OPEN_REPARSE_POINT is documented as incompatible with
+	// CREATE_ALWAYS, so the open below cannot re-check race-free. The small
+	// TOCTOU window between this check and CreateFile is an accepted residual
+	// risk, as Windows is an experimental MINIMAL_BUILD target with no
+	// published binaries and nothing consuming the pidfile.
 	DWORD attrs = GetFileAttributesA(state.options.pidfilename.c_str());
 	if(attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_REPARSE_POINT)) {
 		falco_logger::log(falco_logger::level::ERR,
@@ -123,22 +124,12 @@ falco::app::run_result falco::app::actions::pidfile(const falco::app::state& sta
 	                       FILE_SHARE_READ,
 	                       nullptr,
 	                       CREATE_ALWAYS,
-	                       FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+	                       FILE_ATTRIBUTE_NORMAL,
 	                       nullptr);
 	if(h == INVALID_HANDLE_VALUE) {
 		falco_logger::log(falco_logger::level::ERR,
 		                  "Could not open pidfile " + state.options.pidfilename + " (error: " +
 		                          win32_error_string(GetLastError()) + "). Exiting.\n");
-		exit(-1);
-	}
-
-	BY_HANDLE_FILE_INFORMATION info{};
-	if(!GetFileInformationByHandle(h, &info) ||
-	   (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
-		CloseHandle(h);
-		falco_logger::log(falco_logger::level::ERR,
-		                  "Refusing to write pidfile " + state.options.pidfilename +
-		                          ": path is a reparse point. Exiting.\n");
 		exit(-1);
 	}
 
