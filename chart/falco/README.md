@@ -507,6 +507,7 @@ The following table lists the main configurable parameters of the falco chart v9
 | collectors.kubernetes.pluginRef | string | `"ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1"` | pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.4.1". Or just name + tag: k8smeta:0.4.1. |
 | containerSecurityContext | object | `{}` | Set securityContext for the Falco container.For more info see the "falco.securityContext" helper in "pod-template.tpl" |
 | controller.annotations | object | `{}` |  |
+| controller.daemonset.revisionHistoryLimit | int | `nil` | Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10) |
 | controller.daemonset.updateStrategy.type | string | `"RollingUpdate"` | Perform rolling updates by default in the DaemonSet agent ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/ |
 | controller.deployment.replicas | int | `1` | Number of replicas when installing Falco using a deployment. Change it if you really know what you are doing. For more info check the section on Plugins in the README.md file. |
 | controller.kind | string | `"daemonset"` |  |

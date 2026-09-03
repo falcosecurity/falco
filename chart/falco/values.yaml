@@ -157,6 +157,8 @@ controller:
   # -- Extra labels to add to the daemonset or deployment
   labels: {}
   daemonset:
+    # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
+    # revisionHistoryLimit: 1
     updateStrategy:
       # You can also customize maxUnavailable or minReadySeconds if you
       # need it

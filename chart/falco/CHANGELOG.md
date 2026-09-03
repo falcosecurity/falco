@@ -5,6 +5,8 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Add `revisionHistoryLimit` support to the DaemonSet controller, matching existing deployment behavior
+
 ## v9.0.0
 
 * Drop gRPC output and server support
