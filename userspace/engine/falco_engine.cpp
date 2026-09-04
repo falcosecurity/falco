@@ -124,7 +124,10 @@ void falco_engine::list_fields(const std::string &source,
 		}
 
 		for(const auto &fld_class : it.filter_factory->get_fields()) {
-			fieldclass_event_sources[fieldclass_key(fld_class)].insert(it.name);
+			auto &srcs = fieldclass_event_sources[fieldclass_key(fld_class)];
+			if(!fld_class.is_generic) {
+				srcs.insert(it.name);
+			}
 		}
 	}
 
