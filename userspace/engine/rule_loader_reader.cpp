@@ -873,10 +873,9 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 				read_rule_exceptions(cfg, item, v.exceptions, ctx, true);
 			}
 
-			// TODO restore this error and update testing
-			// THROW((!v.cond.has_value() && !v.exceptions.has_value()),
-			//       "Appended rule must have exceptions or condition property",
-			//       v.ctx);
+			THROW((!v.cond.has_value() && !v.exceptions.has_value()),
+			      "Appended rule must have exceptions or condition property",
+			      v.ctx);
 
 			collector.append(cfg, v);
 		} else {
