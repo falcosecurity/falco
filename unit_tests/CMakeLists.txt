@@ -53,6 +53,7 @@ add_executable(
 	falco/test_configuration_schema.cpp
 	falco/app/actions/test_select_event_sources.cpp
 	falco/app/actions/test_load_config.cpp
+	falco/app/actions/test_validate_rules_files.cpp
 )
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
