@@ -21,6 +21,17 @@ limitations under the License.
 #include "app/state.h"
 #include "versions_info.h"
 #include <atomic>
+#include <signal.h>
+#include <sys/wait.h>
+
+using namespace std::chrono_literals;
+
+namespace {
+std::function<void(int)> sigchld_func;
+void sigchld_handler(int signal) {
+	sigchld_func(signal);
+}
+}  // namespace
 
 falco_webserver::~falco_webserver() {
 	stop();
@@ -58,47 +69,95 @@ void falco_webserver::start(const falco::app::state &state,
 		              res.set_content(versions_json_str, "application/json");
 	              });
 
-	// run server in a separate thread
 	if(!m_server->is_valid()) {
 		m_server = nullptr;
 		throw falco_exception("invalid webserver configuration");
 	}
 
-	m_failed.store(false, std::memory_order_release);
-	m_server_thread = std::thread([this, webserver_config] {
+	sigchld_func = [&](int signal) {
+		wait(nullptr);
+		m_child_stopped = true;
+	};
+	signal(SIGCHLD, sigchld_handler);
+
+	// fork the server
+	m_pid = fork();
+
+	if(m_pid < 0) {
+		throw falco_exception("webserver: an error occurred while forking webserver");
+	} else if(m_pid == 0) {
+		falco_logger::log(falco_logger::level::INFO, "Webserver: forked\n");
+		int res = setgid(webserver_config.m_gid);
+		if(res != NOERROR) {
+			throw falco_exception(
+			        std::string("webserver: an error occurred while setting group id: ") +
+			        std::strerror(errno));
+		}
+		res = setuid(webserver_config.m_uid);
+		if(res != NOERROR) {
+			throw falco_exception(
+			        std::string("webserver: an error occurred while setting user id: ") +
+			        std::strerror(errno));
+		}
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Webserver: process running as " +
+		                          std::to_string(webserver_config.m_uid) + ":" +
+		                          std::to_string(webserver_config.m_gid) + "\n");
 		try {
 			this->m_server->listen(webserver_config.m_listen_address,
 			                       webserver_config.m_listen_port);
 		} catch(std::exception &e) {
 			falco_logger::log(falco_logger::level::ERR,
-			                  "falco_webserver: " + std::string(e.what()) + "\n");
+			                  "Webserver error: " + std::string(e.what()) + "\n");
+			throw;
 		}
-		this->m_failed.store(true, std::memory_order_release);
-	});
+	} else {
+		std::string schema = "http";
+		if(webserver_config.m_ssl_enabled) {
+			schema = "https";
+		}
+		std::string url = schema + "://" + webserver_config.m_listen_address + ":" +
+		                  std::to_string(webserver_config.m_listen_port);
+		httplib::Client cli(url);
 
-	// wait for the server to actually start up
-	// note: is_running() is atomic
-	while(!m_server->is_running() && !m_failed.load(std::memory_order_acquire)) {
-		std::this_thread::yield();
-	}
-	m_running = true;
-	if(m_failed.load(std::memory_order_acquire)) {
-		stop();
-		throw falco_exception("an error occurred while starting webserver");
+		const int max_retries = 10;
+		const std::chrono::seconds delay = 1s;
+		int retry = 0;
+		m_running = false;
+		m_child_stopped = false;
+		while(retry++ < max_retries && !m_child_stopped) {
+			if(auto res = cli.Get(webserver_config.m_k8s_healthz_endpoint)) {
+				falco_logger::log(falco_logger::level::INFO, "Webserver: successfully started\n");
+				m_running = true;
+				break;
+			}
+			std::this_thread::sleep_for(delay * retry);
+		}
+		if(!m_running) {
+			throw falco_exception("webserver: the server is not running");
+		}
 	}
 }
 
 void falco_webserver::stop() {
-	if(m_running) {
-		if(m_server != nullptr) {
-			m_server->stop();
+	if(m_pid > 0) {
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Webserver: terminating process " + std::to_string(m_pid) + "\n");
+		int res = kill(m_pid, SIGKILL);
+		if(res != 0) {
+			falco_logger::log(
+			        falco_logger::level::ERR,
+			        std::string("Webserver: an error occurred while terminating process: ") +
+			                std::strerror(errno));
 		}
-		if(m_server_thread.joinable()) {
-			m_server_thread.join();
-		}
-		m_server = nullptr;
-		m_running = false;
+		waitpid(m_pid, nullptr, 0);
+		m_pid = -1;
+		falco_logger::log(falco_logger::level::INFO, "Webserver: stopping process done\n");
 	}
+
+	m_server = nullptr;
+	m_running = false;
+	m_child_stopped = true;
 }
 
 void falco_webserver::enable_prometheus_metrics(const falco::app::state &state) {
