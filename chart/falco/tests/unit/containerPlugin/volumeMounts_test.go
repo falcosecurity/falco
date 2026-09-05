@@ -28,17 +28,17 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 6)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/var/run/docker.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/var/run", volumeMounts[0].MountPath)
 				require.Equal(t, "container-engine-socket-1", volumeMounts[1].Name)
-				require.Equal(t, "/host/run/podman/podman.sock", volumeMounts[1].MountPath)
+				require.Equal(t, "/host/run/podman", volumeMounts[1].MountPath)
 				require.Equal(t, "container-engine-socket-2", volumeMounts[2].Name)
-				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[2].MountPath)
+				require.Equal(t, "/host/run/host-containerd", volumeMounts[2].MountPath)
 				require.Equal(t, "container-engine-socket-3", volumeMounts[3].Name)
-				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[3].MountPath)
+				require.Equal(t, "/host/run/containerd", volumeMounts[3].MountPath)
 				require.Equal(t, "container-engine-socket-4", volumeMounts[4].Name)
-				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[4].MountPath)
+				require.Equal(t, "/host/run/crio", volumeMounts[4].MountPath)
 				require.Equal(t, "container-engine-socket-5", volumeMounts[5].Name)
-				require.Equal(t, "/host/run/k3s/containerd/containerd.sock", volumeMounts[5].MountPath)
+				require.Equal(t, "/host/run/k3s/containerd", volumeMounts[5].MountPath)
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/var/run/docker.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/var/run", volumeMounts[0].MountPath)
 			},
 		},
 		{
@@ -67,7 +67,7 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/custom/docker.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/custom", volumeMounts[0].MountPath)
 			},
 		},
 		{
@@ -81,13 +81,13 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 4)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/run/containerd/containerd.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/run/containerd", volumeMounts[0].MountPath)
 				require.Equal(t, "container-engine-socket-1", volumeMounts[1].Name)
-				require.Equal(t, "/host/run/crio/crio.sock", volumeMounts[1].MountPath)
+				require.Equal(t, "/host/run/crio", volumeMounts[1].MountPath)
 				require.Equal(t, "container-engine-socket-2", volumeMounts[2].Name)
-				require.Equal(t, "/host/run/k3s/containerd/containerd.sock", volumeMounts[2].MountPath)
+				require.Equal(t, "/host/run/k3s/containerd", volumeMounts[2].MountPath)
 				require.Equal(t, "container-engine-socket-3", volumeMounts[3].Name)
-				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[3].MountPath)
+				require.Equal(t, "/host/run/host-containerd", volumeMounts[3].MountPath)
 			},
 		},
 		{
@@ -102,7 +102,7 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/custom/crio.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/custom", volumeMounts[0].MountPath)
 			},
 		},
 		{
@@ -116,7 +116,7 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/run/host-containerd/containerd.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/run/host-containerd", volumeMounts[0].MountPath)
 			},
 		},
 		{
@@ -131,7 +131,7 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 			expected: func(t *testing.T, volumeMounts []corev1.VolumeMount) {
 				require.Len(t, volumeMounts, 1)
 				require.Equal(t, "container-engine-socket-0", volumeMounts[0].Name)
-				require.Equal(t, "/host/custom/containerd.sock", volumeMounts[0].MountPath)
+				require.Equal(t, "/host/custom", volumeMounts[0].MountPath)
 			},
 		},
 		{
@@ -142,27 +142,27 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 
 				// dockerV := findVolumeMount("docker-socket-0", volumeMounts)
 				// require.NotNil(t, dockerV)
-				// require.Equal(t, "/host/var/run/docker.sock", dockerV.MountPath)
+				// require.Equal(t, "/host/var/run", dockerV.MountPath)
 
 				// podmanV := findVolumeMount("podman-socket-0", volumeMounts)
 				// require.NotNil(t, podmanV)
-				// require.Equal(t, "/host/run/podman/podman.sock", podmanV.MountPath)
+				// require.Equal(t, "/host/run/podman", podmanV.MountPath)
 
 				// containerdV := findVolumeMount("containerd-socket-0", volumeMounts)
 				// require.NotNil(t, containerdV)
-				// require.Equal(t, "/host/run/host-containerd/containerd.sock", containerdV.MountPath)
+				// require.Equal(t, "/host/run/host-containerd", containerdV.MountPath)
 
 				// crioV0 := findVolumeMount("cri-socket-0", volumeMounts)
 				// require.NotNil(t, crioV0)
-				// require.Equal(t, "/host/run/containerd/containerd.sock", crioV0.MountPath)
+				// require.Equal(t, "/host/run/containerd", crioV0.MountPath)
 
 				// crioV1 := findVolumeMount("cri-socket-1", volumeMounts)
 				// require.NotNil(t, crioV1)
-				// require.Equal(t, "/host/run/crio/crio.sock", crioV1.MountPath)
+				// require.Equal(t, "/host/run/crio", crioV1.MountPath)
 
 				// crioV2 := findVolumeMount("cri-socket-2", volumeMounts)
 				// require.NotNil(t, crioV2)
-				// require.Equal(t, "/host/run/k3s/containerd/containerd.sock", crioV2.MountPath)
+				// require.Equal(t, "/host/run/k3s/containerd", crioV2.MountPath)
 			},
 		},
 		{
@@ -180,11 +180,11 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 
 				dockerV0 := findVolumeMount("container-engine-socket-0", volumeMounts)
 				require.NotNil(t, dockerV0)
-				require.Equal(t, "/host/var/run/docker.sock", dockerV0.MountPath)
+				require.Equal(t, "/host/var/run", dockerV0.MountPath)
 
 				dockerV1 := findVolumeMount("container-engine-socket-1", volumeMounts)
 				require.NotNil(t, dockerV1)
-				require.Equal(t, "/host/custom/docker.sock", dockerV1.MountPath)
+				require.Equal(t, "/host/custom", dockerV1.MountPath)
 			},
 		},
 		{
@@ -202,11 +202,11 @@ func TestContainerPluginVolumeMounts(t *testing.T) {
 
 				crioV0 := findVolumeMount("container-engine-socket-0", volumeMounts)
 				require.NotNil(t, crioV0)
-				require.Equal(t, "/host/run/crio/crio.sock", crioV0.MountPath)
+				require.Equal(t, "/host/run/crio", crioV0.MountPath)
 
 				crioV1 := findVolumeMount("container-engine-socket-1", volumeMounts)
 				require.NotNil(t, crioV1)
-				require.Equal(t, "/host/custom/crio.sock", crioV1.MountPath)
+				require.Equal(t, "/host/custom", crioV1.MountPath)
 			},
 		},
 		{
