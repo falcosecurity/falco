@@ -457,9 +457,14 @@ This helper is used to add container plugin volumes to the falco pod.
 {{- $val := index $.Values.collectors.containerEngine.engines $engineName -}}
 {{- if and $val $val.enabled -}}
 {{- range $index, $socket := $val.sockets -}}
-{{- $mountPath := print "/host" $socket -}}
+{{/* Mount the directory holding the socket, not the socket itself. A file
+     bind mount pins the inode, so when the runtime restarts and recreates its
+     socket the pod keeps the old dead one and Falco stops enriching events
+     (issue #632, and again #1052). */}}
+{{- $socketDir := dir $socket -}}
+{{- $mountPath := print "/host" $socketDir -}}
 {{- if not (hasKey $seenPaths $mountPath) -}}
-{{ $volumes = append $volumes (dict "name" (printf "container-engine-socket-%d" $idx) "hostPath" (dict "path" $socket)) -}}
+{{ $volumes = append $volumes (dict "name" (printf "container-engine-socket-%d" $idx) "hostPath" (dict "path" $socketDir)) -}}
 {{- $idx = add $idx 1 -}}
 {{- $_ := set $seenPaths $mountPath true -}}
 {{- end -}}
@@ -488,7 +493,10 @@ This helper is used to add container plugin volumeMounts to the falco pod.
 {{- $val := index $.Values.collectors.containerEngine.engines $engineName -}}
 {{- if and $val $val.enabled -}}
 {{- range $index, $socket := $val.sockets -}}
-{{- $mountPath := print "/host" $socket -}}
+{{/* Kept in step with falco.containerPluginVolumes: the directory is mounted,
+     not the socket file, so the volume names line up. */}}
+{{- $socketDir := dir $socket -}}
+{{- $mountPath := print "/host" $socketDir -}}
 {{- if not (hasKey $seenPaths $mountPath) -}}
 {{ $volumeMounts = append $volumeMounts (dict "name" (printf "container-engine-socket-%d" $idx) "mountPath" $mountPath) -}}
 {{- $idx = add $idx 1 -}}
