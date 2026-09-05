@@ -58,6 +58,9 @@ struct state {
 		// source is a plugin one, the assigned inspector must have that
 		// plugin registered in its plugin manager
 		std::shared_ptr<sinsp> inspector;
+		// Userspace event counter for this source. Written by the event loop
+		// and read by the Prometheus metrics endpoint without locking.
+		std::atomic<uint64_t> num_evts{0};
 	};
 
 	state():
