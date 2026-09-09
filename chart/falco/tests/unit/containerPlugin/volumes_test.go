@@ -276,6 +276,22 @@ func TestContainerPluginVolumes(t *testing.T) {
 			},
 		},
 		{
+			name: "ContainerEnginesSocketsInSameDirectoryShareOneVolume",
+			values: map[string]string{
+				"collectors.containerEngine.engines.docker.enabled":     "false",
+				"collectors.containerEngine.engines.containerd.enabled": "false",
+				"collectors.containerEngine.engines.cri.enabled":        "true",
+				"collectors.containerEngine.engines.cri.sockets[0]":     "/run/containerd/containerd.sock",
+				"collectors.containerEngine.engines.cri.sockets[1]":     "/run/containerd/other.sock",
+				"collectors.containerEngine.engines.podman.enabled":     "false",
+			},
+			expected: func(t *testing.T, volumes []corev1.Volume) {
+				require.Len(t, volumes, 1)
+				require.Equal(t, "container-engine-socket-0", volumes[0].Name)
+				require.Equal(t, "/run/containerd", volumes[0].HostPath.Path)
+			},
+		},
+		{
 			name: "noVolumesWhenCollectorsDisabled",
 			values: map[string]string{
 				"collectors.enabled": "false",
