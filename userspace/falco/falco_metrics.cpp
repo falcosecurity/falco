@@ -208,6 +208,12 @@ std::string falco_metrics::falco_to_text_prometheus(
 				        {"priority", std::to_string(rule->priority)},
 				        {"source", rule->source},
 				};
+				if(state.config->m_include_k8s_metadata) {
+					// Kubernetes metadata is not available at metrics aggregation level.
+					// Expose placeholder labels for consistency with other Falco outputs.
+					const_labels["k8s_ns_name"] = "n/a";
+					const_labels["k8s_pod_name"] = "n/a";
+				}
 				std::for_each(rule->tags.cbegin(),
 				              rule->tags.cend(),
 				              [&const_labels](std::string const& tag) {
