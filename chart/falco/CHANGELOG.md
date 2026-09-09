@@ -5,6 +5,7 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Do not render the `falcoctl-config-volume` pod volume when both falcoctl artifact install and follow containers are disabled
 * Fix Grafana dashboard priority level mappings to match Falco's numeric encoding (0=emergency … 7=debug)
 
 ## v9.0.0
