@@ -110,6 +110,10 @@ tolerations:
   - effect: NoSchedule
     key: node-role.kubernetes.io/control-plane
 
+# -- Optional duration in seconds the pod needs to terminate gracefully.
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
+terminationGracePeriodSeconds:
+
 # -- Parameters used
 healthChecks:
   startupProbe:
