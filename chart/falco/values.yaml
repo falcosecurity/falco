@@ -157,8 +157,8 @@ controller:
   # -- Extra labels to add to the daemonset or deployment
   labels: {}
   daemonset:
-    # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
-    # revisionHistoryLimit: 1
+    # -- (int) Number of old revisions to retain for rollback. Set to 0 to retain no old revisions. If unset, Kubernetes defaults to 10.
+    revisionHistoryLimit: null
     updateStrategy:
       # You can also customize maxUnavailable or minReadySeconds if you
       # need it
@@ -169,8 +169,8 @@ controller:
     # -- Number of replicas when installing Falco using a deployment. Change it if you really know what you are doing.
     # For more info check the section on Plugins in the README.md file.
     replicas: 1
-    # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
-    # revisionHistoryLimit: 1
+    # -- (int) Number of old revisions to retain for rollback. Set to 0 to retain no old revisions. If unset, Kubernetes defaults to 10.
+    revisionHistoryLimit: null
 
 # -- Network services configuration (scenario requirement)
 # Add here your services to be deployed together with Falco.
