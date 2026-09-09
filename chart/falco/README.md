@@ -273,9 +273,17 @@ And this means that our Falco installation has loaded the rules and is ready to 
 
 ## Kubernetes Audit Log
 
-The Kubernetes Audit Log is now supported via the built-in [k8saudit](https://github.com/falcosecurity/plugins/tree/master/plugins/k8saudit) plugin. It is entirely up to you to set up the [webhook backend](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#webhook-backend) of the Kubernetes API server to forward the Audit Log event to the Falco listening port.
+The [k8saudit](https://github.com/falcosecurity/plugins/tree/main/plugins/k8saudit) plugin receives Kubernetes Audit Log events through its own HTTP(S) listener. Configure the Kubernetes API server's [webhook backend](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#webhook-backend) to forward audit events to that listener.
 
-The following snippet shows how to deploy Falco with the [k8saudit](https://github.com/falcosecurity/plugins/tree/master/plugins/k8saudit) plugin:
+TLS settings apply to separate connections:
+
+- `falco.http_output.mtls`, `certs.client`, and `certs.existingClientSecret` configure client authentication for **outgoing alerts** sent to a remote HTTP(S) output endpoint. See [Enable http_output](#enable-http_output).
+- `falco.webserver.ssl_enabled` configures HTTPS for Falco's health and metrics webserver, which is separate from the audit webhook listener.
+- The `k8saudit` plugin uses its own `open_params` and `init_config.sslCertificate` settings for HTTPS. Its webhook listener does **not support client-certificate authentication (mTLS)**. Setting the HTTP output options above does not change this.
+
+To enable HTTPS on the audit listener, set the plugin's `open_params` to an HTTPS URL, such as `https://:9765/k8s-audit`, and point `init_config.sslCertificate` to a mounted PEM file containing the server certificate and private key. When using `certs.server.key`, `certs.server.crt`, and `certs.ca.crt`, the chart mounts this bundle at `/etc/falco/certs/falco.pem`.
+
+The following snippet shows how to deploy Falco with the `k8saudit` plugin over HTTP:
 ```yaml
 # -- Disable the drivers since we want to deploy only the k8saudit plugin.
 driver:
@@ -449,7 +457,7 @@ helm install falco falcosecurity/falco \
     --set json_include_output_property=true
 ```
 
-Additionally, you can enable mTLS communication and load HTTP client cryptographic material via:
+To authenticate Falco to the remote HTTP(S) output endpoint, enable mTLS and supply a client certificate and key:
 
 ```shell
 helm install falco falcosecurity/falco \
@@ -466,7 +474,7 @@ helm install falco falcosecurity/falco \
     --set-file certs.client.key="/path/to/client.key",certs.client.crt="/path/to/client.crt",certs.ca.crt="/path/to/cacert.crt"
 ```
 
-Or instead of directly setting the files via `--set-file`, mounting an existing volume with the `certs.existingClientSecret` value.
+Alternatively, supply these files through an existing Secret with `certs.existingClientSecret`.
 
 ## Deploy Falcosidekick with Falco
 
@@ -485,10 +493,11 @@ The following table lists the main configurable parameters of the falco chart v9
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity constraint for pods' scheduling. |
-| certs | object | `{"ca":{"crt":""},"client":{"crt":"","key":""},"existingClientSecret":"","existingSecret":"","server":{"crt":"","key":""}}` | certificates used by webserver. paste certificate content or use helm with --set-file or use existing secret containing key, crt, ca as well as pem bundle |
-| certs.ca.crt | string | `""` | CA certificate used by webserver and AuditSink validation. |
-| certs.client.crt | string | `""` | Certificate used by http mTLS client. |
-| certs.client.key | string | `""` | Key used by http mTLS client. |
+| certs | object | `{"ca":{"crt":""},"client":{"crt":"","key":""},"existingClientSecret":"","existingSecret":"","server":{"crt":"","key":""}}` | TLS material for server certificates and outbound HTTP output client authentication. paste certificate content or use helm with --set-file or use existing secret containing key, crt, ca as well as pem bundle |
+| certs.ca.crt | string | `""` | CA certificate bundled in the server and HTTP client certificate Secrets. |
+| certs.client.crt | string | `""` | Client certificate for outbound HTTP output mTLS. |
+| certs.client.key | string | `""` | Client private key for outbound HTTP output mTLS. |
+| certs.existingClientSecret | string | `""` | Existing Secret containing client.crt, client.key, and ca.crt for outbound HTTP output mTLS. Does not configure k8saudit client authentication. |
 | certs.existingSecret | string | `""` | Existing secret containing the following key, crt and ca as well as the bundle pem. |
 | certs.server.crt | string | `""` | Certificate used by webserver. |
 | certs.server.key | string | `""` | Key used by webserver. |
@@ -575,7 +584,7 @@ The following table lists the main configurable parameters of the falco chart v9
 | falco.http_output.insecure | bool | `false` | Tell Falco to not verify the remote server. |
 | falco.http_output.keep_alive | bool | `false` | If true, the HTTP connection will be kept alive and reused. |
 | falco.http_output.max_consecutive_timeouts | int | `5` | Maximum consecutive timeouts of libcurl to ignore. |
-| falco.http_output.mtls | bool | `false` | Tell Falco to use mTLS. |
+| falco.http_output.mtls | bool | `false` | Use mTLS for outgoing alerts to the HTTP output endpoint. Does not configure the k8saudit webhook listener. |
 | falco.http_output.url | string | `""` | URL of the remote server to send the alerts to. |
 | falco.http_output.user_agent | string | `"falcosecurity/falco"` | User agent string to be used in the HTTP request. |
 | falco.json_include_message_property | bool | `false` | When using JSON output in Falco, you have the option to include the formatted rule output without timestamp or priority. For instance, if a rule specifies an "output" property like "Opened process %proc.name" the "message" field will only contain "Opened process bash" whereas the "output" field will contain more information. |
