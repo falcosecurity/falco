@@ -46,6 +46,9 @@ spec:
   tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- if .Values.terminationGracePeriodSeconds }}
+  terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+  {{- end }}
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets: 
     {{- toYaml . | nindent 4 }}
