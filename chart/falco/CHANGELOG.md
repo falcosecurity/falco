@@ -11,6 +11,11 @@ numbering uses [semantic versioning](http://semver.org).
 * Add `serviceAccount.labels` to set custom labels on the ServiceAccount
 * Mount the host directory that holds each container engine socket instead of the socket file, so Falco keeps working after a container runtime restart (regression of falcosecurity/charts#632, originally fixed by falcosecurity/charts#633). With the default values the pod now mounts `/var/run`, `/run/podman`, `/run/host-containerd`, `/run/containerd`, `/run/crio`, and `/run/k3s/containerd` instead of the six socket files
 
+## v9.1.0
+
+* Upgrade Falco to v0.44.1
+* Add `driver.modernEbpf.disableIterators` and missing `metrics.kernelIterEventCountersEnabled` for disabling BPF iterators and corresponding metrics support
+
 ## v9.0.0
 
 * Drop gRPC output and server support
