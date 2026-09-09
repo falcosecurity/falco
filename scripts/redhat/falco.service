@@ -1,0 +1,34 @@
+[Unit]
+Description=Falco is a cloud native runtime security tool for Linux operating systems
+Documentation=https://falco.org/docs
+After=network.target network-online.target nss-lookup.target basic.target
+Wants=network-online.target nss-lookup.target
+StartLimitIntervalSec=30
+StartLimitBurst=3
+
+[Service]
+Restart=on-failure
+RestartSec=30
+User=falco
+Group=falcosecurity
+ExecStart=/usr/bin/falco -c /etc/falco/falco.yaml --pidfile /run/falco/falco.pid
+PIDFile=/run/falco/falco.pid
+ExecReload=/bin/kill -HUP $MAINPID
+NoNewPrivileges=false
+ProtectHome=true
+ProtectSystem=strict
+ProtectHostname=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictNamespaces=true
+MemoryDenyWriteExecute=true
+PrivateDevices=true
+PrivateTmp=true
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_PTRACE CAP_SYS_RESOURCE CAP_DAC_OVERRIDE
+RestrictAddressFamilies=~AF_PACKET
+
+[Install]
+WantedBy=multi-user.target

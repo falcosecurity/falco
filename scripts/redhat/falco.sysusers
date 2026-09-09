@@ -1,0 +1,4 @@
+#Type Name                    ID  GECOS        Home directory  Shell
+g     falcosecurity           -
+u!    falco                   -   "Falco user" /var/run/falco  /sbin/nologin
+m     falco                   falcosecurity
