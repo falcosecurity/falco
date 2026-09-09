@@ -46,6 +46,10 @@ spec:
   tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- with .Values.topologySpreadConstraints }}
+  topologySpreadConstraints:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets: 
     {{- toYaml . | nindent 4 }}

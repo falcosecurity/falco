@@ -103,6 +103,10 @@ nodeSelector: {}
 # -- Affinity constraint for pods' scheduling.
 affinity: {}
 
+# -- TopologySpreadConstraints to control how pods are spread across nodes, zones, or regions.
+# ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+topologySpreadConstraints: []
+
 # -- Tolerations to allow Falco to run on Kubernetes masters.
 tolerations:
   - effect: NoSchedule
