@@ -15,7 +15,7 @@ metadata:
   {{- end }}
 spec:
   replicas: {{ .Values.controller.deployment.replicas }}
-  {{- if .Values.controller.deployment.revisionHistoryLimit }}
+  {{- if ne .Values.controller.deployment.revisionHistoryLimit nil }}
   revisionHistoryLimit: {{ .Values.controller.deployment.revisionHistoryLimit }}
   {{- end }}
   selector:
