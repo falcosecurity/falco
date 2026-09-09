@@ -275,9 +275,17 @@ And this means that our Falco installation has loaded the rules and is ready to 
 
 ## Kubernetes Audit Log
 
-The Kubernetes Audit Log is now supported via the built-in [k8saudit](https://github.com/falcosecurity/plugins/tree/master/plugins/k8saudit) plugin. It is entirely up to you to set up the [webhook backend](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#webhook-backend) of the Kubernetes API server to forward the Audit Log event to the Falco listening port.
+The [k8saudit](https://github.com/falcosecurity/plugins/tree/main/plugins/k8saudit) plugin receives Kubernetes Audit Log events through its own HTTP(S) listener. Configure the Kubernetes API server's [webhook backend](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#webhook-backend) to forward audit events to that listener.
 
-The following snippet shows how to deploy Falco with the [k8saudit](https://github.com/falcosecurity/plugins/tree/master/plugins/k8saudit) plugin:
+TLS settings apply to separate connections:
+
+- `falco.http_output.mtls`, `certs.client`, and `certs.existingClientSecret` configure client authentication for **outgoing alerts** sent to a remote HTTP(S) output endpoint. See [Enable http_output](#enable-http_output).
+- `falco.webserver.ssl_enabled` configures HTTPS for Falco's health and metrics webserver, which is separate from the audit webhook listener.
+- The `k8saudit` plugin uses its own `open_params` and `init_config.sslCertificate` settings for HTTPS. Its webhook listener does **not support client-certificate authentication (mTLS)**. Setting the HTTP output options above does not change this.
+
+To enable HTTPS on the audit listener, set the plugin's `open_params` to an HTTPS URL, such as `https://:9765/k8s-audit`, and point `init_config.sslCertificate` to a mounted PEM file containing the server certificate and private key. When using `certs.server.key`, `certs.server.crt`, and `certs.ca.crt`, the chart mounts this bundle at `/etc/falco/certs/falco.pem`.
+
+The following snippet shows how to deploy Falco with the `k8saudit` plugin over HTTP:
 ```yaml
 # -- Disable the drivers since we want to deploy only the k8saudit plugin.
 driver:
@@ -453,7 +461,7 @@ helm install falco falcosecurity/falco \
     --set json_include_output_property=true
 ```
 
-Additionally, you can enable mTLS communication and load HTTP client cryptographic material via:
+To authenticate Falco to the remote HTTP(S) output endpoint, enable mTLS and supply a client certificate and key:
 
 ```shell
 helm install falco falcosecurity/falco \
@@ -470,7 +478,7 @@ helm install falco falcosecurity/falco \
     --set-file certs.client.key="/path/to/client.key",certs.client.crt="/path/to/client.crt",certs.ca.crt="/path/to/cacert.crt"
 ```
 
-Or instead of directly setting the files via `--set-file`, mounting an existing volume with the `certs.existingClientSecret` value.
+Alternatively, supply these files through an existing Secret with `certs.existingClientSecret`.
 
 ## Deploy Falcosidekick with Falco
 

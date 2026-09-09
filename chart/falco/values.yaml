@@ -477,7 +477,7 @@ podHostname:
 # If `extra.env` contains `FALCO_HOSTNAME`, the user-provided value wins.
 falcoHostnameEnv: true
 
-# -- certificates used by webserver.
+# -- TLS material for server certificates and outbound HTTP output client authentication.
 # paste certificate content or use helm with --set-file
 # or use existing secret containing key, crt, ca as well as pem bundle
 certs:
@@ -489,13 +489,14 @@ certs:
     # -- Certificate used by webserver.
     crt: ""
   ca:
-    # -- CA certificate used by webserver and AuditSink validation.
+    # -- CA certificate bundled in the server and HTTP client certificate Secrets.
     crt: ""
+  # -- Existing Secret containing client.crt, client.key, and ca.crt for outbound HTTP output mTLS. Does not configure k8saudit client authentication.
   existingClientSecret: ""
   client:
-    # -- Key used by http mTLS client.
+    # -- Client private key for outbound HTTP output mTLS.
     key: ""
-    # -- Certificate used by http mTLS client.
+    # -- Client certificate for outbound HTTP output mTLS.
     crt: ""
 
 # -- Third party rules enabled for Falco. More info on the dedicated section in README.md file.
@@ -1212,7 +1213,7 @@ falco:
     # stored as individual PEM files in this directory
     # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
     ca_path: "/etc/falco/certs/"
-    # -- Tell Falco to use mTLS.
+    # -- Use mTLS for outgoing alerts to the HTTP output endpoint. Does not configure the k8saudit webhook listener.
     mtls: false
     # -- Path to the client cert.
     # NOTICE: Falco default value for this setting differs from the one used in this Helm chart.
