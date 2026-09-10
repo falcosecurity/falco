@@ -6,6 +6,8 @@ numbering uses [semantic versioning](http://semver.org).
 ## Unreleased
 
 * Always mount an emptyDir at `/etc/falco/config.d` in the Falco container, so the configuration snippets shipped in the Falco image are never merged on top of the chart configuration. Previously, with `driver.kind=modern_ebpf` (or `driver.loader.enabled=false`) and both falcoctl containers disabled, the image's `falco.container_plugin.yaml` added a second `container` entry to `load_plugins` and Falco failed to start with `found another plugin with name container`
+* Bump the falcoctl image to `0.14.1`
+* Bump the default `collectors.containerEngine.pluginRef` to `container:0.7.4` and `collectors.kubernetes.pluginRef` to `k8smeta:0.4.2`
 * Do not render the `falcoctl-config-volume` pod volume when both falcoctl artifact install and follow containers are disabled
 * Fix Grafana dashboard priority level mappings to match Falco's numeric encoding (0=emergency … 7=debug)
 - Add `revisionHistoryLimit` support to the DaemonSet controller and honor an explicit zero for both DaemonSet and Deployment controllers
