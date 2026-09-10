@@ -144,10 +144,16 @@ spec:
           name: plugins-install-dir
       {{- end }}
       {{- end }}
-      {{- if eq (include "driverLoader.enabled" .) "true" }}
+      {{- /*
+        Always shadow the image's /etc/falco/config.d with an emptyDir. The Falco
+        image ships configuration snippets there (falco.container_plugin.yaml sets
+        load_plugins: [container]); merged on top of the chart configuration they
+        would load the container plugin twice and Falco aborts at startup with
+        "found another plugin with name container". The driver loader init
+        container writes its engine-kind-falcoctl.yaml into the same volume.
+      */}}
         - mountPath: /etc/falco/config.d
           name: specialized-falco-configs
-      {{- end }}
         - mountPath: /root/.falco
           name: root-falco-fs
         {{- if eq (include "falco.procfsMount.enabled" .) "true" }}
@@ -219,10 +225,9 @@ spec:
   {{- end }}
   volumes:
     {{- include "falco.containerPluginVolumes" . | nindent 4 -}}
-    {{- if eq (include "driverLoader.enabled" .) "true" }}
+    {{- /* Always present: shadows the /etc/falco/config.d shipped in the Falco image (see the falco container volumeMounts). */}}
     - name: specialized-falco-configs
       emptyDir: {}
-    {{- end }}
     {{- if or .Values.falcoctl.artifact.install.enabled .Values.falcoctl.artifact.follow.enabled }}
     - name: plugins-install-dir
       emptyDir: {}
