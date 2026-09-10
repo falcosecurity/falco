@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Minor Changes
+
+* feat(chart): add `terminationGracePeriodSeconds` support to Falco pod template [[#3960](https://github.com/falcosecurity/falco/pull/3960)] - [@Goutham-Annem](https://github.com/Goutham-Annem)
+
 ## v0.44.0
 
 Released on 2026-05-26
