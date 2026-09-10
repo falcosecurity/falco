@@ -58,6 +58,7 @@ struct state {
 		// source is a plugin one, the assigned inspector must have that
 		// plugin registered in its plugin manager
 		std::shared_ptr<sinsp> inspector;
+		std::shared_ptr<std::atomic<uint64_t>> num_evts{std::make_shared<std::atomic<uint64_t>>(0)};
 	};
 
 	state():
@@ -91,6 +92,8 @@ struct state {
 	// Used to load all plugins to get their info. In capture mode,
 	// this is also used to open the capture file and read its events
 	std::shared_ptr<sinsp> offline_inspector;
+	std::shared_ptr<std::atomic<uint64_t>> offline_num_evts{
+	        std::make_shared<std::atomic<uint64_t>>(0)};
 
 	// List of all the information mapped to each event source
 	// indexed by event source name
