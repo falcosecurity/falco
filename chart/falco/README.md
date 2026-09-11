@@ -486,7 +486,7 @@ If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidek
 
 ## Configuration
 
-The following table lists the main configurable parameters of the falco chart v9.1.0 and their default values. See [values.yaml](./values.yaml) for full list.
+The following table lists the main configurable parameters of the falco chart v9.2.0-rc1 and their default values. See [values.yaml](./values.yaml) for full list.
 
 ## Values
 
