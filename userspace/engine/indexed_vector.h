@@ -87,9 +87,20 @@ public:
 	    \brief Returns a pointer to the element at the given numeric index,
 	    or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(size_t id) const {
+	virtual inline const T* at(size_t id) const {
 		if(id < m_entries.size()) {
-			return (T* const)&m_entries[id];
+			return &m_entries[id];
+		}
+		return nullptr;
+	}
+
+	/*!
+	    \brief Returns a pointer to the element at the given numeric index,
+	    or nullptr if no element exists at the given index.
+	*/
+	virtual inline T* at(size_t id) {
+		if(id < m_entries.size()) {
+			return &m_entries[id];
 		}
 		return nullptr;
 	}
@@ -98,7 +109,19 @@ public:
 	    \brief Returns a pointer to the element at the given string index,
 	    or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(const std::string& index) const {
+	virtual inline const T* at(const std::string& index) const {
+		auto it = m_index.find(index);
+		if(it != m_index.end()) {
+			return at(it->second);
+		}
+		return nullptr;
+	}
+
+	/*!
+	    \brief Returns a pointer to the element at the given string index,
+	    or nullptr if no element exists at the given index.
+	*/
+	virtual inline T* at(const std::string& index) {
 		auto it = m_index.find(index);
 		if(it != m_index.end()) {
 			return at(it->second);
