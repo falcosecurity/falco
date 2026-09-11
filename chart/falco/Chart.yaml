@@ -19,7 +19,7 @@ maintainers:
     email: cncf-falco-dev@lists.cncf.io
 dependencies:
   - name: falcosidekick
-    version: "0.12.*"
+    version: "0.14.*"
     condition: falcosidekick.enabled
     repository: https://falcosecurity.github.io/charts
   - name: k8s-metacollector
@@ -27,6 +27,6 @@ dependencies:
     repository: https://falcosecurity.github.io/charts
     condition: collectors.kubernetes.enabled
   - name: falco-talon
-    version: 0.3.*
+    version: 0.4.*
     repository: https://falcosecurity.github.io/charts
     condition: responseActions.enabled
