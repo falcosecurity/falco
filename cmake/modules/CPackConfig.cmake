@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -74,7 +74,7 @@ endif()
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.falco.org")
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "dkms (>= 2.1.0.0)")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-	"${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${CMAKE_BINARY_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cmake/cpack/debian/conffiles"
+	"${CMAKE_BINARY_DIR}/scripts/debian/preinst;${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${CMAKE_BINARY_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cmake/cpack/debian/conffiles"
 )
 
 set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
@@ -82,6 +82,8 @@ set(CPACK_RPM_PACKAGE_ARCHITECTURE, "amd64")
 set(CPACK_RPM_PACKAGE_URL "https://www.falco.org")
 set(CPACK_RPM_PACKAGE_REQUIRES "systemd")
 set(CPACK_RPM_PACKAGE_SUGGESTS "dkms, kernel-devel")
+set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/preinstall")
+set(CPACK_RPM_POST_TRANS_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/posttrans")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/postuninstall")

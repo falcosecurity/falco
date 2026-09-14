@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -48,4 +48,9 @@ endif()
 
 if(CPACK_GENERATOR MATCHES "TGZ")
 	set(CPACK_SET_DESTDIR "ON")
+endif()
+
+# Older CPack versions silently ignore the required post-transaction hook.
+if(CPACK_GENERATOR MATCHES "RPM" AND CMAKE_VERSION VERSION_LESS 3.18)
+	message(FATAL_ERROR "Building RPM packages requires CMake 3.18 or newer for %posttrans")
 endif()
