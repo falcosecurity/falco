@@ -35,9 +35,19 @@ permissions:
   contents: read
 
 jobs:
+  test-package-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Test DEB and RPM package scripts
+        run: python3 scripts/packaging/test_package_scripts.py
+
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && 'ubuntu-22.04-arm') || 'ubuntu-latest' }}
+    needs: [test-package-scripts]
     container: fedora:41
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.

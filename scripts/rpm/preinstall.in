@@ -20,9 +20,4 @@ set -e
 
 @FALCO_PACKAGE_FUNCTIONS@
 
-case "$1" in
-    remove|purge)
-        package_remove_state
-        systemctl --system daemon-reload || true
-        ;;
-esac
+package_save_previous_driver

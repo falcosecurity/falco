@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,18 @@
 #
 set -e
 
-# Currently running falco service uses the driver, so stop it before driver cleanup
-echo "[PRE-REMOVE] Stop all Falco services:"
-systemctl --system stop 'falco-kmod.service' || true
-systemctl --system stop 'falco-modern-bpf.service' || true
-systemctl --system stop 'falco-custom.service' || true
-systemctl --system stop 'falcoctl-artifact-follow.service' || true
+# An upgrade must not tear down the incoming package.
+if [ "$1" -eq 0 ]; then
+    # Currently running falco service uses the driver, so stop it before driver cleanup
+    echo "[PRE-REMOVE] Stop all Falco services:"
+    systemctl --system stop 'falco-kmod.service' || true
+    systemctl --system stop 'falco-modern-bpf.service' || true
+    systemctl --system stop 'falco-custom.service' || true
+    systemctl --system stop 'falcoctl-artifact-follow.service' || true
 
-echo "[PRE-REMOVE] Call 'falcoctl driver cleanup:'"
-falcoctl driver cleanup
+    echo "[PRE-REMOVE] Call 'falcoctl driver cleanup:'"
+    falcoctl driver cleanup
+fi
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
 # RPM scriptlets: https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_systemd
