@@ -74,6 +74,10 @@ struct state {
 	falco::app::options options;
 	std::atomic<bool> restart = false;
 
+	// Cumulative userspace events across all sources, published in batches by
+	// the event loop and read by the Prometheus sink. See #3584.
+	std::atomic<uint64_t> num_evts = 0;
+
 	std::shared_ptr<falco_configuration> config;
 	std::shared_ptr<falco_outputs> outputs;
 	std::shared_ptr<falco_engine> engine;
