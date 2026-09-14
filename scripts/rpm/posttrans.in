@@ -1,0 +1,49 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 The Falco Authors.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+set -e
+
+@FALCO_PACKAGE_FUNCTIONS@
+
+[ -f "$package_state/pending-driver" ] || exit 0
+chosen_driver=$(sed -n '1p' "$package_state/pending-driver")
+driver_version=$(sed -n '2p' "$package_state/pending-driver")
+chosen_unit=
+case "$chosen_driver" in
+    kmod)
+        package_install_kmod
+        chosen_unit=kmod
+        ;;
+    modern_ebpf)
+        chosen_unit=modern-bpf
+        ;;
+    none)
+        ;;
+    *)
+        echo "[POST-TRANSACTION] Invalid pending driver: $chosen_driver" >&2
+        exit 1
+        ;;
+esac
+systemctl --system daemon-reload || true
+if [ -n "$chosen_unit" ]; then
+    # RPM expands this macro while building the package.
+    %systemd_post "falco-$chosen_unit.service"
+    systemctl --system enable "falco-$chosen_unit.service" || true
+    systemctl --system start "falco-$chosen_unit.service" || true
+fi
+package_clear_transaction

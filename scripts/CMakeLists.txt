@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (C) 2023 The Falco Authors.
+# Copyright (C) 2026 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -37,15 +37,16 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY
 	)
 
-	# Debian
-	configure_file(debian/postinst.in debian/postinst COPYONLY)
-	configure_file(debian/postrm.in debian/postrm COPYONLY)
-	configure_file(debian/prerm.in debian/prerm COPYONLY)
+	# Expand shared package helpers before embedding them in each scriptlet.
+	configure_file(packaging/functions.sh.in packaging/functions.sh @ONLY)
+	file(READ "${CMAKE_CURRENT_BINARY_DIR}/packaging/functions.sh" FALCO_PACKAGE_FUNCTIONS)
 
-	# Rpm
-	configure_file(rpm/postinstall.in rpm/postinstall COPYONLY)
-	configure_file(rpm/postuninstall.in rpm/postuninstall COPYONLY)
-	configure_file(rpm/preuninstall.in rpm/preuninstall COPYONLY)
+	foreach(script preinst postinst prerm postrm)
+		configure_file(debian/${script}.in debian/${script} @ONLY)
+	endforeach()
+	foreach(script preinstall postinstall posttrans preuninstall postuninstall)
+		configure_file(rpm/${script}.in rpm/${script} @ONLY)
+	endforeach()
 endif()
 
 # Install Falcoctl config file
