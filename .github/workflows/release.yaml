@@ -158,6 +158,7 @@ jobs:
     if: ${{ needs.release-settings.outputs.is_latest == 'true' }} # only for latest releases
     permissions:
       contents: write
+      pull-requests: read # rn2md lists the merged PRs
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
@@ -177,7 +178,7 @@ jobs:
           sed -i s/FALCOVER/${{ github.event.release.tag_name }}/g release-body.md
 
       - name: Generate release notes
-        uses: leodido/rn2md@9c351d81278644c0e17b1ca68edbdba305276c73
+        uses: ekoops/rn2md@a30974f3c228cbca9409a3bb5b6eb17a2eeb9f71 # leodido/rn2md#15, until it is merged upstream
         with:
           milestone: ${{ github.event.release.tag_name }}
           output: ./notes.md
