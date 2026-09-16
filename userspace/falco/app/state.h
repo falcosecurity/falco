@@ -116,7 +116,7 @@ struct state {
 	// once all inspectors are opened.
 	std::function<void()> on_inspectors_opened = nullptr;
 
-	inline bool is_capture_mode() const { return config->m_engine_mode == engine_kind_t::REPLAY; }
+	inline bool is_replaying() const { return config->m_engine_mode == engine_kind_t::REPLAY; }
 
 	inline bool is_kmod() const { return config->m_engine_mode == engine_kind_t::KMOD; }
 

@@ -25,7 +25,7 @@ falco::app::run_result falco::app::actions::select_event_sources(falco::app::sta
 	s.enabled_sources = {s.loaded_sources.begin(), s.loaded_sources.end()};
 
 	// event sources selection is meaningless when reading trace files
-	if(s.is_capture_mode()) {
+	if(s.is_replaying()) {
 		return run_result::ok();
 	}
 
