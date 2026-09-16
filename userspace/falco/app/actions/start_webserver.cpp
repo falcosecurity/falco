@@ -26,7 +26,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_webserver(falco::app::state& state) {
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(state.is_capture_mode() || !state.config->m_webserver_enabled) {
+	if(state.is_replaying() || !state.config->m_webserver_enabled) {
 		return run_result::ok();
 	}
 
@@ -51,7 +51,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& state) {
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(state.is_capture_mode() || !state.config->m_webserver_enabled) {
+	if(state.is_replaying() || !state.config->m_webserver_enabled) {
 		return run_result::ok();
 	}
 

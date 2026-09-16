@@ -30,7 +30,7 @@ TEST(ActionSelectEventSources, pre_post_conditions) {
 	{
 		falco::app::state s;
 		s.config->m_engine_mode = engine_kind_t::REPLAY;
-		EXPECT_TRUE(s.is_capture_mode());
+		EXPECT_TRUE(s.is_replaying());
 		EXPECT_ACTION_OK(action(s));
 	}
 
