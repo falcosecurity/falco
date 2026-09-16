@@ -131,7 +131,7 @@ falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state&
 		}
 	}
 
-	// note: in capture mode, we can assume that the plugin source index will
+	// note: in replay mode, we can assume that the plugin source index will
 	// be the same in both the falco engine and the sinsp plugin manager.
 	// This assumption stands because the plugin manager stores sources in a
 	// vector, and the syscall source is appended in the engine *after* the sources
@@ -139,7 +139,7 @@ falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state&
 	// is because in that case event sources are scattered across different
 	// inspectors. Since this is an implementation-based assumption, we
 	// check this and return an error to spot regressions in the future.
-	if(s.is_capture_mode()) {
+	if(s.is_replaying()) {
 		auto manager = s.offline_inspector->get_plugin_manager();
 		for(const auto& p : manager->plugins()) {
 			if((p->caps() & CAP_SOURCING) == 0 || p->id() == 0) {
