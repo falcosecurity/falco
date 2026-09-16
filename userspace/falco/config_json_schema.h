@@ -160,6 +160,14 @@ const char config_schema_string[] = LONG_STRING_CONST(
                 "webserver": {
                     "$ref": "#/definitions/Webserver"
                 },
+                "reload_control": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": { "type": "boolean" },
+                        "socket": { "type": "string", "minLength": 1 }
+                    }
+                },
                 "log_stderr": {
                     "type": "boolean"
                 },

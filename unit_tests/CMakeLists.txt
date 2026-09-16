@@ -60,6 +60,16 @@ add_executable(
 )
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	if(NOT MINIMAL_BUILD)
+		target_sources(
+			falco_unit_tests PRIVATE falco/test_reload_control.cpp
+									 falco/test_reload_control_runtime.cpp
+		)
+		target_compile_definitions(
+			falco_unit_tests PRIVATE TEST_FALCO_BINARY="$<TARGET_FILE:falco>"
+		)
+		add_dependencies(falco_unit_tests falco)
+	endif()
 	target_sources(
 		falco_unit_tests
 		PRIVATE falco/test_atomic_signal_handler.cpp falco/test_restart_handler.cpp

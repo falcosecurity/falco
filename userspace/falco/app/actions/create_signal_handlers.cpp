@@ -49,8 +49,11 @@ static void reopen_outputs_signal_handler(int signal) {
 	falco::app::g_reopen_outputs_signal.trigger();
 }
 
-static void restart_signal_handler(int signal) {
+bool falco::app::request_reload() noexcept {
 #ifdef __linux__
+	if(s_restart_signal_fd < 0) {
+		return false;
+	}
 	const int saved_errno = errno;
 	g_reload_state.request();
 	const uint64_t value = 1;
@@ -60,8 +63,17 @@ static void restart_signal_handler(int signal) {
 	} while(result < 0 && errno == EINTR);
 	// EAGAIN means a wakeup is already pending. The request counter, not the
 	// eventfd value, owns pending work.
+	const bool notified =
+	        result == static_cast<ssize_t>(sizeof(value)) || (result < 0 && errno == EAGAIN);
 	errno = saved_errno;
+	return notified;
+#else
+	return false;
 #endif
+}
+
+static void restart_signal_handler(int signal) {
+	(void)falco::app::request_reload();
 }
 
 bool create_handler(int sig, void (*func)(int), run_result& ret) {
@@ -79,6 +91,7 @@ bool create_handler(int sig, void (*func)(int), run_result& ret) {
 }
 
 bool falco::app::initialize_restart_signal_handler(std::string& err) {
+	g_reload_state.initialize();
 #ifdef __linux__
 	if(s_restart_signal_fd >= 0) {
 		return true;

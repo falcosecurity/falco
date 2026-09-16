@@ -25,6 +25,9 @@ limitations under the License.
 #include "../stats_writer.h"
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "../webserver.h"
+#ifdef __linux__
+#include "../reload_control.h"
+#endif
 #endif
 
 #include <libsinsp/sinsp.h>
@@ -111,6 +114,9 @@ struct state {
 
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	falco_webserver webserver;
+#ifdef __linux__
+	falco_reload_control reload_control;
+#endif
 #endif
 	// Set by start_webserver to start prometheus metrics
 	// once all inspectors are opened.
