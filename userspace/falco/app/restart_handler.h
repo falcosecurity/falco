@@ -45,9 +45,11 @@ public:
 
 	explicit restart_handler(on_check_t on_check,
 	                         const watch_list_t& watch_files = {},
-	                         const watch_list_t& watch_dirs = {}):
+	                         const watch_list_t& watch_dirs = {},
+	                         int signal_fd = -1):
 	        m_inotify_fd(-1),
 	        m_event_fd(-1),
+	        m_signal_fd(signal_fd),
 	        m_stop(false),
 	        m_forced(false),
 	        m_on_check(on_check),
@@ -65,6 +67,8 @@ private:
 
 	int m_inotify_fd = -1;
 	int m_event_fd = -1;
+	// Borrowed process-lifetime SIGHUP descriptor; never closed by this worker.
+	const int m_signal_fd;
 	std::thread m_watcher;
 	std::atomic<bool> m_stop;
 	std::atomic<bool> m_forced;

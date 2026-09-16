@@ -19,6 +19,7 @@ add_library(
 	falco_application STATIC
 	app/app.cpp
 	app/options.cpp
+	app/reload_state.cpp
 	app/restart_handler.cpp
 	app/actions/helpers_generic.cpp
 	app/actions/helpers_inspector.cpp

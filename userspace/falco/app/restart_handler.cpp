@@ -17,8 +17,10 @@ limitations under the License.
 
 #include "restart_handler.h"
 #include "signals.h"
+#include "reload_state.h"
 #include "logger.h"
 
+#include <algorithm>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -57,7 +59,7 @@ void falco::app::restart_handler::close_fds() {
 void falco::app::restart_handler::trigger() {
 	m_forced.store(true, std::memory_order_release);
 #ifdef __linux__
-	// eventfd write is async-signal-safe, so this is safe from the SIGHUP handler
+	// Wake the worker for a programmatic request.
 	if(m_event_fd != -1) {
 		uint64_t v = 1;
 		auto ret = write(m_event_fd, &v, sizeof(v));
@@ -112,6 +114,11 @@ bool falco::app::restart_handler::start(std::string& err) {
 		close_fds();
 		return false;
 	}
+	if(std::max({m_inotify_fd, m_event_fd, m_signal_fd}) >= FD_SETSIZE) {
+		err = "restart handler descriptor exceeds select capacity";
+		close_fds();
+		return false;
+	}
 
 	// launch the watcher thread
 	m_watcher = std::thread(&falco::app::restart_handler::watcher_loop, this);
@@ -149,18 +156,23 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 	bool should_restart = false;
 	struct timeval timeout;
 	uint8_t buf[(10 * (sizeof(struct inotify_event) + NAME_MAX + 1))];
-	int nfds = (m_inotify_fd > m_event_fd ? m_inotify_fd : m_event_fd) + 1;
+	int nfds = std::max({m_inotify_fd, m_event_fd, m_signal_fd}) + 1;
+	uint64_t seen_requests = g_reload_state.covered();
 	while(!m_stop.load(std::memory_order_acquire)) {
 		FD_ZERO(&set);
 		if(m_inotify_fd >= 0) {
 			FD_SET(m_inotify_fd, &set);
 		}
 		FD_SET(m_event_fd, &set);
+		if(m_signal_fd >= 0) {
+			FD_SET(m_signal_fd, &set);
+		}
 
 		struct timeval* to = NULL;
-		if(should_check || should_restart) {
+		const bool pending = m_signal_fd >= 0 && g_reload_state.requested() > seen_requests;
+		if(pending || should_check || should_restart) {
 			timeout.tv_sec = 0;
-			timeout.tv_usec = 100000;
+			timeout.tv_usec = pending ? 0 : 100000;
 			to = &timeout;
 		}
 		auto rv = select(nfds, &set, NULL, NULL, to);
@@ -180,9 +192,27 @@ void falco::app::restart_handler::watcher_loop() noexcept {
 			auto n = read(m_event_fd, &v, sizeof(v));
 			(void)n;
 		}
+		if(m_signal_fd >= 0 && rv > 0 && FD_ISSET(m_signal_fd, &set)) {
+			uint64_t value;
+			auto n = read(m_signal_fd, &value, sizeof(value));
+			(void)n;
+		}
+		if(m_stop.load(std::memory_order_acquire)) {
+			return;
+		}
 
 		bool forced = m_forced.exchange(false, std::memory_order_acq_rel);
+		if(m_signal_fd >= 0) {
+			const auto requests = g_reload_state.requested();
+			forced = forced || requests > seen_requests;
+			seen_requests = requests;
+		}
 		bool inotify_ready = m_inotify_fd >= 0 && rv > 0 && FD_ISSET(m_inotify_fd, &set);
+		// A wakeup may belong to a request already covered by this run's load.
+		// Do not discard an outstanding validation/restart or start a new one.
+		if(rv > 0 && !forced && !inotify_ready) {
+			continue;
+		}
 
 		// no new watch event is received during the timeout
 		if(rv == 0 && !forced) {

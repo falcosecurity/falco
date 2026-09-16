@@ -21,6 +21,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 #include <unistd.h>
+#include <sys/select.h>
 
 #include <atomic>
 #include <chrono>
@@ -110,6 +111,13 @@ TEST_F(RestartHandlerTest, stop_with_nothing_to_watch_joins_promptly) {
 	// must not hang: the watcher wakes up at the next 100ms timeout
 	handler.stop();
 	EXPECT_FALSE(falco::app::g_restart_signal.triggered());
+}
+
+TEST_F(RestartHandlerTest, rejects_signal_descriptor_outside_select_capacity) {
+	falco::app::restart_handler handler([] { return true; }, {}, {}, FD_SETSIZE);
+	std::string err;
+	EXPECT_FALSE(handler.start(err));
+	EXPECT_EQ(err, "restart handler descriptor exceeds select capacity");
 }
 
 // guard for the watch=true path: an inotify event on a watched file must
