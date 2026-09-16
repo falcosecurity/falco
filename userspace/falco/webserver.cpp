@@ -19,6 +19,7 @@ limitations under the License.
 #include "falco_utils.h"
 #include "falco_metrics.h"
 #include "app/state.h"
+#include "app/reload_state.h"
 #include "versions_info.h"
 #include <atomic>
 
@@ -45,7 +46,19 @@ void falco_webserver::start(const falco::app::state &state,
 		return new httplib::ThreadPool(webserver_config.m_threadiness);
 	};
 
-	// setup healthz endpoint
+	// Observe live reload state, including responses served by the previous run.
+	m_server->Get("/reload", [](const httplib::Request &, httplib::Response &res) {
+		const auto status = falco::app::g_reload_state.get();
+		nlohmann::json body = {{"instance_id", status.instance_id},
+		                       {"started_generation", status.started_generation},
+		                       {"applied_generation", status.applied_generation},
+		                       {"rejected_generation", status.rejected_generation},
+		                       {"ready", status.ready}};
+		res.set_header("Cache-Control", "no-store");
+		res.set_content(body.dump(), "application/json");
+	});
+
+	// setup healthz endpoint; /reload is reserved even if this pattern matches it
 	m_server->Get(webserver_config.m_k8s_healthz_endpoint,
 	              [](const httplib::Request &, httplib::Response &res) {
 		              res.set_content("{\"status\": \"ok\"}", "application/json");

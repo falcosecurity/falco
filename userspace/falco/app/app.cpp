@@ -107,6 +107,9 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
 		}
 	}
 
+	if(!s.options.dry_run) {
+		g_reload_state.stop();
+	}
 	for(const auto& func : teardown_steps) {
 		res = falco::app::run_result::merge(res, func(s));
 		// note: we always proceed because we don't want to miss teardown steps

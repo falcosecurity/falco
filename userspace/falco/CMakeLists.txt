@@ -97,6 +97,9 @@ endif()
 
 if(NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)
 	target_sources(falco_application PRIVATE falco_metrics.cpp webserver.cpp)
+	if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+		target_sources(falco_application PRIVATE reload_control.cpp)
+	endif()
 
 	if(OPENSSL_INCLUDE_DIR)
 		list(APPEND FALCO_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")

@@ -25,6 +25,9 @@ limitations under the License.
 #include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __linux__
+#include <sys/un.h>
+#endif
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -494,6 +497,22 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 	}
 	m_webserver_config.m_prometheus_metrics_enabled =
 	        m_config.get_scalar<bool>("webserver.prometheus_metrics_enabled", false);
+	m_reload_control_config.m_enabled = m_config.get_scalar<bool>("reload_control.enabled", false);
+	m_reload_control_config.m_socket =
+	        m_config.get_scalar<std::string>("reload_control.socket", "/run/falco/control.sock");
+	if(m_reload_control_config.m_enabled) {
+#if !defined(__linux__) || defined(MINIMAL_BUILD)
+		throw std::logic_error("reload_control requires a non-minimal Linux build");
+#else
+		const fs::path path(m_reload_control_config.m_socket);
+		if(!path.is_absolute() || path != path.lexically_normal() || path.filename().empty() ||
+		   m_reload_control_config.m_socket.find('\0') != std::string::npos ||
+		   m_reload_control_config.m_socket.size() >= sizeof(sockaddr_un::sun_path)) {
+			throw std::logic_error(
+			        "reload_control.socket must be an absolute normalized file path");
+		}
+#endif
+	}
 
 	std::list<std::string> syscall_event_drop_acts;
 	m_config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");

@@ -31,6 +31,9 @@ extern atomic_signal_handler g_reopen_outputs_signal;
 // SIGHUP reception and its descriptor survive every hot restart.
 bool initialize_restart_signal_handler(std::string& err);
 int restart_signal_fd();
+// Record and wake a reload request without delivering an OS signal. Signal-safe
+// after initialization; false means the notification could not be delivered.
+bool request_reload() noexcept;
 
 };  // namespace app
 };  // namespace falco
