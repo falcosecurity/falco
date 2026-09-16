@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /*
-Copyright (C) 2023 The Falco Authors.
+Copyright (C) 2026 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,22 +15,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#pragma once
+#include "reload_state.h"
 
-#include "../atomic_signal_handler.h"
-#include <string>
+#include <algorithm>
 
-namespace falco {
-namespace app {
+void falco::app::reload_state::begin_run() {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_covered.store(requested(), std::memory_order_release);
+}
 
-extern atomic_signal_handler g_terminate_signal;
-extern atomic_signal_handler g_restart_signal;
-extern atomic_signal_handler g_reopen_outputs_signal;
+falco::app::reload_state::check falco::app::reload_state::begin_check() {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	return {requested()};
+}
 
-// Install once, at the first live run's signal setup, before starting its worker.
-// SIGHUP reception and its descriptor survive every hot restart.
-bool initialize_restart_signal_handler(std::string& err);
-int restart_signal_fd();
-
-};  // namespace app
-};  // namespace falco
+void falco::app::reload_state::rejected(const check& attempt) {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_covered.store(std::max(covered(), attempt.requests), std::memory_order_release);
+}

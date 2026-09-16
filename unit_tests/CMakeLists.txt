@@ -46,6 +46,7 @@ add_executable(
 	engine/test_rule_loader.cpp
 	engine/test_rulesets.cpp
 	falco/test_capture.cpp
+	falco/test_reload_state.cpp
 	falco/test_configuration.cpp
 	falco/test_configuration_rule_selection.cpp
 	falco/test_configuration_config_files.cpp
@@ -62,7 +63,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	target_sources(
 		falco_unit_tests
 		PRIVATE falco/test_atomic_signal_handler.cpp falco/test_restart_handler.cpp
-				falco/app/actions/test_configure_interesting_sets.cpp
+				falco/test_reload_signals.cpp falco/app/actions/test_configure_interesting_sets.cpp
 				falco/app/actions/test_configure_syscall_buffer_num.cpp
 	)
 endif()

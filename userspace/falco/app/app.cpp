@@ -18,11 +18,15 @@ limitations under the License.
 #include "app.h"
 #include "state.h"
 #include "signals.h"
+#include "reload_state.h"
 #include "actions/actions.h"
 
 falco::atomic_signal_handler falco::app::g_terminate_signal;
 falco::atomic_signal_handler falco::app::g_restart_signal;
 falco::atomic_signal_handler falco::app::g_reopen_outputs_signal;
+// SIGHUP can arrive even during static destruction. Keep its state alive until
+// process exit, just like the notification descriptor and installed handler.
+falco::app::reload_state& falco::app::g_reload_state = *new falco::app::reload_state;
 
 using app_action = std::function<falco::app::run_result(falco::app::state&)>;
 
@@ -49,6 +53,9 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr) 
 }
 
 bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr) {
+	if(!s.options.dry_run) {
+		g_reload_state.begin_run();
+	}
 	// The order here is the order in which the methods will be
 	// called. Before changing the order, ensure that all
 	// dependencies are honored (e.g. don't process events before
