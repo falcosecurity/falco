@@ -40,6 +40,12 @@ static void extract_base_syscalls_names(const std::unordered_set<std::string>& b
 static void check_for_rules_unsupported_events(
         falco::app::state& s,
         const libsinsp::events::set<ppm_sc_code>& rules_sc_set) {
+	/* When replaying a capture the selected event set does not apply:
+	 * the file contains whatever was recorded, so there is nothing to warn about. */
+	if(s.is_capture_mode()) {
+		return;
+	}
+
 	/* Unsupported events are those events that are used in the rules
 	 * but that are not part of the selected event set. For now, this
 	 * is expected to happen only for high volume syscalls for
