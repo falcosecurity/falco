@@ -540,7 +540,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 
 	// Start processing events
 	bool termination_forced = false;
-	if(s.is_capture_mode()) {
+	if(s.is_replaying()) {
 		res = open_offline_inspector(s);
 		if(!res.success) {
 			return res;

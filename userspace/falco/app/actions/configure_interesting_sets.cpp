@@ -42,7 +42,7 @@ static void check_for_rules_unsupported_events(
         const libsinsp::events::set<ppm_sc_code>& rules_sc_set) {
 	/* When replaying a capture the selected event set does not apply:
 	 * the file contains whatever was recorded, so there is nothing to warn about. */
-	if(s.is_capture_mode()) {
+	if(s.is_replaying()) {
 		return;
 	}
 
@@ -87,7 +87,7 @@ static void select_event_set(falco::app::state& s,
 
 	/* Load PPM event codes needed by plugins with parsing capability */
 	libsinsp::events::set<ppm_event_code> plugin_ev_codes;
-	if(s.is_capture_mode()) {
+	if(s.is_replaying()) {
 		// In capture mode, we need to use the offline inspector
 		// because plugins are inited under it; see init_inspectors action.
 		for(const auto& p : s.offline_inspector->get_plugin_manager()->plugins()) {

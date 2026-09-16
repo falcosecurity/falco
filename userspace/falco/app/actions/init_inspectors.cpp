@@ -98,14 +98,14 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	std::string err;
 	std::unordered_set<std::string> used_plugins;
 	const auto& all_plugins = s.offline_inspector->get_plugin_manager()->plugins();
-	const bool is_capture_mode = s.is_capture_mode();
+	const bool is_replaying = s.is_replaying();
 
 	for(const auto& src : s.loaded_sources) {
 		auto src_info = s.source_infos.at(src);
 
-		// in capture mode, every event source uses the offline inspector.
+		// in replay mode, every event source uses the offline inspector.
 		// in live mode, we create a new inspector for each event source
-		if(is_capture_mode) {
+		if(is_replaying) {
 			src_info->inspector = s.offline_inspector;
 		} else {
 			src_info->inspector =
@@ -118,7 +118,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		}
 
 		// load and init all plugins compatible with this event source
-		// (if in capture mode, all plugins will be inited on the same inspector)
+		// (if in replay mode, all plugins will be inited on the same inspector)
 		for(const auto& p : all_plugins) {
 			std::shared_ptr<sinsp_plugin> plugin = nullptr;
 			auto config = s.plugin_configs.at(p->name());
@@ -126,8 +126,8 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			                ((p->id() != 0 && src == p->event_source()) ||
 			                 (p->id() == 0 && src == falco_common::syscall_source));
 
-			if(is_capture_mode) {
-				// in capture mode, every plugin is already registered
+			if(is_replaying) {
+				// in replay mode, every plugin is already registered
 				// in the offline inspector by the load_plugins action
 				plugin = p;
 			} else {
@@ -151,10 +151,10 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				continue;
 			}
 
-			// init the plugin only if we registered it into an inspector (in capture mode, this is
+			// init the plugin only if we registered it into an inspector (in replay mode, this is
 			// true for every plugin). Avoid initializing the same plugin twice in the same
 			// inspector if we're in capture mode
-			if(!is_capture_mode || used_plugins.find(p->name()) == used_plugins.end()) {
+			if(!is_replaying || used_plugins.find(p->name()) == used_plugins.end()) {
 				if(!plugin->init(config->m_init_config, err)) {
 					return run_result::fatal(err);
 				}
@@ -176,7 +176,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			return run_result::fatal(err);
 		}
 
-		if(is_capture_mode) {
+		if(is_replaying) {
 			continue;
 		}
 
