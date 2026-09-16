@@ -26,12 +26,30 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_webserver(falco::app::state& state) {
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(state.is_replaying() || !state.config->m_webserver_enabled) {
+	if(state.is_replaying()) {
 		return run_result::ok();
 	}
 
 	if(state.options.dry_run) {
+#ifdef __linux__
+		if(state.config->m_reload_control_config.m_enabled) {
+			falco_reload_control::validate_socket_directory(
+			        state.config->m_reload_control_config.m_socket);
+		}
+#endif
 		falco_logger::log(falco_logger::level::DEBUG, "Skipping starting webserver in dry-run\n");
+		return run_result::ok();
+	}
+
+#ifdef __linux__
+	if(state.config->m_reload_control_config.m_enabled) {
+		falco_logger::log(falco_logger::level::INFO,
+		                  "Starting reload control on " +
+		                          state.config->m_reload_control_config.m_socket + "\n");
+		state.reload_control.start(state.config->m_reload_control_config.m_socket);
+	}
+#endif
+	if(!state.config->m_webserver_enabled) {
 		return run_result::ok();
 	}
 
@@ -51,7 +69,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& state) {
 #if !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-	if(state.is_replaying() || !state.config->m_webserver_enabled) {
+	if(state.is_replaying()) {
 		return run_result::ok();
 	}
 
@@ -60,6 +78,9 @@ falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& st
 		return run_result::ok();
 	}
 
+#ifdef __linux__
+	state.reload_control.stop();
+#endif
 	state.webserver.stop();
 #endif
 	return run_result::ok();

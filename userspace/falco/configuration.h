@@ -90,6 +90,11 @@ public:
 
 	enum class rule_selection_operation { enable, disable };
 
+	struct reload_control_config {
+		bool m_enabled = false;
+		std::string m_socket = "/run/falco/control.sock";
+	};
+
 	struct rule_selection_config {
 		rule_selection_operation m_op;
 		std::string m_tag;
@@ -163,6 +168,7 @@ public:
 
 	bool m_webserver_enabled;
 	webserver_config m_webserver_config;
+	reload_control_config m_reload_control_config;
 
 	syscall_evt_drop_actions m_syscall_evt_drop_actions;
 	double m_syscall_evt_drop_threshold;

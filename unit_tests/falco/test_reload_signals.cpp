@@ -19,6 +19,8 @@ limitations under the License.
 
 #if defined(__linux__) && defined(GTEST_HAS_DEATH_TEST) && GTEST_HAS_DEATH_TEST
 
+#include "reload_test_helpers.h"
+
 #include <falco/app/actions/actions.h>
 #include <falco/app/reload_state.h>
 #include <falco/app/restart_handler.h>
@@ -33,7 +35,6 @@ limitations under the License.
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
-#include <cstdio>
 #include <future>
 #include <limits>
 #include <string>
@@ -43,16 +44,10 @@ namespace {
 
 namespace app = falco::app;
 
+using falco::test::require_in_child;
+
 constexpr std::chrono::seconds s_deadline{5};
 constexpr std::chrono::milliseconds s_poll{10};
-
-// Child assertions must exit unsuccessfully so EXPECT_EXIT observes their failure.
-void require_in_child(bool condition, const std::string& message) {
-	if(!condition) {
-		std::fprintf(stderr, "%s\n", message.c_str());
-		_exit(1);
-	}
-}
 
 void prepare_child() {
 	// Bound failures that would otherwise block indefinitely while joining a worker.
@@ -262,6 +257,9 @@ TEST(ReloadSignalsDeathTest, signal_during_rejected_validation_causes_another_ch
 	EXPECT_EXIT(
 	        {
 		        initialize_child();
+		        app::g_reload_state.expect_sources(1);
+		        app::g_reload_state.source_started();
+		        const auto applied = app::g_reload_state.get().applied_generation;
 		        std::promise<void> first_check_started;
 		        auto entered = first_check_started.get_future();
 		        std::promise<void> release_first_check;
@@ -297,6 +295,10 @@ TEST(ReloadSignalsDeathTest, signal_during_rejected_validation_causes_another_ch
 		                         "second validation did not consume the pending request");
 		        require_in_child(!app::g_restart_signal.triggered(),
 		                         "rejected validation triggered a restart");
+		        require_in_child(app::g_reload_state.get().ready,
+		                         "rejected validation made the running configuration unready");
+		        require_in_child(app::g_reload_state.get().applied_generation == applied,
+		                         "rejected validation changed the applied generation");
 		        _exit(0);
 	        },
 	        ::testing::ExitedWithCode(0),

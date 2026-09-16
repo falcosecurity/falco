@@ -31,6 +31,7 @@ limitations under the License.
 #include "helpers.h"
 #include "../options.h"
 #include "../signals.h"
+#include "../reload_state.h"
 #include "../../falco_semaphore.h"
 #include "../../stats_writer.h"
 #include "../../falco_outputs.h"
@@ -156,6 +157,9 @@ static falco::app::run_result do_inspect(
 	// Start capture
 	//
 	inspector->start_capture();
+	if(!is_capture_mode) {
+		falco::app::g_reload_state.source_started();
+	}
 
 	//
 	// Loop through the events
@@ -418,6 +422,7 @@ static void process_inspector_events(
 		                    check_drops_timeouts,
 		                    uint64_t(s.options.duration_to_tot * ONE_SECOND_IN_NS),
 		                    num_evts);
+		falco::app::g_reload_state.stop();
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
@@ -443,6 +448,7 @@ static void process_inspector_events(
 			sdropmgr.print_stats();
 		}
 	} catch(const std::exception& e) {
+		falco::app::g_reload_state.stop();
 		result = run_result::fatal(e.what());
 	}
 
@@ -566,6 +572,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 #endif
 
 		// start event processing for all enabled sources
+		g_reload_state.expect_sources(s.enabled_sources.size());
 		falco::semaphore termination_sem(s.enabled_sources.size());
 		std::vector<live_context> ctxs;
 		ctxs.reserve(s.enabled_sources.size());
@@ -581,6 +588,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				termination_sem.acquire();
 				res = open_live_inspector(s, src_info->inspector, source);
 				if(!res.success) {
+					g_reload_state.stop();
 					// note: we don't return here because we need to reach
 					// the thread termination loop below to make sure all
 					// already-spawned threads get terminated gracefully
@@ -614,6 +622,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 					        });
 				}
 			} catch(std::exception& e) {
+				g_reload_state.stop();
 				// note: we don't return here because we need to reach
 				// the thread termination loop below to make sure all
 				// already-spawned threads get terminated gracefully
