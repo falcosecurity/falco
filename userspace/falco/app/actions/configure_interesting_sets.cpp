@@ -52,13 +52,16 @@ static void check_for_rules_unsupported_events(
 	/* Get the names of the events (syscall and non syscall events) that were not activated and
 	 * print them. */
 	auto names = libsinsp::events::sc_set_to_event_names(unsupported_sc_set);
-	std::cerr << "Loaded rules match syscalls that are not activated (e.g. were removed via config "
-	             "settings such as no -A flag or negative base_syscalls elements) or unsupported "
-	             "with current configuration: warning (unsupported-evttype): " +
-	                     concat_set_in_order(names)
-	          << std::endl;
-	std::cerr << "If syscalls in rules include high volume syscalls (-> activate via `-A` flag), "
-	             "else syscalls may have been removed via base_syscalls option or might be "
+	std::cerr
+	        << "Loaded rules match syscalls that are not activated (e.g. were removed via config "
+	           "settings such as `base_syscalls.all: false` or negative `base_syscalls.custom_set` "
+	           "elements) or unsupported with current configuration: warning "
+	           "(unsupported-evttype): " +
+	                   concat_set_in_order(names)
+	        << std::endl;
+	std::cerr << "If syscalls in rules include high volume syscalls (-> activate via "
+	             "`base_syscalls.all: true`), else syscalls may have been removed via the "
+	             "`base_syscalls.custom_set` option or might be "
 	             "associated with syscalls undefined on your architecture "
 	             "(https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)"
 	          << std::endl;
@@ -211,10 +214,11 @@ static void select_event_set(falco::app::state& s,
 		s.selected_sc_set = s.selected_sc_set.diff(ignored_sc_set);
 		if(!erased_sc_set.empty()) {
 			auto erased_sc_set_names = libsinsp::events::sc_set_to_event_names(erased_sc_set);
-			falco_logger::log(falco_logger::level::DEBUG,
-			                  "-(" + std::to_string(erased_sc_set_names.size()) +
-			                          ") ignored syscalls (-> activate via `-A` flag): " +
-			                          concat_set_in_order(erased_sc_set_names) + "\n");
+			falco_logger::log(
+			        falco_logger::level::DEBUG,
+			        "-(" + std::to_string(erased_sc_set_names.size()) +
+			                ") ignored syscalls (-> activate via `base_syscalls.all: true`): " +
+			                concat_set_in_order(erased_sc_set_names) + "\n");
 		}
 	}
 
