@@ -925,6 +925,12 @@ program_output:
 # - /versions: responds with a JSON object containing the version numbers of the
 #   internal Falco components (similar output as `falco --version -o
 #   json_output=true`).
+# - GET /reload: reports process identity, reload generations and readiness.
+#   HTTP 200 means the status was read; the JSON fields indicate the reload outcome.
+#
+# GET /reload is exposed whenever this TCP webserver is enabled, independently
+# of reload_control.enabled. POST /reload is available only on the Unix socket
+# when reload_control.enabled is true.
 #
 # Please note that the /versions endpoint is particularly useful for other Falco
 # services, such as `falcoctl`, to retrieve information about a running Falco
@@ -957,6 +963,35 @@ webserver:
   # $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem
   # ```
   ssl_certificate: /etc/falco/falco.pem
+
+# [Incubating] `reload_control`
+#
+# -- Optional Linux administrative HTTP listener over a filesystem Unix socket.
+# Independent of webserver.enabled; no reload command is exposed over TCP.
+# POST /reload (empty body, no query) returns 202 with instance_id and
+# started_generation as a baseline. GET /reload reports the reload state.
+# GET is available on both the Unix socket and the enabled TCP webserver;
+# POST is available only on the Unix socket.
+# After finishing file writes, POST, then wait for the same instance to report
+# ready=true and applied_generation > max(baseline, rejected_generation).
+# A newer rejection reports invalid input; a disconnect or timeout has an
+# unknown outcome. The listener is recreated during reload, so clients retry
+# observation through outages. A changed instance requires a new request.
+# Dry-run validation checks the socket directory without locking it or touching
+# sockets. Startup repeats these checks; filesystem changes and bind failures
+# can still prevent startup after a successful validation.
+#
+# The socket directory must already exist, be dedicated to this listener, and
+# be owned by Falco's effective UID, with mode 0700 or 0750 and no extended or
+# default POSIX ACLs. Socket mode is 0660 with the directory's group. Authorized
+# clients need that group and directory traversal permission, but not directory
+# write permission. Ancestors must be owned by root or Falco and not writable
+# by other users; root-owned sticky directories are allowed. Symlinks are refused.
+# In Kubernetes, share a dedicated emptyDir only with the authorized sidecar and
+# provision its directory ownership and permissions before enabling this option.
+reload_control:
+  enabled: false
+  socket: /run/falco/control.sock
 
 ##############################################################################
 # Falco logging / alerting / metrics related to software functioning (basic) #

@@ -18,6 +18,48 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 
+TEST(Configuration, reload_control_is_disabled_by_default) {
+	falco_configuration config;
+	ASSERT_NO_THROW(config.init_from_content("{}", {}));
+	EXPECT_FALSE(config.m_reload_control_config.m_enabled);
+	EXPECT_EQ(config.m_reload_control_config.m_socket, "/run/falco/control.sock");
+}
+
+TEST(Configuration, reload_control_configuration) {
+	falco_configuration config;
+	const std::string input =
+	        "webserver:\n  enabled: false\n"
+	        "reload_control:\n  enabled: true\n  socket: /run/falco/control.sock\n";
+#if defined(__linux__) && !defined(MINIMAL_BUILD)
+	ASSERT_NO_THROW(config.init_from_content(input, {}));
+	EXPECT_TRUE(config.m_reload_control_config.m_enabled);
+	EXPECT_FALSE(config.m_webserver_enabled);
+	EXPECT_EQ(config.m_reload_control_config.m_socket, "/run/falco/control.sock");
+#else
+	EXPECT_THROW(config.init_from_content(input, {}), std::logic_error);
+#endif
+}
+
+#if defined(__linux__) && !defined(MINIMAL_BUILD)
+TEST(Configuration, reload_control_rejects_invalid_paths_before_runtime_startup) {
+	for(const auto &path : {std::string("control.sock"),
+	                        std::string("/run/../control.sock"),
+	                        std::string("/"),
+	                        std::string(""),
+	                        std::string("/") + std::string(107, 'a')}) {
+		SCOPED_TRACE(path);
+		falco_configuration config;
+		const auto input = "reload_control:\n  enabled: true\n  socket: '" + path + "'\n";
+		EXPECT_THROW(config.init_from_content(input, {}), std::logic_error);
+	}
+	falco_configuration config;
+	EXPECT_THROW(
+	        config.init_from_content("reload_control:\n  enabled: true\n  socket: \"/run/a\\0b\"\n",
+	                                 {}),
+	        std::logic_error);
+}
+#endif
+
 static std::string sample_yaml =
         "base_value:\n"
         "    id: 1\n"

@@ -90,6 +90,16 @@ TEST(Configuration, schema_wrong_embedded_key) {
 	EXPECT_VALIDATION_STATUS(res, yaml_helper::validation_failed);
 }
 
+TEST(Configuration, reload_control_schema) {
+	falco_configuration config;
+	auto result = config.init_from_content(
+	        "reload_control:\n  enabled: false\n  socket: /run/falco/control.sock\n",
+	        {});
+	EXPECT_VALIDATION_STATUS(result, yaml_helper::validation_ok);
+	result = config.init_from_content("reload_control:\n  enable: false\n", {});
+	EXPECT_VALIDATION_STATUS(result, yaml_helper::validation_failed);
+}
+
 TEST(Configuration, plugin_init_config) {
 	falco_configuration falco_config;
 	config_loaded_res res;
