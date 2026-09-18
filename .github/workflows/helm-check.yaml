@@ -22,6 +22,9 @@ on:
       - "ct.yaml"
       - "Makefile"
 
+permissions:
+  contents: read
+
 jobs:
   helm-check:
     name: Verify Helm Chart
