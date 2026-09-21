@@ -1,5 +1,82 @@
 # Change Log
 
+## v0.45.0
+
+Released on 2026-09-21
+
+### Breaking Changes :warning:
+
+* feat(userspace)!: evaluate rule conditions on raw field bytes (invalid and non-printable UTF-8 sequences are now matchable with string operators, single bytes with the new `\xHH` escape sequence), let `regex` operate on sanitized input, and escape non-printable characters / replace invalid UTF-8 sequences at output encoding time; `FALCO_ENGINE_VERSION` bumped from `0.62.0` to `0.63.0`; rules that matched the replacement character with non-regex operators must be reviewed [[#3942](https://github.com/falcosecurity/falco/pull/3942)] - [@ekoops](https://github.com/ekoops)
+
+
+### Major Changes
+
+* new(chart): add `serviceAccount.labels` to set custom labels on the ServiceAccount [[#3946](https://github.com/falcosecurity/falco/pull/3946)] - [@Goutham-Annem](https://github.com/Goutham-Annem)
+* feat(falco): Expose reload status through GET /reload and add optional reload control over a protected Unix socket on Linux. Preserve SIGHUP reception and pending requests across reloads. [[#4005](https://github.com/falcosecurity/falco/pull/4005)] - [@c2ndev](https://github.com/c2ndev)
+* feat(userspace/falco): suggest `--dry-run` when `--validate` receives a Falco configuration file [[#3947](https://github.com/falcosecurity/falco/pull/3947)] - [@AkashKumar7902](https://github.com/AkashKumar7902)
+
+
+### Minor Changes
+
+* update(build): bump falcoctl to 0.14.2 [[#3996](https://github.com/falcosecurity/falco/pull/3996)] - [@leogr](https://github.com/leogr)
+* update(chart): bump the falcosidekick subchart constraint to 0.14.* and the falco-talon subchart constraint to 0.4.* [[#3990](https://github.com/falcosecurity/falco/pull/3990)] - [@leogr](https://github.com/leogr)
+* chore(userspace/falco): drop the `container_engines` leftovers from the configuration JSON schema; configurations still setting this key now log a schema validation warning at startup [[#3924](https://github.com/falcosecurity/falco/pull/3924)] - [@ekoops](https://github.com/ekoops)
+
+
+### Bug Fixes
+
+* fix(falco): no unsupported syscalls warning is printed anymore when replaying a capture [[#4003](https://github.com/falcosecurity/falco/pull/4003)] - [@leogr](https://github.com/leogr)
+* fix(falco): the unsupported syscalls warning now points to `base_syscalls.all` instead of the removed `-A` flag [[#4001](https://github.com/falcosecurity/falco/pull/4001)] - [@leogr](https://github.com/leogr)
+* fix(packaging): restore Falco services and persistent kernel modules after upgrades, migrate package-default driver pins, and clean up package-created systemd state on removal [[#3994](https://github.com/falcosecurity/falco/pull/3994)] - [@leogr](https://github.com/leogr)
+* fix(chart): always mount an emptyDir at /etc/falco/config.d, and bump the default falcoctl image to 0.14.1, the container plugin to 0.7.4, and the k8smeta plugin to 0.4.2 [[#3984](https://github.com/falcosecurity/falco/pull/3984)] - [@leogr](https://github.com/leogr)
+* fix(chart): mount the container engine socket directories instead of the socket files, so Falco keeps working after a container runtime restart [[#3978](https://github.com/falcosecurity/falco/pull/3978)] - [@leogr](https://github.com/leogr)
+* fix(chart): support DaemonSet revision history limits and honor an explicit zero for both DaemonSet and Deployment controllers. [[#3931](https://github.com/falcosecurity/falco/pull/3931)] - [@Goutham-Annem](https://github.com/Goutham-Annem)
+* fix(chart): do not render the falcoctl config volume when falcoctl artifact install and follow are disabled [[#3894](https://github.com/falcosecurity/falco/pull/3894)] - [@immanuwell](https://github.com/immanuwell)
+* fix(engine): `falco --list` no longer incorrectly labels the `evt` field class with a specific event source [[#3936](https://github.com/falcosecurity/falco/pull/3936)] - [@Wahid7852](https://github.com/Wahid7852)
+* fix(cmake): add support for 64K kernel page to jemalloc on aarch64 [[#3970](https://github.com/falcosecurity/falco/pull/3970)] - [@lekanjava](https://github.com/lekanjava)
+* fix(userspace): open the pidfile with O_NOFOLLOW to prevent a symlink TOCTOU when the pidfile path is in an attacker-writable directory. The pidfile content now ends with a trailing newline [[#3871](https://github.com/falcosecurity/falco/pull/3871)] - [@alexmchughdev](https://github.com/alexmchughdev)
+* fix(chart): correct the inverted priority level mappings in the Grafana dashboard, so severity labels match Falco's numeric priorities (0=emergency ... 7=debug) [[#3932](https://github.com/falcosecurity/falco/pull/3932)] - [@Goutham-Annem](https://github.com/Goutham-Annem)
+* fix(engine): correctly match wildcard patterns when the literal segment that follows a `*` appears more than once in the input (e.g. `*.yaml` against `backup.yaml.yaml`, or wildcard `enable`/`disable` of rule names whose names repeat a literal segment). [[#3913](https://github.com/falcosecurity/falco/pull/3913)] - [@tejgokani](https://github.com/tejgokani)
+* fix(userspace/falco): use the absolute `modprobe` path instead of a `PATH` lookup when falling back to loading the kernel module (untrusted search path, CWE-426) [[#3943](https://github.com/falcosecurity/falco/pull/3943)] - [@BoxStrikesTeam](https://github.com/BoxStrikesTeam)
+* fix: serve SIGHUP-triggered hot restart when `watch_config_files` is disabled [[#3939](https://github.com/falcosecurity/falco/pull/3939)] - [@c2ndev](https://github.com/c2ndev)
+* fix(engine): do not emit the `LOAD_NO_EVTTYPE` warning for rules with statically unsatisfiable conditions (e.g. the `never_true` placeholder idiom) [[#3918](https://github.com/falcosecurity/falco/pull/3918)] - [@leogr](https://github.com/leogr)
+
+
+
+### Non user-facing changes
+
+* test(engine): add unit tests for multi-value transformer AST visitors [[#3860](https://github.com/falcosecurity/falco/pull/3860)] - [@therealbobo](https://github.com/therealbobo)
+* Update owner from andreagit97 to andreaterzolo [[#3965](https://github.com/falcosecurity/falco/pull/3965)] - [@andreaterzolo](https://github.com/andreaterzolo)
+* refactor: rename is_capture_mode [[#4006](https://github.com/falcosecurity/falco/pull/4006)] - [@sgaist](https://github.com/sgaist)
+* ci(release): use a rn2md build that accepts the new GitHub token format [[#3997](https://github.com/falcosecurity/falco/pull/3997)] - [@leogr](https://github.com/leogr)
+* chore(cmake): bump libs to `0.26.0` and drivers to `11.0.0+driver` [[#3992](https://github.com/falcosecurity/falco/pull/3992)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(cmake): bump libs to `0.26.0-rc2`, falcoctl to `0.14.1`, and the container plugin to `0.7.4` [[#3985](https://github.com/falcosecurity/falco/pull/3985)] - [@leogr](https://github.com/leogr)
+* fix(ci): bump setup-crane to v0.7 to retry crane download errors [[#3983](https://github.com/falcosecurity/falco/pull/3983)] - [@leogr](https://github.com/leogr)
+* fix(chart): restore v9.1.0 release metadata [[#3977](https://github.com/falcosecurity/falco/pull/3977)] - [@leogr](https://github.com/leogr)
+* docs(chart): clarify mTLS scope for k8saudit [[#3976](https://github.com/falcosecurity/falco/pull/3976)] - [@leogr](https://github.com/leogr)
+* docs(OWNERS): add c2ndev as reviewer [[#3980](https://github.com/falcosecurity/falco/pull/3980)] - [@c2ndev](https://github.com/c2ndev)
+* chore(cmake): bump libs/drivers to `0.26.0-rc1`/`11.0.0-rc1+driver` [[#3971](https://github.com/falcosecurity/falco/pull/3971)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* chore(ci): update the Scorecard workflow actions [[#3974](https://github.com/falcosecurity/falco/pull/3974)] - [@leogr](https://github.com/leogr)
+* chore(cmake): update falco rules to version 5.2.0 [[#3973](https://github.com/falcosecurity/falco/pull/3973)] - [@leogr](https://github.com/leogr)
+* chore(cmake): bump falcoctl to 0.14.0 and container plugin to 0.7.2 [[#3972](https://github.com/falcosecurity/falco/pull/3972)] - [@leogr](https://github.com/leogr)
+* test(engine): cover rejection of empty appended rules [[#3935](https://github.com/falcosecurity/falco/pull/3935)] - [@Jvlegod](https://github.com/Jvlegod)
+* fix(engine): add empty string guards in logger [[#3937](https://github.com/falcosecurity/falco/pull/3937)] - [@archy-rock3t-cloud](https://github.com/archy-rock3t-cloud)
+* update(cmake): update libs and driver to latest master [[#3948](https://github.com/falcosecurity/falco/pull/3948)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* Add Pollinate to ADOPTERS.md [[#3933](https://github.com/falcosecurity/falco/pull/3933)] - [@rr16-chemeng](https://github.com/rr16-chemeng)
+* update(cmake): update libs and driver to latest master [[#3957](https://github.com/falcosecurity/falco/pull/3957)] - [@github-actions[bot]](https://github.com/apps/github-actions)
+* ci: add e2e tests leveraging the `event-generator` [[#3950](https://github.com/falcosecurity/falco/pull/3950)] - [@ekoops](https://github.com/ekoops)
+* test: add `event-generator` test suite for e2e-testing [[#3949](https://github.com/falcosecurity/falco/pull/3949)] - [@ekoops](https://github.com/ekoops)
+* docs(OWNERS): moving `andreagit97` to emeritus [[#3944](https://github.com/falcosecurity/falco/pull/3944)] - [@leogr](https://github.com/leogr)
+* chore(chart): define source chart release workflow [[#3898](https://github.com/falcosecurity/falco/pull/3898)] - [@c2ndev](https://github.com/c2ndev)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |     23 |
+| Release note    |     28 |
+| Total           |     51 |
+
 ## v0.44.0
 
 Released on 2026-05-26
