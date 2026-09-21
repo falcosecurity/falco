@@ -3,15 +3,12 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
-## Unreleased
+## v9.2.0
 
+* Upgrade Falco to v0.45.0
 * Bump the falcoctl image to `0.14.2` (preserves DKMS installations when installing cached kernel modules)
 * Bump the `falcosidekick` subchart dependency constraint to `0.14.*` (Falcosidekick 2.31.1; adds the GCP Workload Identity and Gateway API `HTTPRoute` options, both disabled by default, and switches the Helm test pod to the `curlimages/curl` image and the `/healthz` endpoint)
 * Bump the `falco-talon` subchart dependency constraint to `0.4.*` (Falco Talon 0.3.0; fixes the missing namespace in the Secret metadata, restarts Talon when its rules or `config.rulesOverride` change, and allows a folder annotation for the Grafana dashboards)
-
-## v9.2.0-rc1
-
-* Upgrade Falco to v0.45.0-rc2
 * Bump the `k8s-metacollector` subchart dependency constraint to `0.3.*` (k8s-metacollector 0.1.4)
 * Always mount an emptyDir at `/etc/falco/config.d` in the Falco container, so the configuration snippets shipped in the Falco image are never merged on top of the chart configuration. Previously, with `driver.kind=modern_ebpf` (or `driver.loader.enabled=false`) and both falcoctl containers disabled, the image's `falco.container_plugin.yaml` added a second `container` entry to `load_plugins` and Falco failed to start with `found another plugin with name container`
 * Bump the falcoctl image to `0.14.1`
