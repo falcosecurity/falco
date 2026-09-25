@@ -6,10 +6,10 @@ approvers:
   - LucaGuerra
   - sgaist
   - ekoops
+  - c2ndev
 reviewers:
   - kaizhe
   - irozzo-1A
-  - c2ndev
 emeritus_approvers:
   - fntlnz
   - kris-nova
