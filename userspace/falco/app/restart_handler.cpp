@@ -21,6 +21,7 @@ limitations under the License.
 #include "logger.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -70,6 +71,7 @@ void falco::app::restart_handler::trigger() {
 
 bool falco::app::restart_handler::start(std::string& err) {
 #ifdef __linux__
+	bool recheck = false;
 	// Create the inotify handler only when there is something to watch, so we don't consume an
 	// inotify instance; the watcher thread is always started, as it also serves forced restart
 	// requests (e.g. SIGHUP).
@@ -81,26 +83,51 @@ bool falco::app::restart_handler::start(std::string& err) {
 			return false;
 		}
 
-		for(const auto& f : m_watched_files) {
+		// Watch directories first so a removed member can still be observed when
+		// it is recreated, even if registering its individual watch fails. Include
+		// CLOSE_WRITE in case validation rejects it before the writer finishes.
+		for(const auto& f : m_watched_dirs) {
 			auto wd = inotify_add_watch(m_inotify_fd,
 			                            f.c_str(),
-			                            IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF);
-			if(wd < 0) {
-				err = "could not watch file: " + f;
-				close_fds();
-				return false;
-			}
-			falco_logger::log(falco_logger::level::DEBUG, "Watching file '" + f + "'\n");
-		}
-
-		for(const auto& f : m_watched_dirs) {
-			auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CREATE | IN_DELETE | IN_MOVE);
+			                            IN_CREATE | IN_DELETE | IN_MOVE | IN_CLOSE_WRITE);
 			if(wd < 0) {
 				err = "could not watch directory: " + f;
 				close_fds();
 				return false;
 			}
 			falco_logger::log(falco_logger::level::DEBUG, "Watching directory '" + f + "'\n");
+		}
+
+		for(const auto& f : m_watched_files) {
+			auto wd = inotify_add_watch(m_inotify_fd,
+			                            f.c_str(),
+			                            IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF);
+			if(wd < 0) {
+				if(errno == ENOENT) {
+					auto parent = std::filesystem::path(f).parent_path();
+					if(parent.empty()) {
+						parent = ".";
+					}
+					const bool watched_parent =
+					        std::any_of(m_watched_dirs.begin(),
+					                    m_watched_dirs.end(),
+					                    [&](const auto& dir) {
+						                    std::error_code ec;
+						                    return std::filesystem::equivalent(parent, dir, ec);
+					                    });
+					if(watched_parent) {
+						// The file may have been removed after it was loaded, before
+						// inotify could observe the deletion. Revalidate the new state;
+						// merely skipping this watch would leave removed rules active.
+						recheck = true;
+						continue;
+					}
+				}
+				err = "could not watch file: " + f;
+				close_fds();
+				return false;
+			}
+			falco_logger::log(falco_logger::level::DEBUG, "Watching file '" + f + "'\n");
 		}
 	} else {
 		falco_logger::log(
@@ -118,6 +145,10 @@ bool falco::app::restart_handler::start(std::string& err) {
 		err = "restart handler descriptor exceeds select capacity";
 		close_fds();
 		return false;
+	}
+
+	if(recheck) {
+		trigger();
 	}
 
 	// launch the watcher thread
