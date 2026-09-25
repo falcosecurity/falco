@@ -148,6 +148,40 @@ std::string falco_metrics::falco_to_text_prometheus(
 		        {{"file_name", fs_path.filename()}, {"sha256", item.second}});
 	}
 
+	// # HELP falcosecurity_falco_num_evts_total https://falco.org/docs/metrics/
+	// # TYPE falcosecurity_falco_num_evts_total counter
+	// falcosecurity_falco_num_evts_total{source="syscall"} 1234
+	if(state.is_capture_mode()) {
+		auto metric = libs::metrics::libsinsp_metrics::new_metric(
+		        "num_evts",
+		        METRICS_V2_MISC,
+		        METRIC_VALUE_TYPE_U64,
+		        METRIC_VALUE_UNIT_COUNT,
+		        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+		        (uint64_t)state.offline_num_evts->load(std::memory_order_relaxed));
+		prometheus_text +=
+		        prometheus_metrics_converter.convert_metric_to_text_prometheus(metric,
+		                                                                       "falcosecurity",
+		                                                                       "falco",
+		                                                                       {{"source", ""}});
+	} else {
+		for(const auto& src : state.loaded_sources) {
+			auto metric = libs::metrics::libsinsp_metrics::new_metric(
+			        "num_evts",
+			        METRICS_V2_MISC,
+			        METRIC_VALUE_TYPE_U64,
+			        METRIC_VALUE_UNIT_COUNT,
+			        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+			        (uint64_t)state.source_infos.at(src)->num_evts->load(
+			                std::memory_order_relaxed));
+			prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
+			        metric,
+			        "falcosecurity",
+			        "falco",
+			        {{"source", src}});
+		}
+	}
+
 #endif
 	// # HELP falcosecurity_falco_outputs_queue_num_drops_total https://falco.org/docs/metrics/
 	// # TYPE falcosecurity_falco_outputs_queue_num_drops_total counter
