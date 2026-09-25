@@ -26,7 +26,9 @@ limitations under the License.
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
+#include <filesystem>
 #include <string>
 #include <thread>
 
@@ -58,8 +60,22 @@ bool wait_check_count(const std::atomic<int>& count, int expected, std::chrono::
 // g_restart_signal is a process-wide global: reset it around each test
 class RestartHandlerTest : public testing::Test {
 protected:
-	void SetUp() override { falco::app::g_restart_signal.reset(); }
-	void TearDown() override { falco::app::g_restart_signal.reset(); }
+	void SetUp() override {
+		falco::app::g_restart_signal.reset();
+		char path[] = "/tmp/falco-restart-handler-XXXXXX";
+		const auto directory = ::mkdtemp(path);
+		ASSERT_NE(directory, nullptr);
+		m_directory = directory;
+	}
+	void TearDown() override {
+		falco::app::g_restart_signal.reset();
+		if(!m_directory.empty()) {
+			std::error_code err;
+			std::filesystem::remove_all(m_directory, err);
+			EXPECT_FALSE(err) << err.message();
+		}
+	}
+	std::string m_directory;
 };
 
 }  // namespace
@@ -153,4 +169,160 @@ TEST_F(RestartHandlerTest, watched_file_change_triggers_restart) {
 	EXPECT_GE(checks.load(), 1);
 	handler.stop();
 	std::remove(path.c_str());
+}
+
+// No inotify watch exists when the deletion happens. Recovery must not need a
+// second filesystem event or an external reload request.
+TEST_F(RestartHandlerTest, removed_directory_member_requests_revalidation) {
+	const auto path = m_directory + "/removed.yaml";
+	const auto alias = m_directory + "/alias";
+	std::filesystem::create_directory_symlink(m_directory, alias);
+	for(const auto& directory :
+	    {m_directory, m_directory + "/", alias, std::filesystem::relative(m_directory).string()}) {
+		SCOPED_TRACE(directory);
+		falco::app::g_restart_signal.reset();
+		{ std::ofstream file(path); }
+		ASSERT_TRUE(std::filesystem::remove(path));
+		std::atomic<int> checks{0};
+		falco::app::restart_handler handler(
+		        [&checks] {
+			        checks.fetch_add(1);
+			        return true;
+		        },
+		        {path},
+		        {directory});
+		std::string err;
+		ASSERT_TRUE(handler.start(err)) << err;
+		EXPECT_TRUE(wait_restart_triggered(s_deadline));
+		handler.stop();
+		EXPECT_EQ(checks.load(), 1);
+	}
+}
+
+TEST_F(RestartHandlerTest, multiple_removed_members_coalesce_into_one_check) {
+	std::atomic<int> checks{0};
+	falco::app::restart_handler handler(
+	        [&checks] {
+		        checks.fetch_add(1);
+		        return true;
+	        },
+	        {m_directory + "/first.yaml", m_directory + "/second.yaml"},
+	        {m_directory});
+	std::string err;
+	ASSERT_TRUE(handler.start(err)) << err;
+	EXPECT_TRUE(wait_restart_triggered(s_deadline));
+	handler.stop();
+	EXPECT_EQ(checks.load(), 1);
+}
+
+TEST_F(RestartHandlerTest, removed_member_rejection_recovers_on_directory_change) {
+	std::atomic<int> checks{0};
+	std::atomic<bool> valid{false};
+	const auto path = m_directory + "/removed.yaml";
+	falco::app::restart_handler handler(
+	        [&] {
+		        const bool result = valid.load();
+		        checks.fetch_add(1);
+		        return result;
+	        },
+	        {path},
+	        {m_directory});
+	std::string err;
+	ASSERT_TRUE(handler.start(err)) << err;
+	ASSERT_TRUE(wait_check_count(checks, 1, s_deadline));
+	// More than two debounce cycles: rejection must not turn into a retry loop.
+	std::this_thread::sleep_for(std::chrono::milliseconds(400));
+	EXPECT_EQ(checks.load(), 1);
+	EXPECT_FALSE(falco::app::g_restart_signal.triggered());
+	valid.store(true);
+	{
+		std::ofstream file(path);
+		file << "repaired\n";
+	}
+	EXPECT_TRUE(wait_restart_triggered(s_deadline));
+	handler.stop();
+	// CREATE and CLOSE_WRITE can arrive in different debounce windows.
+	EXPECT_GE(checks.load(), 2);
+}
+
+TEST_F(RestartHandlerTest, recreated_member_recovers_when_the_writer_finishes) {
+	std::atomic<int> checks{0};
+	std::atomic<bool> valid{false};
+	const auto path = m_directory + "/removed.yaml";
+	falco::app::restart_handler handler(
+	        [&] {
+		        const bool result = valid.load();
+		        checks.fetch_add(1);
+		        return result;
+	        },
+	        {path},
+	        {m_directory});
+	std::string err;
+	ASSERT_TRUE(handler.start(err)) << err;
+	ASSERT_TRUE(wait_check_count(checks, 1, s_deadline));
+	std::ofstream file(path);
+	ASSERT_TRUE(file.is_open());
+	// Keep the writer open until the CREATE event has caused a rejected check.
+	ASSERT_TRUE(wait_check_count(checks, 2, s_deadline));
+	EXPECT_FALSE(falco::app::g_restart_signal.triggered());
+	valid.store(true);
+	file << "repaired\n";
+	file.close();
+	EXPECT_TRUE(wait_restart_triggered(s_deadline));
+	handler.stop();
+	EXPECT_EQ(checks.load(), 3);
+}
+
+TEST_F(RestartHandlerTest, missing_file_without_watched_parent_is_fatal) {
+	std::filesystem::create_directory(m_directory + "/unwatched");
+	for(const auto& dirs : {falco::app::restart_handler::watch_list_t{},
+	                        falco::app::restart_handler::watch_list_t{m_directory}}) {
+		const auto path = m_directory + "/unwatched/missing.yaml";
+		falco::app::restart_handler handler([] { return true; }, {path}, dirs);
+		std::string err;
+		EXPECT_FALSE(handler.start(err));
+		EXPECT_NE(err.find("could not watch file: " + path), std::string::npos);
+	}
+}
+
+TEST_F(RestartHandlerTest, missing_directory_is_fatal) {
+	const auto path = m_directory + "/missing";
+	falco::app::restart_handler handler([] { return true; }, {}, {path});
+	std::string err;
+	EXPECT_FALSE(handler.start(err));
+	EXPECT_NE(err.find("could not watch directory: " + path), std::string::npos);
+}
+
+TEST_F(RestartHandlerTest, other_file_watch_errors_remain_fatal) {
+	const auto path = m_directory + "/loop.yaml";
+	std::filesystem::create_symlink(path, path);
+	falco::app::restart_handler handler([] { return true; }, {path}, {m_directory});
+	std::string err;
+	EXPECT_FALSE(handler.start(err));
+	EXPECT_NE(err.find("could not watch file: " + path), std::string::npos);
+}
+
+TEST_F(RestartHandlerTest, unchanged_directory_member_does_not_request_reload) {
+	const auto path = m_directory + "/present.yaml";
+	{ std::ofstream file(path); }
+	std::atomic<int> checks{0};
+	falco::app::restart_handler handler(
+	        [&checks] {
+		        checks.fetch_add(1);
+		        return true;
+	        },
+	        {path},
+	        {m_directory});
+	std::string err;
+	ASSERT_TRUE(handler.start(err)) << err;
+	std::this_thread::sleep_for(std::chrono::milliseconds(400));
+	EXPECT_EQ(checks.load(), 0);
+	EXPECT_FALSE(falco::app::g_restart_signal.triggered());
+	{
+		std::ofstream file(path);
+		file << "changed\n";
+	}
+	EXPECT_TRUE(wait_restart_triggered(s_deadline));
+	handler.stop();
+	EXPECT_GE(checks.load(), 1);
 }
