@@ -99,6 +99,10 @@ struct live_context {
 	std::unique_ptr<source_sync_context> sync;
 };
 
+// Publish batch for state.num_evts (#3584). Power of two so the hot-path
+// predicate is a single AND.
+static constexpr uint64_t NUM_EVTS_PUBLISH_BATCH = 1024;
+
 //
 // Event processing loop
 //
@@ -390,6 +394,11 @@ static falco::app::run_result do_inspect(
 		}
 
 		num_evts++;
+		// Batch the publish so the hot path avoids a per-event atomic;
+		// the caller flushes the residual on loop exit. See #3584.
+		if((num_evts & (NUM_EVTS_PUBLISH_BATCH - 1)) == 0) {
+			s.num_evts.fetch_add(NUM_EVTS_PUBLISH_BATCH, std::memory_order_relaxed);
+		}
 	}
 
 	return run_result::ok();
@@ -423,6 +432,11 @@ static void process_inspector_events(
 		                    uint64_t(s.options.duration_to_tot * ONE_SECOND_IN_NS),
 		                    num_evts);
 		falco::app::g_reload_state.stop();
+
+		// Flush the unpublished tail from do_inspect. See #3584.
+		if(uint64_t residual = num_evts & (NUM_EVTS_PUBLISH_BATCH - 1)) {
+			s.num_evts.fetch_add(residual, std::memory_order_relaxed);
+		}
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
