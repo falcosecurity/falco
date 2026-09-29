@@ -311,11 +311,10 @@ std::string falco_metrics::sources_to_text_prometheus(
 		// kernel_event_counters_per_cpu_enabled
 		// libbpf_stats_enabled
 		// kernel_iter_event_counters_enabled
-		auto metrics_collector =
-		        libs::metrics::libs_metrics_collector(source_inspector.get(),
-		                                              state.config->m_metrics_flags);
-		metrics_collector.snapshot();
-		auto metrics_snapshot = metrics_collector.get_metrics();
+		// Inspector-backed metrics are snapshotted on the event-processing thread.
+		// Webserver threads only read the cached copy, avoiding concurrent access to
+		// mutable inspector state (notably the thread table).
+		auto metrics_snapshot = source_info->get_metrics_snapshot();
 
 		// Source plugin
 		if(source != falco_common::syscall_source) {

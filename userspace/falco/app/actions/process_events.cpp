@@ -114,6 +114,8 @@ static falco::app::run_result do_inspect(
 	int32_t rc = 0;
 	sinsp_evt* ev = NULL;
 	stats_writer::collector stats_collector(statsw);
+	std::unordered_map<std::string, std::unique_ptr<libs::metrics::libs_metrics_collector>>
+	        prometheus_metrics_collectors;
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	const bool is_capture_mode = source.empty();
@@ -258,9 +260,18 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector,
-			                        inspector->event_sources()[source_engine_idx],
-			                        num_evts);
+			const auto& event_source = inspector->event_sources()[source_engine_idx];
+			stats_collector.collect(inspector, event_source, num_evts);
+			if(s.config->m_webserver_config.m_prometheus_metrics_enabled) {
+				auto& collector = prometheus_metrics_collectors[event_source];
+				if(!collector) {
+					collector = std::make_unique<libs::metrics::libs_metrics_collector>(
+					        inspector.get(),
+					        s.config->m_metrics_flags);
+				}
+				collector->snapshot();
+				s.source_infos.at(event_source)->set_metrics_snapshot(collector->get_metrics());
+			}
 		} else {
 			// in live mode, each inspector gets assigned a distinct event source,
 			// so we report an error if we fetch an event of a different source.
@@ -279,6 +290,25 @@ static falco::app::run_result do_inspect(
 
 			// for live mode, the source name is constant
 			stats_collector.collect(inspector, source, num_evts);
+			if(s.config->m_webserver_config.m_prometheus_metrics_enabled) {
+				auto& collector = prometheus_metrics_collectors[source];
+				if(!collector) {
+					uint32_t flags = s.config->m_metrics_flags;
+					if(!inspector->check_current_engine(MODERN_BPF_ENGINE)) {
+						flags &= ~METRICS_V2_LIBBPF_STATS;
+					}
+					if(source != falco_common::syscall_source) {
+						flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_KERNEL_COUNTERS_PER_CPU |
+						           METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS |
+						           METRICS_V2_KERNEL_ITER_COUNTERS);
+					}
+					collector =
+					        std::make_unique<libs::metrics::libs_metrics_collector>(inspector.get(),
+					                                                                flags);
+				}
+				collector->snapshot();
+				s.source_infos.at(source)->set_metrics_snapshot(collector->get_metrics());
+			}
 		}
 
 		// Reset the timeouts counter, Falco successfully got an event to process
