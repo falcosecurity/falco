@@ -35,6 +35,7 @@ limitations under the License.
 #include <string>
 #include <memory>
 #include <atomic>
+#include <mutex>
 #include <unordered_set>
 
 namespace falco {
@@ -61,6 +62,19 @@ struct state {
 		// source is a plugin one, the assigned inspector must have that
 		// plugin registered in its plugin manager
 		std::shared_ptr<sinsp> inspector;
+
+		void set_metrics_snapshot(std::vector<metrics_v2> snapshot) {
+			std::lock_guard<std::mutex> lock(*metrics_snapshot_mutex);
+			metrics_snapshot = std::move(snapshot);
+		}
+
+		std::vector<metrics_v2> get_metrics_snapshot() const {
+			std::lock_guard<std::mutex> lock(*metrics_snapshot_mutex);
+			return metrics_snapshot;
+		}
+
+		std::shared_ptr<std::mutex> metrics_snapshot_mutex = std::make_shared<std::mutex>();
+		std::vector<metrics_v2> metrics_snapshot;
 	};
 
 	state():

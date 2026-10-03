@@ -32,6 +32,7 @@ limitations under the License.
 #include "../options.h"
 #include "../signals.h"
 #include "../reload_state.h"
+#include "../metrics_snapshot.h"
 #include "../../falco_semaphore.h"
 #include "../../stats_writer.h"
 #include "../../falco_outputs.h"
@@ -114,6 +115,8 @@ static falco::app::run_result do_inspect(
 	int32_t rc = 0;
 	sinsp_evt* ev = NULL;
 	stats_writer::collector stats_collector(statsw);
+	std::unique_ptr<libs::metrics::libs_metrics_collector> prometheus_metrics_collector;
+	prometheus_metrics_refresh prometheus_metrics_refresh;
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	const bool is_capture_mode = source.empty();
@@ -161,6 +164,28 @@ static falco::app::run_result do_inspect(
 		falco::app::g_reload_state.source_started();
 	}
 
+	const bool collect_prometheus_metrics =
+	        prometheus_metrics_collection_enabled(*s.config, is_capture_mode);
+	if(collect_prometheus_metrics) {
+		uint32_t flags = s.config->m_metrics_flags;
+		if(!inspector->check_current_engine(MODERN_BPF_ENGINE)) {
+			flags &= ~METRICS_V2_LIBBPF_STATS;
+		}
+		if(source != falco_common::syscall_source) {
+			flags &= ~(METRICS_V2_KERNEL_COUNTERS | METRICS_V2_KERNEL_COUNTERS_PER_CPU |
+			           METRICS_V2_STATE_COUNTERS | METRICS_V2_LIBBPF_STATS |
+			           METRICS_V2_KERNEL_ITER_COUNTERS);
+		}
+		prometheus_metrics_collector =
+		        std::make_unique<libs::metrics::libs_metrics_collector>(inspector.get(), flags);
+		auto snapshot_prometheus_metrics = [&]() {
+			prometheus_metrics_collector->snapshot();
+			s.source_infos.at(source)->set_metrics_snapshot(
+			        prometheus_metrics_collector->get_metrics());
+		};
+		prometheus_metrics_refresh.initialize(snapshot_prometheus_metrics);
+	}
+
 	//
 	// Loop through the events
 	//
@@ -199,7 +224,18 @@ static falco::app::run_result do_inspect(
 				s.restart.store(true);
 			});
 			break;
-		} else if(rc == SCAP_TIMEOUT) {
+		}
+
+		if(collect_prometheus_metrics) {
+			auto snapshot_prometheus_metrics = [&]() {
+				prometheus_metrics_collector->snapshot();
+				s.source_infos.at(source)->set_metrics_snapshot(
+				        prometheus_metrics_collector->get_metrics());
+			};
+			prometheus_metrics_refresh.refresh_if_due(rc, snapshot_prometheus_metrics);
+		}
+
+		if(rc == SCAP_TIMEOUT) {
 			if(ev == nullptr) [[unlikely]] {
 				timeouts_since_last_success_or_msg++;
 				if(timeouts_since_last_success_or_msg >
@@ -258,9 +294,8 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector,
-			                        inspector->event_sources()[source_engine_idx],
-			                        num_evts);
+			const auto& event_source = inspector->event_sources()[source_engine_idx];
+			stats_collector.collect(inspector, event_source, num_evts);
 		} else {
 			// in live mode, each inspector gets assigned a distinct event source,
 			// so we report an error if we fetch an event of a different source.
