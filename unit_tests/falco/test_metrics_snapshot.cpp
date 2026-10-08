@@ -69,7 +69,8 @@ TEST(metrics_snapshot, refreshes_on_bounded_steady_clock_cadence) {
 	EXPECT_EQ(snapshots, 4);
 }
 
-#ifndef __EMSCRIPTEN__\nTEST(metrics_snapshot, startup_and_timeout_refresh_are_safe_during_concurrent_scrapes) {
+#ifndef __EMSCRIPTEN__
+TEST(metrics_snapshot, startup_and_timeout_refresh_are_safe_during_concurrent_scrapes) {
 	using namespace std::chrono_literals;
 	using refresh = falco::app::prometheus_metrics_refresh;
 
@@ -111,3 +112,4 @@ TEST(metrics_snapshot, refreshes_on_bounded_steady_clock_cadence) {
 	ASSERT_EQ(final_snapshot.size(), 1u);
 	EXPECT_EQ(final_snapshot[0].value.u64, 1001u);
 }
+#endif
