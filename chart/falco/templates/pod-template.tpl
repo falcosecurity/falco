@@ -159,7 +159,7 @@ spec:
         {{- if eq (include "falco.procfsMount.enabled" .) "true" }}
         - mountPath: /host/proc
           name: proc-fs
-        {{- if and .Values.driver.enabled (not .Values.driver.loader.enabled) }}
+        {{- if eq (include "driverLoader.enabled" .) "false" }}
           readOnly: true
         {{- end }}
         {{- end }}

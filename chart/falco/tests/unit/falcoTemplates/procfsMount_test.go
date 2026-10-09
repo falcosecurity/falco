@@ -37,12 +37,14 @@ func TestProcfsMount(t *testing.T) {
 		values            map[string]string
 		expectVolumeMount bool
 		expectVolume      bool
+		expectReadOnly    bool
 	}{
 		{
 			name:              "defaultValues",
 			values:            nil,
 			expectVolumeMount: true,
 			expectVolume:      true,
+			expectReadOnly:    false,
 		},
 		{
 			name: "driver.disabled_pluginsHostinfo.enabled",
@@ -52,6 +54,7 @@ func TestProcfsMount(t *testing.T) {
 			},
 			expectVolumeMount: true,
 			expectVolume:      true,
+			expectReadOnly:    true,
 		},
 		{
 			name: "driver.disabled_pluginsHostinfo.disabled",
@@ -70,6 +73,45 @@ func TestProcfsMount(t *testing.T) {
 			},
 			expectVolumeMount: true,
 			expectVolume:      true,
+			expectReadOnly:    false,
+		},
+		{
+			name: "driver.kind=modern_ebpf",
+			values: map[string]string{
+				"driver.kind": "modern_ebpf",
+			},
+			expectVolumeMount: true,
+			expectVolume:      true,
+			expectReadOnly:    true,
+		},
+		{
+			name: "driver.kind=modern_ebpf_loader.disabled",
+			values: map[string]string{
+				"driver.kind":           "modern_ebpf",
+				"driver.loader.enabled": "false",
+			},
+			expectVolumeMount: true,
+			expectVolume:      true,
+			expectReadOnly:    true,
+		},
+		{
+			name: "driver.kind=kmod",
+			values: map[string]string{
+				"driver.kind": "kmod",
+			},
+			expectVolumeMount: true,
+			expectVolume:      true,
+			expectReadOnly:    false,
+		},
+		{
+			name: "driver.kind=kmod_loader.disabled",
+			values: map[string]string{
+				"driver.kind":           "kmod",
+				"driver.loader.enabled": "false",
+			},
+			expectVolumeMount: true,
+			expectVolume:      true,
+			expectReadOnly:    true,
 		},
 	}
 
@@ -94,6 +136,7 @@ func TestProcfsMount(t *testing.T) {
 			if testCase.expectVolumeMount {
 				require.NotNil(t, procMount)
 				require.Equal(t, "/host/proc", procMount.MountPath)
+				require.Equal(t, testCase.expectReadOnly, procMount.ReadOnly)
 			} else {
 				require.Nil(t, procMount)
 			}
