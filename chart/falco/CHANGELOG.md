@@ -8,6 +8,7 @@ numbering uses [semantic versioning](http://semver.org).
 * Upgrade Falco to v0.45.1
 * Bump the default `collectors.containerEngine.pluginRef` to `container:0.7.5`
 * Do not render the `ServiceMonitor` when `metrics.enabled` is `false`. Previously, with `serviceMonitor.create=true` and the default `metrics.enabled=false`, the chart rendered a `ServiceMonitor` whose selector matched no Service, since the `falco-metrics` Service and the Falco Prometheus endpoint are only created when metrics are enabled (falcosecurity/charts#1053)
+* Mount `/host/proc` read-only in the Falco container whenever the driver loader does not run, including with `driver.kind=modern_ebpf` and the default `driver.loader.enabled=true`, and with the driver disabled. Previously the mount was only read-only when `driver.loader.enabled` was explicitly set to `false`
 
 ## v9.2.0
 
