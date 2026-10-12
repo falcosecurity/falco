@@ -5,6 +5,7 @@ numbering uses [semantic versioning](http://semver.org).
 
 ## Unreleased
 
+* Do not render the `ServiceMonitor` when `metrics.enabled` is `false`. Previously, with `serviceMonitor.create=true` and the default `metrics.enabled=false`, the chart rendered a `ServiceMonitor` whose selector matched no Service, since the `falco-metrics` Service and the Falco Prometheus endpoint are only created when metrics are enabled (falcosecurity/charts#1053)
 * Bump the falcoctl image to `0.14.2` (preserves DKMS installations when installing cached kernel modules)
 * Bump the `falcosidekick` subchart dependency constraint to `0.14.*` (Falcosidekick 2.31.1; adds the GCP Workload Identity and Gateway API `HTTPRoute` options, both disabled by default, and switches the Helm test pod to the `curlimages/curl` image and the `/healthz` endpoint)
 * Bump the `falco-talon` subchart dependency constraint to `0.4.*` (Falco Talon 0.3.0; fixes the missing namespace in the Secret metadata, restarts Talon when its rules or `config.rulesOverride` change, and allows a folder annotation for the Grafana dashboards)

@@ -634,6 +634,8 @@ serviceMonitor:
   # -- create specifies whether a ServiceMonitor CRD should be created for a prometheus operator.
   # https://github.com/coreos/prometheus-operator
   # Enable it only if the ServiceMonitor CRD is installed in your cluster.
+  # The ServiceMonitor is rendered only when `metrics.enabled` is also set to true, since
+  # Falco exposes the Prometheus endpoint (and the chart creates the metrics Service) only in that case.
   create: false
   # -- path at which the metrics are exposed by Falco.
   path: /metrics
