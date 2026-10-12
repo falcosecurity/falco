@@ -51,11 +51,68 @@ func TestServiceMonitorTemplate(t *testing.T) {
 	})
 }
 
+// serviceMonitorEnabledValues enables the ServiceMonitor together with the metrics,
+// since the ServiceMonitor is rendered only when metrics.enabled is true.
+var serviceMonitorEnabledValues = map[string]string{
+	"serviceMonitor.create": "true",
+	"metrics.enabled":       "true",
+}
+
 func (s *serviceMonitorTemplateTest) TestCreationDefaultValues() {
 	// Render the servicemonitor and check that it has not been rendered.
 	_, err := helm.RenderTemplateE(s.T(), &helm.Options{}, s.chartPath, s.releaseName, s.templates)
 	s.Error(err, "should error")
 	s.Equal("error while running command: exit status 1; Error: could not find template templates/serviceMonitor.yaml in chart", err.Error())
+}
+
+func (s *serviceMonitorTemplateTest) TestCreationRequiresMetrics() {
+	testCases := []struct {
+		name     string
+		values   map[string]string
+		rendered bool
+	}{
+		{
+			// With metrics disabled, there is no Falco metrics endpoint nor metrics Service
+			// to scrape, so the ServiceMonitor must not be rendered.
+			"serviceMonitorEnabledMetricsDisabled",
+			map[string]string{"serviceMonitor.create": "true", "metrics.enabled": "false"},
+			false,
+		},
+		{
+			"serviceMonitorDisabledMetricsEnabled",
+			map[string]string{"serviceMonitor.create": "false", "metrics.enabled": "true"},
+			false,
+		},
+		{
+			"serviceMonitorEnabledMetricsEnabled",
+			serviceMonitorEnabledValues,
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+
+		s.Run(testCase.name, func() {
+			subT := s.T()
+			subT.Parallel()
+
+			options := &helm.Options{SetValues: testCase.values}
+			output, err := helm.RenderTemplateE(subT, options, s.chartPath, s.releaseName, s.templates)
+
+			if !testCase.rendered {
+				s.Error(err, "should error")
+				s.Equal("error while running command: exit status 1; Error: could not find template templates/serviceMonitor.yaml in chart", err.Error())
+				return
+			}
+
+			s.NoError(err)
+			var svcMonitor monitoringv1.ServiceMonitor
+			helm.UnmarshalK8SYaml(subT, output, &svcMonitor)
+			s.Equal("ServiceMonitor", svcMonitor.Kind)
+			s.Equal(s.releaseName, svcMonitor.Name)
+		})
+	}
 }
 
 func (s *serviceMonitorTemplateTest) TestEndpoint() {
@@ -73,7 +130,7 @@ func (s *serviceMonitorTemplateTest) TestEndpoint() {
 	err := json.Unmarshal([]byte(defaultEndpointsJSON), &defaultEndpoints)
 	s.NoError(err)
 
-	options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"}}
+	options := &helm.Options{SetValues: serviceMonitorEnabledValues}
 	output := helm.RenderTemplate(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
 	var svcMonitor monitoringv1.ServiceMonitor
@@ -88,7 +145,7 @@ func (s *serviceMonitorTemplateTest) TestNamespaceSelector() {
 			"app.kubernetes.io/instance": "my-falco",
 			"foo": "bar"
 		}`
-	options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"},
+	options := &helm.Options{SetValues: serviceMonitorEnabledValues,
 		SetJsonValues: map[string]string{"serviceMonitor.selector": selectorsLabelJson}}
 	output := helm.RenderTemplate(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
@@ -147,7 +204,7 @@ func (s *serviceMonitorTemplateTest) TestServiceMonitorSelector() {
 			subT := s.T()
 			subT.Parallel()
 
-			options := &helm.Options{SetValues: map[string]string{"serviceMonitor.create": "true"},
+			options := &helm.Options{SetValues: serviceMonitorEnabledValues,
 				SetJsonValues: map[string]string{"serviceMonitor.selector": testCase.values}}
 			output := helm.RenderTemplate(s.T(), options, s.chartPath, s.releaseName, s.templates)
 
