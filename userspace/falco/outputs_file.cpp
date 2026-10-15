@@ -35,6 +35,13 @@ void falco::outputs::output_file::output(const message *msg) {
 	open_file();
 	m_outfile << msg->msg + "\n";
 
+	if(m_outfile.fail()) {
+		// The stream would silently refuse every later write. Close it, so that the
+		// next output reopens the file with a clean state, and report the failure.
+		cleanup();
+		throw falco_exception("failed to write to output file " + m_oc.options["filename"]);
+	}
+
 	if(m_oc.options["keep_alive"] != "true") {
 		cleanup();
 	}
