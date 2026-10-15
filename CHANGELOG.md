@@ -1,5 +1,27 @@
 # Change Log
 
+## v0.45.1
+
+### Bug Fixes
+
+* fix(metrics): prevent a race that could crash Falco when Prometheus metrics are scraped while events are being processed [[#4022](https://github.com/falcosecurity/falco/pull/4022)] - [@Rayan-and-beyond](https://github.com/Rayan-and-beyond)
+* fix(deps): update libs to 0.26.1 and driver to 11.0.1+driver [[#4032](https://github.com/falcosecurity/falco/pull/4032)] - [@leogr](https://github.com/leogr)
+* fix(chart): update the default container plugin to 0.7.5. [[#4027](https://github.com/falcosecurity/falco/pull/4027)] - [@leogr](https://github.com/leogr)
+* fix(build): update the bundled container plugin to 0.7.5, including the listener shutdown fix for reloads [[#4024](https://github.com/falcosecurity/falco/pull/4024)] - [@leogr](https://github.com/leogr)
+* fix(userspace): avoid exiting when files in watched directories disappear during reload setup [[#4018](https://github.com/falcosecurity/falco/pull/4018)] - [@c2ndev](https://github.com/c2ndev)
+
+### Non user-facing changes
+
+* chore(build): pin libs and driver release candidates [[#4026](https://github.com/falcosecurity/falco/pull/4026)] - [@leogr](https://github.com/leogr)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      5 |
+| Total           |      6 |
+
 ## v0.45.0
 
 Released on 2026-09-21
