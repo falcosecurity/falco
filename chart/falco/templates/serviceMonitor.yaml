@@ -1,4 +1,10 @@
-{{- if .Values.serviceMonitor.create }}
+{{- /*
+The ServiceMonitor is only rendered when Falco metrics are enabled: with
+metrics.enabled=false Falco does not expose the Prometheus endpoint and the
+"falco-metrics" Service is not created, so the ServiceMonitor would have no
+target to scrape.
+*/}}
+{{- if and .Values.serviceMonitor.create .Values.metrics.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

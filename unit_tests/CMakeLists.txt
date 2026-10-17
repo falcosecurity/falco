@@ -46,6 +46,7 @@ add_executable(
 	engine/test_rule_loader.cpp
 	engine/test_rulesets.cpp
 	falco/test_capture.cpp
+	falco/test_metrics_snapshot.cpp
 	falco/test_reload_state.cpp
 	falco/test_configuration.cpp
 	falco/test_configuration_rule_selection.cpp
