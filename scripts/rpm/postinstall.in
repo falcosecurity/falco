@@ -83,7 +83,9 @@ if [ $1 -ge 1 ]; then
                 # Load the actually automatic chosen driver
                 chosen_driver=$(falcoctl driver printenv | grep DRIVER= | cut -d'"' -f2)
             else
-                falcoctl driver config --version "$driver_version" --type "$chosen_driver"
+                # Under set -e this must not abort the install when the kernel
+                # cannot run the chosen driver; its service then fails to start.
+                falcoctl driver config --version "$driver_version" --type "$chosen_driver" || true
             fi
             CHOICE=
             case $FALCOCTL_ENABLED in
