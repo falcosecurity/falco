@@ -33,7 +33,10 @@ package_save_previous_driver() {
 }
 
 package_driver_version() {
-    driver_env=$(falcoctl driver printenv)
+    # This runs before the driver types are reconfigured. The shipped config
+    # allows only modern_ebpf, so printenv fails on kernels that cannot run it;
+    # an empty result falls back to the package driver version below.
+    driver_env=$(falcoctl driver printenv 2>/dev/null) || driver_env=
     driver_version=$(printf '%s\n' "$driver_env" | sed -n 's/^DRIVER_VERSION="\([^"]*\)"$/\1/p')
     # RPM replaces the old configuration before %post; retain its driver pin.
     if [ "${package_format:-}" = rpm ] && [ -s "$package_state/previous-version" ]; then

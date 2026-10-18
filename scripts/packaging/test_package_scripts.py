@@ -70,7 +70,10 @@ def systemctl(action, units):
             unlink(alias)
             alias.symlink_to(root / "usr/lib/systemd/system" / unit)
         elif action == "start":
-            ready = unit != "falco-kmod.service" or bool(state["module"])
+            if unit == "falco-kmod.service":
+                ready = bool(state["module"])
+            else:
+                ready = unit != "falco-modern-bpf.service" or state.get("modern_ebpf_supported", True)
             state["active"][unit] = ready
             code = 0 if ready else 1
 
@@ -88,13 +91,22 @@ elif command == "falcoctl":
         if not config_file.exists():
             config_file.write_text(json.dumps(config))
         version = os.environ.get("FALCOCTL_DRIVER_VERSION", config.get("version", ""))
-        print('DRIVER_VERSION="' + version + '"')
-        print('DRIVER="' + config.get("type", "kmod") + '"')
+        if config.get("type") == "modern_ebpf" and not state.get("modern_ebpf_supported", True):
+            # Real falcoctl on a kernel that cannot run modern eBPF (e.g. 5.4).
+            print("ERROR no supported driver found for distro", file=sys.stderr)
+            code = 1
+        else:
+            print('DRIVER_VERSION="' + version + '"')
+            print('DRIVER="' + config.get("type", "kmod") + '"')
     elif args[:2] == ["driver", "config"]:
-        config["version"] = option("--version")
         types = [args[i + 1] for i, arg in enumerate(args) if arg == "--type"]
-        config["type"] = state["automatic_type"] if len(types) > 1 else types[0]
-        config_file.write_text(json.dumps(config))
+        if types == ["modern_ebpf"] and not state.get("modern_ebpf_supported", True):
+            print("ERROR no supported driver found for distro", file=sys.stderr)
+            code = 1
+        else:
+            config["version"] = option("--version")
+            config["type"] = state["automatic_type"] if len(types) > 1 else types[0]
+            config_file.write_text(json.dumps(config))
     elif args[:2] == ["driver", "install"]:
         state["installs"] += 1
         # The old cache path reports success after removing its DKMS module.
@@ -178,9 +190,9 @@ class PackageHost:
     def update(self, **values):
         self.write_state(dict(self.state(), **values))
 
-    def set_config(self, version):
+    def set_config(self, version, driver_type="kmod"):
         self.config_file.write_text(json.dumps({
-            "version": version, "type": "kmod", "artifact_customization": "preserve me",
+            "version": version, "type": driver_type, "artifact_customization": "preserve me",
         }))
 
     def config(self):
@@ -360,6 +372,37 @@ class PackageScriptTests(unittest.TestCase):
                     host.finish()
                     self.assertEqual(host.state()["installs"], 0)
                     self.assertTrue(host.state()["active"]["falco-modern-bpf.service"])
+
+    def test_kernel_without_modern_ebpf_falls_back_to_kmod(self):
+        # The shipped falcoctl.yaml allows only modern_ebpf, so printenv fails
+        # until the postinst widens the allowed types. Reproduced with
+        # Ubuntu 20.04 (kernel 5.4), where 0.45.0 left the package half-configured.
+        for package_format in ("debian", "rpm"):
+            for driver in ("auto", "kmod"):
+                with self.subTest(package_format=package_format, driver=driver):
+                    host = PackageHost(self, package_format, version=NEW)
+                    host.set_config(NEW, driver_type="modern_ebpf")
+                    host.env["FALCO_DRIVER_CHOICE"] = driver
+                    host.update(modern_ebpf_supported=False, automatic_type="kmod",
+                                module="", active={})
+                    host.postinstall()
+                    host.finish()
+                    host.assert_running(NEW)
+
+    def test_explicit_modern_ebpf_on_kernel_without_it_still_configures(self):
+        # falcoctl refuses to configure a driver the kernel cannot run. As in
+        # 0.44.1, the package must still configure; only the service fails.
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format, version=NEW)
+                host.set_config(NEW, driver_type="modern_ebpf")
+                host.env["FALCO_DRIVER_CHOICE"] = "modern_ebpf"
+                host.update(modern_ebpf_supported=False, module="", active={})
+                host.postinstall()
+                host.finish()
+                self.assertEqual(host.state()["installs"], 0)
+                self.assertTrue(host.state()["enabled"]["falco-modern-bpf.service"])
+                self.assertFalse(host.state()["active"]["falco-modern-bpf.service"])
 
     def test_removal_clears_only_package_owned_mask(self):
         for package_format in ("debian", "rpm"):
