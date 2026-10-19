@@ -23,6 +23,12 @@ namespace falco {
 namespace outputs {
 
 class output_program : public abstract_output {
+	bool init(const config &oc,
+	          bool buffered,
+	          const std::string &hostname,
+	          bool json_output,
+	          std::string &err) override;
+
 	void output(const message *msg) override;
 
 	void cleanup() override;

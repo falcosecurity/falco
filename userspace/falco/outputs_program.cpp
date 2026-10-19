@@ -19,8 +19,40 @@ limitations under the License.
 #include "compat.h"
 #include "logger.h"
 #include <stdio.h>
+#include <signal.h>
 #include <cerrno>
 #include <cstring>
+
+static void sigpipe_handler(int) {}
+
+bool falco::outputs::output_program::init(const config& oc,
+                                          bool buffered,
+                                          const std::string& hostname,
+                                          bool json_output,
+                                          std::string& err) {
+	if(!falco::outputs::abstract_output::init(oc, buffered, hostname, json_output, err)) {
+		return false;
+	}
+
+	// Writing to a program that has exited raises SIGPIPE, whose default action
+	// terminates Falco. With a handler, the write fails with EPIPE instead.
+	// Unlike SIG_IGN, a handler is reset to the default action on exec, so the
+	// program keeps its own SIGPIPE behavior. Keep any non-default action.
+	struct sigaction current {};
+	if(sigaction(SIGPIPE, nullptr, &current) == 0 && current.sa_handler == SIG_DFL) {
+		struct sigaction action {};
+		action.sa_handler = sigpipe_handler;
+		action.sa_flags = SA_RESTART;
+		sigemptyset(&action.sa_mask);
+		if(sigaction(SIGPIPE, &action, nullptr) != 0) {
+			char errbuf[256];
+			err = std::string("could not handle SIGPIPE for program output: ") +
+			      falco_strerror_r(errno, errbuf, sizeof(errbuf));
+			return false;
+		}
+	}
+	return true;
+}
 
 void falco::outputs::output_program::open_pfile() {
 	if(m_pfile == nullptr) {
@@ -46,6 +78,17 @@ void falco::outputs::output_program::output(const message* msg) {
 
 	if(m_pfile != nullptr) {
 		fprintf(m_pfile, "%s\n", msg->msg.c_str());
+		if(m_oc.options["keep_alive"] != "true") {
+			// pclose() does not report a failure to flush the remaining data.
+			fflush(m_pfile);
+		}
+
+		if(ferror(m_pfile)) {
+			// The program is gone or stopped reading (e.g. EPIPE). Close the pipe,
+			// so that the next output starts the program again, and report the failure.
+			cleanup();
+			throw falco_exception("failed to write to program output " + m_oc.options["program"]);
+		}
 	}
 
 	if(m_oc.options["keep_alive"] != "true") {
