@@ -3,6 +3,11 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v9.2.1
+
+* Upgrade Falco to v0.45.1
+* Bump the default `collectors.containerEngine.pluginRef` to `container:0.7.5`
+
 ## v9.2.0
 
 * Upgrade Falco to v0.45.0
