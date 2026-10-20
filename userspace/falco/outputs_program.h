@@ -19,6 +19,8 @@ limitations under the License.
 
 #include "outputs.h"
 
+#include <sys/types.h>
+
 namespace falco {
 namespace outputs {
 
@@ -38,7 +40,17 @@ class output_program : public abstract_output {
 private:
 	void open_pfile();
 
+	// Close the pipe to the program, then wait for the program to exit, or only
+	// reap it later without blocking if `wait` is false.
+	void close_pfile(bool wait);
+
+	// Reap the program whose pipe was closed without waiting, if it has exited.
+	// Return false if it is still running.
+	bool reap_closed_program();
+
 	FILE *m_pfile = nullptr;
+	pid_t m_pid = -1;
+	pid_t m_closed_pid = -1;
 };
 
 }  // namespace outputs
