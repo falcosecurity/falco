@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Minor Changes
+
+* feat(chart): add `topologySpreadConstraints` support to Falco pod template [[#3959](https://github.com/falcosecurity/falco/pull/3959)] - [@Goutham-Annem](https://github.com/Goutham-Annem)
+
 ## v0.45.0
 
 Released on 2026-09-21
