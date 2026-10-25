@@ -54,6 +54,12 @@ TEST(FalcoUtils, parse_prometheus_interval) {
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("30m"), 1800000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("60m"), 3600000UL);
 
+	/* Leading zeros must not make duration components parse as octal values. */
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("0100ms"), 100UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("010s"), 10000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("030m"), 1800000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h08m"), 4080000UL);
+
 	/* Test matrix for concatenated time interval examples. */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h3m2s1ms"),
 	          3600000UL + 3 * 60000UL + 2 * 1000UL + 1UL);
