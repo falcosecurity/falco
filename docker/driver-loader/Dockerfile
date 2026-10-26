@@ -42,6 +42,8 @@ RUN apt-get update \
 	patchelf \
 	xz-utils \
 	zstd \
+	&& dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge '20250419~deb12u2' \
+	&& update-ca-certificates --fresh \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Some base images have an empty /lib/modules by default
