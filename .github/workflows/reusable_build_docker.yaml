@@ -43,7 +43,7 @@ jobs:
 
       - name: Build falco image
         run: |
-          docker build -f docker/falco/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
+          docker build --pull --no-cache -f docker/falco/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build falco-debian image
         run: |
-          docker build -f docker/falco-debian/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian \
+          docker build --pull --no-cache -f docker/falco-debian/Dockerfile -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
@@ -62,8 +62,9 @@ jobs:
             docker save docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-debian --output /tmp/falco-${{ inputs.arch }}-debian.tar
 
       - name: Build falco-driver-loader image
+        # Use the Debian image built above; it has not been published yet.
         run: |
-          docker build -f docker/driver-loader/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
+          docker build --no-cache -f docker/driver-loader/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
@@ -73,13 +74,35 @@ jobs:
 
       - name: Build falco-driver-loader-buster image
         run: |
-          docker build -f docker/driver-loader-buster/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster \
+          docker build --pull --no-cache -f docker/driver-loader-buster/Dockerfile -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --build-arg FALCO_COMMIT_SHA=${{ github.sha }} \
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}-buster --output /tmp/falco-driver-loader-${{ inputs.arch }}-buster.tar
+
+      - name: Verify image certificate trust
+        env:
+          IMAGE_TAG: ${{ inputs.arch }}-${{ inputs.tag }}
+        run: |
+          for image in \
+            "docker.io/falcosecurity/falco:${IMAGE_TAG}" \
+            "docker.io/falcosecurity/falco:${IMAGE_TAG}-debian" \
+            "docker.io/falcosecurity/falco-driver-loader:${IMAGE_TAG}" \
+            "docker.io/falcosecurity/falco-driver-loader:${IMAGE_TAG}-buster"; do
+            echo "Checking ${image}"
+            docker run --rm --network none --entrypoint /bin/sh \
+              --mount "type=bind,src=${GITHUB_WORKSPACE}/test/container-trust,dst=/test-trust,readonly" \
+              "${image}" -ec '
+                sh /test-trust/check-trust.sh
+                update-ca-certificates --fresh
+                sh /test-trust/check-trust.sh
+              '
+            docker run --rm --entrypoint curl "${image}" \
+              --fail --silent --show-error --location --max-time 60 \
+              --output /dev/null https://download.falco.org/
+          done
 
       - name: Upload images tarballs
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0

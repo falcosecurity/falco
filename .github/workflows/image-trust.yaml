@@ -1,0 +1,35 @@
+name: Image trust
+
+on:
+  pull_request:
+    branches:
+      - master
+      - release/*
+    paths:
+      - docker/**
+      - test/container-trust/**
+      - .github/workflows/image-trust.yaml
+      - .github/workflows/reusable_build_docker.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-trust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test-images:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    uses: ./.github/workflows/reusable_build_docker.yaml
+    with:
+      arch: ${{ matrix.arch }}
+      # Exercise image construction using an already published package. The
+      # package CI separately builds and tests the components pinned by this PR.
+      # Master and release workflows test these images with their new packages.
+      version: '0.45.1'
+      tag: trust-${{ github.run_id }}
