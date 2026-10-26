@@ -24,7 +24,9 @@ ENV FALCO_VERSION="${FALCO_VERSION}" \
     HOST_ROOT="${HOST_ROOT}" \
     HOME="${HOME}"
 
-RUN apk update && apk add curl ca-certificates jq libstdc++
+RUN apk add --no-cache --upgrade curl jq libstdc++ openssl \
+    'ca-certificates>=20260909-r3' 'ca-certificates-bundle>=20260909-r3' \
+    && update-ca-certificates
 
 WORKDIR /
 
