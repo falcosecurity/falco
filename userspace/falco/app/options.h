@@ -62,6 +62,7 @@ public:
 	output_format output_fmt = output_format::TEXT;
 	int duration_to_tot = 0;
 	bool names_only = false;
+	bool operators = false;
 	std::vector<std::string> cmdline_config_options;
 	std::string print_additional;
 	std::string pidfilename;
