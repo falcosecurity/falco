@@ -24,6 +24,8 @@ ENV FALCO_VERSION="${FALCO_VERSION}" \
     HOME="${HOME}"
 
 RUN apt-get -y update && apt-get -y install curl jq ca-certificates gnupg \
+	&& dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge '20250419~deb12u2' \
+	&& update-ca-certificates --fresh \
 	&& apt clean -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /

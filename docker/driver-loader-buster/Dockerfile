@@ -53,11 +53,19 @@ RUN apt-get update \
 	patchelf \
 	xz-utils \
 	zstd \
+	&& if [ "$TARGETARCH" = "amd64" ]; then apt-get install -y --no-install-recommends libmpx2; fi \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN if [ "$TARGETARCH" = "amd64" ]; \
-	then apt-get install -y --no-install-recommends libmpx2; \
-	fi
+# The frozen Buster repository cannot supply the eMudhra trust-store fix.
+# Disable the affected anchors, including the legacy AAA cross-signing root,
+# before any HTTPS downloads. Keep the exclusions when regenerating the store.
+RUN sed -i \
+	-e 's|^mozilla/emSign_ECC_Root_CA_-_G3.crt$|!&|' \
+	-e 's|^mozilla/emSign_Root_CA_-_C1.crt$|!&|' \
+	-e 's|^mozilla/emSign_ECC_Root_CA_-_C3.crt$|!&|' \
+	-e 's|^mozilla/Comodo_AAA_Services_root.crt$|!&|' \
+	/etc/ca-certificates.conf \
+	&& update-ca-certificates --fresh
 
 # gcc 6 is no longer included in debian stable, but we need it to
 # build kernel modules on the default debian-based ami used by
