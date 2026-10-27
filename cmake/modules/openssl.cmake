@@ -61,8 +61,8 @@ else()
 		ExternalProject_Add(
 			openssl
 			PREFIX "${PROJECT_BINARY_DIR}/openssl-prefix"
-			URL "https://github.com/openssl/openssl/releases/download/openssl-3.1.4/openssl-3.1.4.tar.gz"
-			URL_HASH "SHA256=840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3"
+			URL "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz"
+			URL_HASH "SHA256=603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a"
 			CONFIGURE_COMMAND
 				${OPENSSL_EXTERNAL_PROJECT_ENV} ${OPENSSL_CONFIGURE_CMD} ${OPENSSL_SHARED_OPTION}
 				${OPENSSL_PIC_OPTION} --prefix=${OPENSSL_INSTALL_DIR} --libdir=lib
