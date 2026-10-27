@@ -59,7 +59,7 @@ jobs:
         if: inputs.sanitizers
         run: |
           sudo apt update -y
-          sudo apt install -y libasan5 libubsan1
+          sudo apt install -y libasan8 libubsan1
           
       - name: Enable core dumps
         run: |
