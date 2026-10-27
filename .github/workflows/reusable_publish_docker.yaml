@@ -87,36 +87,35 @@ jobs:
           docker push docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}-buster
 
       - name: Create Falco manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}
-          images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
-          push: true
+        run: |
+          docker buildx imagetools create \
+            --tag docker.io/falcosecurity/falco:${{ inputs.tag }} \
+            docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }} \
+            docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
 
       - name: Create falco-debian manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}-debian
-          images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}-debian,docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}-debian
-          push: true
+        run: |
+          docker buildx imagetools create \
+            --tag docker.io/falcosecurity/falco:${{ inputs.tag }}-debian \
+            docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}-debian \
+            docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}-debian
 
       - name: Create falco-driver-loader manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}
-          images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
-          push: true
+        run: |
+          docker buildx imagetools create \
+            --tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} \
+            docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }} \
+            docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
 
       - name: Create falco-driver-loader-buster manifest on Docker Hub
-        uses: Noelware/docker-manifest-action@8e337e3cb9656abfcf20146b99706fd88716e942 # v0.4.0
-        with:
-          inputs: docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster
-          images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}-buster,docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}-buster
-          push: true
+        run: |
+          docker buildx imagetools create \
+            --tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}-buster \
+            docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}-buster \
+            docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}-buster
 
       - name: Get Digests for images
         id: digests
-        # We could probably use the docker-manifest-action output instead of recomputing those with crane
         run: |
           echo "falco=$(crane digest docker.io/falcosecurity/falco:${{ inputs.tag }})" >> $GITHUB_OUTPUT
           echo "falco-debian=$(crane digest docker.io/falcosecurity/falco:${{ inputs.tag }}-debian)" >> $GITHUB_OUTPUT
