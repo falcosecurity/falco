@@ -1,5 +1,27 @@
 # Change Log
 
+## v0.45.2
+
+### Minor Changes
+
+* update(cmake): bump bundled OpenSSL to 3.5.9 LTS, adopting TLS security level 2 (RSA/DSA/DH keys must be at least 2048 bits and EC keys at least 224 bits) [[#4053](https://github.com/falcosecurity/falco/pull/4053)] - [@leogr](https://github.com/leogr)
+
+### Bug Fixes
+
+* fix(packaging): refresh image CA trust stores for the eMudhra incident, retain the Buster loader with corrected trust, and bundle container plugin 0.7.6 and falcoctl 0.14.3 [[#4051](https://github.com/falcosecurity/falco/pull/4051)] - [@leogr](https://github.com/leogr)
+
+### Non user-facing changes
+
+* fix(ci): combine image indexes with buildx imagetools [[#4054](https://github.com/falcosecurity/falco/pull/4054)] - [@leogr](https://github.com/leogr)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      2 |
+| Total           |      3 |
+
 ## v0.45.1
 
 ### Bug Fixes
