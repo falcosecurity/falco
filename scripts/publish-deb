@@ -115,7 +115,7 @@ update_repo() {
       -o APT::FTPArchive::Release::Suite=$2 \
       -o APT::FTPArchive::Release::Codename=$2 \
       -o APT::FTPArchive::Release::Components=${component} \
-      -o APT::FTPArchive::Release::Architectures="$(join_arr , "${architectures[@]}")" \
+      -o APT::FTPArchive::Release::Architectures="$(join_arr ' ' "${architectures[@]}")" \
       ${release_dir} > ${release_dir}/Release
 
     popd > /dev/null
