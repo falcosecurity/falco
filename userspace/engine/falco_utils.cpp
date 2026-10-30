@@ -125,7 +125,7 @@ uint64_t parse_prometheus_interval(std::string interval_str) {
 				uint64_t cur_interval = 0;
 				std::string cur_interval_str = args[group_it->second - 1];
 				if(!cur_interval_str.empty()) {
-					cur_interval = std::stoull(cur_interval_str, nullptr, 0);
+					cur_interval = std::stoull(cur_interval_str, nullptr, 10);
 				}
 				if(cur_interval > 0) {
 					interval += cur_interval * all_prometheus_time_conversions[i];
