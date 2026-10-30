@@ -388,8 +388,8 @@ collectors:
     # -- Enable Container Engine support.
     enabled: true
     # -- pluginRef is the OCI reference for the container plugin. It could be a full reference such as
-    # "ghcr.io/falcosecurity/plugins/plugin/container:0.7.5". Or just name + tag: container:0.7.5.
-    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.7.5"
+    # "ghcr.io/falcosecurity/plugins/plugin/container:0.7.6". Or just name + tag: container:0.7.6.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/container:0.7.6"
     # -- labelMaxLen is the maximum length of the labels that can be used in the container plugin.
     # container labels larger than this value won't be collected.
     labelMaxLen: 100
@@ -521,6 +521,9 @@ customRules: {}
 falcosidekick:
   # -- Enable falcosidekick deployment.
   enabled: false
+  image:
+    # -- The Falcosidekick image tag to pull.
+    tag: "2.35.1"
   # -- Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used).
   fullfqdn: false
   # -- Listen port. Default value: 2801
@@ -546,7 +549,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.14.2"
+    tag: "0.14.3"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artifacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
