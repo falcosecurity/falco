@@ -3,6 +3,13 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v9.2.2
+
+* Upgrade Falco to v0.45.2, including the refreshed image CA trust stores and bundled OpenSSL 3.5.9
+* Bump the falcoctl image to `0.14.3`
+* Bump the default `collectors.containerEngine.pluginRef` to `container:0.7.6`
+* Bump the optional Falcosidekick image to `2.35.1`; its deployment remains disabled by default
+
 ## v9.2.1
 
 * Upgrade Falco to v0.45.1
