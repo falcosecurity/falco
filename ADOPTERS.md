@@ -15,6 +15,7 @@ Falco is being used by numerous other companies, both large and small, to build 
 * Utikal
 * Discrete Events
 * Agritech Infra
+* [Wordfully](https://wordfully.ai)
 
 This is a list of production adopters of Falco (in alphabetical order):
 
