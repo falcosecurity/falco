@@ -1,5 +1,51 @@
 # Change Log
 
+## v0.45.2
+
+### Minor Changes
+
+* update(cmake): bump bundled OpenSSL to 3.5.9 LTS, adopting TLS security level 2 (RSA/DSA/DH keys must be at least 2048 bits and EC keys at least 224 bits) [[#4053](https://github.com/falcosecurity/falco/pull/4053)] - [@leogr](https://github.com/leogr)
+
+### Bug Fixes
+
+* fix(packaging): refresh image CA trust stores for the eMudhra incident, retain the Buster loader with corrected trust, and bundle container plugin 0.7.6 and falcoctl 0.14.3 [[#4051](https://github.com/falcosecurity/falco/pull/4051)] - [@leogr](https://github.com/leogr)
+
+### Non user-facing changes
+
+* fix(ci): combine image indexes with buildx imagetools [[#4054](https://github.com/falcosecurity/falco/pull/4054)] - [@leogr](https://github.com/leogr)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      2 |
+| Total           |      3 |
+
+## v0.45.1
+
+### Bug Fixes
+
+* fix(packaging): the deb and rpm packages no longer stay half-configured on kernels that cannot run modern eBPF (for example Ubuntu 20.04 with kernel 5.4) [[#4037](https://github.com/falcosecurity/falco/pull/4037)] - [@ManuelFCastillo](https://github.com/ManuelFCastillo)
+* fix(userspace/falco): `file_output` with `keep_alive: true` no longer stops writing after a failed write (e.g. a full filesystem); the failure is logged and the file is reopened on the next alert [[#4036](https://github.com/falcosecurity/falco/pull/4036)] - [@cristianchiriac](https://github.com/cristianchiriac)
+* fix(metrics): prevent a race that could crash Falco when Prometheus metrics are scraped while events are being processed [[#4022](https://github.com/falcosecurity/falco/pull/4022)] - [@Rayan-and-beyond](https://github.com/Rayan-and-beyond)
+* fix(deps): update libs to 0.26.1 and driver to 11.0.1+driver [[#4032](https://github.com/falcosecurity/falco/pull/4032)] - [@leogr](https://github.com/leogr)
+* fix(chart): update the default container plugin to 0.7.5. [[#4027](https://github.com/falcosecurity/falco/pull/4027)] - [@leogr](https://github.com/leogr)
+* fix(build): update the bundled container plugin to 0.7.5, including the listener shutdown fix for reloads [[#4024](https://github.com/falcosecurity/falco/pull/4024)] - [@leogr](https://github.com/leogr)
+* fix(userspace): avoid exiting when files in watched directories disappear during reload setup [[#4018](https://github.com/falcosecurity/falco/pull/4018)] - [@c2ndev](https://github.com/c2ndev)
+
+### Non user-facing changes
+
+* chore(build): pin libs and driver release candidates [[#4026](https://github.com/falcosecurity/falco/pull/4026)] - [@leogr](https://github.com/leogr)
+
+### Statistics
+
+|   MERGED PRS    | NUMBER |
+|-----------------|--------|
+| Not user-facing |      1 |
+| Release note    |      7 |
+| Total           |      8 |
+
 ## v0.45.0
 
 Released on 2026-09-21
