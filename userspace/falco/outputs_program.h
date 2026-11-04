@@ -37,6 +37,9 @@ class output_program : public abstract_output {
 
 	void reopen() override;
 
+public:
+	~output_program() override;
+
 private:
 	void open_pfile();
 
@@ -47,6 +50,10 @@ private:
 	// Reap the program whose pipe was closed without waiting, if it has exited.
 	// Return false if it is still running.
 	bool reap_closed_program();
+
+	// Terminate and reap the program whose pipe was closed without waiting, if
+	// it is still running, waiting for a bounded time.
+	void terminate_closed_program();
 
 	FILE *m_pfile = nullptr;
 	pid_t m_pid = -1;

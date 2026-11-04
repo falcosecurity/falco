@@ -25,7 +25,9 @@ limitations under the License.
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cerrno>
+#include <chrono>
 #include <cstring>
+#include <thread>
 
 extern char** environ;
 
@@ -179,6 +181,12 @@ void falco::outputs::output_program::reopen() {
 	open_pfile();
 }
 
+falco::outputs::output_program::~output_program() {
+	// A program that closed its input after a failed write may still be running:
+	// do not leave it behind, running or as a zombie, when the output goes away.
+	terminate_closed_program();
+}
+
 void falco::outputs::output_program::close_pfile(bool wait) {
 	if(m_pfile == nullptr) {
 		return;
@@ -204,4 +212,22 @@ bool falco::outputs::output_program::reap_closed_program() {
 		m_closed_pid = -1;
 	}
 	return true;
+}
+
+void falco::outputs::output_program::terminate_closed_program() {
+	// The program no longer accepts input. Terminate it, then kill it if it does
+	// not exit, waiting at most 500 ms each time.
+	for(int sig : {SIGTERM, SIGKILL}) {
+		if(reap_closed_program()) {
+			return;
+		}
+		kill(m_closed_pid, sig);
+		for(int i = 0; i < 50 && !reap_closed_program(); i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+	}
+	if(!reap_closed_program()) {
+		falco_logger::log(falco_logger::level::ERR,
+		                  "Failed to terminate program output: " + m_oc.options["program"]);
+	}
 }
