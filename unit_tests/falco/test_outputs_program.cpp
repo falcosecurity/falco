@@ -18,13 +18,17 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/outputs_program.h>
 
+#include <cerrno>
 #include <chrono>
 #include <csignal>
 #include <cstdio>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <signal.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 namespace {
@@ -155,6 +159,69 @@ TEST(OutputsProgram, failed_write_does_not_wait_for_running_program) {
 	for(const auto& file : {started, closed, release, path}) {
 		std::remove(file.c_str());
 	}
+}
+
+// The program closes its input but keeps running, then the output is cleaned up
+// and destroyed, as on shutdown or hot reload. The program must not be left
+// behind, neither running nor as a zombie, and the destruction must not wait for
+// long.
+TEST(OutputsProgram, destruction_terminates_and_reaps_running_program) {
+	std::signal(SIGPIPE, SIG_DFL);
+
+	const std::string pid_file = ::testing::TempDir() + "falco_test_outputs_program_pid";
+	const std::string closed = ::testing::TempDir() + "falco_test_outputs_program_closed";
+
+	// Two cycles, like two hot reloads. In the second one, the program ignores
+	// SIGTERM, so it must be killed.
+	for(const std::string prefix : {"", "trap '' TERM; "}) {
+		std::remove(pid_file.c_str());
+		std::remove(closed.c_str());
+
+		falco::outputs::config oc;
+		oc.name = "program";
+		// After closing its input, the program runs for about 10 seconds.
+		oc.options["program"] = prefix + "echo $$ > " + pid_file + "; exec 0<&-; touch " + closed +
+		                        "; n=0; while [ $n -lt 1000 ]; do sleep 0.01; n=$((n + 1)); done";
+		oc.options["keep_alive"] = "true";
+
+		auto out = std::make_unique<test_output_program>();
+		falco::outputs::abstract_output& output = *out;
+		std::string err;
+		ASSERT_TRUE(output.init(oc, false, "host", false, err));
+
+		output.reopen();
+		ASSERT_TRUE(wait_for_file(closed));
+		const pid_t pid = std::stoi(read_file(pid_file));
+
+		falco::outputs::message msg;
+		msg.msg = "alert";
+		EXPECT_THROW(output.output(&msg), falco_exception);
+		output.cleanup();
+		EXPECT_EQ(kill(pid, 0), 0);
+
+		const auto start = std::chrono::steady_clock::now();
+		out.reset();
+		const auto elapsed = std::chrono::steady_clock::now() - start;
+		EXPECT_LT(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(), 2000);
+
+		// nothing is left to wait for, and the program is gone
+		const pid_t waited = waitpid(pid, nullptr, WNOHANG);
+		const int wait_errno = errno;
+		EXPECT_EQ(waited, -1);
+		EXPECT_EQ(wait_errno, ECHILD);
+		const int killed = kill(pid, 0);
+		const int kill_errno = errno;
+		EXPECT_EQ(killed, -1);
+		EXPECT_EQ(kill_errno, ESRCH);
+
+		// do not leave the program behind if the test failed
+		if(waited == 0) {
+			kill(pid, SIGKILL);
+			waitpid(pid, nullptr, 0);
+		}
+	}
+	std::remove(pid_file.c_str());
+	std::remove(closed.c_str());
 }
 
 // Falco must not change how the program itself reacts to SIGPIPE: an ignored
