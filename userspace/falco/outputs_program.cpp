@@ -222,7 +222,9 @@ void falco::outputs::output_program::terminate_closed_program() {
 			return;
 		}
 		kill(m_closed_pid, sig);
-		for(int i = 0; i < 50 && !reap_closed_program(); i++) {
+		// Bound the wait in time, as a sleep may last longer than requested.
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+		while(!reap_closed_program() && std::chrono::steady_clock::now() < deadline) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
