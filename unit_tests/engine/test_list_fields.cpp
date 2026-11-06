@@ -19,14 +19,17 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
+#include <set>
+
 #include <falco_engine.h>
 
 // Helper: capture stdout from list_fields() and return it as a string.
 static std::string capture_list_fields(const falco_engine& engine,
                                        const std::string& source,
-                                       output_format fmt) {
+                                       output_format fmt,
+                                       bool include_operators = false) {
 	testing::internal::CaptureStdout();
-	engine.list_fields(source, false, false, fmt);
+	engine.list_fields(source, false, false, fmt, include_operators);
 	return testing::internal::GetCapturedStdout();
 }
 
@@ -135,4 +138,87 @@ TEST_F(ListFields, json_output_labels_only_source_specific_classes) {
 	ASSERT_FALSE(fd.is_null()) << "fd field class not found in output";
 	ASSERT_TRUE(fd.contains("event_sources")) << fd.dump(2);
 	EXPECT_EQ(fd["event_sources"], syscall_only);
+}
+
+// Find a field by name in a field class of the JSON output.
+static nlohmann::json find_json_field(const nlohmann::json& fld_class, const std::string& name) {
+	for(const auto& field : fld_class.at("fields")) {
+		if(field.at("name") == name) {
+			return field;
+		}
+	}
+	return nlohmann::json();
+}
+
+static std::set<std::string> to_set(const nlohmann::json& arr) {
+	return arr.get<std::set<std::string>>();
+}
+
+// The operators are opt-in: without the option the output is the same as before.
+TEST_F(ListFields, json_output_has_no_operators_by_default) {
+	auto output = nlohmann::json::parse(capture_list_fields(m_engine, "", output_format::JSON));
+
+	for(const auto& fld_class : output.at("fieldclasses")) {
+		for(const auto& field : fld_class.at("fields")) {
+			EXPECT_FALSE(field.contains("operators")) << field.dump(2);
+			EXPECT_FALSE(field.contains("modifier_operators")) << field.dump(2);
+			EXPECT_FALSE(field.contains("suppressed_operators")) << field.dump(2);
+			EXPECT_FALSE(field.contains("transformers")) << field.dump(2);
+		}
+	}
+}
+
+TEST_F(ListFields, json_output_includes_operators_when_requested) {
+	auto output =
+	        nlohmann::json::parse(capture_list_fields(m_engine, "", output_format::JSON, true));
+
+	// the operators depend on the type of the field
+	auto proc = find_json_fieldclass(output, "process", "");
+	ASSERT_FALSE(proc.is_null()) << "process field class not found in output";
+	auto proc_name = find_json_field(proc, "proc.name");
+	ASSERT_FALSE(proc_name.is_null());
+	EXPECT_TRUE(to_set(proc_name["operators"]).count("contains")) << proc_name.dump(2);
+	EXPECT_TRUE(to_set(proc_name["modifier_operators"]).count("contains")) << proc_name.dump(2);
+	EXPECT_FALSE(proc_name.contains("suppressed_operators")) << proc_name.dump(2);
+
+	auto proc_pid = find_json_field(proc, "proc.pid");
+	ASSERT_FALSE(proc_pid.is_null());
+	EXPECT_TRUE(to_set(proc_pid["operators"]).count("<")) << proc_pid.dump(2);
+	EXPECT_FALSE(to_set(proc_pid["operators"]).count("contains")) << proc_pid.dump(2);
+
+	// transformers change the type the operators are checked against
+	ASSERT_TRUE(proc_name.contains("transformers")) << proc_name.dump(2);
+	EXPECT_TRUE(to_set(proc_name["transformers"]["len"]["operators"]).count("<"));
+	EXPECT_FALSE(to_set(proc_name["transformers"]["len"]["operators"]).count("contains"));
+}
+
+// Operators accepted for the type that the field can't use are reported as suppressed, or are
+// not supported at all when the compiler rejects them.
+TEST_F(ListFields, json_output_reports_suppressed_operators) {
+	auto output =
+	        nlohmann::json::parse(capture_list_fields(m_engine, "", output_format::JSON, true));
+
+	auto fd = find_json_fieldclass(output, "fd", "");
+	ASSERT_FALSE(fd.is_null()) << "fd field class not found in output";
+	auto fd_port = find_json_field(fd, "fd.port");
+	ASSERT_FALSE(fd_port.is_null());
+	EXPECT_TRUE(to_set(fd_port["operators"]).count("intersects")) << fd_port.dump(2);
+	EXPECT_TRUE(to_set(fd_port["suppressed_operators"]).count("intersects")) << fd_port.dump(2);
+	EXPECT_FALSE(to_set(fd_port["suppressed_operators"]).count("=")) << fd_port.dump(2);
+
+	// evt.around only accepts '='
+	auto evt = find_json_fieldclass(output, "evt", "Event fields applicable to syscall events");
+	ASSERT_FALSE(evt.is_null()) << "syscall evt field class not found in output";
+	auto evt_around = find_json_field(evt, "evt.around");
+	ASSERT_FALSE(evt_around.is_null());
+	EXPECT_EQ(to_set(evt_around["operators"]), std::set<std::string>{"="}) << evt_around.dump(2);
+	EXPECT_FALSE(evt_around.contains("suppressed_operators")) << evt_around.dump(2);
+}
+
+// The other formats don't serialize the operators.
+TEST_F(ListFields, operators_are_ignored_by_text_and_markdown_formats) {
+	for(auto fmt : {output_format::TEXT, output_format::MARKDOWN}) {
+		EXPECT_EQ(capture_list_fields(m_engine, "", fmt, true),
+		          capture_list_fields(m_engine, "", fmt, false));
+	}
 }

@@ -21,10 +21,12 @@ limitations under the License.
 using namespace falco;
 
 // Factory method
-std::unique_ptr<FieldFormatter> FieldFormatter::create(output_format format, bool verbose) {
+std::unique_ptr<FieldFormatter> FieldFormatter::create(output_format format,
+                                                       bool verbose,
+                                                       bool include_operators) {
 	switch(format) {
 	case output_format::JSON:
-		return std::make_unique<JsonFieldFormatter>(verbose);
+		return std::make_unique<JsonFieldFormatter>(verbose, include_operators);
 	case output_format::MARKDOWN:
 		return std::make_unique<MarkdownFieldFormatter>(verbose);
 	case output_format::TEXT:
@@ -85,7 +87,9 @@ void MarkdownFieldFormatter::end() {
 // JsonFieldFormatter implementation
 // ============================================================================
 
-JsonFieldFormatter::JsonFieldFormatter(bool verbose): m_verbose(verbose) {}
+JsonFieldFormatter::JsonFieldFormatter(bool verbose, bool include_operators):
+        m_verbose(verbose),
+        m_include_operators(include_operators) {}
 
 void JsonFieldFormatter::begin() {
 	m_fieldclasses_array = nlohmann::json::array();
@@ -97,7 +101,7 @@ void JsonFieldFormatter::begin() {
 void JsonFieldFormatter::print_fieldclass(
         const sinsp_filter_factory::filter_fieldclass_info& fld_class,
         const std::set<std::string>& event_sources) {
-	std::string json_str = fld_class.as_json(event_sources);
+	std::string json_str = fld_class.as_json(event_sources, false, m_include_operators);
 	if(!json_str.empty()) {
 		m_fieldclasses_array.push_back(nlohmann::json::parse(json_str));
 		m_has_fieldclasses = true;
