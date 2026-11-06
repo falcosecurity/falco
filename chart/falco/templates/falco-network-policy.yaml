@@ -1,0 +1,50 @@
+{{- if .Values.defaultNetworkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "falco.fullname" . }}-network-policy
+  namespace: {{ include "falco.namespace" . }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: falco
+      app.kubernetes.io/name: falco
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        # Liveness, readyness and health probes
+        - port: 8765
+          protocol: TCP
+        # Falco Webhook for k8saudit
+        - port: 9765
+          protocol: TCP
+  egress:
+    # Allow kube-dns resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+    {{- if .Values.falcosidekick.enabled -}}
+    # Outgoing Traffic to falco sidekick pods
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: core
+            app.kubernetes.io/instance: falco
+            app.kubernetes.io/name: falcosidekick
+      ports:
+        # Falco to sidekick communication
+        - port: 2801
+          protocol: TCP
+        - port: 2810
+          protocol: TCP
+    {{- end -}}
+{{- end -}}
