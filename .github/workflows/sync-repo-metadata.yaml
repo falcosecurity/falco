@@ -1,0 +1,91 @@
+# Manually triggerable workflow to regenerate and re-sign the repository
+# metadata (repodata for RPM, dists for DEB) so that it matches the packages
+# currently published on S3.
+#
+# This is needed when a package is removed from the bucket out-of-band (for
+# example to unpublish a broken release): the shared metadata index would
+# otherwise keep referencing the deleted package, breaking clients with 404
+# errors. See https://github.com/falcosecurity/falco/issues/1674.
+name: sync-repo-metadata
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: Repository whose metadata must be regenerated
+        required: true
+        type: choice
+        options:
+          - rpm
+          - rpm-dev
+          - deb
+          - deb-dev
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_S3_REGION: eu-west-1
+  AWS_CLOUDFRONT_DIST_ID: E1CQNPFWRXLGQD
+
+jobs:
+  sync-rpm-metadata:
+    if: ${{ startsWith(inputs.repo, 'rpm') }}
+    runs-on: ubuntu-latest
+    container: docker.io/library/fedora:38
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Install dependencies
+        run: |
+          dnf install rpm-sign expect which createrepo gpg python python-pip -y
+          pip install awscli==1.29.60
+
+      # Configure AWS role; see https://github.com/falcosecurity/test-infra/pull/1102
+      # The dev repositories use a different role than the stable ones.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.repo == 'rpm-dev' && '-dev' || '' }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}
+
+      - name: Import gpg key
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+        run: printenv GPG_KEY | gpg --import -
+
+      - name: Sync RPM repository metadata
+        run: |
+          ./scripts/publish-rpm -r ${{ inputs.repo }} -i
+
+  sync-deb-metadata:
+    if: ${{ startsWith(inputs.repo, 'deb') }}
+    runs-on: ubuntu-latest
+    container: docker.io/debian:stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Install dependencies
+        run: |
+          apt update -y
+          apt-get install apt-utils bzip2 gpg awscli -y
+
+      # Configure AWS role; see https://github.com/falcosecurity/test-infra/pull/1102
+      # The dev repositories use a different role than the stable ones.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.repo == 'deb-dev' && '-dev' || '' }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}
+
+      - name: Import gpg key
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+        run: printenv GPG_KEY | gpg --import -
+
+      - name: Sync DEB repository metadata
+        run: |
+          ./scripts/publish-deb -r ${{ inputs.repo }} -i

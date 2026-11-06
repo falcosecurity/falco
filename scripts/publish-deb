@@ -2,7 +2,20 @@
 set -e
 
 usage() {
-    echo "usage: $0 -f <package_x86_64.deb> -f <package_aarch64.deb> -r <deb|deb-dev> [-s]"
+    cat <<EOF
+usage: $0 [options]
+
+  -f <package.deb>  Add the given package to the repository. The option can be
+                    repeated to publish more packages in the same run (for
+                    example the x86_64 and the aarch64 ones).
+  -r <deb|deb-dev>  Repository to publish to. Required.
+  -s                Re-sign all the packages already published in the repository.
+  -i                Regenerate the repository metadata to match the packages
+                    currently published, without adding or re-signing any
+                    package.
+
+At least one of -f, -s or -i is required, together with -r.
+EOF
     exit 1
 }
 
@@ -61,6 +74,25 @@ falco_arch_from_deb_arch() {
         exit 1
         ;;
     esac  
+}
+
+# Collect the architectures of the packages currently available in the local
+# repository.
+#
+# add_deb() learns the architectures from the packages being added, hence it
+# cannot be used when the metadata has to be regenerated without publishing any
+# new package. This inspects the repository content instead.
+#
+# $1: path of the directory containing the DEB files.
+collect_deb_architectures() {
+    local debs_dir=$1
+    local file
+    local arch
+    for file in ${debs_dir}/*.deb; do
+        [ -f "${file}" ] || continue
+        arch=$(dpkg --info ${file} | awk '/Architecture/ {printf "%s", $2}')
+        [[ " ${architectures[*]} " == *" ${arch} "* ]] || architectures+=("${arch}")
+    done
 }
 
 # Sign the local DEB repository
@@ -163,7 +195,7 @@ reduce_dir_size() {
 }
 
 # parse options
-while getopts ":f::r::s" opt; do
+while getopts ":f::r::si" opt; do
     case "${opt}" in
         f )
           files+=("${OPTARG}")
@@ -174,6 +206,9 @@ while getopts ":f::r::s" opt; do
           ;;
         s )
           sign_all="true"
+          ;;
+        i )
+          sync_metadata="true"
           ;;
         : )
           echo "invalid option: ${OPTARG} requires an argument" 1>&2
@@ -188,7 +223,7 @@ done
 shift $((OPTIND-1))
 
 # check options
-if ([ ${#files[@]} -eq 0 ] && [ -z "${sign_all}" ]) || [ -z "${repo}" ]; then
+if ([ ${#files[@]} -eq 0 ] && [ -z "${sign_all}" ] && [ -z "${sync_metadata}" ]) || [ -z "${repo}" ]; then
     usage
 fi
 
@@ -204,11 +239,13 @@ check_program dpkg
 debSuite=stable
 s3_bucket_repo="s3://falco-distribution/packages/${repo}"
 cloudfront_path="/packages/${repo}"
-tmp_repo_path=/tmp/falco-$repo
 
-# prepare repository local copy
+# prepare a pristine local copy of the repository, so that packages that are no
+# longer published cannot leak into the regenerated metadata
+tmp_repo_path=$(mktemp -d)
+trap 'rm -rf "${tmp_repo_path}"' EXIT
+
 echo "Fetching ${s3_bucket_repo}..."
-mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
 # update signatures for all existing packages
@@ -253,6 +290,21 @@ if ! [ ${#files[@]} -eq 0 ]; then
     aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
     aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
   done
+fi
+
+# regenerate the repository metadata to match the packages currently published
+if [ "${sync_metadata}" ]; then
+  echo "Updating metadata of ${s3_bucket_repo}..."
+  # the architectures are recomputed from the packages in the repository
+  architectures=()
+  collect_deb_architectures "${tmp_repo_path}/${debSuite}"
+  if [ ${#architectures[@]} -eq 0 ]; then
+    echo "No package found in ${s3_bucket_repo}, nothing to do." 1>&2
+    exit 0
+  fi
+  rm -rf ${tmp_repo_path}/dists
+  update_repo ${tmp_repo_path} ${debSuite}
+  sign_repo ${tmp_repo_path} ${debSuite}
 fi
 
 # sync dists
