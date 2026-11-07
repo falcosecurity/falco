@@ -79,7 +79,10 @@ TEST(Configuration, configuration_environment_variables) {
 	        "plugins:\n"
 	        "  - name: k8saudit\n"
 	        "    library_path: /foo/${ENV_VAR}/libk8saudit.so\n"
-	        "    open_params: ${ENV_VAR_INT}\n";
+	        "    open_params: ${ENV_VAR_INT}\n"
+	        "plain_then_var: \"$HOME/${ENV_VAR}\"\n"
+	        "dollar_amount: \"cost $5 ${ENV_VAR}\"\n"
+	        "double_dollar_then_var: \"$$ENV_VAR/${ENV_VAR}\"\n";
 
 	yaml_helper conf;
 	conf.load_from_string(env_var_sample_yaml);
@@ -217,6 +220,17 @@ TEST(Configuration, configuration_environment_variables) {
 	ASSERT_EQ(m_plugins[0].m_name, "k8saudit");
 	ASSERT_EQ(m_plugins[0].m_library_path, "/foo/" + env_var_value + "/libk8saudit.so");
 	ASSERT_EQ(m_plugins[0].m_open_params, "12");
+
+	/* A plain "$" must not stop expansion of a later ${VAR}. */
+	auto plain_then_var = conf.get_scalar<std::string>("plain_then_var", default_value);
+	ASSERT_EQ(plain_then_var, "$HOME/" + env_var_value);
+
+	auto dollar_amount = conf.get_scalar<std::string>("dollar_amount", default_value);
+	ASSERT_EQ(dollar_amount, "cost $5 " + env_var_value);
+
+	auto double_dollar_then_var =
+	        conf.get_scalar<std::string>("double_dollar_then_var", default_value);
+	ASSERT_EQ(double_dollar_then_var, "$$ENV_VAR/" + env_var_value);
 
 	/* Clear the set environment variables after testing */
 	SET_ENV_VAR(env_var_name.c_str(), "");

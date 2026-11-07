@@ -355,7 +355,10 @@ private:
 					}
 					start_pos++;  // consume the second '$' token
 				} else {
-					start_pos += substr.length();
+					// A plain "$" (as in $HOME or $5) is not a token. Advance
+					// one character so a later ${VAR} in the same value is
+					// still expanded.
+					start_pos += 1;
 				}
 				start_pos = value.find("$", start_pos);
 			}
