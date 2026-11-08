@@ -53,7 +53,7 @@ if [ "$1" = "configure" ]; then
                   CHOICE=4
                   ;;
         esac     
-        if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
+        if [ -z "$CHOICE" ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
                     1 "Manual configuration (no unit is started)" \
@@ -93,7 +93,7 @@ if [ "$1" = "configure" ]; then
                     CHOICE=2
                     ;;
             esac
-            if [ -z $CHOICE ] &&  [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
+            if [ -z "$CHOICE" ] &&  [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
                 CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
                         1 "Yes" \
                         2 "No" \
