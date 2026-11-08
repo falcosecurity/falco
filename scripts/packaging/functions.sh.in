@@ -19,6 +19,22 @@
 package_state=/var/lib/falco/package
 follower_mask=/etc/systemd/system/falcoctl-artifact-follow.service
 
+# Source the debconf confmodule at most once. Only run under a debconf
+# frontend: sourcing it elsewhere re-execs the script under a new frontend,
+# which hangs without a terminal and breaks direct scriptlet testing.
+# DEBCONF_CONFMODULE overrides the confmodule path for testing.
+package_load_debconf() {
+    if [ -z "${package_debconf_loaded:-}" ] && [ -n "${DEBIAN_HAS_FRONTEND:-}" ] \
+        && [ -f "${DEBCONF_CONFMODULE:-/usr/share/debconf/confmodule}" ]; then
+        package_debconf_loaded=1
+        # shellcheck disable=SC1091
+        . "${DEBCONF_CONFMODULE:-/usr/share/debconf/confmodule}"
+    fi
+    # Always succeed so `set -e` callers can probe availability through
+    # $package_debconf_loaded instead.
+    return 0
+}
+
 package_save_previous_driver() {
     mkdir -p "$package_state"
     rm -f "$package_state/previous-default" "$package_state/previous-version" "$package_state/pending-driver"

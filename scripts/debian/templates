@@ -1,0 +1,19 @@
+Template: falco/driver-choice
+Type: select
+Choices: auto, kmod, modern_ebpf, none
+Default: auto
+_Description: Falco driver to configure:
+ The Falco package can automatically select the best driver for this
+ kernel, configure one specific driver, or skip driver configuration
+ entirely. The answer is remembered for future upgrades.
+ .
+ Choose "none" to leave Falco unconfigured: no driver is installed and
+ no Falco service is started.
+
+Template: falco/follow-rulesets
+Type: boolean
+Default: true
+_Description: Follow automatic Falco ruleset updates?
+ The Falco package can enable the falcoctl artifact follower service,
+ which keeps the Falco ruleset updated automatically. The answer is
+ remembered for future upgrades.
