@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## Unreleased
+
+* Fix the replay command and SSL certificate setup commands in the configuration examples
+
 ## v9.2.2
 
 * Upgrade Falco to v0.45.2, including the refreshed image CA trust stores and bundled OpenSSL 3.5.9
