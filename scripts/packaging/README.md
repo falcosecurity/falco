@@ -26,3 +26,18 @@ Only follower masks recorded as package-created are removed. Administrator
 masks and older masks without ownership records are retained. Debian disables
 units before removing their definitions and repairs known dangling Falco aliases
 on removal or purge.
+
+On DEB, the driver choice and ruleset updates questions are asked through
+debconf instead of `dialog`, so answers are remembered across upgrades and
+can be preseeded:
+
+```
+echo "falco falco/driver-choice select modern_ebpf" | debconf-set-selections
+echo "falco falco/follow-rulesets boolean false" | debconf-set-selections
+```
+
+Precedence for each question is: environment variable (`FALCO_DRIVER_CHOICE`,
+`FALCOCTL_ENABLED`), debconf answer, `dialog` prompt, built-in default.
+Without a debconf frontend (for example a bare `dpkg -i` run) postinst falls
+back to the `dialog` prompts. RPM packages are unchanged and keep the
+`dialog` prompts.
