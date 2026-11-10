@@ -20,6 +20,8 @@ limitations under the License.
 
 #include <zlib.h>
 
+#include <cstdint>
+
 // Set a libcurl option, sticky-recording the first real error.
 // CURLE_NOT_BUILT_IN is tolerated: libcurl may return it for any option when
 // the underlying feature is compiled out (e.g. the SChannel TLS backend on
@@ -36,13 +38,18 @@ static size_t noop_write_callback(void * /*contents*/,
 
 // Compress the input in the gzip format, as expected by "Content-Encoding: gzip".
 static bool gzip_compress(const std::string &in, std::string &out) {
+	// zlib takes 32-bit sizes. Up to this size, the compressed output fits them too.
+	if(in.size() > INT32_MAX) {
+		return false;
+	}
+
 	z_stream zs{};
 	// 15 window bits, plus 16 to write a gzip header and trailer instead of a zlib one
 	if(deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) !=
 	   Z_OK) {
 		return false;
 	}
-	out.resize(deflateBound(&zs, in.size()));
+	out.resize(deflateBound(&zs, static_cast<uLong>(in.size())));
 	zs.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(in.data()));
 	zs.avail_in = static_cast<uInt>(in.size());
 	zs.next_out = reinterpret_cast<Bytef *>(&out[0]);
