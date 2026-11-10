@@ -37,6 +37,7 @@ private:
 	CURL *m_curl;
 	struct curl_slist *m_http_headers;
 	uint8_t m_max_consecutive_timeouts;
+	bool m_compress_uploads;
 };
 
 }  // namespace outputs

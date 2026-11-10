@@ -880,7 +880,9 @@ http_output:
   client_key: "/etc/ssl/certs/client.key"
   # -- Whether to echo server answers to stdout.
   echo: false
-  # -- Whether to compress the payload sent to the http server.
+  # -- Whether to compress the payload sent to the http server. The payload is
+  # compressed with gzip and sent with the `Content-Encoding: gzip` header, so the
+  # server must accept gzip-encoded request bodies.
   compress_uploads: false
   # -- If true, the HTTP connection will be kept alive and reused.
   keep_alive: false
