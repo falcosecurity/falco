@@ -517,7 +517,7 @@ customRules: {}
 # Falco integrations   #
 ########################
 
-# -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml
+# -- For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick-v2/values.yaml
 falcosidekick:
   # -- Enable falcosidekick deployment.
   enabled: false

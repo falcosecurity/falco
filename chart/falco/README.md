@@ -479,7 +479,7 @@ Alternatively, supply these files through an existing Secret with `certs.existin
 ## Deploy Falcosidekick with Falco
 
 [`Falcosidekick`](https://github.com/falcosecurity/falcosidekick) can be installed with `Falco` by setting `--set falcosidekick.enabled=true`. This setting automatically configures all options of `Falco` for working with `Falcosidekick`.
-All values for the configuration of `Falcosidekick` are available by prefixing them with `falcosidekick.`. The full list of available values is [here](https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick#configuration).
+All values for the configuration of `Falcosidekick` are available by prefixing them with `falcosidekick.`. The full list of available values is [here](https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick-v2#configuration).
 For example, to enable the deployment of [`Falcosidekick-UI`](https://github.com/falcosecurity/falcosidekick-ui), add `--set falcosidekick.enabled=true --set falcosidekick.webui.enabled=true`.
 
 If you use a Proxy in your cluster, the requests between `Falco` and `Falcosidekick` might be captured, use the full FQDN of `Falcosidekick` by using `--set falcosidekick.fullfqdn=true` to avoid that.
@@ -668,7 +668,7 @@ The following table lists the main configurable parameters of the falco chart v9
 | falcoctl.image.registry | string | `"docker.io"` | The image registry to pull from. |
 | falcoctl.image.repository | string | `"falcosecurity/falcoctl"` | The image repository to pull from. |
 | falcoctl.image.tag | string | `"0.14.3"` | The image tag to pull. |
-| falcosidekick | object | `{"enabled":false,"fullfqdn":false,"image":{"tag":"2.35.1"},"listenPort":""}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml |
+| falcosidekick | object | `{"enabled":false,"fullfqdn":false,"image":{"tag":"2.35.1"},"listenPort":""}` | For configuration values, see https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick-v2/values.yaml |
 | falcosidekick.enabled | bool | `false` | Enable falcosidekick deployment. |
 | falcosidekick.fullfqdn | bool | `false` | Enable usage of full FQDN of falcosidekick service (useful when a Proxy is used). |
 | falcosidekick.image.tag | string | `"2.35.1"` | The Falcosidekick image tag to pull. |

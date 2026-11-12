@@ -56,7 +56,7 @@ NOTICE:
 {{- if not .Values.falcosidekick.enabled }}
 TIP:
 You can easily forward Falco events to Slack, Kafka, AWS Lambda and more with falcosidekick.
-Full list of outputs: https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick.
+Full list of outputs: https://github.com/falcosecurity/charts/tree/master/charts/falcosidekick-v2.
 You can enable its deployment with `--set falcosidekick.enabled=true` or in your values.yaml.
-See: https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick/values.yaml for configuration values.
+See: https://github.com/falcosecurity/charts/blob/master/charts/falcosidekick-v2/values.yaml for configuration values.
 {{- end}}
