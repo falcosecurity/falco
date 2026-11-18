@@ -126,6 +126,15 @@ void falco::outputs::output_http::output(const message *msg) {
 		falco_logger::log(
 		        falco_logger::level::ERR,
 		        "libcurl failed to perform call: " + std::string(curl_easy_strerror(res)));
+		return;
+	}
+
+	// The request went through, but the server may have answered with an error
+	// (e.g. 400 or 500). The alert is lost then, so report the failure.
+	long status = 0;
+	curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &status);
+	if(status >= 400) {
+		throw falco_exception("the server returned HTTP status " + std::to_string(status));
 	}
 }
 

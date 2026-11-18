@@ -82,6 +82,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	)
 endif()
 
+if(BUILD_HTTP_OUTPUT AND NOT WIN32)
+	target_sources(falco_unit_tests PRIVATE falco/test_outputs_http_status.cpp)
+endif()
+
 if(NOT WIN32 AND NOT EMSCRIPTEN)
 	target_sources(falco_unit_tests PRIVATE falco/test_outputs_program.cpp)
 endif()
