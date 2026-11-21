@@ -47,7 +47,10 @@ public:
 	virtual void end() = 0;
 
 	// Factory method
-	static std::unique_ptr<FieldFormatter> create(output_format format, bool verbose);
+	// include_operators is only taken into account by the JSON formatter.
+	static std::unique_ptr<FieldFormatter> create(output_format format,
+	                                              bool verbose,
+	                                              bool include_operators = false);
 };
 
 // Text formatter (default)
@@ -83,7 +86,7 @@ private:
 // JSON formatter
 class JsonFieldFormatter : public FieldFormatter {
 public:
-	explicit JsonFieldFormatter(bool verbose);
+	JsonFieldFormatter(bool verbose, bool include_operators);
 
 	void begin() override;
 	void print_fieldclass(const sinsp_filter_factory::filter_fieldclass_info& fld_class,
@@ -93,6 +96,7 @@ public:
 
 private:
 	bool m_verbose;
+	bool m_include_operators;
 	nlohmann::json m_fieldclasses_array;
 	nlohmann::json m_fieldnames_array;
 	bool m_has_fieldclasses{false};

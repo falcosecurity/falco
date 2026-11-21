@@ -63,10 +63,13 @@ public:
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.
+	// If include_operators is true, the operators supported by each field are printed as well.
+	// This is only supported by the JSON format.
 	void list_fields(const std::string &source,
 	                 bool verbose,
 	                 bool names_only,
-	                 output_format format) const;
+	                 output_format format,
+	                 bool include_operators = false) const;
 
 	// Provide an alternate rule reader, collector, and compiler
 	// to compile any rules provided via load_rules*

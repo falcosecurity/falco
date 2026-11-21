@@ -111,7 +111,8 @@ static std::string fieldclass_key(const sinsp_filter_factory::filter_fieldclass_
 void falco_engine::list_fields(const std::string &source,
                                bool verbose,
                                bool names_only,
-                               output_format format) const {
+                               output_format format,
+                               bool include_operators) const {
 	// Maps from field class name + short desc to list of event
 	// sources for which this field class can be used. Generic field
 	// classes are mapped to an empty set (see below).
@@ -142,7 +143,7 @@ void falco_engine::list_fields(const std::string &source,
 	std::set<std::string> seen_fieldclasses;
 
 	// Create the appropriate formatter and use it
-	auto formatter = FieldFormatter::create(format, verbose);
+	auto formatter = FieldFormatter::create(format, verbose, include_operators);
 	formatter->begin();
 
 	// In the second pass, actually print info, skipping duplicate

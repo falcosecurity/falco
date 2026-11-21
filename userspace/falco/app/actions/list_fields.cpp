@@ -33,6 +33,7 @@ falco::app::run_result falco::app::actions::list_fields(falco::app::state& s) {
 	s.engine->list_fields(s.options.list_source_fields,
 	                      s.options.verbose,
 	                      s.options.names_only,
-	                      s.options.output_fmt);
+	                      s.options.output_fmt,
+	                      s.options.operators);
 	return run_result::exit();
 }

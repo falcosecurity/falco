@@ -123,6 +123,12 @@ bool options::parse(int argc, char **argv, std::string &errstr) {
 		output_fmt = output_format::MARKDOWN;
 	}
 
+	// The operators are only serialized by the JSON field listing
+	if(operators && (!list_fields || output_fmt != output_format::JSON)) {
+		errstr = "The --operators option requires both --list and --format json";
+		return false;
+	}
+
 	return true;
 }
 
@@ -155,6 +161,7 @@ void options::define(cxxopts::Options& opts)
 		("markdown",                 "DEPRECATED: use --format markdown instead. Print output in Markdown format when used in conjunction with --list or --list-events options. It has no effect when used with other options.", cxxopts::value<bool>(markdown))
 		("format",                   "Print output in the specified <format> when used in conjunction with --list or --list-events options. Valid values are 'text', 'markdown', or 'json'. It has no effect when used with other options. Cannot be used together with --markdown.", cxxopts::value(format), "<format>")
 		("N",                        "Only print field names when used in conjunction with the --list option. It has no effect when used with other options.", cxxopts::value(names_only)->default_value("false"))
+		("operators",                "Also print the operators supported by each field, and the ones that are accepted for the field type but not usable on it. It requires --list and --format json, and has no effect with -N.", cxxopts::value(operators)->default_value("false"))
 		("o,option",                 "Set the value of option <opt> to <val>. Overrides values in the configuration file. <opt> can be identified using its location in the configuration file using dot notation. Elements of list entries can be accessed via square brackets []. Use backslash (\\) to escape literal dots, brackets, or backslashes in key names.\n    E.g. base.id=val\n         base.subvalue.subvalue2=val\n         base.list[1]=val\n         base.dotted\\.key=val\n         base.back\\\\slash=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",              "Print info for the plugin specified by <plugin_name> and exit.\nThis includes all descriptive information like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the plugin's name or its configured 'library_path'.", cxxopts::value(print_plugin_info), "<plugin_name>")
 		("p,print",                  "DEPRECATED: use -o append_output... instead. Print additional information in the rule's output.\nUse -pc or -pcontainer to append container details to syscall events.\nUse -pk or -pkubernetes to add both container and Kubernetes details to syscall events.\nThe details will be directly appended to the rule's output.\nAlternatively, use -p <output_format> for a custom format. In this case, the given <output_format> will be appended to the rule's output without any replacement to all events, including plugin events.", cxxopts::value(print_additional), "<output_format>")
