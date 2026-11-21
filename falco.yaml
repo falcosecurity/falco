@@ -500,7 +500,7 @@ engine:
 #
 # Captured data is stored in files with a `.scap` extension, which can be
 # analyzed later using:
-#   falco -o engine.kind=replay -o replay.capture_file=/path/to/file.scap
+#   falco -o engine.kind=replay -o engine.replay.capture_file=/path/to/file.scap
 #
 # --- [Usage]
 #
@@ -957,11 +957,8 @@ webserver:
   # -- Enable SSL.
   ssl_enabled: false
   # -- Path to the combined SSL certificate and key file.
-  # You can generate a key/cert as follows:
-  # ```
-  # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-  # $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem
-  # ```
+  # You can generate a key/cert with `openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem`,
+  # then combine and install them with `cat certificate.pem key.pem > falco.pem && sudo cp falco.pem /etc/falco/falco.pem`.
   ssl_certificate: /etc/falco/falco.pem
 
 # [Incubating] `reload_control`

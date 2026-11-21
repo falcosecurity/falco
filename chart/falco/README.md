@@ -631,7 +631,7 @@ The following table lists the main configurable parameters of the falco chart v9
 | falco.webserver.listen_address | string | `"0.0.0.0"` | Address to listen on. Can be an IPV4 or IPV6 address, defaults to IPV4. |
 | falco.webserver.listen_port | int | `8765` | Port to listen on. |
 | falco.webserver.prometheus_metrics_enabled | bool | `false` | Enable the metrics endpoint providing Prometheus values. It is effective only if metrics.enabled is set to true. |
-| falco.webserver.ssl_certificate | string | `"/etc/falco/falco.pem"` | Path to the combined SSL certificate and key file. You can generate a key/cert as follows: ``` $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem /etc/falco/falco.pem ``` |
+| falco.webserver.ssl_certificate | string | `"/etc/falco/falco.pem"` | Path to the combined SSL certificate and key file. You can generate a key/cert with `openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem`, then combine and install them with `cat certificate.pem key.pem > falco.pem && sudo cp falco.pem /etc/falco/falco.pem`. |
 | falco.webserver.ssl_enabled | bool | `false` | Enable SSL. |
 | falco.webserver.threadiness | int | `0` | When the `threadiness` value is set to 0, Falco will automatically determine the appropriate number of threads based on the number of online cores in the system. |
 | falcoHostnameEnv | bool | `true` | Inject the chart-default `FALCO_HOSTNAME` env var. If `extra.env` contains `FALCO_HOSTNAME`, the user-provided value wins. |
