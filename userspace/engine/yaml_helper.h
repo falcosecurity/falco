@@ -355,7 +355,9 @@ private:
 					}
 					start_pos++;  // consume the second '$' token
 				} else {
-					start_pos += substr.length();
+					// A '$' that does not start a "${" or "$${" token is kept as-is;
+					// keep looking for env vars in the rest of the value.
+					start_pos++;
 				}
 				start_pos = value.find("$", start_pos);
 			}

@@ -225,3 +225,25 @@ TEST(Configuration, configuration_environment_variables) {
 	SET_ENV_VAR(int_env_var_name.c_str(), "");
 	SET_ENV_VAR(empty_env_var_name.c_str(), "");
 }
+
+TEST(Configuration, configuration_environment_variables_after_plain_dollar) {
+	std::string env_var_value = "envVarValue";
+	std::string env_var_name = "ENV_VAR";
+	SET_ENV_VAR(env_var_name.c_str(), env_var_value.c_str());
+
+	std::string env_var_sample_yaml =
+	        "plain_dollar_first: $HOME/${ENV_VAR}\n"
+	        "lone_dollar_first: cost $5 ${ENV_VAR}\n"
+	        "double_dollar_first: $$ENV_VAR/${ENV_VAR}\n";
+	yaml_helper conf;
+	conf.load_from_string(env_var_sample_yaml);
+
+	/* A `$` that does not start a `${VAR}` reference is kept as-is, and the
+	 * `${VAR}` references that follow it in the same string are still expanded */
+	ASSERT_EQ(conf.get_scalar<std::string>("plain_dollar_first", ""), "$HOME/" + env_var_value);
+	ASSERT_EQ(conf.get_scalar<std::string>("lone_dollar_first", ""), "cost $5 " + env_var_value);
+	ASSERT_EQ(conf.get_scalar<std::string>("double_dollar_first", ""),
+	          "$$ENV_VAR/" + env_var_value);
+
+	SET_ENV_VAR(env_var_name.c_str(), "");
+}
