@@ -173,7 +173,8 @@ class PackageHost:
             path.write_text(f"#!{sys.executable}\n" + SHIM)
             path.chmod(0o755)
         self.env = {key: value for key, value in os.environ.items()
-                    if not key.startswith("FALCO")}
+                    if not key.startswith("FALCO") and key != "DEBIAN_HAS_FRONTEND"
+                    and not key.startswith("DEBCONF_")}
         self.env.update({
             "PATH": str(self.root / "bin") + os.pathsep + os.defpath,
             "PACKAGE_TEST_ROOT": str(self.root),
@@ -478,6 +479,59 @@ class PackageScriptTests(unittest.TestCase):
                 host.preinstall()
                 self.assertFalse(host.config_file.exists())
                 self.assertFalse(any(call[0] == "falcoctl" for call in host.state()["calls"]))
+
+    def write_confmodule(self, host, driver="kmod", follow="true"):
+        confmodule = host.root / "confmodule"
+        confmodule.write_text(
+            "db_get() {\n"
+            f"    case \"$1\" in falco/driver-choice) RET=\"{driver}\";;\n"
+            f"    falco/follow-rulesets) RET=\"{follow}\";; esac\n"
+            "    return 0\n"
+            "}\n"
+            "db_purge() { touch \"$PACKAGE_TEST_ROOT/db-purged\"; return 0; }\n"
+        )
+        for key in ("FALCO_FRONTEND", "FALCO_DRIVER_CHOICE", "FALCOCTL_ENABLED"):
+            host.env.pop(key, None)
+        host.env["DEBIAN_HAS_FRONTEND"] = "true"
+        host.env["DEBCONF_CONFMODULE"] = str(confmodule)
+
+    def test_debconf_answers_configure_driver_and_follower(self):
+        host = PackageHost(self, "debian")
+        self.write_confmodule(host, driver="kmod", follow="false")
+        host.preinstall()
+        host.postinstall()
+        host.assert_running(NEW)
+        self.assertTrue(host.mask.is_symlink())
+
+    def test_debconf_auto_selection_follows_rulesets(self):
+        host = PackageHost(self, "debian")
+        self.write_confmodule(host, driver="auto", follow="true")
+        host.preinstall()
+        host.postinstall()
+        host.assert_running(NEW)
+        self.assertFalse(host.mask.is_symlink())
+        self.assertFalse((host.package_state / "follower-mask").exists())
+
+    def test_environment_overrides_debconf_answers(self):
+        host = PackageHost(self, "debian")
+        self.write_confmodule(host, driver="kmod", follow="true")
+        host.env["FALCO_DRIVER_CHOICE"] = "modern_ebpf"
+        host.env["FALCOCTL_ENABLED"] = "no"
+        host.preinstall()
+        host.postinstall()
+        self.assertEqual(host.config()["type"], "modern_ebpf")
+        self.assertTrue(host.mask.is_symlink())
+
+    def test_debconf_purge_runs_on_postrm_purge_only(self):
+        host = PackageHost(self, "debian")
+        self.write_confmodule(host)
+        host.preinstall()
+        host.postinstall()
+        host.run("prerm", "remove")
+        host.run("postrm", "remove")
+        self.assertFalse((host.root / "db-purged").exists())
+        host.run("postrm", "purge")
+        self.assertTrue((host.root / "db-purged").exists())
 
 
 if __name__ == "__main__":
