@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## Unreleased
+
+* Point the Falcosidekick links to `charts/falcosidekick-v2`, the v2 chart this chart depends on (`0.14.*`); `charts/falcosidekick` now holds the v3 chart
+
 ## v9.2.2
 
 * Upgrade Falco to v0.45.2, including the refreshed image CA trust stores and bundled OpenSSL 3.5.9
