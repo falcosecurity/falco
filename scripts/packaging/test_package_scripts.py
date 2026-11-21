@@ -479,6 +479,79 @@ class PackageScriptTests(unittest.TestCase):
                 self.assertFalse(host.config_file.exists())
                 self.assertFalse(any(call[0] == "falcoctl" for call in host.state()["calls"]))
 
+    def test_noninteractive_defaults_select_auto_and_follow(self):
+        # No preseed answers: automatic driver selection with ruleset updates
+        # followed, and no dialog attempt under a noninteractive frontend.
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format)
+                host.env.pop("FALCO_DRIVER_CHOICE")
+                host.env.pop("FALCOCTL_ENABLED")
+                host.preinstall()
+                if package_format == "rpm":
+                    host.set_config(NEW)
+                host.postinstall()
+                host.finish()
+                host.assert_running(NEW)
+                self.assertFalse(host.mask.is_symlink())
+                self.assertFalse((host.package_state / "follower-mask").exists())
+
+    def test_unknown_driver_choice_falls_back_to_auto(self):
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format)
+                host.env["FALCO_DRIVER_CHOICE"] = "bogus"
+                host.preinstall()
+                if package_format == "rpm":
+                    host.set_config(NEW)
+                host.postinstall()
+                host.finish()
+                host.assert_running(NEW)
+                self.assertFalse(host.mask.is_symlink())
+
+    def test_follower_enabled_by_default_when_unset(self):
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format)
+                host.env.pop("FALCOCTL_ENABLED")
+                host.preinstall()
+                if package_format == "rpm":
+                    host.set_config(NEW)
+                host.postinstall()
+                host.finish()
+                host.assert_running(NEW)
+                self.assertFalse(host.mask.is_symlink())
+                self.assertFalse((host.package_state / "follower-mask").exists())
+
+    def test_ruleset_decline_masks_follower_but_keeps_service(self):
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format)
+                host.env["FALCOCTL_ENABLED"] = "no"
+                host.preinstall()
+                if package_format == "rpm":
+                    host.set_config(NEW)
+                host.postinstall()
+                host.finish()
+                host.assert_running(NEW)
+                self.assertTrue(host.mask.is_symlink())
+                self.assertTrue((host.package_state / "follower-mask").exists())
+
+    def test_none_skips_follower_prompt_entirely(self):
+        for package_format in ("debian", "rpm"):
+            with self.subTest(package_format=package_format):
+                host = PackageHost(self, package_format, version=PIN)
+                host.env["FALCO_DRIVER_CHOICE"] = "none"
+                host.env.pop("FALCOCTL_ENABLED")
+                host.preinstall()
+                host.postinstall()
+                host.finish()
+                self.assertEqual(host.config()["version"], PIN)
+                self.assertEqual(host.state()["installs"], 0)
+                self.assertFalse(any(host.state()["active"].values()))
+                self.assertFalse(host.mask.is_symlink())
+                self.assertFalse((host.package_state / "follower-mask").exists())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
