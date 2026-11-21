@@ -26,3 +26,13 @@ Only follower masks recorded as package-created are removed. Administrator
 masks and older masks without ownership records are retained. Debian disables
 units before removing their definitions and repairs known dangling Falco aliases
 on removal or purge.
+
+Non-interactive installs can preseed every prompt with environment variables,
+on both DEB and RPM. `FALCO_FRONTEND=noninteractive` skips the `dialog`
+prompts and keeps the defaults: automatic driver selection with ruleset
+updates followed. `FALCO_DRIVER_CHOICE` preselects the driver menu with
+`none` (no driver configuration, no unit started), `kmod`, or `modern_ebpf`;
+any other value keeps automatic selection. `FALCOCTL_ENABLED=no` declines
+the automatic ruleset updates prompt and masks
+`falcoctl-artifact-follow.service`. Note that `FALCO_DRIVER_CHOICE=none`
+also skips the ruleset updates prompt, since no driver is configured.
