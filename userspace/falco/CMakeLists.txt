@@ -92,7 +92,9 @@ if(BUILD_HTTP_OUTPUT)
 		list(APPEND FALCO_DEPENDENCIES curl)
 	endif()
 
-	list(APPEND FALCO_LIBRARIES "${CURL_LIBRARIES}")
+	# zlib compresses the payload when http_output.compress_uploads is enabled.
+	list(APPEND FALCO_DEPENDENCIES zlib)
+	list(APPEND FALCO_LIBRARIES "${CURL_LIBRARIES}" "${ZLIB_LIB}")
 endif()
 
 if(NOT EMSCRIPTEN AND NOT MINIMAL_BUILD)

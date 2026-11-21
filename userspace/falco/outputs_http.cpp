@@ -18,6 +18,10 @@ limitations under the License.
 #include "outputs_http.h"
 #include "logger.h"
 
+#include <zlib.h>
+
+#include <cstdint>
+
 // Set a libcurl option, sticky-recording the first real error.
 // CURLE_NOT_BUILT_IN is tolerated: libcurl may return it for any option when
 // the underlying feature is compiled out (e.g. the SChannel TLS backend on
@@ -30,6 +34,31 @@ static size_t noop_write_callback(void * /*contents*/,
                                   void * /*userp*/) {
 	// We don't want to echo anything. Just return size of bytes ignored
 	return size * nmemb;
+}
+
+// Compress the input in the gzip format, as expected by "Content-Encoding: gzip".
+static bool gzip_compress(const std::string &in, std::string &out) {
+	// zlib takes 32-bit sizes. Up to this size, the compressed output fits them too.
+	if(in.size() > INT32_MAX) {
+		return false;
+	}
+
+	z_stream zs{};
+	// 15 window bits, plus 16 to write a gzip header and trailer instead of a zlib one
+	if(deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) !=
+	   Z_OK) {
+		return false;
+	}
+	out.resize(deflateBound(&zs, static_cast<uLong>(in.size())));
+	zs.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(in.data()));
+	zs.avail_in = static_cast<uInt>(in.size());
+	zs.next_out = reinterpret_cast<Bytef *>(&out[0]);
+	zs.avail_out = static_cast<uInt>(out.size());
+	// The output buffer is large enough to compress everything in a single call.
+	const int ret = deflate(&zs, Z_FINISH);
+	out.resize(zs.total_out);
+	deflateEnd(&zs);
+	return ret == Z_STREAM_END;
 }
 
 bool falco::outputs::output_http::init(const config &oc,
@@ -45,6 +74,7 @@ bool falco::outputs::output_http::init(const config &oc,
 	m_http_headers = nullptr;
 	m_max_consecutive_timeouts =
 	        static_cast<uint8_t>(std::stoi(m_oc.options["max_consecutive_timeouts"]) & 0xFF);
+	m_compress_uploads = m_oc.options["compress_uploads"] == std::string("true");
 	CURLcode res = CURLE_FAILED_INIT;
 
 	m_curl = curl_easy_init();
@@ -59,6 +89,9 @@ bool falco::outputs::output_http::init(const config &oc,
 	} else {
 		m_http_headers = curl_slist_append(m_http_headers, "Content-Type: text/plain");
 	}
+	if(m_compress_uploads) {
+		m_http_headers = curl_slist_append(m_http_headers, "Content-Encoding: gzip");
+	}
 	res = curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_http_headers);
 
 	// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
@@ -70,7 +103,6 @@ bool falco::outputs::output_http::init(const config &oc,
 	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_URL, unquotedUrl.c_str()));
 
 	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str()));
-	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, -1L));
 
 	if(m_oc.options["insecure"] == std::string("true")) {
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
@@ -95,10 +127,6 @@ bool falco::outputs::output_http::init(const config &oc,
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, noop_write_callback));
 	}
 
-	if(m_oc.options["compress_uploads"] == std::string("true")) {
-		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TRANSFER_ENCODING, 1L));
-	}
-
 	if(m_oc.options["keep_alive"] == std::string("true")) {
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPALIVE, 1L));
 	}
@@ -111,7 +139,23 @@ bool falco::outputs::output_http::init(const config &oc,
 }
 
 void falco::outputs::output_http::output(const message *msg) {
-	CURLcode res = curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
+	const std::string *payload = &msg->msg;
+	std::string compressed;
+	if(m_compress_uploads) {
+		if(!gzip_compress(msg->msg, compressed)) {
+			falco_logger::log(falco_logger::level::ERR, "failed to compress http output payload");
+			return;
+		}
+		payload = &compressed;
+	}
+
+	// A compressed payload is binary, so libcurl cannot compute its size with strlen().
+	CURLcode res = curl_easy_setopt(m_curl,
+	                                CURLOPT_POSTFIELDSIZE_LARGE,
+	                                static_cast<curl_off_t>(payload->size()));
+	if(res == CURLE_OK) {
+		res = curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, payload->data());
+	}
 	uint8_t curl_easy_platform_calls = 0;
 
 	if(res == CURLE_OK) {
