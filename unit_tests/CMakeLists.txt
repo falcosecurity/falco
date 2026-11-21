@@ -86,6 +86,14 @@ if(NOT WIN32 AND NOT EMSCRIPTEN)
 	target_sources(falco_unit_tests PRIVATE falco/test_outputs_program.cpp)
 endif()
 
+if(BUILD_HTTP_OUTPUT
+   AND NOT WIN32
+   AND NOT EMSCRIPTEN
+   AND NOT MINIMAL_BUILD
+)
+	target_sources(falco_unit_tests PRIVATE falco/test_outputs_http.cpp)
+endif()
+
 target_include_directories(
 	falco_unit_tests
 	PRIVATE ${CMAKE_SOURCE_DIR}/userspace

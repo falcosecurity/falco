@@ -18,6 +18,9 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 
+#include <stdexcept>
+#include <string>
+
 TEST(ConfigurationRuleOutputOptions, parse_yaml) {
 	falco_configuration falco_config;
 	ASSERT_NO_THROW(falco_config.init_from_content(R"(
@@ -120,4 +123,57 @@ TEST(ConfigurationRuleOutputOptions, cli_options) {
 
 	EXPECT_EQ(falco_config.m_append_output[2].m_raw_fields.size(), 1);
 	EXPECT_EQ(falco_config.m_append_output[2].m_raw_fields.count("ka.verb"), 1);
+}
+
+TEST(ConfigurationHttpOutputOptions, parse_unix_socket_path) {
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init_from_content(R"(
+http_output:
+  enabled: true
+  url: "http://localhost/events"
+  unix_socket_path: "/run/falco-consumer/events.sock"
+)",
+	                                               {}));
+
+	ASSERT_EQ(falco_config.m_outputs.size(), 1);
+	EXPECT_EQ(falco_config.m_outputs[0].name, "http");
+	EXPECT_EQ(falco_config.m_outputs[0].options["url"], "http://localhost/events");
+	EXPECT_EQ(falco_config.m_outputs[0].options["unix_socket_path"],
+	          "/run/falco-consumer/events.sock");
+}
+
+TEST(ConfigurationHttpOutputOptions, unix_socket_path_defaults_to_empty) {
+	falco_configuration falco_config;
+	ASSERT_NO_THROW(falco_config.init_from_content(R"(
+http_output:
+  enabled: true
+  url: "http://localhost/events"
+)",
+	                                               {}));
+
+	ASSERT_EQ(falco_config.m_outputs.size(), 1);
+	EXPECT_EQ(falco_config.m_outputs[0].options["unix_socket_path"], "");
+}
+
+TEST(ConfigurationHttpOutputOptions, rejects_relative_unix_socket_path) {
+	falco_configuration falco_config;
+	EXPECT_THROW(falco_config.init_from_content(R"(
+http_output:
+  enabled: true
+  url: "http://localhost/events"
+  unix_socket_path: "relative.sock"
+)",
+	                                            {}),
+	             std::logic_error);
+}
+
+TEST(ConfigurationHttpOutputOptions, rejects_too_long_unix_socket_path) {
+	falco_configuration falco_config;
+	std::string config =
+	        "http_output:\n"
+	        "  enabled: true\n"
+	        "  url: \"http://localhost/events\"\n"
+	        "  unix_socket_path: \"/" +
+	        std::string(200, 'a') + "\"\n";
+	EXPECT_THROW(falco_config.init_from_content(config, {}), std::logic_error);
 }

@@ -25,10 +25,8 @@ limitations under the License.
 #include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef __linux__
-#include <sys/un.h>
-#endif
 #ifndef _WIN32
+#include <sys/un.h>
 #include <unistd.h>
 #endif
 #include "falco_utils.h"
@@ -392,6 +390,31 @@ void falco_configuration::load_yaml(const std::string &config_name) {
 			                       "): http output enabled but no url in configuration block");
 		}
 		http_output.options["url"] = url;
+
+		std::string unix_socket_path;
+		unix_socket_path = m_config.get_scalar<std::string>("http_output.unix_socket_path", "");
+		if(!unix_socket_path.empty()) {
+#if defined(_WIN32)
+			throw std::logic_error(
+			        "Error reading config file (" + config_name +
+			        "): http_output.unix_socket_path is not supported on this platform");
+#else
+			constexpr size_t max_unix_socket_path_len =
+			        sizeof(((struct sockaddr_un *)nullptr)->sun_path) - 1;
+			if(unix_socket_path.front() != '/') {
+				throw std::logic_error("Error reading config file (" + config_name +
+				                       "): http_output.unix_socket_path must be an absolute "
+				                       "path");
+			}
+			if(unix_socket_path.find('\0') != std::string::npos ||
+			   unix_socket_path.size() > max_unix_socket_path_len) {
+				throw std::logic_error("Error reading config file (" + config_name +
+				                       "): http_output.unix_socket_path must be shorter than " +
+				                       std::to_string(max_unix_socket_path_len + 1) + " bytes");
+			}
+#endif
+		}
+		http_output.options["unix_socket_path"] = unix_socket_path;
 
 		std::string user_agent;
 		user_agent =
