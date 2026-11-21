@@ -18,6 +18,14 @@ limitations under the License.
 #include "outputs_http.h"
 #include "logger.h"
 
+#include <cerrno>
+#include <string>
+#include <system_error>
+
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
+
 // Set a libcurl option, sticky-recording the first real error.
 // CURLE_NOT_BUILT_IN is tolerated: libcurl may return it for any option when
 // the underlying feature is compiled out (e.g. the SChannel TLS backend on
@@ -31,6 +39,37 @@ static size_t noop_write_callback(void * /*contents*/,
 	// We don't want to echo anything. Just return size of bytes ignored
 	return size * nmemb;
 }
+
+namespace {
+
+#ifndef _WIN32
+// Check that the configured Unix domain socket path points to an existing socket.
+// Syntax and platform validation happen while loading the configuration; a missing
+// socket is not an error here, because the consumer may legitimately be started
+// after Falco, and every failed delivery is reported by output().
+bool check_unix_socket_path(const std::string &path, std::string &err) {
+	struct stat buf {};
+	if(stat(path.c_str(), &buf) != 0) {
+		if(errno == ENOENT) {
+			falco_logger::log(falco_logger::level::WARNING,
+			                  "http_output: unix socket '" + path +
+			                          "' does not exist yet, alerts will be dropped until it "
+			                          "becomes available");
+			return true;
+		}
+		err = "http_output: cannot access unix_socket_path '" + path +
+		      "': " + std::system_category().message(errno);
+		return false;
+	}
+	if(!S_ISSOCK(buf.st_mode)) {
+		err = "http_output: unix_socket_path '" + path + "' exists but is not a socket";
+		return false;
+	}
+	return true;
+}
+#endif
+
+}  // namespace
 
 bool falco::outputs::output_http::init(const config &oc,
                                        bool buffered,
@@ -68,6 +107,36 @@ bool falco::outputs::output_http::init(const config &oc,
 		unquotedUrl = libsinsp::filter::unescape_str(unquotedUrl);
 	}
 	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_URL, unquotedUrl.c_str()));
+
+	const std::string &unix_socket_path = m_oc.options["unix_socket_path"];
+	if(!unix_socket_path.empty()) {
+#if defined(_WIN32)
+		// Unix domain sockets are not supported on Windows. Configuration loading
+		// already rejects this, so this is only defensive (e.g. direct use).
+		err = "http_output: unix_socket_path is not supported on this platform";
+		cleanup();
+		return false;
+#else
+		if(!check_unix_socket_path(unix_socket_path, err)) {
+			cleanup();
+			return false;
+		}
+		// This option must never be tolerated as "not built in": silently ignoring it
+		// would fall back to TCP, which is exactly what unix_socket_path prevents.
+		CURLcode socket_res =
+		        curl_easy_setopt(m_curl, CURLOPT_UNIX_SOCKET_PATH, unix_socket_path.c_str());
+		if(socket_res != CURLE_OK) {
+			err = "http_output: cannot use unix_socket_path '" + unix_socket_path +
+			      "': " + std::string(curl_easy_strerror(socket_res)) +
+			      " (this libcurl build may lack support for Unix domain sockets)";
+			cleanup();
+			return false;
+		}
+		falco_logger::log(falco_logger::level::INFO,
+		                  "http_output: sending alerts to '" + unquotedUrl +
+		                          "' through unix socket '" + unix_socket_path + "'");
+#endif
+	}
 
 	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str()));
 	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, -1L));
