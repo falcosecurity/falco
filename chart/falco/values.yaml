@@ -1208,6 +1208,18 @@ falco:
     enabled: false
     # -- URL of the remote server to send the alerts to.
     url: ""
+    # [Incubating] `falco.http_output.unix_socket_path`
+    # -- Connect to the endpoint through a file system Unix domain socket instead of TCP.
+    # When set, `url` is still required and must be an http(s) URL: its host is used for the
+    # `Host` header (and for TLS SNI and certificate verification when using `https`), and its
+    # path is used as the request target. No DNS lookup is performed and the URL port is ignored.
+    # The value must be an absolute path shorter than the platform limit for socket paths
+    # (108 bytes on Linux), otherwise Falco fails to start; this option is not supported on
+    # Windows. Falco must be able to connect to the socket: it must be writable by the Falco
+    # process and its parent directories must be traversable. If the socket does not exist when
+    # Falco starts, a warning is logged and every alert delivery is retried until it appears.
+    # Falco never falls back to TCP when this option is set. Leave empty to use TCP.
+    unix_socket_path: ""
     # -- User agent string to be used in the HTTP request.
     user_agent: "falcosecurity/falco"
     # -- Tell Falco to not verify the remote server.

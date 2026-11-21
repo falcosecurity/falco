@@ -231,3 +231,18 @@ TEST(Configuration, schema_yaml_helper_validator) {
 	EXPECT_NO_THROW(conf.load_from_string(sample_yaml, falco_config.m_config_schema, &validation));
 	EXPECT_EQ(validation[0], yaml_helper::validation_ok);
 }
+
+TEST(Configuration, http_output_unix_socket_path_schema) {
+	falco_configuration config;
+	auto result = config.init_from_content(
+	        "http_output:\n"
+	        "  enabled: true\n"
+	        "  url: \"http://localhost/events\"\n"
+	        "  unix_socket_path: /run/falco-consumer/events.sock\n",
+	        {});
+	EXPECT_VALIDATION_STATUS(result, yaml_helper::validation_ok);
+
+	// valijson runs in weak-types mode, so only a non-scalar type is reported.
+	result = config.init_from_content("http_output:\n  unix_socket_path: [/run/events.sock]\n", {});
+	EXPECT_VALIDATION_STATUS(result, yaml_helper::validation_failed);
+}

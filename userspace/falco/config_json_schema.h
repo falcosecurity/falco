@@ -426,6 +426,9 @@ const char config_schema_string[] = LONG_STRING_CONST(
                         "http"
                     ]
                 },
+                "unix_socket_path": {
+                    "type": "string"
+                },
                 "user_agent": {
                     "type": "string"
                 },
