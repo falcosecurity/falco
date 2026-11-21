@@ -26,7 +26,7 @@ chosen_driver="auto"
 chosen_unit=
 CHOICE=
 
-# Every time we call this script we want to stat from a clean state.
+# Every time we call this script we want to start from a clean state.
 echo "[POST-INSTALL] Disable all possible 'falco' services:"
 systemctl --system stop 'falco-kmod.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
@@ -111,7 +111,7 @@ fi
 
 set -e
 
-echo "[POST-INSTALL] Trigger deamon-reload:"
+echo "[POST-INSTALL] Trigger daemon-reload:"
 systemctl --system daemon-reload || true
 
 # If needed, try to load/compile the driver through falcoctl

@@ -26,7 +26,7 @@ chosen_driver="auto"
 chosen_unit=
 CHOICE=
 
-# Every time we call this script we want to stat from a clean state.
+# Every time we call this script we want to start from a clean state.
 echo "[POST-INSTALL] Disable all possible enabled 'falco' service:"
 systemctl --system stop 'falco-kmod.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
