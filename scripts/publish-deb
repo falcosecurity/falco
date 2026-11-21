@@ -14,7 +14,8 @@ check_program() {
   fi
 }
 
-# Used to get comma separated list of architectures
+# Join arguments with the separator in $1.
+# Debian Release Architectures must be whitespace-separated.
 join_arr() {
   local IFS="$1"
   shift
