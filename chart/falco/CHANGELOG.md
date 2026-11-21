@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## Unreleased
+
+* Use `falcosidekick.listenPort` for the port of the Falcosidekick URL set in `http_output.url`. The template read `falcosidekick.listenport` instead, so the documented value was ignored and the URL always used port `2801`; numeric ports also rendered as `%!s(int64=...)`. The old lowercase key still works
+
 ## v9.2.2
 
 * Upgrade Falco to v0.45.2, including the refreshed image CA trust stores and bundled OpenSSL 3.5.9
