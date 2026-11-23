@@ -534,5 +534,54 @@ class PackageScriptTests(unittest.TestCase):
         self.assertTrue((host.root / "db-purged").exists())
 
 
+class DebconfTemplatesTests(unittest.TestCase):
+    """The packaged templates must render both questions with help text.
+
+    CPack packages the generated runtime templates (see the generation rule
+    in scripts/CMakeLists.txt), not the po-debconf source file. Real debconf
+    rejects the source `_Description` marker as an unknown template field,
+    leaving the questions' description/help empty, so these tests apply the
+    same generation rule and validate its output.
+    """
+
+    EXPECTED = ("falco/driver-choice", "falco/follow-rulesets")
+
+    def rendered(self):
+        text = (SCRIPTS / "debian/templates").read_text()
+        return text.replace("_Description:", "Description:")
+
+    def stanzas(self):
+        stanzas = {}
+        for block in self.rendered().split("\n\n"):
+            fields = {}
+            for line in block.splitlines():
+                if line and not line.startswith((" ", "\t")):
+                    name, _, value = line.partition(":")
+                    fields[name] = [value.strip()]
+                elif line.strip():
+                    fields[name].append(line.strip())
+            if fields:
+                stanzas[fields["Template"][0]] = fields
+        return stanzas
+
+    def test_no_unconverted_marker_fields_remain(self):
+        for line in self.rendered().splitlines():
+            self.assertFalse(line.startswith("_"),
+                             f"unconverted po-debconf field: {line!r}")
+
+    def test_both_questions_present(self):
+        self.assertEqual(tuple(self.stanzas()), self.EXPECTED)
+
+    def test_both_questions_have_description_and_help(self):
+        for name, fields in self.stanzas().items():
+            description = fields.get("Description", [])
+            self.assertTrue(description and description[0],
+                            f"{name} has empty prompt text")
+            self.assertGreater(len(description), 1,
+                               f"{name} has no help paragraph")
+            self.assertTrue(any(paragraph != "." for paragraph in description[1:]),
+                            f"{name} has empty help paragraph")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
