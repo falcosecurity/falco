@@ -44,6 +44,19 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	foreach(script preinst postinst prerm postrm)
 		configure_file(debian/${script}.in debian/${script} @ONLY)
 	endforeach()
+
+	# debconf only accepts runtime field names (Description:). The source
+	# templates use po-debconf input syntax, where a leading underscore
+	# marks the field translatable. No .po translations exist in the tree,
+	# so generating the runtime file is exactly stripping that marker.
+	# CPack must package the generated file below, never the source:
+	# real debconf rejects "_description" as an unknown template field
+	# and the questions lose their prompt/help text.
+	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/debian/templates" FALCO_DEBCONF_TEMPLATES_IN)
+	string(REPLACE "_Description:" "Description:" FALCO_DEBCONF_TEMPLATES_OUT
+		"${FALCO_DEBCONF_TEMPLATES_IN}"
+	)
+	file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/debian/templates" "${FALCO_DEBCONF_TEMPLATES_OUT}")
 	foreach(script preinstall postinstall posttrans preuninstall postuninstall)
 		configure_file(rpm/${script}.in rpm/${script} @ONLY)
 	endforeach()

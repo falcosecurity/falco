@@ -53,7 +53,30 @@ if [ "$1" = "configure" ]; then
                   CHOICE=4
                   ;;
         esac     
-        if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
+        # Debconf answers are remembered across upgrades and can be preseeded.
+        # Environment variables above still take precedence over them.
+        if [ -z "$CHOICE" ]; then
+            package_load_debconf
+            if [ -n "${package_debconf_loaded:-}" ]; then
+                RET=
+                db_get falco/driver-choice || true
+                case "$RET" in
+                    none)
+                        CHOICE=1
+                        ;;
+                    auto)
+                        CHOICE=2
+                        ;;
+                    kmod)
+                        CHOICE=3
+                        ;;
+                    modern_ebpf)
+                        CHOICE=4
+                        ;;
+                esac
+            fi
+        fi
+        if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
                     1 "Manual configuration (no unit is started)" \
@@ -93,6 +116,21 @@ if [ "$1" = "configure" ]; then
                     CHOICE=2
                     ;;
             esac
+            if [ -z "$CHOICE" ]; then
+                package_load_debconf
+                if [ -n "${package_debconf_loaded:-}" ]; then
+                    RET=
+                    db_get falco/follow-rulesets || true
+                    case "$RET" in
+                        true)
+                            CHOICE=1
+                            ;;
+                        false)
+                            CHOICE=2
+                            ;;
+                    esac
+                fi
+            fi
             if [ -z $CHOICE ] &&  [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
                 CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
                         1 "Yes" \
