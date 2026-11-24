@@ -62,6 +62,8 @@ struct state {
 		// source is a plugin one, the assigned inspector must have that
 		// plugin registered in its plugin manager
 		std::shared_ptr<sinsp> inspector;
+		std::shared_ptr<std::atomic<uint64_t>> num_evts =
+		        std::make_shared<std::atomic<uint64_t>>(0);
 
 		void set_metrics_snapshot(std::vector<metrics_v2> snapshot) {
 			std::lock_guard<std::mutex> lock(*metrics_snapshot_mutex);
