@@ -129,14 +129,20 @@ static falco::app::run_result do_inspect(
 	// the only other source loaded in its relative live inspector.
 	size_t expected_live_evt_src_idx = source == falco_common::syscall_source ? 0 : 1;
 
+	std::shared_ptr<std::atomic<uint64_t>> num_evts_counter;
 	if(!is_capture_mode) {
 		// note: in live mode, each inspector gets assigned a distinct event
 		// source that does not change for the whole capture.
-		source_engine_idx = s.source_infos.at(source)->engine_idx;
+		auto source_info = s.source_infos.at(source);
+		source_engine_idx = source_info->engine_idx;
+		num_evts_counter = source_info->num_evts;
 	}
 
 	// reset event counter
 	num_evts = 0;
+	if(num_evts_counter != nullptr) {
+		num_evts_counter->store(0, std::memory_order_relaxed);
+	}
 
 	// init drop manager if we are inspecting syscalls
 	if(check_drops_and_timeouts) {
@@ -425,6 +431,9 @@ static falco::app::run_result do_inspect(
 		}
 
 		num_evts++;
+		if(num_evts_counter != nullptr) {
+			num_evts_counter->store(num_evts, std::memory_order_relaxed);
+		}
 	}
 
 	return run_result::ok();

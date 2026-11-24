@@ -302,6 +302,23 @@ std::string falco_metrics::sources_to_text_prometheus(
 			}
 		}
 
+		// # HELP falcosecurity_falco_num_evts_total https://falco.org/docs/metrics/
+		// # TYPE falcosecurity_falco_num_evts_total counter
+		// falcosecurity_falco_num_evts_total{source="syscall"} 1234
+		auto num_evts_metric = libs::metrics::libsinsp_metrics::new_metric(
+		        "num_evts",
+		        METRICS_V2_MISC,
+		        METRIC_VALUE_TYPE_U64,
+		        METRIC_VALUE_UNIT_COUNT,
+		        METRIC_VALUE_METRIC_TYPE_MONOTONIC,
+		        source_info->num_evts->load(std::memory_order_relaxed));
+		prometheus_metrics_converter.convert_metric_to_unit_convention(num_evts_metric);
+		prometheus_text += prometheus_metrics_converter.convert_metric_to_text_prometheus(
+		        num_evts_metric,
+		        "falcosecurity",
+		        "falco",
+		        {{"source", source}});
+
 		// Inspectors' metrics collectors
 		// Libs metrics categories
 		//
